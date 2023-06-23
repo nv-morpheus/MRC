@@ -40,28 +40,28 @@ ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
 
 ManifoldInstance::~ManifoldInstance() = default;
 
-void ManifoldInstance::register_local_ingress(SegmentAddress address,
-                                              std::shared_ptr<segment::IngressPortBase> ingress_port)
+void ManifoldInstance::register_local_output(SegmentAddress address,
+                                             std::shared_ptr<segment::IngressPortBase> ingress_port)
 {
     CHECK(!m_local_output.contains(address)) << "Local segment with address: " << address << ", already registered";
 
     m_local_output[address] = ingress_port;
 }
 
-void ManifoldInstance::register_local_egress(SegmentAddress address,
-                                             std::shared_ptr<segment::EgressPortBase> egress_port)
+void ManifoldInstance::register_local_input(SegmentAddress address,
+                                            std::shared_ptr<segment::EgressPortBase> egress_port)
 {
     CHECK(!m_local_input.contains(address)) << "Local segment with address: " << address << ", already registered";
 
     m_local_input[address] = egress_port;
 }
 
-void ManifoldInstance::unregister_local_ingress(SegmentAddress address)
+void ManifoldInstance::unregister_local_output(SegmentAddress address)
 {
     throw std::runtime_error("Not implemented");
 }
 
-void ManifoldInstance::unregister_local_egress(SegmentAddress address)
+void ManifoldInstance::unregister_local_input(SegmentAddress address)
 {
     throw std::runtime_error("Not implemented");
 }
@@ -108,55 +108,55 @@ void ManifoldInstance::on_completed_requested(control_plane::state::ManifoldInst
 {
     CHECK(m_interface) << "Must create ManifoldInstance before starting";
 
-    // m_interface->start();
+    m_interface->start();
 }
 
 void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldInstance& instance)
 {
     // Check for ingress assignments
-    auto cur_ingress = extract_keys(m_actual_ingress_segments);
-    auto new_ingress = extract_keys(instance.requested_ingress_segments());
+    auto cur_output = extract_keys(m_actual_output_segments);
+    auto new_output = extract_keys(instance.requested_output_segments());
 
-    auto [create_ingress, remove_ingress] = compare_difference(cur_ingress, new_ingress);
+    auto [create_output, remove_output] = compare_difference(cur_output, new_output);
 
     // construct new segments and attach to manifold
-    for (const auto& address : create_ingress)
+    for (const auto& address : create_output)
     {
-        this->add_ingress(address, instance.requested_ingress_segments().at(address));
+        this->add_output(address, instance.requested_output_segments().at(address));
     }
 
     // detach from manifold or stop old segments
-    for (const auto& address : remove_ingress)
+    for (const auto& address : remove_output)
     {
-        this->remove_ingress(address);
+        this->remove_input(address);
     }
 
-    // Check for ingress assignments
-    auto cur_egress = extract_keys(m_actual_egress_segments);
-    auto new_egress = extract_keys(instance.requested_egress_segments());
+    // Check for egress assignments
+    auto cur_input = extract_keys(m_actual_input_segments);
+    auto new_input = extract_keys(instance.requested_input_segments());
 
-    auto [create_egress, remove_egress] = compare_difference(cur_egress, new_egress);
+    auto [create_input, remove_input] = compare_difference(cur_input, new_input);
 
     // construct new segments and attach to manifold
-    for (const auto& address : create_egress)
+    for (const auto& address : create_input)
     {
-        this->add_egress(address, instance.requested_egress_segments().at(address));
+        this->add_input(address, instance.requested_input_segments().at(address));
     }
 
     // detach from manifold or stop old segments
-    for (const auto& address : remove_egress)
+    for (const auto& address : remove_input)
     {
-        this->remove_egress(address);
+        this->remove_output(address);
     }
 }
 
-void ManifoldInstance::add_ingress(SegmentAddress address, bool is_local)
+void ManifoldInstance::add_input(SegmentAddress address, bool is_local)
 {
     if (is_local)
     {
-        CHECK(m_local_output.contains(address)) << "Missing local ingress for address: " << address;
+        // CHECK(m_local_input.contains(address)) << "Missing local ingress for address: " << address;
 
-        m_local_output[address]->connect_to_manifold(m_interface);
+        m_local_input[address]->connect_to_manifold(m_interface);
     }
     else
     {
@@ -164,13 +164,13 @@ void ManifoldInstance::add_ingress(SegmentAddress address, bool is_local)
     }
 }
 
-void ManifoldInstance::add_egress(SegmentAddress address, bool is_local)
+void ManifoldInstance::add_output(SegmentAddress address, bool is_local)
 {
     if (is_local)
     {
-        CHECK(m_local_input.contains(address)) << "Missing local egress for address: " << address;
+        // CHECK(m_local_output.contains(address)) << "Missing local egress for address: " << address;
 
-        m_local_input[address]->connect_to_manifold(m_interface);
+        m_local_output[address]->connect_to_manifold(m_interface);
     }
     else
     {
@@ -178,12 +178,12 @@ void ManifoldInstance::add_egress(SegmentAddress address, bool is_local)
     }
 }
 
-void ManifoldInstance::remove_ingress(SegmentAddress address)
+void ManifoldInstance::remove_input(SegmentAddress address)
 {
     throw std::runtime_error("Not implemented: remove_ingress");
 }
 
-void ManifoldInstance::remove_egress(SegmentAddress address)
+void ManifoldInstance::remove_output(SegmentAddress address)
 {
     throw std::runtime_error("Not implemented: remove_egress");
 }

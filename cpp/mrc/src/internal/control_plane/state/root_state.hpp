@@ -339,9 +339,9 @@ struct ManifoldInstance : public ResourceTopLevelMessage<protos::ManifoldInstanc
 
     const PipelineInstance& pipeline_instance() const;
 
-    std::map<uint32_t, bool> requested_ingress_segments() const;
+    std::map<uint32_t, bool> requested_output_segments() const;
 
-    std::map<uint32_t, bool> requested_egress_segments() const;
+    std::map<uint32_t, bool> requested_input_segments() const;
 
   private:
     // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;

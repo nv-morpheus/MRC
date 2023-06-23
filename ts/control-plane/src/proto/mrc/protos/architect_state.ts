@@ -578,10 +578,10 @@ export interface PipelineDefinition_ManifoldDefinition {
   parentId: string;
   /** Port name for matching ingress/egress nodes */
   portName: string;
-  /** Segment definition IDs for attached ingress segments. Segment Name/ID pair for cross referencing */
-  ingressSegmentIds: { [key: string]: string };
+  /** Segment definition IDs for attached input segments. Segment Name/ID pair for cross referencing */
+  inputSegmentIds: { [key: string]: string };
   /** Segment definition IDs for attached egress segments. Segment Name/ID pair for cross referencing */
-  egressSegmentIds: { [key: string]: string };
+  outputSegmentIds: { [key: string]: string };
   /** All options for this config */
   options:
     | ManifoldOptions
@@ -590,14 +590,14 @@ export interface PipelineDefinition_ManifoldDefinition {
   instanceIds: string[];
 }
 
-export interface PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
-  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.IngressSegmentIdsEntry";
+export interface PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.InputSegmentIdsEntry";
   key: string;
   value: string;
 }
 
-export interface PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
-  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.EgressSegmentIdsEntry";
+export interface PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.OutputSegmentIdsEntry";
   key: string;
   value: string;
 }
@@ -688,36 +688,36 @@ export interface ManifoldInstance {
   state:
     | ResourceState
     | undefined;
-  /** The requested ingress connections. True = Local, False = Remote */
-  requestedIngressSegments: { [key: number]: boolean };
-  /** The requested egress connections. True = Local, False = Remote */
-  requestedEgressSegments: { [key: number]: boolean };
-  /** The actual ingress connections. True = Local, False = Remote */
-  actualIngressSegments: { [key: number]: boolean };
-  /** The actual egress connections. True = Local, False = Remote */
-  actualEgressSegments: { [key: number]: boolean };
+  /** The requested input connections. True = Local, False = Remote */
+  requestedInputSegments: { [key: number]: boolean };
+  /** The requested output connections. True = Local, False = Remote */
+  requestedOutputSegments: { [key: number]: boolean };
+  /** The actual input connections. True = Local, False = Remote */
+  actualInputSegments: { [key: number]: boolean };
+  /** The actual output connections. True = Local, False = Remote */
+  actualOutputSegments: { [key: number]: boolean };
 }
 
-export interface ManifoldInstance_RequestedIngressSegmentsEntry {
-  $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry";
+export interface ManifoldInstance_RequestedInputSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry";
   key: number;
   value: boolean;
 }
 
-export interface ManifoldInstance_RequestedEgressSegmentsEntry {
-  $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry";
+export interface ManifoldInstance_RequestedOutputSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry";
   key: number;
   value: boolean;
 }
 
-export interface ManifoldInstance_ActualIngressSegmentsEntry {
-  $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry";
+export interface ManifoldInstance_ActualInputSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry";
   key: number;
   value: boolean;
 }
 
-export interface ManifoldInstance_ActualEgressSegmentsEntry {
-  $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry";
+export interface ManifoldInstance_ActualOutputSegmentsEntry {
+  $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry";
   key: number;
   value: boolean;
 }
@@ -2828,8 +2828,8 @@ function createBasePipelineDefinition_ManifoldDefinition(): PipelineDefinition_M
     id: "0",
     parentId: "0",
     portName: "",
-    ingressSegmentIds: {},
-    egressSegmentIds: {},
+    inputSegmentIds: {},
+    outputSegmentIds: {},
     options: undefined,
     instanceIds: [],
   };
@@ -2848,16 +2848,16 @@ export const PipelineDefinition_ManifoldDefinition = {
     if (message.portName !== "") {
       writer.uint32(26).string(message.portName);
     }
-    Object.entries(message.ingressSegmentIds).forEach(([key, value]) => {
-      PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry.encode({
-        $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.IngressSegmentIdsEntry",
+    Object.entries(message.inputSegmentIds).forEach(([key, value]) => {
+      PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.encode({
+        $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.InputSegmentIdsEntry",
         key: key as any,
         value,
       }, writer.uint32(34).fork()).ldelim();
     });
-    Object.entries(message.egressSegmentIds).forEach(([key, value]) => {
-      PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry.encode({
-        $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.EgressSegmentIdsEntry",
+    Object.entries(message.outputSegmentIds).forEach(([key, value]) => {
+      PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.encode({
+        $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.OutputSegmentIdsEntry",
         key: key as any,
         value,
       }, writer.uint32(42).fork()).ldelim();
@@ -2890,15 +2890,15 @@ export const PipelineDefinition_ManifoldDefinition = {
           message.portName = reader.string();
           break;
         case 4:
-          const entry4 = PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry.decode(reader, reader.uint32());
+          const entry4 = PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.decode(reader, reader.uint32());
           if (entry4.value !== undefined) {
-            message.ingressSegmentIds[entry4.key] = entry4.value;
+            message.inputSegmentIds[entry4.key] = entry4.value;
           }
           break;
         case 5:
-          const entry5 = PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry.decode(reader, reader.uint32());
+          const entry5 = PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
-            message.egressSegmentIds[entry5.key] = entry5.value;
+            message.outputSegmentIds[entry5.key] = entry5.value;
           }
           break;
         case 6:
@@ -2928,14 +2928,14 @@ export const PipelineDefinition_ManifoldDefinition = {
       id: isSet(object.id) ? String(object.id) : "0",
       parentId: isSet(object.parentId) ? String(object.parentId) : "0",
       portName: isSet(object.portName) ? String(object.portName) : "",
-      ingressSegmentIds: isObject(object.ingressSegmentIds)
-        ? Object.entries(object.ingressSegmentIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+      inputSegmentIds: isObject(object.inputSegmentIds)
+        ? Object.entries(object.inputSegmentIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
           acc[key] = String(value);
           return acc;
         }, {})
         : {},
-      egressSegmentIds: isObject(object.egressSegmentIds)
-        ? Object.entries(object.egressSegmentIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+      outputSegmentIds: isObject(object.outputSegmentIds)
+        ? Object.entries(object.outputSegmentIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
           acc[key] = String(value);
           return acc;
         }, {})
@@ -2950,16 +2950,16 @@ export const PipelineDefinition_ManifoldDefinition = {
     message.id !== undefined && (obj.id = message.id);
     message.parentId !== undefined && (obj.parentId = message.parentId);
     message.portName !== undefined && (obj.portName = message.portName);
-    obj.ingressSegmentIds = {};
-    if (message.ingressSegmentIds) {
-      Object.entries(message.ingressSegmentIds).forEach(([k, v]) => {
-        obj.ingressSegmentIds[k] = v;
+    obj.inputSegmentIds = {};
+    if (message.inputSegmentIds) {
+      Object.entries(message.inputSegmentIds).forEach(([k, v]) => {
+        obj.inputSegmentIds[k] = v;
       });
     }
-    obj.egressSegmentIds = {};
-    if (message.egressSegmentIds) {
-      Object.entries(message.egressSegmentIds).forEach(([k, v]) => {
-        obj.egressSegmentIds[k] = v;
+    obj.outputSegmentIds = {};
+    if (message.outputSegmentIds) {
+      Object.entries(message.outputSegmentIds).forEach(([k, v]) => {
+        obj.outputSegmentIds[k] = v;
       });
     }
     message.options !== undefined &&
@@ -2981,7 +2981,7 @@ export const PipelineDefinition_ManifoldDefinition = {
     message.id = object.id ?? "0";
     message.parentId = object.parentId ?? "0";
     message.portName = object.portName ?? "";
-    message.ingressSegmentIds = Object.entries(object.ingressSegmentIds ?? {}).reduce<{ [key: string]: string }>(
+    message.inputSegmentIds = Object.entries(object.inputSegmentIds ?? {}).reduce<{ [key: string]: string }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
           acc[key] = String(value);
@@ -2990,7 +2990,7 @@ export const PipelineDefinition_ManifoldDefinition = {
       },
       {},
     );
-    message.egressSegmentIds = Object.entries(object.egressSegmentIds ?? {}).reduce<{ [key: string]: string }>(
+    message.outputSegmentIds = Object.entries(object.outputSegmentIds ?? {}).reduce<{ [key: string]: string }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
           acc[key] = String(value);
@@ -3009,15 +3009,15 @@ export const PipelineDefinition_ManifoldDefinition = {
 
 messageTypeRegistry.set(PipelineDefinition_ManifoldDefinition.$type, PipelineDefinition_ManifoldDefinition);
 
-function createBasePipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry(): PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
-  return { $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.IngressSegmentIdsEntry", key: "", value: "0" };
+function createBasePipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry(): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
+  return { $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.InputSegmentIdsEntry", key: "", value: "0" };
 }
 
-export const PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry = {
-  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.IngressSegmentIdsEntry" as const,
+export const PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry = {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.InputSegmentIdsEntry" as const,
 
   encode(
-    message: PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry,
+    message: PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry,
     writer: _m0.Writer = _m0.Writer.create(),
   ): _m0.Writer {
     if (message.key !== "") {
@@ -3029,13 +3029,10 @@ export const PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry = {
     return writer;
   },
 
-  decode(
-    input: _m0.Reader | Uint8Array,
-    length?: number,
-  ): PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry();
+    const message = createBasePipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3053,15 +3050,15 @@ export const PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry = {
     return message;
   },
 
-  fromJSON(object: any): PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
+  fromJSON(object: any): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
     return {
-      $type: PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry.$type,
+      $type: PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.$type,
       key: isSet(object.key) ? String(object.key) : "",
       value: isSet(object.value) ? String(object.value) : "0",
     };
   },
 
-  toJSON(message: PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry): unknown {
+  toJSON(message: PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
@@ -3069,15 +3066,15 @@ export const PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry = {
   },
 
   create(
-    base?: DeepPartial<PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry>,
-  ): PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
-    return PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry.fromPartial(base ?? {});
+    base?: DeepPartial<PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry>,
+  ): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
+    return PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry>,
-  ): PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry {
-    const message = createBasePipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry();
+    object: DeepPartial<PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry>,
+  ): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
+    const message = createBasePipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry();
     message.key = object.key ?? "";
     message.value = object.value ?? "0";
     return message;
@@ -3085,19 +3082,19 @@ export const PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry = {
 };
 
 messageTypeRegistry.set(
-  PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry.$type,
-  PipelineDefinition_ManifoldDefinition_IngressSegmentIdsEntry,
+  PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.$type,
+  PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry,
 );
 
-function createBasePipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry(): PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
-  return { $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.EgressSegmentIdsEntry", key: "", value: "0" };
+function createBasePipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry(): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
+  return { $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.OutputSegmentIdsEntry", key: "", value: "0" };
 }
 
-export const PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry = {
-  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.EgressSegmentIdsEntry" as const,
+export const PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry = {
+  $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.OutputSegmentIdsEntry" as const,
 
   encode(
-    message: PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry,
+    message: PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry,
     writer: _m0.Writer = _m0.Writer.create(),
   ): _m0.Writer {
     if (message.key !== "") {
@@ -3109,10 +3106,10 @@ export const PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry();
+    const message = createBasePipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -3130,15 +3127,15 @@ export const PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry = {
     return message;
   },
 
-  fromJSON(object: any): PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
+  fromJSON(object: any): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
     return {
-      $type: PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry.$type,
+      $type: PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.$type,
       key: isSet(object.key) ? String(object.key) : "",
       value: isSet(object.value) ? String(object.value) : "0",
     };
   },
 
-  toJSON(message: PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry): unknown {
+  toJSON(message: PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
@@ -3146,15 +3143,15 @@ export const PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry = {
   },
 
   create(
-    base?: DeepPartial<PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry>,
-  ): PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
-    return PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry.fromPartial(base ?? {});
+    base?: DeepPartial<PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry>,
+  ): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
+    return PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry>,
-  ): PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry {
-    const message = createBasePipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry();
+    object: DeepPartial<PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry>,
+  ): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
+    const message = createBasePipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry();
     message.key = object.key ?? "";
     message.value = object.value ?? "0";
     return message;
@@ -3162,8 +3159,8 @@ export const PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry = {
 };
 
 messageTypeRegistry.set(
-  PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry.$type,
-  PipelineDefinition_ManifoldDefinition_EgressSegmentIdsEntry,
+  PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.$type,
+  PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry,
 );
 
 function createBasePipelineDefinition_MappingsEntry(): PipelineDefinition_MappingsEntry {
@@ -3776,10 +3773,10 @@ function createBaseManifoldInstance(): ManifoldInstance {
     machineId: "0",
     pipelineInstanceId: "0",
     state: undefined,
-    requestedIngressSegments: {},
-    requestedEgressSegments: {},
-    actualIngressSegments: {},
-    actualEgressSegments: {},
+    requestedInputSegments: {},
+    requestedOutputSegments: {},
+    actualInputSegments: {},
+    actualOutputSegments: {},
   };
 }
 
@@ -3805,30 +3802,30 @@ export const ManifoldInstance = {
     if (message.state !== undefined) {
       ResourceState.encode(message.state, writer.uint32(50).fork()).ldelim();
     }
-    Object.entries(message.requestedIngressSegments).forEach(([key, value]) => {
-      ManifoldInstance_RequestedIngressSegmentsEntry.encode({
-        $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry",
+    Object.entries(message.requestedInputSegments).forEach(([key, value]) => {
+      ManifoldInstance_RequestedInputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry",
         key: key as any,
         value,
       }, writer.uint32(58).fork()).ldelim();
     });
-    Object.entries(message.requestedEgressSegments).forEach(([key, value]) => {
-      ManifoldInstance_RequestedEgressSegmentsEntry.encode({
-        $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry",
+    Object.entries(message.requestedOutputSegments).forEach(([key, value]) => {
+      ManifoldInstance_RequestedOutputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry",
         key: key as any,
         value,
       }, writer.uint32(66).fork()).ldelim();
     });
-    Object.entries(message.actualIngressSegments).forEach(([key, value]) => {
-      ManifoldInstance_ActualIngressSegmentsEntry.encode({
-        $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry",
+    Object.entries(message.actualInputSegments).forEach(([key, value]) => {
+      ManifoldInstance_ActualInputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry",
         key: key as any,
         value,
       }, writer.uint32(74).fork()).ldelim();
     });
-    Object.entries(message.actualEgressSegments).forEach(([key, value]) => {
-      ManifoldInstance_ActualEgressSegmentsEntry.encode({
-        $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry",
+    Object.entries(message.actualOutputSegments).forEach(([key, value]) => {
+      ManifoldInstance_ActualOutputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry",
         key: key as any,
         value,
       }, writer.uint32(82).fork()).ldelim();
@@ -3862,27 +3859,27 @@ export const ManifoldInstance = {
           message.state = ResourceState.decode(reader, reader.uint32());
           break;
         case 7:
-          const entry7 = ManifoldInstance_RequestedIngressSegmentsEntry.decode(reader, reader.uint32());
+          const entry7 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry7.value !== undefined) {
-            message.requestedIngressSegments[entry7.key] = entry7.value;
+            message.requestedInputSegments[entry7.key] = entry7.value;
           }
           break;
         case 8:
-          const entry8 = ManifoldInstance_RequestedEgressSegmentsEntry.decode(reader, reader.uint32());
+          const entry8 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry8.value !== undefined) {
-            message.requestedEgressSegments[entry8.key] = entry8.value;
+            message.requestedOutputSegments[entry8.key] = entry8.value;
           }
           break;
         case 9:
-          const entry9 = ManifoldInstance_ActualIngressSegmentsEntry.decode(reader, reader.uint32());
+          const entry9 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry9.value !== undefined) {
-            message.actualIngressSegments[entry9.key] = entry9.value;
+            message.actualInputSegments[entry9.key] = entry9.value;
           }
           break;
         case 10:
-          const entry10 = ManifoldInstance_ActualEgressSegmentsEntry.decode(reader, reader.uint32());
+          const entry10 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry10.value !== undefined) {
-            message.actualEgressSegments[entry10.key] = entry10.value;
+            message.actualOutputSegments[entry10.key] = entry10.value;
           }
           break;
         default:
@@ -3902,26 +3899,26 @@ export const ManifoldInstance = {
       machineId: isSet(object.machineId) ? String(object.machineId) : "0",
       pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
-      requestedIngressSegments: isObject(object.requestedIngressSegments)
-        ? Object.entries(object.requestedIngressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+      requestedInputSegments: isObject(object.requestedInputSegments)
+        ? Object.entries(object.requestedInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
           acc[Number(key)] = Boolean(value);
           return acc;
         }, {})
         : {},
-      requestedEgressSegments: isObject(object.requestedEgressSegments)
-        ? Object.entries(object.requestedEgressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+      requestedOutputSegments: isObject(object.requestedOutputSegments)
+        ? Object.entries(object.requestedOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
           acc[Number(key)] = Boolean(value);
           return acc;
         }, {})
         : {},
-      actualIngressSegments: isObject(object.actualIngressSegments)
-        ? Object.entries(object.actualIngressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+      actualInputSegments: isObject(object.actualInputSegments)
+        ? Object.entries(object.actualInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
           acc[Number(key)] = Boolean(value);
           return acc;
         }, {})
         : {},
-      actualEgressSegments: isObject(object.actualEgressSegments)
-        ? Object.entries(object.actualEgressSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+      actualOutputSegments: isObject(object.actualOutputSegments)
+        ? Object.entries(object.actualOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
           acc[Number(key)] = Boolean(value);
           return acc;
         }, {})
@@ -3937,28 +3934,28 @@ export const ManifoldInstance = {
     message.machineId !== undefined && (obj.machineId = message.machineId);
     message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
-    obj.requestedIngressSegments = {};
-    if (message.requestedIngressSegments) {
-      Object.entries(message.requestedIngressSegments).forEach(([k, v]) => {
-        obj.requestedIngressSegments[k] = v;
+    obj.requestedInputSegments = {};
+    if (message.requestedInputSegments) {
+      Object.entries(message.requestedInputSegments).forEach(([k, v]) => {
+        obj.requestedInputSegments[k] = v;
       });
     }
-    obj.requestedEgressSegments = {};
-    if (message.requestedEgressSegments) {
-      Object.entries(message.requestedEgressSegments).forEach(([k, v]) => {
-        obj.requestedEgressSegments[k] = v;
+    obj.requestedOutputSegments = {};
+    if (message.requestedOutputSegments) {
+      Object.entries(message.requestedOutputSegments).forEach(([k, v]) => {
+        obj.requestedOutputSegments[k] = v;
       });
     }
-    obj.actualIngressSegments = {};
-    if (message.actualIngressSegments) {
-      Object.entries(message.actualIngressSegments).forEach(([k, v]) => {
-        obj.actualIngressSegments[k] = v;
+    obj.actualInputSegments = {};
+    if (message.actualInputSegments) {
+      Object.entries(message.actualInputSegments).forEach(([k, v]) => {
+        obj.actualInputSegments[k] = v;
       });
     }
-    obj.actualEgressSegments = {};
-    if (message.actualEgressSegments) {
-      Object.entries(message.actualEgressSegments).forEach(([k, v]) => {
-        obj.actualEgressSegments[k] = v;
+    obj.actualOutputSegments = {};
+    if (message.actualOutputSegments) {
+      Object.entries(message.actualOutputSegments).forEach(([k, v]) => {
+        obj.actualOutputSegments[k] = v;
       });
     }
     return obj;
@@ -3978,7 +3975,7 @@ export const ManifoldInstance = {
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
-    message.requestedIngressSegments = Object.entries(object.requestedIngressSegments ?? {}).reduce<
+    message.requestedInputSegments = Object.entries(object.requestedInputSegments ?? {}).reduce<
       { [key: number]: boolean }
     >((acc, [key, value]) => {
       if (value !== undefined) {
@@ -3986,7 +3983,7 @@ export const ManifoldInstance = {
       }
       return acc;
     }, {});
-    message.requestedEgressSegments = Object.entries(object.requestedEgressSegments ?? {}).reduce<
+    message.requestedOutputSegments = Object.entries(object.requestedOutputSegments ?? {}).reduce<
       { [key: number]: boolean }
     >((acc, [key, value]) => {
       if (value !== undefined) {
@@ -3994,15 +3991,16 @@ export const ManifoldInstance = {
       }
       return acc;
     }, {});
-    message.actualIngressSegments = Object.entries(object.actualIngressSegments ?? {}).reduce<
-      { [key: number]: boolean }
-    >((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[Number(key)] = Boolean(value);
-      }
-      return acc;
-    }, {});
-    message.actualEgressSegments = Object.entries(object.actualEgressSegments ?? {}).reduce<{ [key: number]: boolean }>(
+    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[Number(key)] = Boolean(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: number]: boolean }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
           acc[Number(key)] = Boolean(value);
@@ -4017,17 +4015,14 @@ export const ManifoldInstance = {
 
 messageTypeRegistry.set(ManifoldInstance.$type, ManifoldInstance);
 
-function createBaseManifoldInstance_RequestedIngressSegmentsEntry(): ManifoldInstance_RequestedIngressSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry", key: 0, value: false };
+function createBaseManifoldInstance_RequestedInputSegmentsEntry(): ManifoldInstance_RequestedInputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry", key: 0, value: false };
 }
 
-export const ManifoldInstance_RequestedIngressSegmentsEntry = {
-  $type: "mrc.protos.ManifoldInstance.RequestedIngressSegmentsEntry" as const,
+export const ManifoldInstance_RequestedInputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry" as const,
 
-  encode(
-    message: ManifoldInstance_RequestedIngressSegmentsEntry,
-    writer: _m0.Writer = _m0.Writer.create(),
-  ): _m0.Writer {
+  encode(message: ManifoldInstance_RequestedInputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
     }
@@ -4037,10 +4032,10 @@ export const ManifoldInstance_RequestedIngressSegmentsEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedIngressSegmentsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedInputSegmentsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseManifoldInstance_RequestedIngressSegmentsEntry();
+    const message = createBaseManifoldInstance_RequestedInputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -4058,15 +4053,15 @@ export const ManifoldInstance_RequestedIngressSegmentsEntry = {
     return message;
   },
 
-  fromJSON(object: any): ManifoldInstance_RequestedIngressSegmentsEntry {
+  fromJSON(object: any): ManifoldInstance_RequestedInputSegmentsEntry {
     return {
-      $type: ManifoldInstance_RequestedIngressSegmentsEntry.$type,
+      $type: ManifoldInstance_RequestedInputSegmentsEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
-  toJSON(message: ManifoldInstance_RequestedIngressSegmentsEntry): unknown {
+  toJSON(message: ManifoldInstance_RequestedInputSegmentsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = Math.round(message.key));
     message.value !== undefined && (obj.value = message.value);
@@ -4074,15 +4069,15 @@ export const ManifoldInstance_RequestedIngressSegmentsEntry = {
   },
 
   create(
-    base?: DeepPartial<ManifoldInstance_RequestedIngressSegmentsEntry>,
-  ): ManifoldInstance_RequestedIngressSegmentsEntry {
-    return ManifoldInstance_RequestedIngressSegmentsEntry.fromPartial(base ?? {});
+    base?: DeepPartial<ManifoldInstance_RequestedInputSegmentsEntry>,
+  ): ManifoldInstance_RequestedInputSegmentsEntry {
+    return ManifoldInstance_RequestedInputSegmentsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<ManifoldInstance_RequestedIngressSegmentsEntry>,
-  ): ManifoldInstance_RequestedIngressSegmentsEntry {
-    const message = createBaseManifoldInstance_RequestedIngressSegmentsEntry();
+    object: DeepPartial<ManifoldInstance_RequestedInputSegmentsEntry>,
+  ): ManifoldInstance_RequestedInputSegmentsEntry {
+    const message = createBaseManifoldInstance_RequestedInputSegmentsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? false;
     return message;
@@ -4090,18 +4085,18 @@ export const ManifoldInstance_RequestedIngressSegmentsEntry = {
 };
 
 messageTypeRegistry.set(
-  ManifoldInstance_RequestedIngressSegmentsEntry.$type,
-  ManifoldInstance_RequestedIngressSegmentsEntry,
+  ManifoldInstance_RequestedInputSegmentsEntry.$type,
+  ManifoldInstance_RequestedInputSegmentsEntry,
 );
 
-function createBaseManifoldInstance_RequestedEgressSegmentsEntry(): ManifoldInstance_RequestedEgressSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry", key: 0, value: false };
+function createBaseManifoldInstance_RequestedOutputSegmentsEntry(): ManifoldInstance_RequestedOutputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry", key: 0, value: false };
 }
 
-export const ManifoldInstance_RequestedEgressSegmentsEntry = {
-  $type: "mrc.protos.ManifoldInstance.RequestedEgressSegmentsEntry" as const,
+export const ManifoldInstance_RequestedOutputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry" as const,
 
-  encode(message: ManifoldInstance_RequestedEgressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: ManifoldInstance_RequestedOutputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
     }
@@ -4111,10 +4106,10 @@ export const ManifoldInstance_RequestedEgressSegmentsEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedEgressSegmentsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedOutputSegmentsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseManifoldInstance_RequestedEgressSegmentsEntry();
+    const message = createBaseManifoldInstance_RequestedOutputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -4132,15 +4127,15 @@ export const ManifoldInstance_RequestedEgressSegmentsEntry = {
     return message;
   },
 
-  fromJSON(object: any): ManifoldInstance_RequestedEgressSegmentsEntry {
+  fromJSON(object: any): ManifoldInstance_RequestedOutputSegmentsEntry {
     return {
-      $type: ManifoldInstance_RequestedEgressSegmentsEntry.$type,
+      $type: ManifoldInstance_RequestedOutputSegmentsEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
-  toJSON(message: ManifoldInstance_RequestedEgressSegmentsEntry): unknown {
+  toJSON(message: ManifoldInstance_RequestedOutputSegmentsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = Math.round(message.key));
     message.value !== undefined && (obj.value = message.value);
@@ -4148,15 +4143,15 @@ export const ManifoldInstance_RequestedEgressSegmentsEntry = {
   },
 
   create(
-    base?: DeepPartial<ManifoldInstance_RequestedEgressSegmentsEntry>,
-  ): ManifoldInstance_RequestedEgressSegmentsEntry {
-    return ManifoldInstance_RequestedEgressSegmentsEntry.fromPartial(base ?? {});
+    base?: DeepPartial<ManifoldInstance_RequestedOutputSegmentsEntry>,
+  ): ManifoldInstance_RequestedOutputSegmentsEntry {
+    return ManifoldInstance_RequestedOutputSegmentsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<ManifoldInstance_RequestedEgressSegmentsEntry>,
-  ): ManifoldInstance_RequestedEgressSegmentsEntry {
-    const message = createBaseManifoldInstance_RequestedEgressSegmentsEntry();
+    object: DeepPartial<ManifoldInstance_RequestedOutputSegmentsEntry>,
+  ): ManifoldInstance_RequestedOutputSegmentsEntry {
+    const message = createBaseManifoldInstance_RequestedOutputSegmentsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? false;
     return message;
@@ -4164,18 +4159,18 @@ export const ManifoldInstance_RequestedEgressSegmentsEntry = {
 };
 
 messageTypeRegistry.set(
-  ManifoldInstance_RequestedEgressSegmentsEntry.$type,
-  ManifoldInstance_RequestedEgressSegmentsEntry,
+  ManifoldInstance_RequestedOutputSegmentsEntry.$type,
+  ManifoldInstance_RequestedOutputSegmentsEntry,
 );
 
-function createBaseManifoldInstance_ActualIngressSegmentsEntry(): ManifoldInstance_ActualIngressSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry", key: 0, value: false };
+function createBaseManifoldInstance_ActualInputSegmentsEntry(): ManifoldInstance_ActualInputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry", key: 0, value: false };
 }
 
-export const ManifoldInstance_ActualIngressSegmentsEntry = {
-  $type: "mrc.protos.ManifoldInstance.ActualIngressSegmentsEntry" as const,
+export const ManifoldInstance_ActualInputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry" as const,
 
-  encode(message: ManifoldInstance_ActualIngressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: ManifoldInstance_ActualInputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
     }
@@ -4185,10 +4180,10 @@ export const ManifoldInstance_ActualIngressSegmentsEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualIngressSegmentsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualInputSegmentsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseManifoldInstance_ActualIngressSegmentsEntry();
+    const message = createBaseManifoldInstance_ActualInputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -4206,45 +4201,45 @@ export const ManifoldInstance_ActualIngressSegmentsEntry = {
     return message;
   },
 
-  fromJSON(object: any): ManifoldInstance_ActualIngressSegmentsEntry {
+  fromJSON(object: any): ManifoldInstance_ActualInputSegmentsEntry {
     return {
-      $type: ManifoldInstance_ActualIngressSegmentsEntry.$type,
+      $type: ManifoldInstance_ActualInputSegmentsEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
-  toJSON(message: ManifoldInstance_ActualIngressSegmentsEntry): unknown {
+  toJSON(message: ManifoldInstance_ActualInputSegmentsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = Math.round(message.key));
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
 
-  create(base?: DeepPartial<ManifoldInstance_ActualIngressSegmentsEntry>): ManifoldInstance_ActualIngressSegmentsEntry {
-    return ManifoldInstance_ActualIngressSegmentsEntry.fromPartial(base ?? {});
+  create(base?: DeepPartial<ManifoldInstance_ActualInputSegmentsEntry>): ManifoldInstance_ActualInputSegmentsEntry {
+    return ManifoldInstance_ActualInputSegmentsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<ManifoldInstance_ActualIngressSegmentsEntry>,
-  ): ManifoldInstance_ActualIngressSegmentsEntry {
-    const message = createBaseManifoldInstance_ActualIngressSegmentsEntry();
+    object: DeepPartial<ManifoldInstance_ActualInputSegmentsEntry>,
+  ): ManifoldInstance_ActualInputSegmentsEntry {
+    const message = createBaseManifoldInstance_ActualInputSegmentsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? false;
     return message;
   },
 };
 
-messageTypeRegistry.set(ManifoldInstance_ActualIngressSegmentsEntry.$type, ManifoldInstance_ActualIngressSegmentsEntry);
+messageTypeRegistry.set(ManifoldInstance_ActualInputSegmentsEntry.$type, ManifoldInstance_ActualInputSegmentsEntry);
 
-function createBaseManifoldInstance_ActualEgressSegmentsEntry(): ManifoldInstance_ActualEgressSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry", key: 0, value: false };
+function createBaseManifoldInstance_ActualOutputSegmentsEntry(): ManifoldInstance_ActualOutputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry", key: 0, value: false };
 }
 
-export const ManifoldInstance_ActualEgressSegmentsEntry = {
-  $type: "mrc.protos.ManifoldInstance.ActualEgressSegmentsEntry" as const,
+export const ManifoldInstance_ActualOutputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry" as const,
 
-  encode(message: ManifoldInstance_ActualEgressSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: ManifoldInstance_ActualOutputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.key !== 0) {
       writer.uint32(8).uint32(message.key);
     }
@@ -4254,10 +4249,10 @@ export const ManifoldInstance_ActualEgressSegmentsEntry = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualEgressSegmentsEntry {
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualOutputSegmentsEntry {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseManifoldInstance_ActualEgressSegmentsEntry();
+    const message = createBaseManifoldInstance_ActualOutputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -4275,36 +4270,36 @@ export const ManifoldInstance_ActualEgressSegmentsEntry = {
     return message;
   },
 
-  fromJSON(object: any): ManifoldInstance_ActualEgressSegmentsEntry {
+  fromJSON(object: any): ManifoldInstance_ActualOutputSegmentsEntry {
     return {
-      $type: ManifoldInstance_ActualEgressSegmentsEntry.$type,
+      $type: ManifoldInstance_ActualOutputSegmentsEntry.$type,
       key: isSet(object.key) ? Number(object.key) : 0,
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
-  toJSON(message: ManifoldInstance_ActualEgressSegmentsEntry): unknown {
+  toJSON(message: ManifoldInstance_ActualOutputSegmentsEntry): unknown {
     const obj: any = {};
     message.key !== undefined && (obj.key = Math.round(message.key));
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
 
-  create(base?: DeepPartial<ManifoldInstance_ActualEgressSegmentsEntry>): ManifoldInstance_ActualEgressSegmentsEntry {
-    return ManifoldInstance_ActualEgressSegmentsEntry.fromPartial(base ?? {});
+  create(base?: DeepPartial<ManifoldInstance_ActualOutputSegmentsEntry>): ManifoldInstance_ActualOutputSegmentsEntry {
+    return ManifoldInstance_ActualOutputSegmentsEntry.fromPartial(base ?? {});
   },
 
   fromPartial(
-    object: DeepPartial<ManifoldInstance_ActualEgressSegmentsEntry>,
-  ): ManifoldInstance_ActualEgressSegmentsEntry {
-    const message = createBaseManifoldInstance_ActualEgressSegmentsEntry();
+    object: DeepPartial<ManifoldInstance_ActualOutputSegmentsEntry>,
+  ): ManifoldInstance_ActualOutputSegmentsEntry {
+    const message = createBaseManifoldInstance_ActualOutputSegmentsEntry();
     message.key = object.key ?? 0;
     message.value = object.value ?? false;
     return message;
   },
 };
 
-messageTypeRegistry.set(ManifoldInstance_ActualEgressSegmentsEntry.$type, ManifoldInstance_ActualEgressSegmentsEntry);
+messageTypeRegistry.set(ManifoldInstance_ActualOutputSegmentsEntry.$type, ManifoldInstance_ActualOutputSegmentsEntry);
 
 function createBaseControlPlaneState(): ControlPlaneState {
   return {

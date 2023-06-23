@@ -94,7 +94,7 @@ export const manifoldInstancesSlice = createSlice({
          state,
          action: PayloadAction<{
             manifold: IManifoldInstance;
-            is_ingress: boolean;
+            is_input: boolean;
             segment: ISegmentInstance;
             is_local: boolean;
          }>
@@ -106,25 +106,25 @@ export const manifoldInstancesSlice = createSlice({
          }
 
          // Check to make sure this hasnt been added already
-         if (action.payload.is_ingress) {
-            if (action.payload.segment.address in found.requestedIngressSegments) {
+         if (action.payload.is_input) {
+            if (action.payload.segment.address in found.requestedInputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
-            found.requestedIngressSegments[action.payload.segment.address] = action.payload.is_local;
+            found.requestedInputSegments[action.payload.segment.address] = action.payload.is_local;
          } else {
-            if (action.payload.segment.address in found.requestedEgressSegments) {
+            if (action.payload.segment.address in found.requestedOutputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
-            found.requestedEgressSegments[action.payload.segment.address] = action.payload.is_local;
+            found.requestedOutputSegments[action.payload.segment.address] = action.payload.is_local;
          }
       },
       detachRequestedSegment: (
          state,
          action: PayloadAction<{
             manifold: IManifoldInstance;
-            is_ingress: boolean;
+            is_input: boolean;
             segment: ISegmentInstance;
          }>
       ) => {
@@ -135,18 +135,18 @@ export const manifoldInstancesSlice = createSlice({
          }
 
          // Check to make sure its already added
-         if (action.payload.is_ingress) {
-            if (!(action.payload.segment.address in found.requestedIngressSegments)) {
+         if (action.payload.is_input) {
+            if (!(action.payload.segment.address in found.requestedInputSegments)) {
                throw new Error("Segment not attached to manifold");
             }
 
-            delete found.requestedIngressSegments[action.payload.segment.address];
+            delete found.requestedInputSegments[action.payload.segment.address];
          } else {
-            if (!(action.payload.segment.address in found.requestedEgressSegments)) {
+            if (!(action.payload.segment.address in found.requestedOutputSegments)) {
                throw new Error("Segment not attached to manifold");
             }
 
-            delete found.requestedEgressSegments[action.payload.segment.address];
+            delete found.requestedOutputSegments[action.payload.segment.address];
          }
       },
    },
@@ -168,7 +168,7 @@ function syncSegmentNameForManifold(
    state: RootState,
    manifold: IManifoldInstance,
    segmentName: string,
-   isIngress: boolean
+   isInput: boolean
 ) {
    // Find all segments that match this name and definition pair
    const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(
@@ -188,9 +188,7 @@ function syncSegmentNameForManifold(
       )
       .map((s) => s.id);
 
-   const currentSegmentIds = Object.keys(
-      isIngress ? manifold.requestedIngressSegments : manifold.requestedEgressSegments
-   );
+   const currentSegmentIds = Object.keys(isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments);
 
    // Determine any that need to be added
    const toAdd = activeSegmentIds.filter((s) => !currentSegmentIds.includes(s));
@@ -208,7 +206,7 @@ function syncSegmentNameForManifold(
       // Dispatch the attach action
       dispatch(
          manifoldInstancesSlice.actions.attachRequestedSegment({
-            is_ingress: isIngress,
+            is_input: isInput,
             is_local: is_local,
             manifold: manifold,
             segment: seg,
@@ -229,7 +227,7 @@ function syncSegmentNameForManifold(
       // Dispatch the attach action
       dispatch(
          manifoldInstancesSlice.actions.detachRequestedSegment({
-            is_ingress: isIngress,
+            is_input: isInput,
             manifold: manifold,
             segment: seg,
          })
@@ -263,13 +261,13 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
       const manifold_def = pipeline_def.manifolds[found.portName];
 
       // For each ingress, sync all segments
-      Object.entries(manifold_def.ingressSegmentIds).forEach(([segmentName]) => {
-         syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
+      Object.entries(manifold_def.outputSegmentIds).forEach(([segmentName]) => {
+         syncSegmentNameForManifold(dispatch, state, found, segmentName, false);
       });
 
       // For each egress, sync all segments
-      Object.entries(manifold_def.egressSegmentIds).forEach(([segmentName]) => {
-         syncSegmentNameForManifold(dispatch, state, found, segmentName, false);
+      Object.entries(manifold_def.inputSegmentIds).forEach(([segmentName]) => {
+         syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
       });
    };
 }

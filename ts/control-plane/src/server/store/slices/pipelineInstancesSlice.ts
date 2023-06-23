@@ -201,14 +201,14 @@ async function manifoldsFromInstance(
    const manifolds = Object.entries(pipeline_def.manifolds).map(([manifold_name, manifold_def]) => {
       return {
          id: generateId(),
-         actualEgressSegments: {},
-         actualIngressSegments: {},
+         actualInputSegments: {},
+         actualOutputSegments: {},
          machineId: pipelineInstance.machineId,
          pipelineDefinitionId: pipeline_def.id,
          pipelineInstanceId: pipelineInstance.id,
          portName: manifold_name,
-         requestedEgressSegments: {},
-         requestedIngressSegments: {},
+         requestedInputSegments: {},
+         requestedOutputSegments: {},
          state: {
             refCount: 0,
             requestedStatus: ResourceRequestedStatus.Requested_Created,

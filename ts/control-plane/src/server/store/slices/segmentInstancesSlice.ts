@@ -275,14 +275,14 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
          return listenerApi.dispatch(
             manifoldInstancesAdd({
                id: generateId(),
-               actualEgressSegments: {},
-               actualIngressSegments: {},
+               actualInputSegments: {},
+               actualOutputSegments: {},
                machineId: pipeline_instance.machineId,
                pipelineDefinitionId: pipeline_def.id,
                pipelineInstanceId: pipeline_instance.id,
                portName: port_name,
-               requestedEgressSegments: {},
-               requestedIngressSegments: {},
+               requestedInputSegments: {},
+               requestedOutputSegments: {},
                state: {
                   refCount: 0,
                   requestedStatus: ResourceRequestedStatus.Requested_Created,

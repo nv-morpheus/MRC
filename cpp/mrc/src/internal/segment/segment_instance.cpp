@@ -124,7 +124,7 @@ void SegmentInstance::service_start_impl()
     {
         DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-        pipeline_instance.get_manifold_instance(name).register_local_egress(m_address, node);
+        pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
         // node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
@@ -143,7 +143,7 @@ void SegmentInstance::service_start_impl()
     {
         DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-        pipeline_instance.get_manifold_instance(name).register_local_ingress(m_address, node);
+        pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
         node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
@@ -386,7 +386,7 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_egress(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
             // node->connect_to_manifold(pipeline_instance.get_manifold(name));
 
@@ -405,7 +405,7 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_ingress(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
             // node->connect_to_manifold(pipeline_instance.get_manifold(name));
 

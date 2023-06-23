@@ -137,6 +137,18 @@ class Ports
         return names;
     }
 
+    std::vector<std::type_index> type_indices() const
+    {
+        std::vector<std::type_index> type_indices;
+
+        for (const auto& [name, info] : m_info)
+        {
+            type_indices.push_back(info.type_index);
+        }
+
+        return type_indices;
+    }
+
     // const std::vector<std::string>& names() const
     // {
     //     return m_names;

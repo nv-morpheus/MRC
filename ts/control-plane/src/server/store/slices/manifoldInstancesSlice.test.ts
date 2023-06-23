@@ -87,15 +87,15 @@ describe("Single", () => {
       expect(found).toHaveLength(manifolds.length);
 
       found.forEach((m) => {
-         expect(m.actualEgressSegments).toEqual(manifolds_map[m.portName].actualEgressSegments);
-         expect(m.actualIngressSegments).toEqual(manifolds_map[m.portName].actualIngressSegments);
+         expect(m.actualInputSegments).toEqual(manifolds_map[m.portName].actualInputSegments);
+         expect(m.actualOutputSegments).toEqual(manifolds_map[m.portName].actualOutputSegments);
          expect(m.id).toEqual(manifolds_map[m.portName].id);
          expect(m.machineId).toEqual(manifolds_map[m.portName].machineId);
          expect(m.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(m.pipelineInstanceId).toEqual(pipeline.id);
          expect(m.portName).toEqual(manifolds_map[m.portName].portName);
-         expect(m.requestedEgressSegments).toEqual(manifolds_map[m.portName].requestedEgressSegments);
-         expect(m.requestedIngressSegments).toEqual(manifolds_map[m.portName].requestedIngressSegments);
+         expect(m.requestedInputSegments).toEqual(manifolds_map[m.portName].requestedInputSegments);
+         expect(m.requestedOutputSegments).toEqual(manifolds_map[m.portName].requestedOutputSegments);
          expect(m.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
       });
    });

@@ -42,8 +42,8 @@ export class PipelineDefinitionWrapper {
                   portName: man_name,
                   options: man_config.options,
                   instanceIds: [],
-                  egressSegmentIds: {},
-                  ingressSegmentIds: {},
+                  outputSegmentIds: {},
+                  inputSegmentIds: {},
                } as IManifoldDefinition,
             ];
          })
@@ -58,14 +58,14 @@ export class PipelineDefinitionWrapper {
 
             // Cross reference the egress ports (i.e. ingress on the manifold)
             egressManifolds.forEach((p) => {
-               p.ingressSegmentIds[seg_name] = config_hash;
+               p.inputSegmentIds[seg_name] = config_hash;
             });
 
             const ingressManifolds = seg_config.ingressPorts.map((p) => manifolds[p]);
 
             // Cross reference the ingress ports (i.e. egress on the manifold)
             ingressManifolds.forEach((p) => {
-               p.egressSegmentIds[seg_name] = config_hash;
+               p.outputSegmentIds[seg_name] = config_hash;
             });
 
             return [

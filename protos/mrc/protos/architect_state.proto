@@ -240,11 +240,11 @@ message PipelineDefinition {
       // Port name for matching ingress/egress nodes
       string port_name = 3;
 
-      // Segment definition IDs for attached ingress segments. Segment Name/ID pair for cross referencing
-      map<string, uint64> ingress_segment_ids = 4;
+      // Segment definition IDs for attached input segments. Segment Name/ID pair for cross referencing
+      map<string, uint64> input_segment_ids = 4;
 
       // Segment definition IDs for attached egress segments. Segment Name/ID pair for cross referencing
-      map<string, uint64> egress_segment_ids = 5;
+      map<string, uint64> output_segment_ids = 5;
 
       // All options for this config
       ManifoldOptions options = 6;
@@ -365,17 +365,17 @@ message ManifoldInstance {
    // The current state of this resource
    ResourceState state = 6;
 
-   // The requested ingress connections. True = Local, False = Remote
-   map<uint32, bool> requested_ingress_segments = 7;
+   // The requested input connections. True = Local, False = Remote
+   map<uint32, bool> requested_input_segments = 7;
 
-   // The requested egress connections. True = Local, False = Remote
-   map<uint32, bool> requested_egress_segments = 8;
+   // The requested output connections. True = Local, False = Remote
+   map<uint32, bool> requested_output_segments = 8;
 
-   // The actual ingress connections. True = Local, False = Remote
-   map<uint32, bool> actual_ingress_segments = 9;
+   // The actual input connections. True = Local, False = Remote
+   map<uint32, bool> actual_input_segments = 9;
 
-   // The actual egress connections. True = Local, False = Remote
-   map<uint32, bool> actual_egress_segments = 10;
+   // The actual output connections. True = Local, False = Remote
+   map<uint32, bool> actual_output_segments = 10;
 }
 
 message ControlPlaneState {

@@ -435,16 +435,26 @@ const PipelineInstance& ManifoldInstance::pipeline_instance() const
     return MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, m_message.pipeline_instance_id());
 }
 
-std::map<uint32_t, bool> ManifoldInstance::requested_ingress_segments() const
+std::map<uint32_t, bool> ManifoldInstance::requested_output_segments() const
 {
     std::map<uint32_t, bool> mapping;
+
+    for (const auto& [seg_id, is_local] : m_message.requested_output_segments())
+    {
+        mapping.emplace(seg_id, is_local);
+    }
 
     return mapping;
 }
 
-std::map<uint32_t, bool> ManifoldInstance::requested_egress_segments() const
+std::map<uint32_t, bool> ManifoldInstance::requested_input_segments() const
 {
     std::map<uint32_t, bool> mapping;
+
+    for (const auto& [seg_id, is_local] : m_message.requested_input_segments())
+    {
+        mapping.emplace(seg_id, is_local);
+    }
 
     return mapping;
 }

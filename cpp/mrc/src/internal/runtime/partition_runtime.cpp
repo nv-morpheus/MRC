@@ -115,6 +115,8 @@ std::unique_ptr<mrc::codable::ICodableStorage> PartitionRuntime::make_codable_st
 
 void PartitionRuntime::do_service_start(std::stop_token stop_token)
 {
+    Promise<void> completed_promise;
+
     // First thing, need to register this worker with the control plane
     protos::RegisterWorkersRequest req;
 
@@ -127,12 +129,46 @@ void PartitionRuntime::do_service_start(std::stop_token stop_token)
 
     auto worker_id = resp->instance_ids(0);
 
-    m_segments_manager = std::make_unique<SegmentsManager>(*this, worker_id);
+    // Block until we get a state update with this worker
+    this->control_plane()
+        .state_update_obs()
+        .filter([worker_id](const control_plane::state::ControlPlaneState& state) {
+            return state.workers().contains(worker_id);
+        })
+        .map([worker_id](const control_plane::state::ControlPlaneState& state) {
+            return state.workers().at(worker_id);
+        })
+        .first()
+        .subscribe(
+            [this](auto state) {
+                m_segments_manager = std::make_unique<SegmentsManager>(*this, state.id());
 
-    // Start the child service
-    this->child_service_start(*m_segments_manager);
+                // Mark started first otherwise this deadlocks
+                this->mark_started();
 
-    this->mark_started();
+                // Start the child service
+                this->child_service_start(*m_segments_manager);
+            },
+            [this, &completed_promise](std::exception_ptr ex_ptr) {
+                try
+                {
+                    std::rethrow_exception(ex_ptr);
+                } catch (const std::exception& ex)
+                {
+                    LOG(ERROR) << this->debug_prefix() << " Error in subscription. Message: " << ex.what();
+                }
+
+                this->service_kill();
+
+                // Must call the completed promise
+                completed_promise.set_value();
+            },
+            [&completed_promise] {
+                completed_promise.set_value();
+            });
+
+    // Yield until the observable is finished
+    completed_promise.get_future().get();
 }
 
 std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher_service(

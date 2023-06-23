@@ -51,11 +51,11 @@ class ManifoldInstance final : public runtime::ResourceManagerBase<control_plane
                      InstanceID instance_id);
     ~ManifoldInstance() override;
 
-    void register_local_ingress(SegmentAddress address, std::shared_ptr<segment::IngressPortBase> ingress_port);
-    void register_local_egress(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> egress_port);
+    void register_local_output(SegmentAddress address, std::shared_ptr<segment::IngressPortBase> ingress_port);
+    void register_local_input(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> egress_port);
 
-    void unregister_local_ingress(SegmentAddress address);
-    void unregister_local_egress(SegmentAddress address);
+    void unregister_local_output(SegmentAddress address);
+    void unregister_local_input(SegmentAddress address);
 
     std::shared_ptr<manifold::Interface> get_interface() const;
 
@@ -69,11 +69,11 @@ class ManifoldInstance final : public runtime::ResourceManagerBase<control_plane
 
     void on_running_state_updated(control_plane::state::ManifoldInstance& instance) override;
 
-    void add_ingress(SegmentAddress address, bool is_local);
-    void add_egress(SegmentAddress address, bool is_local);
+    void add_input(SegmentAddress address, bool is_local);
+    void add_output(SegmentAddress address, bool is_local);
 
-    void remove_ingress(SegmentAddress address);
-    void remove_egress(SegmentAddress address);
+    void remove_input(SegmentAddress address);
+    void remove_output(SegmentAddress address);
 
     std::shared_ptr<const ManifoldDefinition> m_definition;
 
@@ -84,8 +84,8 @@ class ManifoldInstance final : public runtime::ResourceManagerBase<control_plane
     std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
     std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
 
-    std::map<SegmentAddress, bool> m_actual_ingress_segments;
-    std::map<SegmentAddress, bool> m_actual_egress_segments;
+    std::map<SegmentAddress, bool> m_actual_input_segments;
+    std::map<SegmentAddress, bool> m_actual_output_segments;
 };
 
 }  // namespace mrc::pipeline
