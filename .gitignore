@@ -72,10 +72,6 @@ wheels/
 *.egg
 MANIFEST
 
-# Redux/nodejs
-node_modules/
-ts/control-plane/src/proto/typeRegistry.ts
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
