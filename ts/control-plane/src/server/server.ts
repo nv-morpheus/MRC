@@ -24,7 +24,8 @@ export class ArchitectServer {
    public async start() {
       const port = await this._server.listen(this.hostname, ServerCredentials.createInsecure());
 
-      console.log(`server is running on 0.0.0.0:${port}`);
+      console.log(`server is running on ${this.hostname}`);
+
 
       this._completed_promise = new Promise<void>((resolve, reject) => {
          // Save the resolve function to signal this outside of this function

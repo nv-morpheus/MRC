@@ -70,6 +70,14 @@ export class WorkersManager {
       return this._registerResponse ?? throwExpression("Must register first");
    }
 
+   public async unregister() {
+      if (this.connectionManager.isRegistered) {
+         await this.connectionManager.unregister();
+      }
+
+      this._registerResponse = undefined;
+   }
+
    public async createResources() {
       if (this.isCreated) {
          throw new Error("Already created");
