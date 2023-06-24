@@ -4,9 +4,10 @@ import { ArchitectServer } from "@mrc/server/server";
 import { setupStore } from "@mrc/server/store/store";
 
 async function main() {
-   console.log("Sleeping...");
-   await sleep(4000);
-   console.log("Sleeping... Done");
+   // Uncomment to debug startup errors. Need to sleep since the debugger doesnt attach in time
+   // console.log("Sleeping...");
+   // await sleep(4000);
+   // console.log("Sleeping... Done");
 
    const addDevTools = process.env.NODE_ENV !== "production";
 

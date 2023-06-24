@@ -1,6 +1,6 @@
 /* eslint-disable */
-import _m0 from "protobufjs/minimal.js";
-import { messageTypeRegistry } from "../../typeRegistry.js";
+import _m0 from "protobufjs/minimal";
+import { messageTypeRegistry } from "../../typeRegistry";
 
 export const protobufPackage = "google.protobuf";
 

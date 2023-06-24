@@ -85,98 +85,98 @@ SegmentAddress SegmentInstance::address() const
     return m_address;
 }
 
-void SegmentInstance::service_start_impl()
-{
-    // We construct the builder resources here since we are on the correct numa node
-    m_builder = std::make_unique<BuilderDefinition>(*this, m_definition, m_address);
+// void SegmentInstance::service_start_impl()
+// {
+//     // We construct the builder resources here since we are on the correct numa node
+//     m_builder = std::make_unique<BuilderDefinition>(*this, m_definition, m_address);
 
-    m_builder->initialize();
+//     m_builder->initialize();
 
-    // Get a reference to the pipeline instance
-    auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_pipeline_instance_id);
+//     // Get a reference to the pipeline instance
+//     auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_pipeline_instance_id);
 
-    // prepare launchers from m_builder
-    // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
-    // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> ingress_launchers;
+//     // prepare launchers from m_builder
+//     // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
+//     // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> ingress_launchers;
 
-    auto apply_callback = [this](std::unique_ptr<mrc::runnable::Launcher>& launcher, std::string name) {
-        launcher->apply([this, n = std::move(name)](mrc::runnable::Runner& runner) {
-            runner.on_completion_callback([this, n](bool ok) {
-                if (!ok)
-                {
-                    DVLOG(10) << info() << ": detected a failure in node " << n << "; issuing service_kill()";
-                    service_kill();
-                }
+//     auto apply_callback = [this](std::unique_ptr<mrc::runnable::Launcher>& launcher, std::string name) {
+//         launcher->apply([this, n = std::move(name)](mrc::runnable::Runner& runner) {
+//             runner.on_completion_callback([this, n](bool ok) {
+//                 if (!ok)
+//                 {
+//                     DVLOG(10) << info() << ": detected a failure in node " << n << "; issuing service_kill()";
+//                     service_kill();
+//                 }
 
-                // Now remove the runner
-                CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
+//                 // Now remove the runner
+//                 CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
 
-                if (m_runners.empty())
-                {
-                    // We are shut down, call stop on the service
-                    this->service_stop();
-                }
-            });
-        });
-    };
+//                 if (m_runners.empty())
+//                 {
+//                     // We are shut down, call stop on the service
+//                     this->service_stop();
+//                 }
+//             });
+//         });
+//     };
 
-    for (const auto& [name, node] : m_builder->egress_ports())
-    {
-        DVLOG(10) << info() << " constructing launcher egress port " << name;
+//     for (const auto& [name, node] : m_builder->egress_ports())
+//     {
+//         DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-        pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
+//         // pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
-        // node->connect_to_manifold(pipeline_instance.get_manifold(name));
+//         node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
-        m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
-        apply_callback(m_launchers[name], name);
-    }
+//         m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
+//         apply_callback(m_launchers[name], name);
+//     }
 
-    for (const auto& [name, node] : m_builder->nodes())
-    {
-        DVLOG(10) << info() << " constructing launcher for " << name;
-        m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
-        apply_callback(m_launchers[name], name);
-    }
+//     for (const auto& [name, node] : m_builder->nodes())
+//     {
+//         DVLOG(10) << info() << " constructing launcher for " << name;
+//         m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
+//         apply_callback(m_launchers[name], name);
+//     }
 
-    for (const auto& [name, node] : m_builder->ingress_ports())
-    {
-        DVLOG(10) << info() << " constructing launcher ingress port " << name;
+//     for (const auto& [name, node] : m_builder->ingress_ports())
+//     {
+//         DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-        pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
+//         // pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
-        node->connect_to_manifold(pipeline_instance.get_manifold(name));
+//         node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
-        m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
-        apply_callback(m_launchers[name], name);
-    }
+//         m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
+//         apply_callback(m_launchers[name], name);
+//     }
 
-    DVLOG(10) << info() << " issuing start request";
+//     DVLOG(10) << info() << " issuing start request";
 
-    // for (const auto& [name, launcher] : egress_launchers)
-    // {
-    //     DVLOG(10) << info() << " launching egress port " << name;
-    //     m_egress_runners[name] = launcher->ignition();
-    // }
+//     // for (const auto& [name, launcher] : egress_launchers)
+//     // {
+//     //     DVLOG(10) << info() << " launching egress port " << name;
+//     //     m_egress_runners[name] = launcher->ignition();
+//     // }
 
-    for (const auto& [name, launcher] : m_launchers)
-    {
-        DVLOG(10) << info() << " launching node " << name;
-        m_runners[name] = launcher->ignition();
-    }
+//     for (const auto& [name, launcher] : m_launchers)
+//     {
+//         DVLOG(10) << info() << " launching node " << name;
+//         m_runners[name] = launcher->ignition();
+//     }
 
-    // for (const auto& [name, launcher] : ingress_launchers)
-    // {
-    //     DVLOG(10) << info() << " launching ingress port " << name;
-    //     m_ingress_runners[name] = launcher->ignition();
-    // }
+//     // for (const auto& [name, launcher] : ingress_launchers)
+//     // {
+//     //     DVLOG(10) << info() << " launching ingress port " << name;
+//     //     m_ingress_runners[name] = launcher->ignition();
+//     // }
 
-    // egress_launchers.clear();
-    // launchers.clear();
-    // ingress_launchers.clear();
+//     // egress_launchers.clear();
+//     // launchers.clear();
+//     // ingress_launchers.clear();
 
-    DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
-}
+//     DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
+// }
 
 // void SegmentInstance::do_service_stop()
 // {
@@ -371,13 +371,19 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
                     }
 
                     // Now remove the runner
-                    CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
+                    // CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
+                    LOG(INFO) << "Before: " << m_runners.size();
+                    // auto count = m_runners.erase(n);
+                    m_running_count--;
+                    LOG(INFO) << "After: " << m_runners.size();
 
-                    if (m_runners.empty())
+                    if (m_running_count == 0)
                     {
                         // We are shut down, advance us to complete
                         this->mark_completed();
                     }
+
+                    LOG(INFO) << "Post check: " << m_runners.size();
                 });
             });
         };
@@ -386,12 +392,12 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
+            // pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
-            // node->connect_to_manifold(pipeline_instance.get_manifold(name));
+            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
-            // m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
-            // apply_callback(m_launchers[name], name);
+            m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
+            apply_callback(m_launchers[name], name);
         }
 
         for (const auto& [name, node] : m_builder->nodes())
@@ -405,12 +411,12 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
+            // pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
-            // node->connect_to_manifold(pipeline_instance.get_manifold(name));
+            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
-            // m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
-            // apply_callback(m_launchers[name], name);
+            m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
+            apply_callback(m_launchers[name], name);
         }
     }
 
@@ -433,6 +439,7 @@ void SegmentInstance::on_completed_requested(control_plane::state::SegmentInstan
         m_runners[name] = launcher->ignition();
     }
 
+    m_running_count = m_runners.size();
     m_launchers.clear();
 
     // for (const auto& [name, launcher] : ingress_launchers)

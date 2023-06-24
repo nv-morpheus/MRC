@@ -95,7 +95,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
         DCHECK_EQ(manifold->port_name(), m_port_name);
         CHECK(m_sink);
         CHECK(!m_manifold_connected);
-        manifold->add_input(m_segment_address, m_sink.get());
+        manifold->add_local_input(m_segment_address, m_sink.get());
         m_manifold_connected = true;
     }
 

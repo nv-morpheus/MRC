@@ -53,7 +53,7 @@ const std::string& Manifold::info() const
     return m_info;
 }
 
-void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
+void Manifold::add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to upstream segment " << segment::info(address);
     do_add_input(address, input_source);
@@ -61,7 +61,7 @@ void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorB
               << segment::info(address);
 }
 
-void Manifold::add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
+void Manifold::add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to downstream segment " << segment::info(address);
     do_add_output(address, output_sink);
@@ -97,6 +97,36 @@ void ManifoldNodeBase::add_output(const SegmentAddress& address, edge::IWritable
     update_future.get();
 }
 
+ManifoldPolicy& ManifoldNodeBase::current_policy()
+{
+    return m_current_policy;
+}
+
+const ManifoldPolicy& ManifoldNodeBase::current_policy() const
+{
+    return m_current_policy;
+}
+
+void ManifoldNodeBase::update_policy(ManifoldPolicy policy)
+{
+    boost::fibers::packaged_task<void()> update_task([this, policy = std::move(policy)] {
+        this->do_update_policy(policy);
+
+        m_current_policy = std::move(policy);
+    });
+
+    auto update_future = update_task.get_future();
+
+    CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+    // Before continuing, wait for the update to be processed
+    update_future.get();
+}
+
+void ManifoldNodeBase::do_update_policy(const ManifoldPolicy& policy){
+    // Nothing in base
+};
+
 void ManifoldNodeBase::run(runnable::Context& ctx)
 {
     std::uint64_t backoff = 128;
@@ -119,8 +149,15 @@ void ManifoldNodeBase::run(runnable::Context& ctx)
         // Barrier to sync threads
         ctx.barrier();
 
-        // Process one element. This will pull one off the queue, process it, and return the status
-        auto status = this->process_one();
+        // Default to timeout in case we dont have any output connections
+        channel::Status status = channel::Status::timeout;
+
+        // Only process an element if we have something to write to
+        if (this->writable_edge_count() > 0)
+        {
+            // Process one element. This will pull one off the queue, process it, and return the status
+            status = this->process_one();
+        }
 
         if (status == channel::Status::success)
         {
@@ -147,19 +184,23 @@ void ManifoldTaggerBase::add_output(const SegmentAddress& address, edge::IWritab
 {
     // Call the base and then update the list of available tags
     ManifoldNodeBase::add_output(address, output_sink);
-
-    m_available_outputs.push_back(address);
-
-    // Now make sure we dont have any duplicates
-    std::sort(m_available_outputs.begin(), m_available_outputs.end());
-    m_available_outputs.erase(std::unique(m_available_outputs.begin(), m_available_outputs.end()),
-                              m_available_outputs.end());
 }
 
 SegmentAddress ManifoldTaggerBase::get_next_tag()
 {
-    // Just loop over all options for now
-    return m_available_outputs[m_msg_counter++ % m_available_outputs.size()];
+    return this->current_policy().get_next_tag();
+}
+
+void ManifoldTaggerBase::do_update_policy(const ManifoldPolicy& policy)
+{
+    // Clear the list of existing outputs
+    this->drop_outputs();
+
+    for (const auto& info : policy.outputs)
+    {
+        CHECK(info.edge != nullptr) << "Cannot set an empty edge for SegmentAddress: " << info.address;
+        mrc::make_edge(this->get_output(info.address), *info.edge);
+    }
 }
 
 ManifoldBase::ManifoldBase(runnable::IRunnableResources& resources,
@@ -204,7 +245,7 @@ const std::string& ManifoldBase::info() const
     return m_info;
 }
 
-void ManifoldBase::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
+void ManifoldBase::add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {
     // Need to cast away the const-ness to make an edge
     auto& tagger = const_cast<ManifoldTaggerBase&>(m_tagger_runner->runnable_as<ManifoldTaggerBase>());
@@ -212,16 +253,40 @@ void ManifoldBase::add_input(const SegmentAddress& address, edge::IWritableAccep
     tagger.add_input(address, input_source);
 }
 
-void ManifoldBase::add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
+void ManifoldBase::add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
+{
+    // Need to cast away the const-ness to make an edge
+    auto& untagger = const_cast<ManifoldUnTaggerBase&>(m_untagger_runner->runnable_as<ManifoldUnTaggerBase>());
+
+    untagger.add_output(address, output_sink);
+}
+
+void ManifoldBase::update_policy(ManifoldPolicy policy)
 {
     // Need to cast away the const-ness to make an edge
     auto& tagger   = const_cast<ManifoldTaggerBase&>(m_tagger_runner->runnable_as<ManifoldTaggerBase>());
     auto& untagger = const_cast<ManifoldUnTaggerBase&>(m_untagger_runner->runnable_as<ManifoldUnTaggerBase>());
 
-    // Need to add a local connection to the tagger first
-    tagger.add_output(address, &untagger);
+    // TODO(MDD): Figure out if we need to update the inputs here
+    // for (auto& info : policy.inputs)
+    // {
+    //     if (info.is_local){
+    //         info.edge = &tagger;
+    //     }
+    // }
 
-    untagger.add_output(address, output_sink);
+    // For each output, see if its local. If so, then use the internal untagger (since its null)
+    for (auto& info : policy.outputs)
+    {
+        if (info.is_local)
+        {
+            info.edge = &untagger;
+        }
+    }
+
+    // Now update the nodes
+    untagger.update_policy(policy);
+    tagger.update_policy(policy);
 }
 
 void ManifoldBase::update_inputs()

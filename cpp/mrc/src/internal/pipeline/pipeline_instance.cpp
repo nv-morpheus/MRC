@@ -79,7 +79,7 @@ ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_n
     return *m_manifold_instances_by_name.at(port_name);
 }
 
-std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold(const PortName& port_name) const
+std::shared_ptr<manifold::Interface> PipelineInstance::get_manifold_interface(const PortName& port_name) const
 {
     return this->get_manifold_instance(port_name).get_interface();
 }
@@ -273,7 +273,7 @@ void PipelineInstance::destroy_manifold(InstanceID manifold_id)
 
 manifold::Interface& PipelineInstance::manifold(const PortName& port_name)
 {
-    auto manifold = get_manifold(port_name);
+    auto manifold = get_manifold_interface(port_name);
     CHECK(manifold);
     return *manifold;
 }

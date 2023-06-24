@@ -1,7 +1,7 @@
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal.js";
-import { messageTypeRegistry } from "../../typeRegistry.js";
+import _m0 from "protobufjs/minimal";
+import { messageTypeRegistry } from "../../typeRegistry";
 
 export const protobufPackage = "mrc.protos";
 

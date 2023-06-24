@@ -83,7 +83,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         // ingress ports connect to manifold outputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         CHECK(m_source);
-        manifold->add_output(m_segment_address, m_source.get());
+        manifold->add_local_output(m_segment_address, m_source.get());
     }
 
     SegmentAddress m_segment_address;

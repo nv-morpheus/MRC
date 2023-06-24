@@ -59,8 +59,10 @@ class Manifold : public Interface
     const std::string& info() const;
 
   private:
-    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
-    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+    void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+    void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+
+    void update_policy(ManifoldPolicy policy) override {}
 
     virtual void do_add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
@@ -79,14 +81,25 @@ class ManifoldNodeBase : public virtual edge::IWritableProviderBase,
 
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink);
 
+  protected:
+    ManifoldPolicy& current_policy();
+    const ManifoldPolicy& current_policy() const;
+
+    virtual edge::IWritableAcceptorBase& get_output(SegmentAddress address) const = 0;
+    virtual void drop_outputs()                                                   = 0;
+
   private:
     void run(runnable::Context& ctx) final;
 
-    virtual edge::IWritableAcceptorBase& get_output(SegmentAddress address) const = 0;
-    virtual channel::Status process_one()                                         = 0;
+    void update_policy(ManifoldPolicy policy);
+
+    virtual void do_update_policy(const ManifoldPolicy& policy);
+
+    virtual channel::Status process_one() = 0;
 
     bool m_is_running{true};
     channel::BufferedChannel<mrc::PackagedTask<void()>> m_updates;
+    ManifoldPolicy m_current_policy;
 
     friend class ManifoldBase;
 };
@@ -101,8 +114,9 @@ class ManifoldTaggerBase : public ManifoldNodeBase
     SegmentAddress get_next_tag();
 
   private:
+    void do_update_policy(const ManifoldPolicy& policy) override;
+
     std::atomic_size_t m_msg_counter{0};
-    std::vector<SegmentAddress> m_available_outputs;
 };
 
 // Utility class to avoid tagger and untagger getting mixed up
@@ -183,9 +197,11 @@ class ManifoldBase : public Interface, runnable::RunnableResourcesProvider
     const std::string& info() const;
 
   private:
-    void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+    void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
 
-    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+    void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+
+    void update_policy(ManifoldPolicy policy) override;
 
     void update_inputs() override;
     void update_outputs() override;

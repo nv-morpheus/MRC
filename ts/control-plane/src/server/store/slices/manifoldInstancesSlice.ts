@@ -18,6 +18,7 @@ import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { AppDispatch, RootState, AppGetState } from "@mrc/server/store/store";
+import { yield_immediate } from "@mrc/common/utils";
 
 const manifoldInstancesAdapter = createWrappedEntityAdapter<IManifoldInstance>({
    selectId: (w) => w.id,
@@ -151,13 +152,12 @@ export const manifoldInstancesSlice = createSlice({
    },
    extraReducers: (builder) => {
       builder.addCase(pipelineInstancesRemove, (state, action) => {
-         // Need to delete any manifolds associated with the pipeline
-         const instances = selectByPipelineId(state, action.payload.id);
-
-         manifoldInstancesAdapter.removeMany(
-            state,
-            instances.map((x) => x.id)
-         );
+         // // Need to delete any manifolds associated with the pipeline
+         // const instances = selectByPipelineId(state, action.payload.id);
+         // manifoldInstancesAdapter.removeMany(
+         //    state,
+         //    instances.map((x) => x.id)
+         // );
       });
    },
 });
@@ -350,6 +350,46 @@ export function manifoldInstancesAddMany(instances: IManifoldInstance[]) {
       instances.forEach((m) => {
          dispatch(manifoldInstancesAdd(m));
       });
+   };
+}
+
+export function manifoldInstancesDestroy(instance: IManifoldInstance) {
+   // To allow the watchers to work, we need to set the requested and actual state
+   return async (dispatch: AppDispatch, getState: AppGetState) => {
+      const state_snapshot = getState();
+
+      // For any found workers, set the requested and actual states to avoid errors
+      const found = manifoldInstancesSelectById(getState(), instance.id);
+
+      if (found) {
+         // Set the requested to destroyed
+         dispatch(
+            manifoldInstancesUpdateResourceRequestedState({
+               resource: instance,
+               status: ResourceRequestedStatus.Requested_Destroyed,
+            })
+         );
+
+         // Yield here to allow listeners to run
+         await yield_immediate();
+
+         // Set the actual to destroyed
+         dispatch(
+            manifoldInstancesUpdateResourceActualState({
+               resource: instance,
+               status: ResourceActualStatus.Actual_Destroyed,
+            })
+         );
+
+         // Yield here to allow listeners to run
+         await yield_immediate();
+
+         // Finally, run the remove segment action just to be sure
+         if (manifoldInstancesSelectById(getState(), instance.id)) {
+            console.warn("ManifoldInstances watcher did not correctly destroy instance. Manually destroying.");
+            dispatch(manifoldInstancesRemove(instance));
+         }
+      }
    };
 }
 

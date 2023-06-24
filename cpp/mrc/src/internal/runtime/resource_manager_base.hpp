@@ -255,6 +255,9 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
         // If we are advancing the status, send the update
         if (status > m_local_status)
         {
+            // Set the local status first
+            m_local_status = status;
+
             if (push_update)
             {
                 // Issue a resource state update to the control plane
@@ -269,8 +272,6 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
                         protos::EventType::ClientUnaryResourceUpdateStatus,
                         request);
             }
-
-            m_local_status = status;
 
             return true;
         }

@@ -29,6 +29,9 @@
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/utils/string_utils.hpp"
 
+#include <stdexcept>
+#include <vector>
+
 namespace mrc::pipeline {
 
 ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
@@ -113,41 +116,90 @@ void ManifoldInstance::on_completed_requested(control_plane::state::ManifoldInst
 
 void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldInstance& instance)
 {
-    // Check for ingress assignments
-    auto cur_output = extract_keys(m_actual_output_segments);
-    auto new_output = extract_keys(instance.requested_output_segments());
-
-    auto [create_output, remove_output] = compare_difference(cur_output, new_output);
-
-    // construct new segments and attach to manifold
-    for (const auto& address : create_output)
+    if (m_actual_input_segments == instance.requested_input_segments() &&
+        m_actual_output_segments == instance.requested_output_segments())
     {
-        this->add_output(address, instance.requested_output_segments().at(address));
+        // No changes
+        return;
     }
 
-    // detach from manifold or stop old segments
-    for (const auto& address : remove_output)
+    std::vector<manifold::ManifoldPolicyInputInfo> manifold_inputs;
+    std::vector<manifold::ManifoldPolicyOutputInfo> manifold_outputs;
+
+    // First, loop over all requested inputs and hook these up so they are available
+    for (const auto& [seg_id, is_local] : instance.requested_input_segments())
     {
-        this->remove_input(address);
+        if (is_local)
+        {
+            // Use nullptr if its local (because we never see the internal connection)
+            manifold_inputs.emplace_back(seg_id, true, 1, nullptr);
+        }
+        else
+        {
+            // Get an edge from the data plane for this particular, remote segment
+            throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
+        }
     }
 
-    // Check for egress assignments
-    auto cur_input = extract_keys(m_actual_input_segments);
-    auto new_input = extract_keys(instance.requested_input_segments());
-
-    auto [create_input, remove_input] = compare_difference(cur_input, new_input);
-
-    // construct new segments and attach to manifold
-    for (const auto& address : create_input)
+    // Now loop over the requested outputs
+    for (const auto& [seg_id, is_local] : instance.requested_output_segments())
     {
-        this->add_input(address, instance.requested_input_segments().at(address));
+        if (is_local)
+        {
+            // Use nullptr if its local (because we never see the internal connection)
+            manifold_outputs.emplace_back(seg_id, true, 1, nullptr);
+        }
+        else
+        {
+            // Get an edge from the data plane for this particular, remote segment
+            throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
+        }
     }
 
-    // detach from manifold or stop old segments
-    for (const auto& address : remove_input)
-    {
-        this->remove_output(address);
-    }
+    // Update the policy on the manifold interface
+    m_interface->update_policy(manifold::ManifoldPolicy(std::move(manifold_inputs), std::move(manifold_outputs)));
+
+    // Set the message that we have updated the policy
+
+    // Now save the actual values for next iteration
+    m_actual_input_segments  = instance.requested_input_segments();
+    m_actual_output_segments = instance.requested_output_segments();
+
+    // // Check for ingress assignments
+    // auto cur_output = extract_keys(m_actual_output_segments);
+    // auto new_output = extract_keys(instance.requested_output_segments());
+
+    // auto [create_output, remove_output] = compare_difference(cur_output, new_output);
+
+    // // construct new segments and attach to manifold
+    // for (const auto& address : create_output)
+    // {
+    //     this->add_output(address, instance.requested_output_segments().at(address));
+    // }
+
+    // // detach from manifold or stop old segments
+    // for (const auto& address : remove_output)
+    // {
+    //     this->remove_input(address);
+    // }
+
+    // // Check for egress assignments
+    // auto cur_input = extract_keys(m_actual_input_segments);
+    // auto new_input = extract_keys(instance.requested_input_segments());
+
+    // auto [create_input, remove_input] = compare_difference(cur_input, new_input);
+
+    // // construct new segments and attach to manifold
+    // for (const auto& address : create_input)
+    // {
+    //     this->add_input(address, instance.requested_input_segments().at(address));
+    // }
+
+    // // detach from manifold or stop old segments
+    // for (const auto& address : remove_input)
+    // {
+    //     this->remove_output(address);
+    // }
 }
 
 void ManifoldInstance::add_input(SegmentAddress address, bool is_local)

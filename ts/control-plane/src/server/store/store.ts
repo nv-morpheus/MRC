@@ -84,6 +84,7 @@ export const setupStore = (preloadedState?: PreloadedState<RootState>, addDevToo
             sendOnError: 1,
             suppressConnectErrors: false,
             stopOn: stopAction.type,
+            maxAge: 100,
          }),
       ];
    }

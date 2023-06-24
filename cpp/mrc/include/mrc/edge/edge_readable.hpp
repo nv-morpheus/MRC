@@ -213,6 +213,7 @@ template <typename KeyT>
 class IMultiReadableAcceptorBase
 {
   public:
+    virtual size_t writable_edge_count() const                                                  = 0;
     virtual void set_readable_edge_handle(KeyT key, std::shared_ptr<ReadableEdgeHandle> egress) = 0;
 };
 
@@ -237,7 +238,7 @@ class IReadableAcceptor : public virtual IReadableAcceptorBase
 };
 
 template <typename KeyT, typename T>
-class IMultiReadableAcceptor : public virtual IMultiWritableAcceptorBase<KeyT>
+class IMultiReadableAcceptor : public virtual IMultiReadableAcceptorBase<KeyT>
 {};
 
 }  // namespace mrc::edge

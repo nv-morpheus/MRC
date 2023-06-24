@@ -55,6 +55,11 @@ class RouterWritableAcceptor : public MultiWritableAcceptor<KeyT, OutputT>
         MultiWritableAcceptor<KeyT, output_data_t>::release_edge_connection(key);
     }
 
+    void drop_all_sources()
+    {
+        MultiWritableAcceptor<KeyT, output_data_t>::release_edge_connections();
+    }
+
   protected:
     class DownstreamEdge : public edge::IWritableAcceptor<output_data_t>
     {
@@ -91,12 +96,17 @@ class RouterReadableAcceptor : public MultiReadableAcceptor<KeyT, InputT>
 
     bool has_sink(const KeyT& key) const
     {
-        return MultiWritableAcceptor<KeyT, input_data_t>::get_edge_pair(key).first;
+        return MultiReadableAcceptor<KeyT, input_data_t>::get_edge_pair(key).first;
     }
 
     void drop_sink(const KeyT& key)
     {
-        MultiWritableAcceptor<KeyT, input_data_t>::release_edge_connection(key);
+        MultiReadableAcceptor<KeyT, input_data_t>::release_edge_connection(key);
+    }
+
+    void drop_all_sinks()
+    {
+        MultiReadableAcceptor<KeyT, input_data_t>::release_edge_connections();
     }
 
   protected:

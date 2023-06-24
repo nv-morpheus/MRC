@@ -197,6 +197,12 @@ template <typename KeyT, typename T>
 class MultiReadableAcceptor : public virtual MultiSinkProperties<KeyT, T>, public edge::IMultiReadableAcceptor<KeyT, T>
 {
   public:
+  protected:
+    size_t readable_edge_count() const override
+    {
+        return MultiSinkProperties<KeyT, T>::edge_connection_count();
+    }
+
   private:
     void set_readable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> egress) override
     {

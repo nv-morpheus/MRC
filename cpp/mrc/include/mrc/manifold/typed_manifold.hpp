@@ -39,26 +39,14 @@ class ManifoldTagger : public ManifoldTaggerBase,
 
         // Connect to ourselves
         mrc::make_edge(*m_tagger_entrypoint, *this);
-
-        m_node_component = std::make_shared<node::LambdaNodeComponent<input_message_t, output_message_t>>(
-            [this](input_message_t&& data) -> output_message_t {
-                auto tag = this->get_next_tag();
-
-                return std::make_pair(tag, std::move(data));
-            });
     }
 
-    // void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) override
-    // {
-    //     mrc::make_edge(*input_source, *m_node_component);
-    // }
-
-    // void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) override
-    // {
-    //     mrc::make_edge(*m_node_component, *output_sink);
-    // }
-
   private:
+    void drop_outputs() override
+    {
+        this->drop_all_sources();
+    }
+
     edge::IWritableAcceptorBase& get_output(SegmentAddress address) const override
     {
         return *this->get_source(address);
@@ -85,8 +73,6 @@ class ManifoldTagger : public ManifoldTaggerBase,
     // This entrypoint is used to keep the channel open incase all upstream egress points go away. Also, it allows for
     // errored messages to be re-tagged so they arent lost
     std::shared_ptr<node::WritableEntrypoint<input_message_t>> m_tagger_entrypoint;
-
-    std::shared_ptr<node::LambdaNodeComponent<input_message_t, output_message_t>> m_node_component;
 };
 
 template <typename T>
@@ -104,23 +90,20 @@ class ManifoldUnTagger : public ManifoldUnTaggerBase,
         // Set the default channel
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<input_message_t>>());
 
-        m_node_component = std::make_shared<node::LambdaNodeComponent<input_message_t, output_message_t>>(
-            [this](input_message_t&& data) -> output_message_t {
-                return std::move(data.second);
-            });
+        // To prevent closing the input channel when all segments go away, create an entrypoint ourselves to guarantee
+        // lifetime
+        m_tagger_entrypoint = std::make_shared<node::WritableEntrypoint<input_message_t>>();
+
+        // Connect to ourselves
+        mrc::make_edge(*m_tagger_entrypoint, *this);
     }
 
-    // void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) override
-    // {
-    //     mrc::make_edge(*input_source, *m_node_component);
-    // }
-
-    // void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) override
-    // {
-    //     mrc::make_edge(*m_node_component, *output_sink);
-    // }
-
   private:
+    void drop_outputs() override
+    {
+        return this->drop_all_sources();
+    }
+
     edge::IWritableAcceptorBase& get_output(SegmentAddress address) const override
     {
         return *this->get_source(address);
@@ -143,7 +126,9 @@ class ManifoldUnTagger : public ManifoldUnTaggerBase,
         return status;
     }
 
-    std::shared_ptr<node::LambdaNodeComponent<input_message_t, output_message_t>> m_node_component;
+    // This entrypoint is used to keep the channel open incase all upstream egress points go away. Also, it allows for
+    // errored messages to be re-tagged so they arent lost
+    std::shared_ptr<node::WritableEntrypoint<input_message_t>> m_tagger_entrypoint;
 };
 
 template <typename T>

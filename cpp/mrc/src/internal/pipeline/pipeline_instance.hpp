@@ -55,7 +55,7 @@ class PipelineInstance final : public runtime::ResourceManagerBase<control_plane
     ~PipelineInstance() override;
 
     ManifoldInstance& get_manifold_instance(const PortName& port_name) const;
-    std::shared_ptr<manifold::Interface> get_manifold(const PortName& port_name) const;
+    std::shared_ptr<manifold::Interface> get_manifold_interface(const PortName& port_name) const;
 
     // // currently we are passing the instance back to the executor
     // // we should own the instance here in the pipeline instance

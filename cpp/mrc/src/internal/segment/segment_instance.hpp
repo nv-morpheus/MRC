@@ -101,6 +101,7 @@ class SegmentInstance final : public runtime::ResourceManagerBase<control_plane:
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_launchers;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
+    int64_t m_running_count{0};
     // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
     // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
 

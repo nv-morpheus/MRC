@@ -1,4 +1,4 @@
-import { ClientOptions } from "socketcluster-client/lib/clientsocket.js";
+import { ClientOptions } from "socketcluster-client/lib/clientsocket";
 
 export const defaultSocketOptions: ClientOptions = {
    secure: false,

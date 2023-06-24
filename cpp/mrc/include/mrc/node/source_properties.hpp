@@ -201,6 +201,12 @@ class MultiWritableAcceptor : public virtual MultiSourceProperties<KeyT, T>,
                               public edge::IMultiWritableAcceptor<KeyT, T>
 {
   public:
+  protected:
+    size_t writable_edge_count() const override
+    {
+        return MultiSourceProperties<KeyT, T>::edge_connection_count();
+    }
+
   private:
     void set_writable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {

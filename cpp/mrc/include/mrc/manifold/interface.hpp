@@ -20,7 +20,141 @@
 #include "mrc/edge/forward.hpp"
 #include "mrc/types.hpp"
 
+#include <atomic>
+#include <memory>
+
 namespace mrc::manifold {
+
+struct ManifoldPolicyInfoBase
+{
+    ManifoldPolicyInfoBase(SegmentAddress _address, bool _is_local, size_t _points) :
+      address(_address),
+      is_local(_is_local),
+      points(_points)
+    {}
+
+    SegmentAddress address;
+
+    // Whether or not this segment connection is local
+    bool is_local;
+
+    // Relative weighting of this address. Percentage is points / (total points of all segments)
+    size_t points;
+};
+
+struct ManifoldPolicyInputInfo : public ManifoldPolicyInfoBase
+{
+    ManifoldPolicyInputInfo(SegmentAddress _address,
+                            bool _is_local,
+                            size_t _points,
+                            edge::IWritableAcceptorBase* _edge) :
+      ManifoldPolicyInfoBase(_address, _is_local, _points),
+      edge(_edge)
+    {}
+    edge::IWritableAcceptorBase* edge;
+};
+
+struct ManifoldPolicyOutputInfo : public ManifoldPolicyInfoBase
+{
+    ManifoldPolicyOutputInfo(SegmentAddress _address,
+                             bool _is_local,
+                             size_t _points,
+                             edge::IWritableProviderBase* _edge) :
+      ManifoldPolicyInfoBase(_address, _is_local, _points),
+      edge(_edge)
+    {}
+
+    edge::IWritableProviderBase* edge;
+};
+
+// struct ManifoldPolicy;
+
+// class ManifoldInputPolicy
+// {
+//   public:
+//     ManifoldInputPolicy(const ManifoldPolicy& _parent, std::vector<ManifoldPolicyInputInfo> _inputs) :
+//       parent(_parent),
+//       inputs(std::move(_inputs))
+//     {}
+
+//     const ManifoldPolicy& parent;
+//     std::vector<ManifoldPolicyInputInfo> inputs;
+// };
+
+// class ManifoldOutputPolicy
+// {
+//   public:
+//     ManifoldOutputPolicy(const ManifoldPolicy& _parent, std::vector<ManifoldPolicyOutputInfo> _outputs) :
+//       parent(_parent),
+//       outputs(std::move(_outputs))
+//     {}
+
+//     const ManifoldPolicy& parent;
+//     std::vector<ManifoldPolicyOutputInfo> outputs;
+
+//     virtual SegmentAddress get_next_tag() const = 0;
+// };
+
+class ManifoldPolicy
+{
+  public:
+    ManifoldPolicy() = default;
+
+    ManifoldPolicy(std::vector<ManifoldPolicyInputInfo> inputs, std::vector<ManifoldPolicyOutputInfo> outputs) :
+      inputs(std::move(inputs)),
+      outputs(std::move(outputs))
+    {}
+
+    ManifoldPolicy(const ManifoldPolicy& other) :
+      inputs(other.inputs),
+      outputs(other.outputs),
+      m_msg_counter(other.m_msg_counter.load())
+    {}
+
+    ManifoldPolicy(ManifoldPolicy&& other) : inputs(other.inputs), outputs(other.outputs), m_msg_counter(0)
+    {
+        m_msg_counter = m_msg_counter.exchange(0);
+    }
+
+    ManifoldPolicy& operator=(const ManifoldPolicy& other)
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        inputs        = other.inputs;
+        outputs       = other.outputs;
+        m_msg_counter = other.m_msg_counter.load();
+
+        return *this;
+    }
+
+    ManifoldPolicy& operator=(ManifoldPolicy&& other)
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        inputs        = std::move(other.inputs);
+        outputs       = std::move(other.outputs);
+        m_msg_counter = other.m_msg_counter.exchange(0);
+
+        return *this;
+    }
+
+    std::vector<ManifoldPolicyInputInfo> inputs;
+    std::vector<ManifoldPolicyOutputInfo> outputs;
+
+    SegmentAddress get_next_tag()
+    {
+        return this->outputs[m_msg_counter++ % this->outputs.size()].address;
+    }
+
+  private:
+    std::atomic_size_t m_msg_counter{0};
+};
 
 struct Interface
 {
@@ -31,8 +165,13 @@ struct Interface
     virtual void start() = 0;
     virtual void join()  = 0;
 
-    virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
-    virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+
+    virtual void update_policy(ManifoldPolicy policy) = 0;
+
+    // virtual void add_remote_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    // virtual void add_remote_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
     // updates are ordered
     // first, inputs are updated (upstream segments have not started emitting - this is safe)

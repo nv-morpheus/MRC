@@ -1,19 +1,22 @@
 import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { createWrappedEntityAdapter } from "../../utils.js";
-
-import type { AppDispatch, AppGetState, RootState } from "../store.js";
-import {
-   pipelineInstancesAdd,
-   pipelineInstancesRemove,
-   pipelineInstancesSelectByIds,
-} from "./pipelineInstancesSlice.js";
-import { workersAdd, workersRemove, workersSelectByIds } from "./workersSlice.js";
 import { segmentInstancesDestroy, segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
 import { IConnection, IWorker } from "@mrc/common/entities";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
+import {
+   manifoldInstancesDestroy,
+   manifoldInstancesSelectByIds,
+} from "@mrc/server/store/slices/manifoldInstancesSlice";
+import { workersAdd, workersRemove, workersSelectByIds } from "@mrc/server/store/slices/workersSlice";
+import {
+   pipelineInstancesAdd,
+   pipelineInstancesRemove,
+   pipelineInstancesSelectByIds,
+} from "@mrc/server/store/slices/pipelineInstancesSlice";
+import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
+import { createWrappedEntityAdapter } from "@mrc/server/utils";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
@@ -169,6 +172,11 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
       // Now find matching pipelines
       const pipelines = pipelineInstancesSelectByIds(state_snapshot, connection.assignedPipelineIds);
 
+      // Find matching manifolds
+      const manifold_ids = pipelines.reduce((sum_ids: string[], curr) => sum_ids.concat(curr.manifoldIds), []);
+
+      const manifolds = manifoldInstancesSelectByIds(state_snapshot, manifold_ids);
+
       // Finally, find matching segments
       const seg_ids = pipelines.reduce((sum_ids: string[], curr) => sum_ids.concat(curr.segmentIds), []);
 
@@ -179,15 +187,23 @@ export function connectionsDropOne(payload: Pick<IConnection, "id">) {
          // Start a batch to avoid many notifications
          dispatch(systemStartRequest(`Dropping Connection: ${payload.id}`));
 
+         // Destroy segments first
          for (const x of segments) {
-            // Need to set the state first
             await dispatch(segmentInstancesDestroy(x));
          }
 
+         // Then manifolds
+         for (const x of manifolds) {
+            await dispatch(manifoldInstancesDestroy(x));
+         }
+
+         // Then pipelines
          pipelines.forEach((x) => dispatch(pipelineInstancesRemove(x)));
 
+         // Workers
          workers.forEach((x) => dispatch(workersRemove(x)));
 
+         // Finally, the connection
          dispatch(connectionsRemove(connection));
       } finally {
          dispatch(systemStopRequest(`Dropping Connection: ${payload.id}`));
