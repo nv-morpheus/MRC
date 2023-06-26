@@ -41,7 +41,10 @@ ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
   m_definition(std::move(definition))
 {}
 
-ManifoldInstance::~ManifoldInstance() = default;
+ManifoldInstance::~ManifoldInstance()
+{
+    ResourceManagerBase::call_in_destructor();
+}
 
 void ManifoldInstance::register_local_output(SegmentAddress address,
                                              std::shared_ptr<segment::IngressPortBase> ingress_port)

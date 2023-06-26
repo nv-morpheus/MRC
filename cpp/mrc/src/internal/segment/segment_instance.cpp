@@ -68,7 +68,10 @@ SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
   m_info(::mrc::segment::info(instance_id))
 {}
 
-SegmentInstance::~SegmentInstance() = default;
+SegmentInstance::~SegmentInstance()
+{
+    ResourceManagerBase::call_in_destructor();
+}
 
 const std::string& SegmentInstance::name() const
 {

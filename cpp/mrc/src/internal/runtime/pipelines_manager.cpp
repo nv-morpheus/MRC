@@ -40,7 +40,10 @@ PipelinesManager::PipelinesManager(Runtime& runtime, InstanceID connection_id) :
   ResourceManagerBase(runtime, connection_id, MRC_CONCAT_STR("PipelinesManager[" << connection_id << "]"))
 {}
 
-PipelinesManager::~PipelinesManager() = default;
+PipelinesManager::~PipelinesManager()
+{
+    ResourceManagerBase::call_in_destructor();
+}
 
 void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs)
 {

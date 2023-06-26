@@ -415,7 +415,9 @@ export function segmentInstancesConfigureSlice() {
       },
       async (instance) => {},
       async (instance) => {},
-      async (instance) => {},
+      async (instance, listenerApi) => {
+         const manifolds = syncManifolds(listenerApi, instance);
+      },
       async (instance, listenerApi) => {
          listenerApi.dispatch(segmentInstancesRemove(instance));
       }

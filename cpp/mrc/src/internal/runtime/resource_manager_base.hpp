@@ -127,7 +127,7 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
             })
             .take_while([](ResourceT& state) {
                 // Process events until the worker is indicated to be destroyed
-                return state.state().actual_status() < control_plane::state::ResourceActualStatus::Destroyed;
+                return state.state().requested_status() < control_plane::state::ResourceRequestedStatus::Destroyed;
             })
             .subscribe(
                 [this](ResourceT state) {

@@ -39,6 +39,7 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <rxcpp/rx.hpp>
 
+#include <chrono>
 #include <memory>
 
 namespace mrc::runtime {
@@ -49,7 +50,10 @@ SegmentsManager::SegmentsManager(PartitionRuntime& runtime, InstanceID worker_id
   m_worker_id(worker_id)
 {}
 
-SegmentsManager::~SegmentsManager() = default;
+SegmentsManager::~SegmentsManager()
+{
+    ResourceManagerBase::call_in_destructor();
+}
 
 control_plane::state::Worker SegmentsManager::filter_resource(const control_plane::state::ControlPlaneState& state) const
 {
@@ -337,6 +341,12 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
     DVLOG(10) << "Manager created SegmentInstance: " << instance_state.id() << "/" << instance_state.name();
 }
 
-void SegmentsManager::erase_segment(SegmentAddress address) {}
+void SegmentsManager::erase_segment(SegmentAddress address)
+{
+    CHECK(m_instances[address]->service_await_join(std::chrono::milliseconds(100)))
+        << "SegmentInstance[" << address << "] did not shut down quickly";
+
+    CHECK_EQ(m_instances.erase(address), 1) << "SegmentInstance[" << address << "] could not be removed";
+}
 
 }  // namespace mrc::runtime

@@ -98,7 +98,7 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     bool is_service_startable() const;
     const AsyncServiceState& state() const;
 
-    SharedFuture<void> service_start(std::stop_source stop_source = {});
+    SharedFuture<void> service_start();
     void service_await_live();
     void service_stop();
     void service_kill();

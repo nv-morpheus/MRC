@@ -65,7 +65,7 @@ PipelineInstance::PipelineInstance(runtime::IInternalRuntimeProvider& runtime,
 
 PipelineInstance::~PipelineInstance()
 {
-    AsyncService::call_in_destructor();
+    ResourceManagerBase::call_in_destructor();
 }
 
 ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_name) const
