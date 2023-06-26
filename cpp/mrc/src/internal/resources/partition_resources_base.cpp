@@ -17,26 +17,26 @@
 
 #include "internal/resources/partition_resources_base.hpp"
 
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/partition.hpp"
 
 #include <glog/logging.h>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
-PartitionResourceBase::PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id) :
+PartitionResourceBase::PartitionResourceBase(runnable::RunnableResources& runnable, std::size_t partition_id) :
   system::PartitionProvider(runnable, partition_id),
   m_runnable(runnable)
 {
     CHECK_EQ(runnable.host_partition_id(), partition().host_partition_id());
 }
-runnable::Resources& PartitionResourceBase::runnable()
+runnable::RunnableResources& PartitionResourceBase::runnable()
 {
     return m_runnable;
 }
 
-const runnable::Resources& PartitionResourceBase::runnable() const
+const runnable::RunnableResources& PartitionResourceBase::runnable() const
 {
     return m_runnable;
 }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

@@ -97,14 +97,14 @@ TEST_F(TestTopology, Bitmap)
 TEST_F(TestTopology, TopologyOptions)
 {
     auto options  = std::make_unique<TopologyOptions>();
-    auto topology = internal::system::Topology::Create(*options);
+    auto topology = system::Topology::Create(*options);
     EXPECT_GT(topology->cpu_count(), 1);
 
     auto full_numa = topology->numa_count();
 
     options->use_process_cpuset(false);
     options->user_cpuset("0");
-    topology = internal::system::Topology::Create(*options);
+    topology = system::Topology::Create(*options);
     EXPECT_EQ(topology->cpu_count(), 1);
     EXPECT_EQ(topology->numa_count(), 1);
 
@@ -113,12 +113,12 @@ TEST_F(TestTopology, TopologyOptions)
 
     // impossible cpu_set
     options->user_cpuset("9999999");
-    EXPECT_ANY_THROW(topology = internal::system::Topology::Create(*options));
+    EXPECT_ANY_THROW(topology = system::Topology::Create(*options));
 
     // should receive a warning
     options->user_cpuset("0,9999999");
     LOG(INFO) << "*** expect a warning below this mark ***";
-    topology = internal::system::Topology::Create(*options);
+    topology = system::Topology::Create(*options);
     LOG(INFO) << "*** expect a warning above this mark ***";
 
     if (full_numa > 1)
@@ -126,7 +126,7 @@ TEST_F(TestTopology, TopologyOptions)
         options->restrict_numa_domains(false);
         options->use_process_cpuset(false);
         options->user_cpuset("0");
-        topology = internal::system::Topology::Create(*options);
+        topology = system::Topology::Create(*options);
         EXPECT_EQ(topology->cpu_count(), 1);
         EXPECT_EQ(topology->numa_count(), full_numa);
     }
@@ -142,7 +142,7 @@ TEST_F(TestTopology, HwlocDev)
     hwloc_topology_init(&topology);
 
     auto* cpu_set = hwloc_bitmap_alloc();
-    EXPECT_EQ(mrc::internal::system::DeviceInfo::GetDeviceCpuset(topology, 0, cpu_set), 0);
+    EXPECT_EQ(mrc::system::DeviceInfo::GetDeviceCpuset(topology, 0, cpu_set), 0);
 
     char* cpuset_string = nullptr;
     hwloc_bitmap_asprintf(&cpuset_string, cpu_set);
@@ -172,7 +172,7 @@ TEST_F(TestTopology, HwlocDev)
 
 TEST_F(TestTopology, ExportXML)
 {
-    auto topology = internal::system::Topology::Create();
+    auto topology = system::Topology::Create();
     auto xml      = topology->export_xml();
 
     auto pos = xml.find("object type=\"Machine\"");
@@ -181,9 +181,9 @@ TEST_F(TestTopology, ExportXML)
 
 TEST_F(TestTopology, Codable)
 {
-    auto topology = internal::system::Topology::Create();
+    auto topology = system::Topology::Create();
     auto encoded  = topology->serialize();
-    auto decoded  = internal::system::Topology::Create(encoded);
+    auto decoded  = system::Topology::Create(encoded);
 
     EXPECT_EQ(topology->cpu_set().str(), decoded->cpu_set().str());
     EXPECT_EQ(topology->cpu_count(), decoded->cpu_count());

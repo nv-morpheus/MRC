@@ -41,7 +41,7 @@
 #include <string>
 
 using namespace mrc;
-using namespace internal::ucx;
+using namespace ucx;
 
 class TestUCX : public ::testing::Test
 {

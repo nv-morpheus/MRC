@@ -36,16 +36,16 @@
 namespace google::protobuf {
 class Message;
 }  // namespace google::protobuf
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;  // IWYU pragma: keep
-}  // namespace mrc::internal::resources
-namespace mrc::internal::ucx {
+}  // namespace mrc::resources
+namespace mrc::ucx {
 struct MemoryBlock;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 
 // IWYU pragma: no_include "internal/resources/partition_resources.hpp"
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 /**
  * @brief CodableStorage implements both the IEncodableStorage and the IDecodableStorage interfaces
@@ -118,4 +118,4 @@ class CodableStorage final : public mrc::codable::ICodableStorage, public Storag
     mutable std::mutex m_mutex;
 };
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

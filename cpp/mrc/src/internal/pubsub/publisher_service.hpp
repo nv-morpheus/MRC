@@ -32,23 +32,23 @@
 #include <string>
 #include <unordered_map>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 struct RemoteDescriptorMessage;
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane
 namespace mrc::runtime {
 class RemoteDescriptor;
 }  // namespace mrc::runtime
 namespace mrc::codable {
 struct ICodableStorage;
 }  // namespace mrc::codable
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 class Partition;
-}  // namespace mrc::internal::runtime
-namespace mrc::internal::ucx {
+}  // namespace mrc::runtime
+namespace mrc::ucx {
 class Endpoint;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 class PublisherService : public Base, public mrc::pubsub::IPublisherService
 {
@@ -90,19 +90,19 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
     // [IPublisherService] provides a runtime dependent codable storage object
     std::unique_ptr<mrc::codable::ICodableStorage> create_storage() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // setup up the runnables needed to driver the publisher
     void do_subscription_service_setup() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // teardown up the runnables needed to driver the publisher
     void do_subscription_service_teardown() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // await on the completion of all internal runnables
     void do_subscription_service_join() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received
     void update_tagged_instances(const std::string& role,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
@@ -127,4 +127,4 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>> m_tagged_endpoints;
 };
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

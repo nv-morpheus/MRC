@@ -29,11 +29,11 @@ namespace mrc::memory {
 struct memory_resource;
 }  // namespace mrc::memory
 
-namespace mrc::internal::ucx {
-class Resources;
+namespace mrc::ucx {
+class UcxResources;
 }
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 /**
  * @brief Object that provides access to device memory_resource objects for a "flattened" partition
@@ -41,7 +41,7 @@ namespace mrc::internal::memory {
 class DeviceResources : private resources::PartitionResourceBase
 {
   public:
-    DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::Resources>& ucx);
+    DeviceResources(resources::PartitionResourceBase& base, std::optional<ucx::UcxResources>& ucx);
 
     int cuda_device_id() const;
 
@@ -57,4 +57,4 @@ class DeviceResources : private resources::PartitionResourceBase
     std::shared_ptr<mrc::memory::memory_resource> m_arena;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

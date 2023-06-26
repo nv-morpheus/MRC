@@ -31,7 +31,7 @@
 #include <sstream>
 #include <utility>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 SubscriptionService::SubscriptionService(const std::string& service_name, Instance& instance) :
   m_service_name(std::move(service_name)),
@@ -239,4 +239,4 @@ void RoleUpdater::update_tagged_instances(const std::unordered_map<std::uint64_t
     }
     m_update_promises.clear();
 }
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

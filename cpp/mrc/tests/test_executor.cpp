@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -31,7 +30,6 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
@@ -65,7 +63,7 @@ class TestExecutor : public ::testing::Test
     // static std::pair<std::unique_ptr<pipeline::Pipeline>, std::shared_ptr<TestSource<std::string>>>
     // make_two_node_pipeline()
     // {
-    //     auto pipeline = pipeline::make_pipeline();
+    //     auto pipeline = mrc::make_pipeline();
     //     auto source   = std::make_shared<TestSource<std::string>>("source", "channel");
     //     auto sink     = std::make_shared<TestSink<std::string>>("sink", "channel");
 
@@ -74,14 +72,14 @@ class TestExecutor : public ::testing::Test
     //     return std::make_pair(std::move(pipeline), std::move(source));
     // }
 
-    static std::unique_ptr<pipeline::Pipeline> make_pipeline()
+    static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
-        auto pipeline = pipeline::make_pipeline();
+        auto pipeline = mrc::make_pipeline();
 
-        auto segment_initializer = [](segment::Builder& seg) {};
+        auto segment_initializer = [](segment::IBuilder& seg) {};
 
         // ideally we make this a true source (seg_1) and true source (seg_4)
-        auto seg_1 = Segment::create("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::Builder& s) {
+        pipeline->make_segment("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
             auto src    = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
                 s.on_next(1);
                 s.on_next(2);
@@ -91,25 +89,25 @@ class TestExecutor : public ::testing::Test
             auto egress = s.get_egress<int>("my_int2");
             s.make_edge(src, egress);
         });
-        auto seg_2 = Segment::create("seg_2",
-                                     segment::IngressPorts<int>({"my_int2"}),
-                                     segment::EgressPorts<int>({"my_int3"}),
-                                     [](segment::Builder& s) {
-                                         // pure pass-thru
-                                         auto in  = s.get_ingress<int>("my_int2");
-                                         auto out = s.get_egress<int>("my_int3");
-                                         s.make_edge(in, out);
-                                     });
-        auto seg_3 = Segment::create("seg_3",
-                                     segment::IngressPorts<int>({"my_int3"}),
-                                     segment::EgressPorts<int>({"my_int4"}),
-                                     [](segment::Builder& s) {
-                                         // pure pass-thru
-                                         auto in  = s.get_ingress<int>("my_int3");
-                                         auto out = s.get_egress<int>("my_int4");
-                                         s.make_edge(in, out);
-                                     });
-        auto seg_4 = Segment::create("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::Builder& s) {
+        pipeline->make_segment("seg_2",
+                               segment::IngressPorts<int>({"my_int2"}),
+                               segment::EgressPorts<int>({"my_int3"}),
+                               [](segment::IBuilder& s) {
+                                   // pure pass-thru
+                                   auto in  = s.get_ingress<int>("my_int2");
+                                   auto out = s.get_egress<int>("my_int3");
+                                   s.make_edge(in, out);
+                               });
+        pipeline->make_segment("seg_3",
+                               segment::IngressPorts<int>({"my_int3"}),
+                               segment::EgressPorts<int>({"my_int4"}),
+                               [](segment::IBuilder& s) {
+                                   // pure pass-thru
+                                   auto in  = s.get_ingress<int>("my_int3");
+                                   auto out = s.get_egress<int>("my_int4");
+                                   s.make_edge(in, out);
+                               });
+        pipeline->make_segment("seg_4", segment::IngressPorts<int>({"my_int4"}), [](segment::IBuilder& s) {
             // pure pass-thru
             auto in   = s.get_ingress<int>("my_int4");
             auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
@@ -118,11 +116,6 @@ class TestExecutor : public ::testing::Test
                                            }));
             s.make_edge(in, sink);
         });
-
-        pipeline->register_segment(seg_1);
-        pipeline->register_segment(seg_2);
-        pipeline->register_segment(seg_3);
-        pipeline->register_segment(seg_4);
 
         return pipeline;
     }
@@ -138,7 +131,7 @@ class TestExecutor : public ::testing::Test
 
 TEST_F(TestExecutor, LifeCycleSingleSegment)
 {
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     auto options = make_options();
     options->engine_factories().set_engine_factory_options("single_use_threads", [](EngineFactoryOptions& options) {
@@ -153,7 +146,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegment)
     std::atomic<int> src_count  = 0;
     std::atomic<int> node_count = 0;
 
-    auto segment = Segment::create("seg_1", [&next_count, &src_count, &node_count](segment::Builder& s) {
+    pipeline->make_segment("seg_1", [&next_count, &src_count, &node_count](segment::IBuilder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             s.on_next(1.0F);
             s.on_next(2.0F);
@@ -191,8 +184,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegment)
         s.make_edge(rx_node, rx_sink);
     });
 
-    pipeline->register_segment(segment);
-
     executor.register_pipeline(std::move(pipeline));
 
     executor.start();
@@ -222,11 +213,11 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxer)
 {
     Executor executor(make_options());
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     std::atomic<int> next_count = 0;
 
-    auto segment = Segment::create("seg_1", [&next_count](segment::Builder& s) {
+    pipeline->make_segment("seg_1", [&next_count](segment::IBuilder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             DVLOG(1) << runnable::Context::get_runtime_context().info();
             s.on_next(1.0F);
@@ -243,8 +234,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxer)
 
         s.make_edge(rx_source, rx_sink);
     });
-
-    pipeline->register_segment(segment);
 
     executor.register_pipeline(std::move(pipeline));
 
@@ -261,11 +250,11 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxerOnThreads)
 
     Executor executor(std::move(options));
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     std::atomic<int> next_count = 0;
 
-    auto segment = Segment::create("seg_1", [&next_count](segment::Builder& s) {
+    pipeline->make_segment("seg_1", [&next_count](segment::IBuilder& s) {
         auto rx_source = s.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             DVLOG(1) << runnable::Context::get_runtime_context().info();
             s.on_next(1.0F);
@@ -283,8 +272,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentOpMuxerOnThreads)
         s.make_edge(rx_source, rx_sink);
     });
 
-    pipeline->register_segment(segment);
-
     executor.register_pipeline(std::move(pipeline));
 
     executor.start();
@@ -300,7 +287,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSource)
 
     Executor executor(std::move(options));
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     std::mutex mutex;
     std::set<std::size_t> unique_thread_ids;
@@ -310,7 +297,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSource)
         unique_thread_ids.insert(id);
     };
 
-    auto segment = Segment::create("seg_1", [&add_thread_id](segment::Builder& s) {
+    pipeline->make_segment("seg_1", [&add_thread_id](segment::IBuilder& s) {
         auto rx_source = s.make_source<std::size_t>("rx_source", [](rxcpp::subscriber<std::size_t> s) {
             auto thread_id_hash = std::hash<std::thread::id>()(std::this_thread::get_id());
             DVLOG(1) << runnable::Context::get_runtime_context().info() << ": hash=" << thread_id_hash;
@@ -331,8 +318,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSource)
         s.make_edge(rx_source, rx_sink);
     });
 
-    pipeline->register_segment(segment);
-
     executor.register_pipeline(std::move(pipeline));
 
     executor.start();
@@ -348,7 +333,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
 
     Executor executor(std::move(options));
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     std::mutex mutex;
     std::set<std::size_t> unique_thread_ids;
@@ -358,7 +343,7 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
         unique_thread_ids.insert(id);
     };
 
-    auto segment = Segment::create("seg_1", [&add_thread_id](segment::Builder& s) {
+    pipeline->make_segment("seg_1", [&add_thread_id](segment::IBuilder& s) {
         auto rx_source = s.make_source<std::size_t>("rx_source", [](rxcpp::subscriber<std::size_t> s) {
             auto thread_id_hash = std::hash<std::thread::id>()(std::this_thread::get_id());
             auto& ctx           = runnable::Context::get_runtime_context();
@@ -384,8 +369,6 @@ TEST_F(TestExecutor, LifeCycleSingleSegmentConcurrentSourceWithStaggeredShutdown
 
         s.make_edge(rx_source, rx_sink);
     });
-
-    pipeline->register_segment(segment);
 
     executor.register_pipeline(std::move(pipeline));
 

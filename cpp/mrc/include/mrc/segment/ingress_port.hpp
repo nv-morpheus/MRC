@@ -36,11 +36,11 @@
 
 namespace mrc::segment {
 
-class Instance;
+class SegmentInstance;
 
 struct IngressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
 {
-    friend Instance;
+    friend SegmentInstance;
 };
 
 template <typename T>
@@ -56,9 +56,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_source(std::make_unique<node::RxNode<T>>())
-    {
-        this->set_name(m_port_name);
-    }
+    {}
 
   private:
     node::RxSourceBase<T>* get_object() const final
@@ -74,7 +72,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         return launch_control.prepare_launcher(std::move(m_source));
     }
 
-    std::shared_ptr<manifold::Interface> make_manifold(pipeline::Resources& resources) final
+    std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources& resources) final
     {
         return manifold::Factory<T>::make_manifold(m_port_name, resources);
     }
@@ -92,7 +90,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     std::unique_ptr<node::RxNode<T>> m_source;
     std::mutex m_mutex;
 
-    friend Instance;
+    friend SegmentInstance;
 };
 
 }  // namespace mrc::segment

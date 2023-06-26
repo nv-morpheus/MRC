@@ -31,7 +31,7 @@
 #include <sstream>
 #include <utility>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 ConnectionManager::~ConnectionManager() = default;
 
@@ -259,4 +259,4 @@ const std::map<ConnectionManager::stream_id_t, ConnectionManager::stream_t>& Con
     return m_streams;
 }
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

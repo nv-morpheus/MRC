@@ -19,7 +19,7 @@
 
 #include "internal/memory/host_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/types.hpp"
@@ -29,32 +29,32 @@
 #include <optional>
 #include <vector>
 
-namespace mrc::internal::network {
-class Resources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::control_plane {
-class Resources;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::memory {
+namespace mrc::network {
+class NetworkResources;
+}  // namespace mrc::network
+namespace mrc::control_plane {
+class ControlPlaneResources;
+}  // namespace mrc::control_plane
+namespace mrc::memory {
 class DeviceResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::system {
-class Resources;
-}  // namespace mrc::internal::system
-namespace mrc::internal::ucx {
-class Resources;
-}  // namespace mrc::internal::ucx
-namespace mrc::internal::runtime {
+}  // namespace mrc::memory
+namespace mrc::system {
+class ThreadingResources;
+}  // namespace mrc::system
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
+namespace mrc::runtime {
 class Runtime;
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 class Manager final : public system::SystemProvider
 {
   public:
     Manager(const system::SystemProvider& system);
-    Manager(std::unique_ptr<system::Resources> resources);
+    // Manager(std::unique_ptr<system::ThreadingResources> resources);
     ~Manager() override;
 
     static Manager& get_resources();
@@ -68,11 +68,11 @@ class Manager final : public system::SystemProvider
   private:
     Future<void> shutdown();
 
-    const std::unique_ptr<system::Resources> m_system;
-    std::vector<runnable::Resources> m_runnable;                   // one per host partition
-    std::vector<std::optional<ucx::Resources>> m_ucx;              // one per flattened partition if network is enabled
-    std::shared_ptr<control_plane::Resources> m_control_plane;     // one per instance of resources::Manager
-    std::vector<memory::HostResources> m_host;                     // one per host partition
+    const std::unique_ptr<system::ThreadingResources> m_threading;
+    std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
+    std::vector<std::optional<ucx::UcxResources>> m_ucx;  // one per flattened partition if network is enabled
+    std::shared_ptr<control_plane::ControlPlaneResources> m_control_plane;  // one per instance of resources::Manager
+    std::vector<memory::HostResources> m_host;                              // one per host partition
     std::vector<std::optional<memory::DeviceResources>> m_device;  // one per flattened partition upto device_count
     std::vector<PartitionResources> m_partitions;                  // one per flattened partition
 
@@ -80,7 +80,7 @@ class Manager final : public system::SystemProvider
     // so it can be the first variable destroyed
     // this is the owner of the control_plane::Client::Instance
     // which must be destroyed before all other
-    std::vector<std::optional<network::Resources>> m_network;  // one per flattened partition
+    std::vector<std::optional<network::NetworkResources>> m_network;  // one per flattened partition
 
     static thread_local PartitionResources* m_thread_partition;
     static thread_local Manager* m_thread_resources;
@@ -88,4 +88,4 @@ class Manager final : public system::SystemProvider
     friend runtime::Runtime;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

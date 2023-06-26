@@ -195,9 +195,6 @@
                 "source.organizeImports": true
             },
             "editor.formatOnSave": true,
-            "editor.rulers": [
-                120
-            ],
             "editor.tabSize": 4
         },
         "cmake.configureArgs": [
@@ -205,6 +202,7 @@
             "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
         ],
         "cmake.format.allowOptionalArgumentIndentation": true,
+        "editor.rulers": [120],
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,
         "files.watcherExclude": {

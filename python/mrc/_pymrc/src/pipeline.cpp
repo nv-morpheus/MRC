@@ -39,7 +39,6 @@
 #include <tuple>
 #include <typeindex>
 #include <typeinfo>
-#include <utility>
 #include <vector>
 
 namespace mrc::pymrc {
@@ -162,13 +161,13 @@ PipelineEgressInfo collect_egress_info(py::list ids)
 }
 }  // namespace
 
-Pipeline::Pipeline() : m_pipeline(mrc::pipeline::make_pipeline()) {}
+Pipeline::Pipeline() : m_pipeline(mrc::make_pipeline()) {}
 
 Pipeline::~Pipeline() = default;
 
-void Pipeline::make_segment(const std::string& name, const std::function<void(mrc::segment::Builder&)>& init)
+void Pipeline::make_segment(const std::string& name, const std::function<void(mrc::segment::IBuilder&)>& init)
 {
-    auto init_wrapper = [=](mrc::segment::Builder& seg) {
+    auto init_wrapper = [=](mrc::segment::IBuilder& seg) {
         py::gil_scoped_acquire gil;
         init(seg);
     };
@@ -179,14 +178,14 @@ void Pipeline::make_segment(const std::string& name, const std::function<void(mr
 void Pipeline::make_segment(const std::string& name,
                             py::list ingress_port_info,
                             py::list egress_port_info,
-                            const std::function<void(mrc::segment::Builder&)>& init)
+                            const std::function<void(mrc::segment::IBuilder&)>& init)
 {
     if (ingress_port_info.empty() && egress_port_info.empty())
     {
         return make_segment(name, init);
     }
 
-    auto init_wrapper = [init](mrc::segment::Builder& seg) {
+    auto init_wrapper = [init](mrc::segment::IBuilder& seg) {
         py::gil_scoped_acquire gil;
         init(seg);
     };
@@ -202,10 +201,9 @@ void Pipeline::make_segment(const std::string& name,
     m_pipeline->make_segment(name, ingress_ports, egress_ports, init_wrapper);
 }
 
-std::unique_ptr<mrc::pipeline::Pipeline> Pipeline::swap()
+std::shared_ptr<pipeline::IPipeline> Pipeline::get_wrapped() const
 {
-    auto tmp   = std::move(m_pipeline);
-    m_pipeline = mrc::pipeline::make_pipeline();
-    return std::move(tmp);
+    return m_pipeline;
 }
+
 }  // namespace mrc::pymrc

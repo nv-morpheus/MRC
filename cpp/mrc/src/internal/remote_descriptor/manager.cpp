@@ -19,15 +19,15 @@
 
 #include "internal/codable/codable_storage.hpp"
 #include "internal/data_plane/client.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/request.hpp"
-#include "internal/data_plane/resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/remote_descriptor/decodable_storage.hpp"
 #include "internal/remote_descriptor/messages.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/channel/buffered_channel.hpp"
@@ -59,7 +59,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 namespace {
 
@@ -283,4 +283,4 @@ mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
     return {shared_from_this(), std::move(handle)};
 }
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

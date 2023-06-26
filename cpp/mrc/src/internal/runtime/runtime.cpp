@@ -26,7 +26,7 @@
 
 #include <utility>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 Runtime::Runtime(std::unique_ptr<resources::Manager> resources) : m_resources(std::move(resources))
 {
@@ -67,4 +67,4 @@ Partition& Runtime::partition(std::size_t partition_id)
     return *m_partitions.at(partition_id);
 }
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

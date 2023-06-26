@@ -19,7 +19,7 @@
 
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/runnable/launch_control.hpp"
@@ -31,9 +31,9 @@
 #include <memory>
 #include <utility>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable)
+Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable)
 {
     m_cq = m_builder.AddCompletionQueue();
     m_builder.AddListeningPort("0.0.0.0:13337", grpc::InsecureServerCredentials());
@@ -88,7 +88,7 @@ void Server::do_service_await_join()
     }
 }
 
-runnable::Resources& Server::runnable()
+runnable::RunnableResources& Server::runnable()
 {
     return m_runnable;
 }
@@ -101,4 +101,4 @@ void Server::register_service(std::shared_ptr<grpc::Service> service)
     m_builder.RegisterService(service.get());
     m_services.push_back(service);
 }
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

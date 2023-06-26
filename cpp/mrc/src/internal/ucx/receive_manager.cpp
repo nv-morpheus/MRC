@@ -32,7 +32,7 @@
 #include <cstdint>  // for uint32_t
 #include <utility>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 TaggedReceiveManager::TaggedReceiveManager(Handle<Worker> worker, ucp_tag_t tag, ucp_tag_t task_mask) :
   m_worker(std::move(worker)),
@@ -113,4 +113,4 @@ void TaggedReceiveManager::progress_engine()
     }
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 class TransientBuffer;
 

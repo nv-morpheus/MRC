@@ -18,8 +18,8 @@
 #include "internal/system/fiber_manager.hpp"
 
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -30,9 +30,9 @@
 #include <functional>
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-FiberManager::FiberManager(const Resources& resources) : m_cpu_set(resources.system().topology().cpu_set())
+FiberManager::FiberManager(const ThreadingResources& resources) : m_cpu_set(resources.system().topology().cpu_set())
 {
     auto cpu_count       = m_cpu_set.weight();
     const auto& options  = resources.system().options();
@@ -94,4 +94,4 @@ FiberTaskQueue& FiberManager::task_queue(std::uint32_t cpu_id) const
     return *search->second;
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

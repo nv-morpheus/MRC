@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class HostPartition;
 
 class DevicePartition final : private GpuInfo
@@ -48,4 +48,4 @@ class DevicePartition final : private GpuInfo
     std::shared_ptr<const HostPartition> m_host_partition;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

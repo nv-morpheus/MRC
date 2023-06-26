@@ -24,7 +24,7 @@
 
 #include <string>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 class ClientInstance
 {
@@ -62,4 +62,4 @@ class ClientInstance
     const std::string m_worker_address;
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

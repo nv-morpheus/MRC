@@ -80,7 +80,7 @@ function update_conda_env() {
 
     # Make sure we have the conda-merge package installed
     if [[ -z "$(conda list | grep conda-merge)" ]]; then
-        rapids-mamba-retry install -n mrc -c conda-forge "conda-merge>=0.2"
+        rapids-mamba-retry install -q -n mrc -c conda-forge "conda-merge>=0.2"
     fi
 
     # Create a temp directory which we store the combined environment file in
@@ -91,7 +91,7 @@ function update_conda_env() {
     conda run -n mrc --live-stream conda-merge ${CONDA_ENV_YML} ${CONDA_CLANG_ENV_YML} ${CONDA_CI_ENV_YML} > ${condatmpdir}/merged_env.yml
 
     # Update the conda env with prune remove excess packages (in case one was removed from the env)
-    rapids-mamba-retry env update -n mrc -q --prune --file ${condatmpdir}/merged_env.yml
+    rapids-mamba-retry env update -n mrc --prune --file ${condatmpdir}/merged_env.yml
 
     # Delete the temp directory
     rm -rf ${condatmpdir}

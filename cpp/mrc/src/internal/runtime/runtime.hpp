@@ -25,11 +25,11 @@
 #include <memory>
 #include <vector>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 /**
  * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
@@ -59,4 +59,4 @@ class Runtime final : public mrc::runtime::IRuntime
     std::vector<std::unique_ptr<Partition>> m_partitions;
 };
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

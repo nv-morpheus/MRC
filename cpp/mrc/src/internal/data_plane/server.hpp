@@ -39,12 +39,12 @@ namespace mrc::node {
 template <typename KeyT, typename T>
 class TaggedRouter;
 }  // namespace mrc::node
-namespace mrc::internal::memory {
+namespace mrc::memory {
 class HostResources;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::ucx {
-class Resources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::memory
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -70,7 +70,7 @@ class Runner;
 // channel decoder, which should issue the recv in the same context as was
 // called and return immediately.
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 using network_event_t = std::pair<std::uint64_t, memory::TransientBuffer>;
 
@@ -89,7 +89,7 @@ class Server final : public Service, public resources::PartitionResourceBase
 {
   public:
     Server(resources::PartitionResourceBase& provider,
-           ucx::Resources& ucx,
+           ucx::UcxResources& ucx,
            memory::HostResources& host,
            memory::TransientPool& transient_pool,
            InstanceID instance_id);
@@ -109,7 +109,7 @@ class Server final : public Service, public resources::PartitionResourceBase
     const std::size_t m_pre_posted_recv_count{16};
 
     // ucx resources
-    ucx::Resources& m_ucx;
+    ucx::UcxResources& m_ucx;
     memory::HostResources& m_host;
     InstanceID m_instance_id;
 
@@ -131,4 +131,4 @@ class Server final : public Service, public resources::PartitionResourceBase
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
 };
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

@@ -45,7 +45,7 @@ class MirrorTapStreamModule : public SegmentModule, public PersistentModule
     void tap_ingress_port_name(std::string name);
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 
@@ -82,7 +82,7 @@ void MirrorTapStreamModule<DataTypeT>::tap_ingress_port_name(std::string ingress
 }
 
 template <typename DataTypeT>
-void MirrorTapStreamModule<DataTypeT>::initialize(segment::Builder& builder)
+void MirrorTapStreamModule<DataTypeT>::initialize(segment::IBuilder& builder)
 {
     auto mirror_ingress = builder.get_ingress<DataTypeT>(m_ingress_name);
     m_stream_buffer     = builder.make_module<StreamBufferModule<DataTypeT>>("test", config());

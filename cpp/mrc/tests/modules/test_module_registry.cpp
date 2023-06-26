@@ -17,8 +17,6 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/plugins.hpp"
 #include "mrc/modules/properties/persistent.hpp"
@@ -27,6 +25,7 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
@@ -261,7 +260,7 @@ TEST_F(TestModuleRegistry, DynamicModuleRegistrationTest)
 
     unsigned int packet_count{0};
 
-    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count](segment::IBuilder& builder) {
         auto config = nlohmann::json();
         unsigned int source_count{42};
         config["source_count"] = source_count;

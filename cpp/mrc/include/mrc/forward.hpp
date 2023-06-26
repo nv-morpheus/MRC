@@ -24,7 +24,7 @@ class Executor;
 struct PlacementGroup;
 
 namespace pipeline {
-class Pipeline;
+class PipelineDefinition;
 }  // namespace pipeline
 
 struct CpuSet;

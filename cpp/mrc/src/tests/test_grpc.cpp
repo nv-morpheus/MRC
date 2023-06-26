@@ -23,7 +23,8 @@
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/channel/status.hpp"
@@ -66,8 +67,8 @@ class TestRPC : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<internal::resources::Manager>(
-            internal::system::SystemProvider(make_system([](Options& options) {
+        m_resources = std::make_unique<resources::Manager>(
+            system::SystemProvider(tests::make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 // options.architect_url("localhost:13337");
                 options.topology().user_cpuset("0-8");
@@ -75,7 +76,7 @@ class TestRPC : public ::testing::Test
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
 
-        m_server = std::make_unique<internal::rpc::Server>(m_resources->partition(0).runnable());
+        m_server = std::make_unique<rpc::Server>(m_resources->partition(0).runnable());
 
         m_channel = grpc::CreateChannel("localhost:13337", grpc::InsecureChannelCredentials());
         m_stub    = mrc::testing::TestService::NewStub(m_channel);
@@ -89,10 +90,10 @@ class TestRPC : public ::testing::Test
         m_resources.reset();
     }
 
-    std::unique_ptr<internal::resources::Manager> m_resources;
+    std::unique_ptr<resources::Manager> m_resources;
     std::shared_ptr<grpc::Channel> m_channel;
     std::shared_ptr<mrc::testing::TestService::Stub> m_stub;
-    std::unique_ptr<internal::rpc::Server> m_server;
+    std::unique_ptr<rpc::Server> m_server;
 };
 
 TEST_F(TestRPC, ServerLifeCycle)
@@ -106,8 +107,8 @@ TEST_F(TestRPC, ServerLifeCycle)
     // server.register_service(service);
 }
 
-using stream_server_t = internal::rpc::ServerStream<mrc::testing::Input, mrc::testing::Output>;
-using stream_client_t = internal::rpc::ClientStream<mrc::testing::Input, mrc::testing::Output>;
+using stream_server_t = rpc::ServerStream<mrc::testing::Input, mrc::testing::Output>;
+using stream_client_t = rpc::ClientStream<mrc::testing::Input, mrc::testing::Output>;
 
 TEST_F(TestRPC, Alternative)
 {

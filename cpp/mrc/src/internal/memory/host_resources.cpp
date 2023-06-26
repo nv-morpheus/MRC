@@ -18,7 +18,7 @@
 #include "internal/memory/host_resources.hpp"
 
 #include "internal/memory/callback_adaptor.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
@@ -48,9 +48,9 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
-HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
+HostResources::HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
 {
     runnable.main()
@@ -122,4 +122,4 @@ std::shared_ptr<mrc::memory::memory_resource> HostResources::arena_memory_resour
 {
     return m_arena;
 }
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

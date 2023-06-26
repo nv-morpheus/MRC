@@ -17,13 +17,13 @@
 
 #include "internal/codable/codable_storage.hpp"
 
-#include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/memory/host_resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 
 #include "mrc/codable/memory.hpp"
 #include "mrc/cuda/common.hpp"
@@ -43,7 +43,7 @@
 
 using namespace mrc::memory::literals;
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 CodableStorage::CodableStorage(resources::PartitionResources& resources) : m_resources(resources) {}
 CodableStorage::CodableStorage(mrc::codable::protos::EncodedObject proto, resources::PartitionResources& resources) :
@@ -221,4 +221,4 @@ CodableStorage::idx_t CodableStorage::add_meta_data(const google::protobuf::Mess
     return index;
 }
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

@@ -29,14 +29,14 @@
 #include <optional>
 #include <vector>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::ucx {
-class Resources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::control_plane
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 class Instance;
 
 class ConnectionsManager : public StateManager
@@ -48,7 +48,7 @@ class ConnectionsManager : public StateManager
     ~ConnectionsManager() override;
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
-        std::vector<std::optional<ucx::Resources>>& ucx_resources);
+        std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
 
     const MachineID& machine_id() const;
     const std::vector<InstanceID>& instance_ids() const;
@@ -69,4 +69,4 @@ class ConnectionsManager : public StateManager
     std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
 };
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

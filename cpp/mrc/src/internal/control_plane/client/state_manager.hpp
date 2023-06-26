@@ -36,7 +36,7 @@ namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 class Client;
 
@@ -96,4 +96,4 @@ class StateManager
 };
 
 }  // namespace client
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

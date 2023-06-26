@@ -18,14 +18,13 @@
 #include "test_mrc.hpp"
 
 #include "mrc/channel/status.hpp"  // for Status
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
@@ -68,12 +67,12 @@ INSTANTIATE_TEST_SUITE_P(TestNode, ParallelTests, testing::Values(1, 2, 4));
 
 TEST_F(TestNode, GenericEndToEnd)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         DVLOG(1) << "In Initializer" << std::endl;
 
         auto sourceStr1 = seg.make_source<std::string>("src1", [&](rxcpp::subscriber<std::string>& s) {
@@ -149,12 +148,12 @@ TEST_F(TestNode, GenericEndToEnd)
 
 TEST_F(TestNode, GenericEndToEndComponent)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         DVLOG(1) << "In Initializer" << std::endl;
 
         auto sourceStr1 = seg.make_source<std::string>("src1", [&](rxcpp::subscriber<std::string>& s) {
@@ -234,14 +233,14 @@ TEST_F(TestNode, GenericEndToEndComponent)
 // ======= Replace SourceRoundRobinPolicy with approprate Operator =======
 // TEST_F(TestNode, EnsureMoveSemantics)
 // {
-//     auto p = pipeline::make_pipeline();
+//     auto p = mrc::make_pipeline();
 
 //     std::atomic<int> next_count     = 0;
 //     std::atomic<int> complete_count = 0;
 
 //     CopyMoveCounter::reset();
 
-//     auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+//     auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
 //         auto source = seg.make_source<CopyMoveCounter>("src1", [&](rxcpp::subscriber<CopyMoveCounter>& s) {
 //             s.on_next(CopyMoveCounter(1));
 //             s.on_next(CopyMoveCounter(2));
@@ -314,13 +313,13 @@ TEST_F(TestNode, GenericEndToEndComponent)
 
 TEST_F(TestNode, SourceEpilogue)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
     std::atomic<int> tap_count      = 0;
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             s.on_next(1);
             s.on_next(2);
@@ -368,13 +367,13 @@ TEST_F(TestNode, SourceEpilogue)
 
 TEST_F(TestNode, SinkPrologue)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
     std::atomic<int> tap_count      = 0;
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             s.on_next(1);
             s.on_next(2);
@@ -422,14 +421,14 @@ TEST_F(TestNode, SinkPrologue)
 
 TEST_F(TestNode, NodePrologueEpilogue)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> sink_sum         = 0;
     std::atomic<int> complete_count   = 0;
     std::atomic<int> prologue_tap_sum = 0;
     std::atomic<int> epilogue_tap_sum = 0;
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             s.on_next(1);
             s.on_next(2);
@@ -489,12 +488,12 @@ TEST_F(TestNode, NodePrologueEpilogue)
 
 TEST_F(TestNode, RxNodeComponentThrows)
 {
-    auto p                           = pipeline::make_pipeline();
+    auto p                           = mrc::make_pipeline();
     std::atomic<int> throw_count     = 0;
     std::atomic<int> sink_call_count = 0;
     std::atomic<int> complete_count  = 0;
 
-    auto my_segment = p->make_segment("test_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("test_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("source", [&](rxcpp::subscriber<int>& s) {
             s.on_next(1);
             s.on_next(2);
@@ -547,7 +546,7 @@ TEST_F(TestNode, RxNodeComponentThrows)
 
 TEST_P(ParallelTests, SourceMultiThread)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
@@ -561,7 +560,7 @@ TEST_P(ParallelTests, SourceMultiThread)
 
     ParallelTester parallel_test(source_thread_count);
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             auto& context = mrc::runnable::Context::get_runtime_context();
 
@@ -634,7 +633,7 @@ TEST_P(ParallelTests, SourceMultiThread)
 
 TEST_P(ParallelTests, SinkMultiThread)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
@@ -648,7 +647,7 @@ TEST_P(ParallelTests, SinkMultiThread)
 
     ParallelTester parallel_test(thread_count);
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             auto& context = mrc::runnable::Context::get_runtime_context();
 
@@ -708,7 +707,7 @@ TEST_P(ParallelTests, SinkMultiThread)
 
 TEST_P(ParallelTests, NodeMultiThread)
 {
-    auto p = pipeline::make_pipeline();
+    auto p = mrc::make_pipeline();
 
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
@@ -722,7 +721,7 @@ TEST_P(ParallelTests, NodeMultiThread)
 
     ParallelTester parallel_test(thread_count);
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::Builder& seg) {
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
         auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
             auto& context = mrc::runnable::Context::get_runtime_context();
 

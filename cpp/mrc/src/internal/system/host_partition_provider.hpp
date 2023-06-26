@@ -21,7 +21,7 @@
 
 #include <cstddef>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class HostPartition;
 
 /**
@@ -41,4 +41,4 @@ class HostPartitionProvider : public SystemProvider
     const std::size_t m_host_partition_id;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

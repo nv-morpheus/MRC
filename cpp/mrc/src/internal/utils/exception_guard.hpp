@@ -22,7 +22,7 @@
 #include <exception>
 #include <functional>
 
-namespace mrc::internal::utils {
+namespace mrc::utils {
 
 class ExceptionGuard final
 {
@@ -37,4 +37,4 @@ class ExceptionGuard final
     std::exception_ptr m_ptr{nullptr};
 };
 
-}  // namespace mrc::internal::utils
+}  // namespace mrc::utils

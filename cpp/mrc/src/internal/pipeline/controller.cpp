@@ -17,7 +17,7 @@
 
 #include "internal/pipeline/controller.hpp"
 
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 
 #include "mrc/core/utils.hpp"
@@ -38,9 +38,9 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-Controller::Controller(std::unique_ptr<Instance> pipeline) : m_pipeline(std::move(pipeline))
+Controller::Controller(std::unique_ptr<PipelineInstance> pipeline) : m_pipeline(std::move(pipeline))
 {
     CHECK(m_pipeline);
     m_pipeline->service_start();
@@ -166,4 +166,4 @@ const std::string& Controller::info()
     return str;
 }
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

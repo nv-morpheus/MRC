@@ -34,7 +34,7 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class ThreadResources;
 
@@ -106,4 +106,4 @@ Thread ThreadResources::make_thread(std::string desc, CpuSet cpu_affinity, Calla
     return {shared_from_this(), std::move(thread)};
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

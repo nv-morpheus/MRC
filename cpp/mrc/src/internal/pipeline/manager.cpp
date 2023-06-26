@@ -18,11 +18,11 @@
 #include "internal/pipeline/manager.hpp"
 
 #include "internal/pipeline/controller.hpp"
-#include "internal/pipeline/instance.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
@@ -41,9 +41,9 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-Manager::Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources) :
+Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources) :
   m_pipeline(std::move(pipeline)),
   m_resources(resources)
 {
@@ -71,7 +71,7 @@ void Manager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<Instance>(m_pipeline, m_resources);
+    auto instance    = std::make_unique<PipelineInstance>(m_pipeline, m_resources);
     auto controller  = std::make_unique<Controller>(std::move(instance));
     m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 
@@ -133,9 +133,9 @@ resources::Manager& Manager::resources()
     return m_resources;
 }
 
-const Pipeline& Manager::pipeline() const
+const PipelineDefinition& Manager::pipeline() const
 {
     CHECK(m_pipeline);
     return *m_pipeline;
 }
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline
