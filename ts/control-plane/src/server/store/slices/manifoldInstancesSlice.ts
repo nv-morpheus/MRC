@@ -11,6 +11,8 @@ import {
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
+   segmentInstancesDecRefCount,
+   segmentInstancesIncRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
@@ -91,6 +93,7 @@ export const manifoldInstancesSlice = createSlice({
          found.state.actualStatus = action.payload.status;
       },
       attachRequestedSegment: (
+         dispatch: AppDispatch,
          state,
          action: PayloadAction<{
             manifold: IManifoldInstance;
@@ -118,6 +121,7 @@ export const manifoldInstancesSlice = createSlice({
             }
 
             found.requestedOutputSegments[action.payload.segment.address] = action.payload.is_local;
+            dispatch(segmentInstancesIncRefCount({ segment: action.payload.segment }));
          }
       },
       detachRequestedSegment: (
@@ -181,9 +185,9 @@ function syncSegmentNameForManifold(
       .filter(
          (s) =>
             resourceActualStatusToNumber(s.state.actualStatus) >=
-               resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
+            resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
             resourceActualStatusToNumber(s.state.actualStatus) <
-               resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
+            resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
       )
       .map((s) => s.id);
 

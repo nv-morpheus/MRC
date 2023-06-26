@@ -94,6 +94,25 @@ export const segmentInstancesSlice = createSlice({
 
          found.state.actualStatus = action.payload.status;
       },
+
+      incRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
+         const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
+         if (!found) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} not found`);
+         }
+
+         found.state.refCount++;
+      },
+      decRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
+         const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
+         if (!found) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} not found`);
+         } else if (found.state.refCount == 0) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} has refCount 0`);
+         }
+
+         found.state.refCount--;
+      }
    },
    extraReducers: (builder) => {
       builder.addCase(connectionsRemove, (state, action) => {
@@ -176,10 +195,13 @@ export function segmentInstancesDestroy(instance: ISegmentInstance) {
    };
 }
 
+
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
 export const {
    add: segmentInstancesAdd,
+   decRefCount: segmentInstancesDecRefCount,
+   incRefCount: segmentInstancesIncRefCount,
    // addMany: segmentInstancesAddMany,
    remove: segmentInstancesRemove,
    updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
@@ -413,9 +435,9 @@ export function segmentInstancesConfigureSlice() {
 
          // Increment the ref count on our manifolds
       },
-      async (instance) => {},
-      async (instance) => {},
-      async (instance) => {},
+      async (instance) => { },
+      async (instance) => { },
+      async (instance) => { },
       async (instance, listenerApi) => {
          listenerApi.dispatch(segmentInstancesRemove(instance));
       }
