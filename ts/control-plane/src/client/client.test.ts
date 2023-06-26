@@ -467,7 +467,7 @@ describe("Worker", () => {
    });
 
    test("Add One", async () => {
-      const manager = new WorkersManager(connectionManager, ["test data"]);
+      const manager = new WorkersManager(connectionManager, [ "test data" ]);
 
       await manager.register();
 
@@ -477,12 +477,12 @@ describe("Worker", () => {
    });
 
    test("Activate", async () => {
-      const manager = new WorkersManager(connectionManager, ["test data"]);
+      const manager = new WorkersManager(connectionManager, [ "test data" ]);
 
       await manager.createResources();
 
       // Check to make sure its activated
-      let found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
+      let found_worker = workersSelectById(client.getServerState(), manager.workerIds[ 0 ]);
 
       expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Created);
 
@@ -490,7 +490,7 @@ describe("Worker", () => {
       await manager.runResources();
 
       // Ensure its running
-      found_worker = workersSelectById(client.getServerState(), manager.workerIds[0]);
+      found_worker = workersSelectById(client.getServerState(), manager.workerIds[ 0 ]);
 
       expect(found_worker?.state.actualStatus).toBe(ResourceActualStatus.Actual_Running);
    });
@@ -498,7 +498,7 @@ describe("Worker", () => {
 
 describe("Pipeline", () => {
    const client: MrcTestClient = new MrcTestClient();
-   const workersManager: WorkersManager = WorkersManager.create(["test data", "test data 2"], client);
+   const workersManager: WorkersManager = WorkersManager.create([ "test data", "test data 2" ], client);
 
    beforeEach(async () => {
       // Ensure everything up to the workers is ready to go
@@ -555,13 +555,13 @@ describe("Pipeline", () => {
       const pipelineManager = new PipelineManager(workersManager, {
          segments: {
             my_seg1: {
-               egressPorts: ["port1"],
+               egressPorts: [ "port1" ],
                ingressPorts: [],
                name: "my_seg",
             },
             my_seg2: {
                egressPorts: [],
-               ingressPorts: ["port1"],
+               ingressPorts: [ "port1" ],
                name: "my_seg2",
             },
          },
@@ -585,7 +585,7 @@ describe("Pipeline", () => {
       test("Resource States", async () => {
          let pipeline_instance_state: PipelineInstance | null =
             workersManager.connectionManager.getClientState().pipelineInstances!.entities[
-               pipelineManager.pipelineInstanceId
+            pipelineManager.pipelineInstanceId
             ];
 
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Created);
@@ -694,7 +694,7 @@ describe("Pipeline", () => {
       test("Resource State Handle Errors", async () => {
          const pipeline_instance_state: PipelineInstance | null =
             workersManager.connectionManager.getClientState().pipelineInstances!.entities[
-               pipelineManager.pipelineInstanceId
+            pipelineManager.pipelineInstanceId
             ];
 
          expect(pipeline_instance_state?.state?.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Created);
@@ -716,11 +716,11 @@ describe("Manifold", () => {
       segments: {
          my_seg1: {
             ingressPorts: [],
-            egressPorts: ["port1"],
+            egressPorts: [ "port1" ],
             name: "my_seg1",
          },
          my_seg2: {
-            ingressPorts: ["port1"],
+            ingressPorts: [ "port1" ],
             egressPorts: [],
             name: "my_seg2",
          },
@@ -738,7 +738,7 @@ describe("Manifold", () => {
    };
 
    const client: MrcTestClient = new MrcTestClient();
-   const pipelineManager = PipelineManager.create(pipeline_config, ["test data"], client);
+   const pipelineManager = PipelineManager.create(pipeline_config, [ "test data" ], client);
 
    beforeEach(async () => {
       await pipelineManager.ensureResourcesCreated();
@@ -772,7 +772,7 @@ describe("Manifold", () => {
       const segments = await Promise.all(
          pipelineManager.connectionManager
             .getClientState()
-            .pipelineInstances!.entities[pipelineManager.pipelineInstanceId].segmentIds.map(async (s) => {
+            .pipelineInstances!.entities[ pipelineManager.pipelineInstanceId ].segmentIds.map(async (s) => {
                return await pipelineManager.connectionManager.update_resource_status(
                   s,
                   "SegmentInstances",
@@ -785,14 +785,64 @@ describe("Manifold", () => {
    });
 
    test("Second Connection", async () => {
-      const pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
+      let state = pipelineManager.connectionManager.getClientState();
 
+      // Verify that with a single connection, the `my_seg1` segment has a single local connection to `my_seg2`
+      expect(state.segmentInstances!.ids).toHaveLength(2);
+      const pipe1seg1Id: number = parseInt(state.segmentInstances!.ids[ 0 ]);
+      const pipe1seg2Id: number = parseInt(state.segmentInstances!.ids[ 1 ]);
+
+      // Might need to change this to a search if the order stops being deterministic
+      expect(state.segmentInstances!.entities[ pipe1seg1Id! ].name).toEqual("my_seg1");
+      expect(state.segmentInstances!.entities[ pipe1seg2Id! ].name).toEqual("my_seg2");
+
+      expect(state.manifoldInstances!.ids).toHaveLength(1);
+      const manifoldId1 = state.manifoldInstances!.ids[ 0 ];
+      let manifold1 = state.manifoldInstances!.entities[ manifoldId1 ];
+      expect(Object.keys(manifold1.requestedInputSegments)).toHaveLength(1);
+      expect(manifold1.requestedInputSegments[ pipe1seg1Id ]).toBe(true);
+
+      expect(Object.keys(manifold1.requestedOutputSegments)).toHaveLength(1);
+      expect(manifold1.requestedOutputSegments[ pipe1seg2Id ]).toBe(true);
+
+      // Now create a second connection
+      const pipelineManager2 = PipelineManager.create(pipeline_config, [ "test data2" ], client);
       await pipelineManager2.ensureResourcesCreated();
 
-      // Now see what the state is
-      const state = pipelineManager2.connectionManager.getClientState();
+      // Now see what the state is, we should have 4 segments and 2 manifolds
+      state = pipelineManager2.connectionManager.getClientState();
+      expect(state.segmentInstances!.ids).toHaveLength(4);
+      const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[ 2 ]);
+      const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[ 3 ]);
 
-      console.log("Multiple connected");
+      expect(state.segmentInstances!.entities[ pipe2seg1Id! ].name).toEqual("my_seg1");
+      expect(state.segmentInstances!.entities[ pipe2seg2Id! ].name).toEqual("my_seg2");
+
+      expect(state.manifoldInstances!.ids).toHaveLength(2);
+      expect(state.manifoldInstances!.ids[ 0 ]).toEqual(manifoldId1);
+
+      const manifoldId2 = state.manifoldInstances!.ids[ 1 ];
+      expect(manifoldId2).not.toEqual(manifoldId1);
+
+      // fetch an updated version of the first manifold
+      manifold1 = state.manifoldInstances!.entities[ manifoldId1 ];
+      expect(Object.keys(manifold1.requestedInputSegments)).toHaveLength(2);
+      expect(manifold1.requestedInputSegments[ pipe1seg1Id ]).toBe(true);
+      expect(manifold1.requestedInputSegments[ pipe2seg1Id ]).toBe(false);
+
+      expect(Object.keys(manifold1.requestedOutputSegments)).toHaveLength(2);
+      expect(manifold1.requestedOutputSegments[ pipe1seg2Id ]).toBe(true);
+      expect(manifold1.requestedOutputSegments[ pipe2seg2Id ]).toBe(false);
+
+      let manifold2 = state.manifoldInstances!.entities[ manifoldId2 ];
+      expect(Object.keys(manifold2.requestedInputSegments)).toHaveLength(2);
+      expect(manifold2.requestedInputSegments[ pipe1seg1Id ]).toBe(false);
+      expect(manifold2.requestedInputSegments[ pipe2seg1Id ]).toBe(true);
+
+      expect(Object.keys(manifold2.requestedOutputSegments)).toHaveLength(2);
+      expect(manifold2.requestedOutputSegments[ pipe1seg2Id ]).toBe(false);
+      expect(manifold2.requestedOutputSegments[ pipe2seg2Id ]).toBe(true);
+
       await pipelineManager2.unregister();
    });
 });
