@@ -11,8 +11,7 @@ import {
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
-   segmentInstancesDecRefCount,
-   segmentInstancesIncRefCount,
+   segmentInstanceIncRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
@@ -93,7 +92,6 @@ export const manifoldInstancesSlice = createSlice({
          found.state.actualStatus = action.payload.status;
       },
       attachRequestedSegment: (
-         dispatch: AppDispatch,
          state,
          action: PayloadAction<{
             manifold: IManifoldInstance;
@@ -121,7 +119,7 @@ export const manifoldInstancesSlice = createSlice({
             }
 
             found.requestedOutputSegments[action.payload.segment.address] = action.payload.is_local;
-            dispatch(segmentInstancesIncRefCount({ segment: action.payload.segment }));
+            segmentInstanceIncRefCount(action.payload.segment);
          }
       },
       detachRequestedSegment: (

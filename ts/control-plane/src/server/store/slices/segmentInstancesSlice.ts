@@ -195,6 +195,12 @@ export function segmentInstancesDestroy(instance: ISegmentInstance) {
    };
 }
 
+export function segmentInstanceIncRefCount(segment: ISegmentInstance) {
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      dispatch(segmentInstancesIncRefCount({ segment: segment }));
+   };
+}
+
 
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
