@@ -854,5 +854,24 @@ describe("Manifold", () => {
       expect(manifold2.requestedOutputSegments[pipe2seg2Id]).toBe(true);
 
       await pipelineManager2.unregister();
+
+      // veirfy the refcount went back down
+      state = pipelineManager.connectionManager.getClientState();
+      pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+      expect(pipe1seg1.name).toEqual("my_seg1");
+      expect(pipe1seg1.state!.refCount).toEqual(1);
+
+      pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+      expect(pipe1seg2.name).toEqual("my_seg2");
+      expect(pipe1seg2.state!.refCount).toEqual(1);
+
+      expect(state.manifoldInstances!.ids).toHaveLength(1);
+
+      manifold1 = state.manifoldInstances!.entities[manifoldId1];
+      expect(Object.keys(manifold1.requestedInputSegments)).toHaveLength(1);
+      expect(manifold1.requestedInputSegments[pipe1seg1Id]).toBe(true);
+
+      expect(Object.keys(manifold1.requestedOutputSegments)).toHaveLength(1);
+      expect(manifold1.requestedOutputSegments[pipe1seg2Id]).toBe(true);
    });
 });
