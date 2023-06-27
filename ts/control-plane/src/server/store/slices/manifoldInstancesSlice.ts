@@ -119,7 +119,6 @@ export const manifoldInstancesSlice = createSlice({
             }
 
             found.requestedOutputSegments[action.payload.segment.address] = action.payload.is_local;
-            segmentInstanceIncRefCount(action.payload.segment);
          }
       },
       detachRequestedSegment: (
@@ -205,14 +204,7 @@ function syncSegmentNameForManifold(
       const is_local = manifold.pipelineInstanceId === seg.pipelineInstanceId;
 
       // Dispatch the attach action
-      dispatch(
-         manifoldInstancesSlice.actions.attachRequestedSegment({
-            is_input: isInput,
-            is_local: is_local,
-            manifold: manifold,
-            segment: seg,
-         })
-      );
+      dispatch(manifoldInstanceAddSegnment(manifold, isInput, seg, is_local));
    });
 
    // Determine any that need to be removed
@@ -272,6 +264,28 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
       });
    };
 }
+
+function manifoldInstanceAddSegnment(
+   manifold: IManifoldInstance,
+   isInput: boolean,
+   segment: ISegmentInstance,
+   isLocal: boolean) {
+   return (dispatch: AppDispatch) => {
+      // Dispatch the attach action
+      dispatch(
+         manifoldInstancesSlice.actions.attachRequestedSegment({
+            is_input: isInput,
+            is_local: isLocal,
+            manifold: manifold,
+            segment: segment,
+         })
+      );
+
+      // Increment the ref count of the segment
+      dispatch(segmentInstanceIncRefCount({ segment: segment }));
+   };
+}
+
 
 // export function manifoldInstancesAttachLocalSegment(manifold: IManifoldInstance, segment: ISegmentInstance) {
 //    return (dispatch: AppDispatch, getState: AppGetState) => {

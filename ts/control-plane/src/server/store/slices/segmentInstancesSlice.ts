@@ -195,19 +195,13 @@ export function segmentInstancesDestroy(instance: ISegmentInstance) {
    };
 }
 
-export function segmentInstanceIncRefCount(segment: ISegmentInstance) {
-   return (dispatch: AppDispatch, getState: AppGetState) => {
-      dispatch(segmentInstancesIncRefCount({ segment: segment }));
-   };
-}
-
 
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
 export const {
    add: segmentInstancesAdd,
-   decRefCount: segmentInstancesDecRefCount,
-   incRefCount: segmentInstancesIncRefCount,
+   incRefCount: segmentInstanceIncRefCount,
+   decRefCount: segmentInstanceDecRefCount,
    // addMany: segmentInstancesAddMany,
    remove: segmentInstancesRemove,
    updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
