@@ -804,7 +804,6 @@ describe("Manifold", () => {
       expect(Object.keys(manifold1.actualInputSegments)).toHaveLength(0);
       expect(Object.keys(manifold1.actualOutputSegments)).toHaveLength(0);
 
-
       // update requested to actual
       let response = await pipelineManager.connectionManager.send_request<ManifoldUpdateActualAssignmentsResponse>(
          EventType.ClientUnaryManifoldUpdateActualAssignments,

@@ -109,13 +109,13 @@ export const manifoldInstancesSlice = createSlice({
 
          // Check to make sure this hasnt been added already
          if (action.payload.is_input) {
-            if (action.payload.segment.address in found.requestedInputSegments) {
+            if (action.payload.segment.address in found.requestedInputSegments || action.payload.segment.address in found.actualInputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
             found.requestedInputSegments[action.payload.segment.address] = action.payload.is_local;
          } else {
-            if (action.payload.segment.address in found.requestedOutputSegments) {
+            if (action.payload.segment.address in found.requestedOutputSegments || action.payload.segment.address in found.actualOutputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
@@ -197,6 +197,9 @@ function syncSegmentNameForManifold(
    segmentName: string,
    isInput: boolean
 ) {
+   // TODO: There is a bug on the filtering, attachRequestedSegment is being dispatched 
+   // for segments that are already attached in the actual map
+
    // Find all segments that match this name and definition pair
    const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(
       state,
