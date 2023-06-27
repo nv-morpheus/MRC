@@ -12,6 +12,7 @@ import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { pipelineDefinitionsSelectById } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import {
    segmentInstanceIncRefCount,
+   segmentInstanceDecRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
@@ -218,13 +219,7 @@ function syncSegmentNameForManifold(
       }
 
       // Dispatch the attach action
-      dispatch(
-         manifoldInstancesSlice.actions.detachRequestedSegment({
-            is_input: isInput,
-            manifold: manifold,
-            segment: seg,
-         })
-      );
+      dispatch(manifoldInstanceRemoveSegment(manifold, isInput, seg));
    });
 }
 
@@ -283,6 +278,25 @@ function manifoldInstanceAddSegnment(
 
       // Increment the ref count of the segment
       dispatch(segmentInstanceIncRefCount({ segment: segment }));
+   };
+}
+
+function manifoldInstanceRemoveSegment(
+   manifold: IManifoldInstance,
+   isInput: boolean,
+   segment: ISegmentInstance) {
+   return (dispatch: AppDispatch) => {
+      // Dispatch the detach action
+      dispatch(
+         manifoldInstancesSlice.actions.detachRequestedSegment({
+            manifold: manifold,
+            is_input: isInput,
+            segment: segment,
+         })
+      );
+
+      // Decrement the ref count of the segment
+      dispatch(segmentInstanceDecRefCount({ segment: segment }));
    };
 }
 
