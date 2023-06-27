@@ -72,6 +72,7 @@ enum EventType
     // Pipeline Management
     ClientUnaryPipelineRegisterConfig = 401;
     ClientUnaryPipelineAddMapping = 402;
+    ClientUnaryManifoldUpdateActualAssignments = 403;
 
     // Resource Management
     ClientUnaryResourceUpdateStatus = 501;
@@ -265,6 +266,22 @@ message PipelineAddMappingResponse
 {
     // The pipeline instance ID that was created
     uint64 pipeline_instance_id = 1;
+}
+
+message ManifoldUpdateActualAssignmentsRequest
+{
+    uint64 manifold_instance_id = 1;
+
+   // The actual input connections. True = Local, False = Remote
+   map<uint32, bool> actual_input_segments = 2;
+
+   // The actual output connections. True = Local, False = Remote
+   map<uint32, bool> actual_output_segments = 3;
+}
+
+message ManifoldUpdateActualAssignmentsResponse
+{
+    bool ok = 1;
 }
 
 // message sent by an UpdateManager

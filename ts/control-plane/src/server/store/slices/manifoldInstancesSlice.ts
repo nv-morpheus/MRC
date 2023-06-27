@@ -151,6 +151,32 @@ export const manifoldInstancesSlice = createSlice({
             delete found.requestedOutputSegments[action.payload.segment.address];
          }
       },
+
+      updateRequestedSegment: (
+         state,
+         action: PayloadAction<{
+            manifold: IManifoldInstance;
+            is_input: boolean;
+            segment: ISegmentInstance;
+         }>
+      ) => {
+         const found = manifoldInstancesAdapter.getOne(state, action.payload.manifold.id);
+
+         if (!found) {
+            throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
+         }
+
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
+         const actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
+
+         const isLocal = requestedMap[action.payload.segment.address];
+         if (isLocal === undefined) {
+            throw new Error("Segment not attached to manifold");
+         }
+
+         actualMap[action.payload.segment.address] = isLocal;
+         delete requestedMap[action.payload.segment.address];
+      },
    },
    extraReducers: (builder) => {
       builder.addCase(pipelineInstancesRemove, (state, action) => {
@@ -205,7 +231,14 @@ function syncSegmentNameForManifold(
       const is_local = manifold.pipelineInstanceId === seg.pipelineInstanceId;
 
       // Dispatch the attach action
-      dispatch(manifoldInstanceAddSegnment(manifold, isInput, seg, is_local));
+      dispatch(
+         manifoldInstancesSlice.actions.attachRequestedSegment({
+            is_input: isInput,
+            is_local: is_local,
+            manifold: manifold,
+            segment: seg,
+         })
+      );
    });
 
    // Determine any that need to be removed
@@ -260,24 +293,55 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
    };
 }
 
-function manifoldInstanceAddSegnment(
+function manifoldInstanceUpdateActualSegment(
+   dispatch: AppDispatch,
+   state: RootState,
    manifold: IManifoldInstance,
    isInput: boolean,
-   segment: ISegmentInstance,
+   segmentId: string,
    isLocal: boolean) {
-   return (dispatch: AppDispatch) => {
-      // Dispatch the attach action
-      dispatch(
-         manifoldInstancesSlice.actions.attachRequestedSegment({
-            is_input: isInput,
-            is_local: isLocal,
-            manifold: manifold,
-            segment: segment,
-         })
-      );
+   const segment = segmentInstancesSelectById(state, segmentId);
+   if (!segment) {
+      throw new Error(`Could not find segment with ID: ${segmentId}`);
+   }
 
-      // Increment the ref count of the segment
-      dispatch(segmentInstanceIncRefCount({ segment: segment }));
+   let mapping: { [key: string]: boolean };
+   if (isInput) {
+      mapping = manifold.requestedInputSegments;
+   } else {
+      mapping = manifold.requestedOutputSegments;
+   }
+
+   if (mapping[segment.address] !== isLocal) {
+      throw new Error(`Actual segment ${segmentId} does not match requested segment`);
+   }
+
+   dispatch(manifoldInstancesSlice.actions.updateRequestedSegment({ manifold: manifold, is_input: isInput, segment: segment }));
+
+   // Increment the ref count of the segment
+   dispatch(segmentInstanceIncRefCount({ segment: segment }));
+}
+
+export function manifoldInstancesUpdateActualSegments(
+   manifoldInstanceId: string,
+   actualInputSegments: { [key: string]: boolean },
+   actualOutputSegments: { [key: string]: boolean }) {
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      const state = getState();
+      const manifold = manifoldInstancesSelectById(state, manifoldInstanceId);
+      if (!manifold) {
+         throw new Error(`Could not find manifold with ID: ${manifoldInstanceId}`);
+      }
+
+      Object.entries(actualInputSegments).forEach(([segmentId, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentId, isLocal);
+      });
+
+      Object.entries(actualOutputSegments).forEach(([segmentId, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
+      });
+
+
    };
 }
 
