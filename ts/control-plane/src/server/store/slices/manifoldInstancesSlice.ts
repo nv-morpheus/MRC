@@ -197,9 +197,6 @@ function syncSegmentNameForManifold(
    segmentName: string,
    isInput: boolean
 ) {
-   // TODO: There is a bug on the filtering, attachRequestedSegment is being dispatched 
-   // for segments that are already attached in the actual map
-
    // Find all segments that match this name and definition pair
    const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(
       state,
