@@ -218,7 +218,9 @@ function syncSegmentNameForManifold(
       )
       .map((s) => s.id);
 
-   const currentSegmentIds = Object.keys(isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments);
+   const currentRequestedSegmentIds = Object.keys(isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments);
+   const currentActualSegmentIds = Object.keys(isInput ? manifold.actualInputSegments : manifold.actualOutputSegments);
+   const currentSegmentIds = currentRequestedSegmentIds.concat(currentActualSegmentIds);
 
    // Determine any that need to be added
    const toAdd = activeSegmentIds.filter((s) => !currentSegmentIds.includes(s));
