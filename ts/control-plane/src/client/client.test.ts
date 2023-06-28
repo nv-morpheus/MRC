@@ -852,6 +852,8 @@ describe("Manifold", () => {
       manifold1 = state.manifoldInstances!.entities[manifoldId1];
       expect(Object.keys(manifold1.requestedInputSegments)).toHaveLength(1);
       expect(Object.keys(manifold1.actualInputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold1.requestedOutputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold1.actualOutputSegments)).toHaveLength(1);
 
       let manifold2 = state.manifoldInstances!.entities[manifoldId2];
       expect(Object.keys(manifold2.requestedInputSegments)).toHaveLength(2);
@@ -860,7 +862,17 @@ describe("Manifold", () => {
       expect(Object.keys(manifold2.actualOutputSegments)).toHaveLength(0);
 
 
-      // update requested to actual for the second client
+      // Both manifolds need to update their requested/actual segments
+      response = await pipelineManager.connectionManager.send_request<ManifoldUpdateActualAssignmentsResponse>(
+         EventType.ClientUnaryManifoldUpdateActualAssignments,
+         ManifoldUpdateActualAssignmentsRequest.create({
+            manifoldInstanceId: manifoldId1,
+            actualInputSegments: manifold1.requestedInputSegments,
+            actualOutputSegments: manifold1.requestedOutputSegments,
+         }));
+
+      expect(response.ok).toBe(true);
+
       response = await pipelineManager2.connectionManager.send_request<ManifoldUpdateActualAssignmentsResponse>(
          EventType.ClientUnaryManifoldUpdateActualAssignments,
          ManifoldUpdateActualAssignmentsRequest.create({
@@ -871,16 +883,9 @@ describe("Manifold", () => {
 
       expect(response.ok).toBe(true);
 
+      state = pipelineManager2.connectionManager.getClientState();
       const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[2]);
       const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[3]);
-
-      let pipe2seg1 = state.segmentInstances!.entities[pipe2seg1Id!];
-      expect(pipe2seg1.name).toEqual("my_seg1");
-      expect(pipe2seg1.state!.refCount).toEqual(2);
-
-      let pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
-      expect(pipe2seg2.name).toEqual("my_seg2");
-      expect(pipe2seg2.state!.refCount).toEqual(2);
 
       // fetch an updated version of the first manifold
       manifold1 = state.manifoldInstances!.entities[manifoldId1];
@@ -900,9 +905,19 @@ describe("Manifold", () => {
       expect(manifold2.actualInputSegments[pipe1seg1Id]).toBe(false);
       expect(manifold2.actualInputSegments[pipe2seg1Id]).toBe(true);
 
-      expect(Object.keys(manifold2.requestedOutputSegments)).toHaveLength(2);
-      expect(manifold2.requestedOutputSegments[pipe1seg2Id]).toBe(false);
-      expect(manifold2.requestedOutputSegments[pipe2seg2Id]).toBe(true);
+      expect(Object.keys(manifold2.requestedOutputSegments)).toHaveLength(0);
+      expect(Object.keys(manifold2.actualOutputSegments)).toHaveLength(2);
+      expect(manifold2.actualOutputSegments[pipe1seg2Id]).toBe(false);
+      expect(manifold2.actualOutputSegments[pipe2seg2Id]).toBe(true);
+
+      const pipe2seg1 = state.segmentInstances!.entities[pipe2seg1Id!];
+      expect(pipe2seg1.name).toEqual("my_seg1");
+      expect(pipe2seg1.state!.refCount).toEqual(2);
+
+      const pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
+      expect(pipe2seg2.name).toEqual("my_seg2");
+      expect(pipe2seg2.state!.refCount).toEqual(2);
+
 
       await pipelineManager2.unregister();
 
