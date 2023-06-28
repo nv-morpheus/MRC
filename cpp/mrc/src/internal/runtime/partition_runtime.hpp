@@ -50,12 +50,12 @@ namespace mrc::runtime {
 
 class Runtime;
 class PipelinesManager;
-class SegmentsManager;
+class WorkerManager;
 
 class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
                                public AsyncService,
-                               public IInternalRuntime,
-                               public IInternalRuntimeProvider
+                               public IInternalPartitionRuntime,
+                               public IInternalPartitionRuntimeProvider
 {
   public:
     PartitionRuntime(Runtime& system_runtime, size_t partition_id);
@@ -64,7 +64,7 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
     DELETE_COPYABILITY(PartitionRuntime);
     DELETE_MOVEABILITY(PartitionRuntime);
 
-    size_t partition_id() const;
+    size_t partition_id() const override;
 
     std::size_t gpu_count() const override;
 
@@ -74,11 +74,13 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
 
     control_plane::Client& control_plane() const override;
 
+    DataPlaneManager& data_plane() const override;
+
     PipelinesManager& pipelines_manager() const override;
 
     metrics::Registry& metrics_registry() const override;
 
-    IInternalRuntime& runtime() override;
+    IInternalPartitionRuntime& runtime() override;
 
     // IPartition -> IRemoteDescriptorManager& is covariant
     remote_descriptor::Manager& remote_descriptor_manager() final;
@@ -100,7 +102,7 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
 
-    std::unique_ptr<SegmentsManager> m_segments_manager;
+    std::unique_ptr<WorkerManager> m_worker_manager;
 };
 
 }  // namespace mrc::runtime

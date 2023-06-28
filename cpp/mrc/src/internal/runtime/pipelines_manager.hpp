@@ -39,10 +39,10 @@ namespace mrc::runtime {
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class PipelinesManager : public ResourceManagerBase<control_plane::state::Connection>
+class PipelinesManager : public AsyncService, public InternalRuntimeProvider
 {
   public:
-    PipelinesManager(Runtime& runtime, InstanceID connection_id);
+    PipelinesManager(IInternalRuntimeProvider& runtime);
     ~PipelinesManager() override;
 
     void register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs);
@@ -52,10 +52,9 @@ class PipelinesManager : public ResourceManagerBase<control_plane::state::Connec
     pipeline::PipelineInstance& get_instance(uint64_t instance_id);
 
   private:
-    control_plane::state::Connection filter_resource(
-        const control_plane::state::ControlPlaneState& state) const override;
+    void do_service_start(std::stop_token stop_token) override;
 
-    void on_running_state_updated(control_plane::state::Connection& instance) override;
+    void sync_state(const control_plane::state::Connection& connection);
 
     void create_pipeline(const control_plane::state::PipelineInstance& instance);
     void erase_pipeline(InstanceID pipeline_id);
@@ -63,6 +62,8 @@ class PipelinesManager : public ResourceManagerBase<control_plane::state::Connec
     std::map<uint64_t, std::shared_ptr<pipeline::PipelineDefinition>> m_definitions;
 
     std::map<uint64_t, std::unique_ptr<pipeline::PipelineInstance>> m_instances;
+
+    friend class ConnectionManager;
 };
 
 }  // namespace mrc::runtime

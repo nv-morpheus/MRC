@@ -42,13 +42,13 @@
 
 namespace mrc::runtime {
 
-template <typename ResourceT>
-class ResourceManagerBase : public AsyncService, public runtime::InternalRuntimeProvider
+template <typename ResourceT, typename RuntimeProviderT>
+class ResourceManagerBase : public AsyncService, public RuntimeProviderT
 {
   public:
-    ResourceManagerBase(runtime::IInternalRuntimeProvider& runtime, uint64_t id, std::string name) :
+    ResourceManagerBase(typename RuntimeProviderT::interface_t& runtime, uint64_t id, std::string name) :
       AsyncService(std::move(name)),
-      runtime::InternalRuntimeProvider(runtime),
+      RuntimeProviderT(runtime),
       m_id(id)
     {
         if constexpr (std::is_same_v<ResourceT, control_plane::state::Connection>)
@@ -297,6 +297,20 @@ class ResourceManagerBase : public AsyncService, public runtime::InternalRuntime
     std::string m_resource_type;
 
     control_plane::state::ResourceActualStatus m_local_status{control_plane::state::ResourceActualStatus::Unknown};
+};
+
+template <typename ResourceT>
+class SystemResourceManager : public ResourceManagerBase<ResourceT, runtime::InternalRuntimeProvider>
+{
+  public:
+    using ResourceManagerBase<ResourceT, runtime::InternalRuntimeProvider>::ResourceManagerBase;
+};
+
+template <typename ResourceT>
+class PartitionResourceManager : public ResourceManagerBase<ResourceT, runtime::InternalPartitionRuntimeProvider>
+{
+  public:
+    using ResourceManagerBase<ResourceT, runtime::InternalPartitionRuntimeProvider>::ResourceManagerBase;
 };
 
 }  // namespace mrc::runtime

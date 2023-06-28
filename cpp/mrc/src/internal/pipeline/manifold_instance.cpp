@@ -19,6 +19,7 @@
 
 #include "internal/pipeline/manifold_definition.hpp"
 #include "internal/resources/system_resources.hpp"
+#include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/utils/ranges.hpp"
 
@@ -37,13 +38,13 @@ namespace mrc::pipeline {
 ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
                                    std::shared_ptr<const ManifoldDefinition> definition,
                                    InstanceID instance_id) :
-  ResourceManagerBase(runtime, instance_id, (MRC_CONCAT_STR("Manifold[" << definition->name() << "]"))),
+  SystemResourceManager(runtime, instance_id, (MRC_CONCAT_STR("Manifold[" << definition->name() << "]"))),
   m_definition(std::move(definition))
 {}
 
 ManifoldInstance::~ManifoldInstance()
 {
-    ResourceManagerBase::call_in_destructor();
+    SystemResourceManager::call_in_destructor();
 }
 
 void ManifoldInstance::register_local_output(SegmentAddress address,
@@ -139,6 +140,10 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         }
         else
         {
+            // auto remote_edge = this->runtime().data_plane().get_input_channel(seg_id);
+
+            // manifold_inputs.emplace_back(seg_id, false, 1, remote_edge.get());
+
             // Get an edge from the data plane for this particular, remote segment
             throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
         }
@@ -154,6 +159,10 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         }
         else
         {
+            // auto remote_edge = this->runtime().data_plane().get_output_channel(seg_id);
+
+            // manifold_outputs.emplace_back(seg_id, false, 1, remote_edge.get());
+
             // Get an edge from the data plane for this particular, remote segment
             throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
         }

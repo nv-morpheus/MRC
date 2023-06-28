@@ -46,7 +46,7 @@ namespace mrc::pipeline {
 class PipelineDefinition;
 class ManifoldInstance;
 
-class PipelineInstance final : public runtime::ResourceManagerBase<control_plane::state::PipelineInstance>
+class PipelineInstance final : public runtime::SystemResourceManager<control_plane::state::PipelineInstance>
 {
   public:
     PipelineInstance(runtime::IInternalRuntimeProvider& runtime,

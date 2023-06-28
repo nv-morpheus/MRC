@@ -26,6 +26,7 @@
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/segments_manager.hpp"
+#include "internal/runtime/worker_manager.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/core/async_service.hpp"
@@ -87,6 +88,13 @@ control_plane::Client& PartitionRuntime::control_plane() const
     return m_system_runtime.control_plane();
 }
 
+DataPlaneManager& PartitionRuntime::data_plane() const
+{
+    CHECK(m_worker_manager) << "The partition must be started before using the data_plane()";
+
+    return m_worker_manager->data_plane();
+}
+
 PipelinesManager& PartitionRuntime::pipelines_manager() const
 {
     return m_system_runtime.pipelines_manager();
@@ -97,7 +105,7 @@ metrics::Registry& PartitionRuntime::metrics_registry() const
     return m_system_runtime.metrics_registry();
 }
 
-IInternalRuntime& PartitionRuntime::runtime()
+IInternalPartitionRuntime& PartitionRuntime::runtime()
 {
     return *this;
 }
@@ -129,46 +137,53 @@ void PartitionRuntime::do_service_start(std::stop_token stop_token)
 
     auto worker_id = resp->instance_ids(0);
 
-    // Block until we get a state update with this worker
-    this->control_plane()
-        .state_update_obs()
-        .filter([worker_id](const control_plane::state::ControlPlaneState& state) {
-            return state.workers().contains(worker_id);
-        })
-        .map([worker_id](const control_plane::state::ControlPlaneState& state) {
-            return state.workers().at(worker_id);
-        })
-        .first()
-        .subscribe(
-            [this](auto state) {
-                m_segments_manager = std::make_unique<SegmentsManager>(*this, state.id());
+    m_worker_manager = std::make_unique<WorkerManager>(*this, worker_id);
 
-                // Mark started first otherwise this deadlocks
-                this->mark_started();
+    // Start the child service
+    this->child_service_start(*m_worker_manager, true);
 
-                // Start the child service
-                this->child_service_start(*m_segments_manager);
-            },
-            [this, &completed_promise](std::exception_ptr ex_ptr) {
-                try
-                {
-                    std::rethrow_exception(ex_ptr);
-                } catch (const std::exception& ex)
-                {
-                    LOG(ERROR) << this->debug_prefix() << " Error in subscription. Message: " << ex.what();
-                }
+    this->mark_started();
 
-                this->service_kill();
+    // // Block until we get a state update with this worker
+    // this->control_plane()
+    //     .state_update_obs()
+    //     .filter([worker_id](const control_plane::state::ControlPlaneState& state) {
+    //         return state.workers().contains(worker_id);
+    //     })
+    //     .map([worker_id](const control_plane::state::ControlPlaneState& state) {
+    //         return state.workers().at(worker_id);
+    //     })
+    //     .first()
+    //     .subscribe(
+    //         [this](auto state) {
+    //             m_worker_manager = std::make_unique<WorkerManager>(*this, state.id());
 
-                // Must call the completed promise
-                completed_promise.set_value();
-            },
-            [&completed_promise] {
-                completed_promise.set_value();
-            });
+    //             // Mark started first otherwise this deadlocks
+    //             this->mark_started();
 
-    // Yield until the observable is finished
-    completed_promise.get_future().get();
+    //             // Start the child service
+    //             this->child_service_start(*m_worker_manager);
+    //         },
+    //         [this, &completed_promise](std::exception_ptr ex_ptr) {
+    //             try
+    //             {
+    //                 std::rethrow_exception(ex_ptr);
+    //             } catch (const std::exception& ex)
+    //             {
+    //                 LOG(ERROR) << this->debug_prefix() << " Error in subscription. Message: " << ex.what();
+    //             }
+
+    //             this->service_kill();
+
+    //             // Must call the completed promise
+    //             completed_promise.set_value();
+    //         },
+    //         [&completed_promise] {
+    //             completed_promise.set_value();
+    //         });
+
+    // // Yield until the observable is finished
+    // completed_promise.get_future().get();
 }
 
 std::shared_ptr<mrc::pubsub::IPublisherService> PartitionRuntime::make_publisher_service(

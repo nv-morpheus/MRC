@@ -24,7 +24,6 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
-#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 
@@ -32,6 +31,7 @@
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 
 namespace mrc::memory {
@@ -47,28 +47,39 @@ class RunnableResources;
 
 namespace mrc::runtime {
 
+class SegmentsManager;
+class DataPlaneManager;
+
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
  *
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class SegmentsManager : public AsyncService, public InternalPartitionRuntimeProvider
+class ConnectionManager : public SystemResourceManager<control_plane::state::Connection>
 {
   public:
-    SegmentsManager(runtime::IInternalPartitionRuntimeProvider& runtime, size_t partition_id);
-    ~SegmentsManager() override;
+    ConnectionManager(Runtime& runtime, InstanceID instance_id);
+    ~ConnectionManager() override;
 
-    void sync_state(const control_plane::state::Worker& worker);
+    PipelinesManager& pipelines_manager() const;
 
   private:
-    void do_service_start(std::stop_token stop_token) override;
+    control_plane::state::Connection filter_resource(
+        const control_plane::state::ControlPlaneState& state) const override;
 
-    void create_segment(const control_plane::state::SegmentInstance& instance);
-    void erase_segment(SegmentAddress address);
+    bool on_created_requested(control_plane::state::Connection& instance, bool needs_local_update) override;
 
-    // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
+    void on_completed_requested(control_plane::state::Connection& instance) override;
+
+    void on_running_state_updated(control_plane::state::Connection& instance) override;
+
+    void on_stopped_requested(control_plane::state::Connection& instance) override;
+
+    Runtime& m_runtime;
+
+    std::unique_ptr<PipelinesManager> m_pipelines_manager;
+    std::map<uint64_t, std::unique_ptr<WorkerManager>> m_worker_instances;
 };
 
 }  // namespace mrc::runtime

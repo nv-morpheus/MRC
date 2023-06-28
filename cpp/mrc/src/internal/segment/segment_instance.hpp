@@ -51,10 +51,10 @@ class SegmentDefinition;
 class BuilderDefinition;
 
 // todo(ryan) - inherit from service
-class SegmentInstance final : public runtime::ResourceManagerBase<control_plane::state::SegmentInstance>
+class SegmentInstance final : public runtime::PartitionResourceManager<control_plane::state::SegmentInstance>
 {
   public:
-    SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
+    SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                     std::shared_ptr<const SegmentDefinition> definition,
                     SegmentAddress instance_id,
                     uint64_t pipeline_instance_id);
