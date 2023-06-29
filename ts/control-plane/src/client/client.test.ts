@@ -8,7 +8,7 @@ import { ConnectionManager } from "@mrc/client/connection_manager";
 import { PipelineManager } from "@mrc/client/pipeline_manager";
 import { WorkersManager } from "@mrc/client/workers_manager";
 import { IPipelineConfiguration } from "@mrc/common/entities";
-import { EventType, ManifoldUpdateActualAssignmentsRequest, ManifoldUpdateActualAssignmentsResponse, PingRequest, ResourceUpdateStatusRequest, ResourceUpdateStatusResponse } from "@mrc/proto/mrc/protos/architect";
+import { PingRequest} from "@mrc/proto/mrc/protos/architect";
 import {
    ManifoldOptions_Policy,
    PipelineInstance,

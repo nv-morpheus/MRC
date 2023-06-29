@@ -33,7 +33,7 @@ export class ManifoldClientInstance {
 }
 
 export class ManifoldsManager {
-   constructor(public pipelineManager: PipelineManager) {}
+   constructor(public readonly pipelineManager: PipelineManager) {}
 
    get manifoldIds() {
       const state = this.connectionManager.getClientState();

@@ -79,14 +79,6 @@ enum ResourceActualStatus
    Actual_Destroyed = 9;
 }
 
-enum SegmentStates
-{
-   Initialized = 0;
-   Running = 1;
-   Stopped = 2;
-   Completed = 3;
-}
-
 message ResourceState {
    // // Current status of the resource
    // ResourceStatus status = 1;
