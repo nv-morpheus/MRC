@@ -15,8 +15,8 @@ import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_mi
 import { generateId, sleep, yield_, yield_immediate } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
-   manifoldInstanceRemoveSegment,
    manifoldInstancesAdd,
+   manifoldInstancesDetachRequestedSegment,
    manifoldInstancesSelectByNameAndPipelineDef,
    manifoldInstancesSelectByPipelineId,
    manifoldInstancesSyncSegments,
@@ -188,9 +188,9 @@ export function segmentInstancesRequestStop(segmentInstanceId: string) {
          Object.values(state.manifoldInstances.entities).forEach((m) => {
             if (m!== undefined) {
                if (found.address in (m?.requestedInputSegments ?? {})) {
-                  dispatch(manifoldInstanceRemoveSegment(m, true, found));
+                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: true, segment: found}));
                } else if (found.address in (m?.requestedOutputSegments ?? {})) {
-                  dispatch(manifoldInstanceRemoveSegment(m, false, found));
+                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: false, segment: found}));
                }
             }
          });
