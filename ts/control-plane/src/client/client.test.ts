@@ -896,6 +896,11 @@ describe("Manifold", () => {
       expect(pipe2seg2.name).toEqual("my_seg2");
       expect(pipe2seg2.state!.refCount).toEqual(2);
 
+      pipelineManager2.workersManager.workers.forEach(async (worker) => {
+         worker.segments.forEach(async (seg) =>  {
+            await seg.requestSegmentStop();
+         });
+      });
 
       await pipelineManager2.unregister();
 

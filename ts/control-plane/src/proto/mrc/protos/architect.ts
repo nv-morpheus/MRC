@@ -44,6 +44,7 @@ export enum EventType {
   ClientUnaryResourceUpdateStatus = "ClientUnaryResourceUpdateStatus",
   ClientUnaryResourceIncrementRef = "ClientUnaryResourceIncrementRef",
   ClientUnaryResourceDecrementRef = "ClientUnaryResourceDecrementRef",
+  ClientUnaryResourceStopRequest = "ClientUnaryResourceStopRequest",
   /** ServerEvent - Server Event issues to Client(s) */
   ServerEvent = "ServerEvent",
   ServerStateUpdate = "ServerStateUpdate",
@@ -112,6 +113,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 503:
     case "ClientUnaryResourceDecrementRef":
       return EventType.ClientUnaryResourceDecrementRef;
+    case 504:
+    case "ClientUnaryResourceStopRequest":
+      return EventType.ClientUnaryResourceStopRequest;
     case 1000:
     case "ServerEvent":
       return EventType.ServerEvent;
@@ -167,6 +171,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientUnaryResourceIncrementRef";
     case EventType.ClientUnaryResourceDecrementRef:
       return "ClientUnaryResourceDecrementRef";
+    case EventType.ClientUnaryResourceStopRequest:
+      return "ClientUnaryResourceStopRequest";
     case EventType.ServerEvent:
       return "ServerEvent";
     case EventType.ServerStateUpdate:
@@ -219,6 +225,8 @@ export function eventTypeToNumber(object: EventType): number {
       return 502;
     case EventType.ClientUnaryResourceDecrementRef:
       return 503;
+    case EventType.ClientUnaryResourceStopRequest:
+      return 504;
     case EventType.ServerEvent:
       return 1000;
     case EventType.ServerStateUpdate:
@@ -376,6 +384,17 @@ export interface ResourceDecrementRefRequest {
 
 export interface ResourceDecrementRefResponse {
   $type: "mrc.protos.ResourceDecrementRefResponse";
+  ok: boolean;
+}
+
+export interface ResourceStopRequest {
+  $type: "mrc.protos.ResourceStopRequest";
+  resourceType: string;
+  resourceId: string;
+}
+
+export interface ResourceStopResponse {
+  $type: "mrc.protos.ResourceStopResponse";
   ok: boolean;
 }
 
@@ -1626,6 +1645,128 @@ export const ResourceDecrementRefResponse = {
 };
 
 messageTypeRegistry.set(ResourceDecrementRefResponse.$type, ResourceDecrementRefResponse);
+
+function createBaseResourceStopRequest(): ResourceStopRequest {
+  return { $type: "mrc.protos.ResourceStopRequest", resourceType: "", resourceId: "0" };
+}
+
+export const ResourceStopRequest = {
+  $type: "mrc.protos.ResourceStopRequest" as const,
+
+  encode(message: ResourceStopRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.resourceType !== "") {
+      writer.uint32(10).string(message.resourceType);
+    }
+    if (message.resourceId !== "0") {
+      writer.uint32(16).uint64(message.resourceId);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceStopRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceStopRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.resourceType = reader.string();
+          break;
+        case 2:
+          message.resourceId = longToString(reader.uint64() as Long);
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceStopRequest {
+    return {
+      $type: ResourceStopRequest.$type,
+      resourceType: isSet(object.resourceType) ? String(object.resourceType) : "",
+      resourceId: isSet(object.resourceId) ? String(object.resourceId) : "0",
+    };
+  },
+
+  toJSON(message: ResourceStopRequest): unknown {
+    const obj: any = {};
+    message.resourceType !== undefined && (obj.resourceType = message.resourceType);
+    message.resourceId !== undefined && (obj.resourceId = message.resourceId);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceStopRequest>): ResourceStopRequest {
+    return ResourceStopRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceStopRequest>): ResourceStopRequest {
+    const message = createBaseResourceStopRequest();
+    message.resourceType = object.resourceType ?? "";
+    message.resourceId = object.resourceId ?? "0";
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceStopRequest.$type, ResourceStopRequest);
+
+function createBaseResourceStopResponse(): ResourceStopResponse {
+  return { $type: "mrc.protos.ResourceStopResponse", ok: false };
+}
+
+export const ResourceStopResponse = {
+  $type: "mrc.protos.ResourceStopResponse" as const,
+
+  encode(message: ResourceStopResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok === true) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ResourceStopResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseResourceStopResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.ok = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ResourceStopResponse {
+    return { $type: ResourceStopResponse.$type, ok: isSet(object.ok) ? Boolean(object.ok) : false };
+  },
+
+  toJSON(message: ResourceStopResponse): unknown {
+    const obj: any = {};
+    message.ok !== undefined && (obj.ok = message.ok);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ResourceStopResponse>): ResourceStopResponse {
+    return ResourceStopResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ResourceStopResponse>): ResourceStopResponse {
+    const message = createBaseResourceStopResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ResourceStopResponse.$type, ResourceStopResponse);
 
 function createBaseLookupWorkersRequest(): LookupWorkersRequest {
   return { $type: "mrc.protos.LookupWorkersRequest", instanceIds: [] };

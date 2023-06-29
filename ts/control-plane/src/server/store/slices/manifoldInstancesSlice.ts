@@ -109,13 +109,13 @@ export const manifoldInstancesSlice = createSlice({
 
          // Check to make sure this hasnt been added already
          if (action.payload.is_input) {
-            if (action.payload.segment.address in found.requestedInputSegments || action.payload.segment.address in found.actualInputSegments) {
+            if (action.payload.segment.address in found.requestedInputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
             found.requestedInputSegments[action.payload.segment.address] = action.payload.is_local;
          } else {
-            if (action.payload.segment.address in found.requestedOutputSegments || action.payload.segment.address in found.actualOutputSegments) {
+            if (action.payload.segment.address in found.requestedOutputSegments) {
                throw new Error("Segment already attached to manifold");
             }
 
@@ -346,7 +346,7 @@ export function manifoldInstancesUpdateActualSegments(
    };
 }
 
-function manifoldInstanceRemoveSegment(
+export function manifoldInstanceRemoveSegment(
    manifold: IManifoldInstance,
    isInput: boolean,
    segment: ISegmentInstance) {

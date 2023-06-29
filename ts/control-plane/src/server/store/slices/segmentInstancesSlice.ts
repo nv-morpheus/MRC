@@ -15,6 +15,7 @@ import { AppListenerAPI, startAppListening } from "@mrc/server/store/listener_mi
 import { generateId, sleep, yield_, yield_immediate } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
+   manifoldInstanceRemoveSegment,
    manifoldInstancesAdd,
    manifoldInstancesSelectByNameAndPipelineDef,
    manifoldInstancesSelectByPipelineId,
@@ -96,6 +97,8 @@ export const segmentInstancesSlice = createSlice({
       },
 
       incRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
+         // TODO: refCount should be renamed to "dependees" and should be a list in the form of
+         // [{"type": "ManifoldInstance", "id": "id"} ...]
          const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
          if (!found) {
             throw new Error(`Segment Instance with ID: ${action.payload.segment.id} not found`);
@@ -103,6 +106,7 @@ export const segmentInstancesSlice = createSlice({
 
          found.state.refCount++;
       },
+
       decRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
          const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
          if (!found) {
@@ -112,7 +116,17 @@ export const segmentInstancesSlice = createSlice({
          }
 
          found.state.refCount--;
-      }
+
+         if (found.state.refCount == 0) {
+            // Segment has no dependees OK to stop now
+            // TODO: We need some way to distinguish between a segment which simply has no more depenees and should run
+            // to completion (ex. `Requested_Completed`), and a segment which already requested to stop.
+            // This handles the second situation.
+            found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
+         }
+
+      },
+
    },
    extraReducers: (builder) => {
       builder.addCase(connectionsRemove, (state, action) => {
@@ -152,6 +166,36 @@ export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
       instances.forEach((s) => {
          dispatch(segmentInstancesAdd(s));
       });
+   };
+}
+
+export function segmentInstancesRequestStop(segmentInstanceId: string) {
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      // In the future we will have more than just manifolds that depend on segments, see comment in `incRefCount`
+      const state = getState();
+      const found = segmentInstancesSelectById(state, segmentInstanceId);
+      if (!found) {
+         throw new Error(`Segment Instance with ID: ${segmentInstanceId} not found`);
+      }
+
+      if (found.state.refCount == 0) { 
+          // Segment has no dependees OK to stop now
+         dispatch(segmentInstancesSlice.actions.updateResourceRequestedState({
+            resource: found,
+            status: ResourceRequestedStatus.Requested_Stopped
+         }));
+      } else {
+         Object.values(state.manifoldInstances.entities).forEach((m) => {
+            if (m!== undefined) {
+               if (found.address in (m?.requestedInputSegments ?? {})) {
+                  dispatch(manifoldInstanceRemoveSegment(m, true, found));
+               } else if (found.address in (m?.requestedOutputSegments ?? {})) {
+                  dispatch(manifoldInstanceRemoveSegment(m, false, found));
+               }
+            }
+         });
+      }
+      
    };
 }
 
@@ -203,6 +247,7 @@ export const {
    incRefCount: segmentInstanceIncRefCount,
    decRefCount: segmentInstanceDecRefCount,
    // addMany: segmentInstancesAddMany,
+   // requestStop: segmentInstancesRequestStop,
    remove: segmentInstancesRemove,
    updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
    updateResourceActualState: segmentInstancesUpdateResourceActualState,

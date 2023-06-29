@@ -23,16 +23,6 @@ import {
 import { ConnectionManager } from "@mrc/client/connection_manager";
 import { ManifoldsManager } from "./manifolds_manager";
 
-
-// create segmentsmanager under workersmanager
-// a segment has shutdown
-// pipeline can signal to server to have its segments shutdown
-
-// need a way for a segment to signal to the server that it wants to shutdown.
-// need a way for the server to signal to the segment that it should shutdown.
-// set status to requested_stopping
-
-
 export class PipelineManager {
    private _pipelineDefinitionId: string | undefined;
    private _pipelineInstanceId: string | undefined;

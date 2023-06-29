@@ -1,6 +1,7 @@
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import { IConnection, IWorker } from "@mrc/common/entities";
 import {
+   segmentInstancesRequestStop,
    segmentInstancesSelectById,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
@@ -39,6 +40,7 @@ import {
    PipelineRegisterConfigResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
+   ResourceStopResponse,
    ResourceUpdateStatusRequest,
    ResourceUpdateStatusResponse,
    ServerStreamingMethodResult,
@@ -435,7 +437,7 @@ class Architect implements ArchitectServiceImplementation {
                const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
 
                if (found_worker) {
-                  this._store.dispatch(workersRemove(found_worker));
+                  this._store.dispatch(workersRemove(found_worker));  // TODO: removing a worker should cascade to segments
                }
 
                yield unaryResponse(event, Ack.create());
@@ -638,6 +640,24 @@ class Architect implements ArchitectServiceImplementation {
                }
 
                yield unaryResponse(event, ResourceUpdateStatusResponse.create({ ok: true }));
+
+               break;
+            }
+            case EventType.ClientUnaryResourceStopRequest: {
+               const payload = unpackEvent<ResourceUpdateStatusRequest>(event.msg);
+
+               switch (payload.resourceType) {
+                  case "SegmentInstances": {
+                     this._store.dispatch(
+                        segmentInstancesRequestStop(payload.resourceId)
+                     );
+
+                     break;
+                  }
+                  default:
+                     throw new Error(`Unsupported resource type: ${payload.resourceType}`);
+               }
+               yield unaryResponse(event, ResourceStopResponse.create({ ok: true }));
 
                break;
             }

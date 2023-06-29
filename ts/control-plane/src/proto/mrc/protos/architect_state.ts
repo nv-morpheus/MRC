@@ -302,67 +302,6 @@ export function resourceActualStatusToNumber(object: ResourceActualStatus): numb
   }
 }
 
-export enum SegmentStates {
-  Initialized = "Initialized",
-  Running = "Running",
-  Stopped = "Stopped",
-  Completed = "Completed",
-  UNRECOGNIZED = "UNRECOGNIZED",
-}
-
-export function segmentStatesFromJSON(object: any): SegmentStates {
-  switch (object) {
-    case 0:
-    case "Initialized":
-      return SegmentStates.Initialized;
-    case 1:
-    case "Running":
-      return SegmentStates.Running;
-    case 2:
-    case "Stopped":
-      return SegmentStates.Stopped;
-    case 3:
-    case "Completed":
-      return SegmentStates.Completed;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return SegmentStates.UNRECOGNIZED;
-  }
-}
-
-export function segmentStatesToJSON(object: SegmentStates): string {
-  switch (object) {
-    case SegmentStates.Initialized:
-      return "Initialized";
-    case SegmentStates.Running:
-      return "Running";
-    case SegmentStates.Stopped:
-      return "Stopped";
-    case SegmentStates.Completed:
-      return "Completed";
-    case SegmentStates.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
-export function segmentStatesToNumber(object: SegmentStates): number {
-  switch (object) {
-    case SegmentStates.Initialized:
-      return 0;
-    case SegmentStates.Running:
-      return 1;
-    case SegmentStates.Stopped:
-      return 2;
-    case SegmentStates.Completed:
-      return 3;
-    case SegmentStates.UNRECOGNIZED:
-    default:
-      return -1;
-  }
-}
-
 export enum SegmentMappingPolicies {
   OnePerWorker = "OnePerWorker",
   UNRECOGNIZED = "UNRECOGNIZED",
