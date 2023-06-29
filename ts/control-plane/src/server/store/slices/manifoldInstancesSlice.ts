@@ -152,7 +152,7 @@ export const manifoldInstancesSlice = createSlice({
          }
       },
 
-      updateRequestedSegment: (
+      attachActualSegment: (
          state,
          action: PayloadAction<{
             manifold: IManifoldInstance;
@@ -175,7 +175,6 @@ export const manifoldInstancesSlice = createSlice({
          }
 
          actualMap[action.payload.segment.address] = isLocal;
-         delete requestedMap[action.payload.segment.address];
       },
    },
    extraReducers: (builder) => {
@@ -318,9 +317,9 @@ function manifoldInstanceUpdateActualSegment(
       throw new Error(`Actual segment ${segmentId} does not match requested segment`);
    }
 
-   dispatch(manifoldInstancesSlice.actions.updateRequestedSegment({ manifold: manifold, is_input: isInput, segment: segment }));
+   dispatch(manifoldInstancesSlice.actions.attachActualSegment({ manifold: manifold, is_input: isInput, segment: segment }));
 
-   // Increment the ref count of the segment
+   // Increment the ref count of the segment [{"type": "ManifoldInstance", "id": "id"}]
    dispatch(segmentInstanceIncRefCount({ segment: segment }));
 }
 

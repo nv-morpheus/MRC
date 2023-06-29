@@ -39,6 +39,7 @@ export enum EventType {
   /** ClientUnaryPipelineRegisterConfig - Pipeline Management */
   ClientUnaryPipelineRegisterConfig = "ClientUnaryPipelineRegisterConfig",
   ClientUnaryPipelineAddMapping = "ClientUnaryPipelineAddMapping",
+  ClientUnaryManifoldUpdateActualAssignments = "ClientUnaryManifoldUpdateActualAssignments",
   /** ClientUnaryResourceUpdateStatus - Resource Management */
   ClientUnaryResourceUpdateStatus = "ClientUnaryResourceUpdateStatus",
   ClientUnaryResourceIncrementRef = "ClientUnaryResourceIncrementRef",
@@ -99,6 +100,9 @@ export function eventTypeFromJSON(object: any): EventType {
     case 402:
     case "ClientUnaryPipelineAddMapping":
       return EventType.ClientUnaryPipelineAddMapping;
+    case 403:
+    case "ClientUnaryManifoldUpdateActualAssignments":
+      return EventType.ClientUnaryManifoldUpdateActualAssignments;
     case 501:
     case "ClientUnaryResourceUpdateStatus":
       return EventType.ClientUnaryResourceUpdateStatus;
@@ -155,6 +159,8 @@ export function eventTypeToJSON(object: EventType): string {
       return "ClientUnaryPipelineRegisterConfig";
     case EventType.ClientUnaryPipelineAddMapping:
       return "ClientUnaryPipelineAddMapping";
+    case EventType.ClientUnaryManifoldUpdateActualAssignments:
+      return "ClientUnaryManifoldUpdateActualAssignments";
     case EventType.ClientUnaryResourceUpdateStatus:
       return "ClientUnaryResourceUpdateStatus";
     case EventType.ClientUnaryResourceIncrementRef:
@@ -205,6 +211,8 @@ export function eventTypeToNumber(object: EventType): number {
       return 401;
     case EventType.ClientUnaryPipelineAddMapping:
       return 402;
+    case EventType.ClientUnaryManifoldUpdateActualAssignments:
+      return 403;
     case EventType.ClientUnaryResourceUpdateStatus:
       return 501;
     case EventType.ClientUnaryResourceIncrementRef:
@@ -456,6 +464,32 @@ export interface PipelineAddMappingResponse {
   $type: "mrc.protos.PipelineAddMappingResponse";
   /** The pipeline instance ID that was created */
   pipelineInstanceId: string;
+}
+
+export interface ManifoldUpdateActualAssignmentsRequest {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest";
+  manifoldInstanceId: string;
+  /** The actual input connections. True = Local, False = Remote */
+  actualInputSegments: { [key: number]: boolean };
+  /** The actual output connections. True = Local, False = Remote */
+  actualOutputSegments: { [key: number]: boolean };
+}
+
+export interface ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
+export interface ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry";
+  key: number;
+  value: boolean;
+}
+
+export interface ManifoldUpdateActualAssignmentsResponse {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsResponse";
+  ok: boolean;
 }
 
 /** message sent by an UpdateManager */
@@ -2566,6 +2600,358 @@ export const PipelineAddMappingResponse = {
 };
 
 messageTypeRegistry.set(PipelineAddMappingResponse.$type, PipelineAddMappingResponse);
+
+function createBaseManifoldUpdateActualAssignmentsRequest(): ManifoldUpdateActualAssignmentsRequest {
+  return {
+    $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest",
+    manifoldInstanceId: "0",
+    actualInputSegments: {},
+    actualOutputSegments: {},
+  };
+}
+
+export const ManifoldUpdateActualAssignmentsRequest = {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest" as const,
+
+  encode(message: ManifoldUpdateActualAssignmentsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.manifoldInstanceId !== "0") {
+      writer.uint32(8).uint64(message.manifoldInstanceId);
+    }
+    Object.entries(message.actualInputSegments).forEach(([key, value]) => {
+      ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(18).fork()).ldelim();
+    });
+    Object.entries(message.actualOutputSegments).forEach(([key, value]) => {
+      ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.encode({
+        $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry",
+        key: key as any,
+        value,
+      }, writer.uint32(26).fork()).ldelim();
+    });
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldUpdateActualAssignmentsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldUpdateActualAssignmentsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.manifoldInstanceId = longToString(reader.uint64() as Long);
+          break;
+        case 2:
+          const entry2 = ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.decode(
+            reader,
+            reader.uint32(),
+          );
+          if (entry2.value !== undefined) {
+            message.actualInputSegments[entry2.key] = entry2.value;
+          }
+          break;
+        case 3:
+          const entry3 = ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.decode(
+            reader,
+            reader.uint32(),
+          );
+          if (entry3.value !== undefined) {
+            message.actualOutputSegments[entry3.key] = entry3.value;
+          }
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldUpdateActualAssignmentsRequest {
+    return {
+      $type: ManifoldUpdateActualAssignmentsRequest.$type,
+      manifoldInstanceId: isSet(object.manifoldInstanceId) ? String(object.manifoldInstanceId) : "0",
+      actualInputSegments: isObject(object.actualInputSegments)
+        ? Object.entries(object.actualInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+      actualOutputSegments: isObject(object.actualOutputSegments)
+        ? Object.entries(object.actualOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
+          acc[Number(key)] = Boolean(value);
+          return acc;
+        }, {})
+        : {},
+    };
+  },
+
+  toJSON(message: ManifoldUpdateActualAssignmentsRequest): unknown {
+    const obj: any = {};
+    message.manifoldInstanceId !== undefined && (obj.manifoldInstanceId = message.manifoldInstanceId);
+    obj.actualInputSegments = {};
+    if (message.actualInputSegments) {
+      Object.entries(message.actualInputSegments).forEach(([k, v]) => {
+        obj.actualInputSegments[k] = v;
+      });
+    }
+    obj.actualOutputSegments = {};
+    if (message.actualOutputSegments) {
+      Object.entries(message.actualOutputSegments).forEach(([k, v]) => {
+        obj.actualOutputSegments[k] = v;
+      });
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldUpdateActualAssignmentsRequest>): ManifoldUpdateActualAssignmentsRequest {
+    return ManifoldUpdateActualAssignmentsRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ManifoldUpdateActualAssignmentsRequest>): ManifoldUpdateActualAssignmentsRequest {
+    const message = createBaseManifoldUpdateActualAssignmentsRequest();
+    message.manifoldInstanceId = object.manifoldInstanceId ?? "0";
+    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[Number(key)] = Boolean(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[Number(key)] = Boolean(value);
+        }
+        return acc;
+      },
+      {},
+    );
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldUpdateActualAssignmentsRequest.$type, ManifoldUpdateActualAssignmentsRequest);
+
+function createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry(): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry" as const,
+
+  encode(
+    message: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+    return {
+      $type: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry>,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+    return ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry>,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
+    const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.$type,
+  ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry,
+);
+
+function createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry(): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+  return { $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry", key: 0, value: false };
+}
+
+export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry" as const,
+
+  encode(
+    message: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry,
+    writer: _m0.Writer = _m0.Writer.create(),
+  ): _m0.Writer {
+    if (message.key !== 0) {
+      writer.uint32(8).uint32(message.key);
+    }
+    if (message.value === true) {
+      writer.uint32(16).bool(message.value);
+    }
+    return writer;
+  },
+
+  decode(
+    input: _m0.Reader | Uint8Array,
+    length?: number,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.uint32();
+          break;
+        case 2:
+          message.value = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+    return {
+      $type: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.$type,
+      key: isSet(object.key) ? Number(object.key) : 0,
+      value: isSet(object.value) ? Boolean(object.value) : false,
+    };
+  },
+
+  toJSON(message: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.value !== undefined && (obj.value = message.value);
+    return obj;
+  },
+
+  create(
+    base?: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry>,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+    return ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.fromPartial(base ?? {});
+  },
+
+  fromPartial(
+    object: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry>,
+  ): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
+    const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry();
+    message.key = object.key ?? 0;
+    message.value = object.value ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(
+  ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.$type,
+  ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry,
+);
+
+function createBaseManifoldUpdateActualAssignmentsResponse(): ManifoldUpdateActualAssignmentsResponse {
+  return { $type: "mrc.protos.ManifoldUpdateActualAssignmentsResponse", ok: false };
+}
+
+export const ManifoldUpdateActualAssignmentsResponse = {
+  $type: "mrc.protos.ManifoldUpdateActualAssignmentsResponse" as const,
+
+  encode(message: ManifoldUpdateActualAssignmentsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.ok === true) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldUpdateActualAssignmentsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManifoldUpdateActualAssignmentsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.ok = reader.bool();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManifoldUpdateActualAssignmentsResponse {
+    return { $type: ManifoldUpdateActualAssignmentsResponse.$type, ok: isSet(object.ok) ? Boolean(object.ok) : false };
+  },
+
+  toJSON(message: ManifoldUpdateActualAssignmentsResponse): unknown {
+    const obj: any = {};
+    message.ok !== undefined && (obj.ok = message.ok);
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManifoldUpdateActualAssignmentsResponse>): ManifoldUpdateActualAssignmentsResponse {
+    return ManifoldUpdateActualAssignmentsResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial(object: DeepPartial<ManifoldUpdateActualAssignmentsResponse>): ManifoldUpdateActualAssignmentsResponse {
+    const message = createBaseManifoldUpdateActualAssignmentsResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+messageTypeRegistry.set(ManifoldUpdateActualAssignmentsResponse.$type, ManifoldUpdateActualAssignmentsResponse);
 
 function createBaseStateUpdate(): StateUpdate {
   return {
