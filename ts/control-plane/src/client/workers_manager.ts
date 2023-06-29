@@ -9,7 +9,7 @@ import { Ack, EventType, RegisterWorkersRequest, RegisterWorkersResponse } from 
 import { MrcTestClient } from "@mrc/client/client";
 import { ConnectionManager } from "@mrc/client/connection_manager";
 import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
-import { SegmentManager } from "./SegmentManager";
+import { SegmentManager } from "./segment_manager";
 
 export class WorkerClientInstance { 
    constructor(public readonly workersManager: WorkersManager, public readonly workerId: string) {}
