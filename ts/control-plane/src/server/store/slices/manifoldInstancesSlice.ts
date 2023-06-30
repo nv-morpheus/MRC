@@ -156,7 +156,10 @@ export const manifoldInstancesSlice = createSlice({
          }>
       ) => {
          const found = manifoldInstancesAdapter.getOne(state, action.payload.manifold.id);
-
+         if (!found) {
+            throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
+         }
+         
          const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
          const actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
 
