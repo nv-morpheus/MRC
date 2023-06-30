@@ -888,6 +888,12 @@ describe("Manifold", () => {
       expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
       expect(manifold2State.actualOutputSegments).toEqual(manifold2State.requestedOutputSegments);
 
+      pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+      expect(pipe1seg1.state!.refCount).toEqual(2);
+
+      pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+      expect(pipe1seg2.state!.refCount).toEqual(2);
+
       const pipe2seg1 = state.segmentInstances!.entities[pipe2seg1Id!];
       expect(pipe2seg1.name).toEqual("my_seg1");
       expect(pipe2seg1.state!.refCount).toEqual(2);
@@ -919,6 +925,22 @@ describe("Manifold", () => {
       expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
       expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
       expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(1);
+
+      for (const worker of pipelineManager2.workersManager.workers) {
+         for (const seg of worker.segments) {
+            let segmentState = seg.getState();
+            expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+            await seg.syncActualStatus();
+            segmentState = seg.getState();
+            expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
+            await seg.sendSegmenStopped();
+            segmentState = seg.getState();
+            expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
+         }
+      }
+
+      manifold1State = manifold1.getState();
+      manifold2State = manifold1.getState();
 
       await pipelineManager2.unregister();
       
