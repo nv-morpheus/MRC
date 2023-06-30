@@ -187,6 +187,12 @@ export const manifoldInstancesSlice = createSlice({
          }
 
          delete actualMap[action.payload.segment.address];
+
+         // TODO: Figure out who/what/when to shutdown a manifold
+         // if (Object.keys(found.actualInputSegments).length === 0 && Object.keys(found.actualOutputSegments).length === 0) {
+         //    // Tell the manifold it is OK to shutdown
+         //    found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
+         // }
       },
    },
    extraReducers: (builder) => {
