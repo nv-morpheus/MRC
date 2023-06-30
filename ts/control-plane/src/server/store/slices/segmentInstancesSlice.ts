@@ -172,7 +172,7 @@ export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
 export function segmentInstancesRequestStop(segmentInstanceId: string) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // In the future we will have more than just manifolds that depend on segments, see comment in `incRefCount`
-      const state = getState();
+      let state = getState();
       const found = segmentInstancesSelectById(state, segmentInstanceId);
       if (!found) {
          throw new Error(`Segment Instance with ID: ${segmentInstanceId} not found`);
@@ -195,7 +195,8 @@ export function segmentInstancesRequestStop(segmentInstanceId: string) {
             }
          });
       }
-      
+      state = getState();
+      return state;
    };
 }
 

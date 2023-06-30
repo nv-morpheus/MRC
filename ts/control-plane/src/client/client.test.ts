@@ -902,8 +902,20 @@ describe("Manifold", () => {
          });
       });
 
-      await pipelineManager2.unregister();
+      // Both manifolds should have some of their segments removed
+      state = pipelineManager.connectionManager.getClientState();
+      manifold1State = manifold1.getState();
+      manifold2State = manifold1.getState();
+      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
+      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
 
+      await manifold1.syncActualSegments();
+      await manifold2.syncActualSegments();
+
+      await pipelineManager2.unregister();
+      
       // veirfy the refcount went back down
       state = pipelineManager.connectionManager.getClientState();
       pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
