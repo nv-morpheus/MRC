@@ -159,9 +159,9 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         }
         else
         {
-            // auto remote_edge = this->runtime().data_plane().get_output_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_output_channel(seg_id);
 
-            // manifold_outputs.emplace_back(seg_id, false, 1, remote_edge.get());
+            manifold_outputs.emplace_back(seg_id, false, 1, remote_edge.get());
 
             // Get an edge from the data plane for this particular, remote segment
             throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");

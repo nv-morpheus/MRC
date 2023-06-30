@@ -42,6 +42,11 @@ const mrc::core::FiberTaskQueue& IRunnableResources::main() const
     return const_cast<IRunnableResources*>(this)->main();
 }
 
+const mrc::core::FiberTaskQueue& IRunnableResources::network() const
+{
+    return const_cast<IRunnableResources*>(this)->network();
+}
+
 const IRunnableResources& IRunnableResourcesProvider::runnable() const
 {
     // Return the other overload

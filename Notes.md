@@ -105,3 +105,55 @@ Resources:
     - `main()`
       - For enqueuing fiber work
     -
+
+
+## Data Plane
+
+- `IStorage`
+  - Allows access to chunks of memory
+  - Holds memory as "objects"
+- `IEncodableStorage`
+  - Interface which allows you to write memory into the `IStorage`
+- `IDecodableStorage`
+  - Interface which allows you to read memory from `IStorage`
+- `ICodableStorage` : `IDecodableStorage`, `IEncodableStorage`
+  - Both readable and writable from `IStorage`
+- `EncodedStorage`
+  - Object which holds onto an `IDecodableStorage` so you can read from it
+  - Usually, this is created via an encoding process and is read-only
+- `EncodedObject<T>` : `EncodedStorage`
+  - Typed version of `EncodedStorage`.
+  - Handles calling `mrc::codable::encode(object, *storage);` for you with the supplied object type
+
+Steps for the Publisher:
+1. Encoding from `T` -> `EncodedStorage`
+   1. Requires getting a `CodableStorage` object before encoding
+   2. `CodableStorage` object requires a partition runtime to get the UCX `registration_cache()`
+   3. For `Publisher<T>` this runs without a progress engine using the thread of the caller
+   4. Pushes output into a channel on the `PublisherService`
+2. From `EncdedStorage` -> `RemoteDescriptor`
+   1. Uses the `RemoteDescriptorManager` to handle the conversion
+   2. Runs on the `main` engine of a partition
+3. From `RemoteDescriptor` -> `RemoteDescriptorMessage`
+   1. Combining a `RemoteDescriptor` with a tag and a UCX `Endpoint`
+   2. Runs on the `main` engine of a partition in the same thread as the previous step
+   3. Pushes output into a channel on the `DataPlaneClient`
+4. From `RemoteDescriptorMessage` -> `Request`
+   1. Takes the message and actually writes it to UCX
+   2. Runs on the `mrc_network` engine of a partition
+   3. Awaits for completion before returning
+   4. The progress engine for this step usually has 16+ progress engines running on 1 thread
+
+Steps for the Subscriber:
+1. UCX Worker creates a `TransientBuffer` with the data
+   1. Pushes output to a router a `std::pair<tag, TransientBuffer>` called `deserialize_source()` on `DataPlaneServer`
+   2. Runs on the `mrc_network` engine of a partition
+   3. Output lands in a channel on the `SubscriberService`
+2. From `TransientBuffer` -> `RemoteDescriptor`
+   1. Converts the buffer into a RemoteDescriptor proto
+   2. Releases the buffer to be reused
+   3. Converts the RemoteDescriptor proto into a `RemoteDescriptor` via the `RemoteDescriptorManager`
+   4. Runs on the `main` engine of a partition
+3. From `RemoteDescriptor` -> `T`
+   1. Via `RemoteDescriptor::decode<T>()`
+   2. Runs on the calling thread from the `Subscriber<T>`

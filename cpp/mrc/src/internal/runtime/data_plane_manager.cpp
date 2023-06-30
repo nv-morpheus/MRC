@@ -45,6 +45,59 @@
 
 namespace mrc::runtime {
 
+DataPlaneSystemManager::DataPlaneSystemManager(IInternalRuntimeProvider& runtime) :
+  AsyncService(MRC_CONCAT_STR("DataPlaneSystemManager")),
+  InternalRuntimeProvider(runtime)
+{}
+
+DataPlaneSystemManager::~DataPlaneSystemManager()
+{
+    AsyncService::call_in_destructor();
+}
+
+std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> DataPlaneSystemManager::get_output_channel(
+    SegmentAddress address)
+{
+    this->runnable().main()
+}
+
+void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
+{
+    Promise<void> completed_promise;
+
+    // Block until we get a state update with this worker
+    this->runtime().control_plane().state_update_obs().subscribe(
+        [this](auto state) {
+            this->process_state_update(state);
+        },
+        [this, &completed_promise](std::exception_ptr ex_ptr) {
+            try
+            {
+                std::rethrow_exception(ex_ptr);
+            } catch (const std::exception& ex)
+            {
+                LOG(ERROR) << this->debug_prefix() << " Error in subscription. Message: " << ex.what();
+            }
+
+            this->service_kill();
+
+            // Must call the completed promise
+            completed_promise.set_value();
+        },
+        [&completed_promise] {
+            completed_promise.set_value();
+        });
+
+    this->mark_started();
+
+    completed_promise.get_future().get();
+}
+
+void DataPlaneSystemManager::process_state_update(const control_plane::state::ControlPlaneState& state)
+{
+    m_previous_state = state;
+}
+
 DataPlaneManager::DataPlaneManager(IInternalRuntimeProvider& runtime, size_t partition_id) :
   AsyncService(MRC_CONCAT_STR("DataPlaneManager[" << partition_id << "]")),
   InternalRuntimeProvider(runtime)

@@ -50,12 +50,22 @@ class RunnableResources;
 
 namespace mrc::runtime {
 
-/**
- * @brief Partition Resources define the set of Resources available to a given Partition
- *
- * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
- * constructed and owned by the resources::Manager to ensure validity of the references.
- */
+class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvider
+{
+  public:
+    DataPlaneSystemManager(IInternalRuntimeProvider& runtime);
+    ~DataPlaneSystemManager() override;
+
+    std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> get_output_channel(SegmentAddress address);
+
+  private:
+    void do_service_start(std::stop_token stop_token) override;
+
+    void process_state_update(const control_plane::state::ControlPlaneState& state);
+
+    control_plane::state::ControlPlaneState m_previous_state;
+};
+
 class DataPlaneManager : public AsyncService, public InternalRuntimeProvider
 {
   public:

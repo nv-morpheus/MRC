@@ -78,6 +78,7 @@ class ConnectionManager : public SystemResourceManager<control_plane::state::Con
 
     Runtime& m_runtime;
 
+    std::unique_ptr<DataPlaneManager> m_data_plane_manager;
     std::unique_ptr<PipelinesManager> m_pipelines_manager;
     std::map<uint64_t, std::unique_ptr<WorkerManager>> m_worker_instances;
 };
