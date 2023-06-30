@@ -106,21 +106,16 @@ export const manifoldInstancesSlice = createSlice({
          if (!found) {
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
+         
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
 
          // Check to make sure this hasnt been added already
-         if (action.payload.is_input) {
-            if (action.payload.segment.address in found.requestedInputSegments) {
-               throw new Error("Segment already attached to manifold");
-            }
-
-            found.requestedInputSegments[action.payload.segment.address] = action.payload.is_local;
-         } else {
-            if (action.payload.segment.address in found.requestedOutputSegments) {
-               throw new Error("Segment already attached to manifold");
-            }
-
-            found.requestedOutputSegments[action.payload.segment.address] = action.payload.is_local;
+         if (action.payload.segment.address in requestedMap) {
+            throw new Error("Segment already attached to manifold");
          }
+
+         requestedMap[action.payload.segment.address] = action.payload.is_local;
+
       },
       detachRequestedSegment: (
          state,
@@ -347,10 +342,6 @@ function manifoldInstanceUpdateActualSegment(
          throw new Error(`Actual segment ${segmentId} does not match an attached segment`);
       }
    }
-
-
-
-   throw new Error(`Actual segment ${segmentId} does not match requested segment`);
 }
 
 export function manifoldInstancesUpdateActualSegments(
