@@ -197,3 +197,6 @@ include/mrc/version.hpp
 .vscode/launch.json
 .vscode/settings.json
 .vscode/tasks.json
+
+# Ignore user-defined clangd settings
+.clangd
