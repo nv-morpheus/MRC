@@ -896,11 +896,11 @@ describe("Manifold", () => {
       expect(pipe2seg2.name).toEqual("my_seg2");
       expect(pipe2seg2.state!.refCount).toEqual(2);
 
-      pipelineManager2.workersManager.workers.forEach(async (worker) => {
-         worker.segments.forEach(async (seg) =>  {
+      for (const worker of pipelineManager2.workersManager.workers) {
+         for (const seg of worker.segments) {
             await seg.requestSegmentStop();
-         });
-      });
+         }
+      }
 
       // Both manifolds should have some of their segments removed
       state = pipelineManager.connectionManager.getClientState();
@@ -908,11 +908,17 @@ describe("Manifold", () => {
       manifold2State = manifold1.getState();
       expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
       expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
       expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
 
       await manifold1.syncActualSegments();
       await manifold2.syncActualSegments();
+      manifold1State = manifold1.getState();
+      manifold2State = manifold1.getState();
+      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
+      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(1);
 
       await pipelineManager2.unregister();
       

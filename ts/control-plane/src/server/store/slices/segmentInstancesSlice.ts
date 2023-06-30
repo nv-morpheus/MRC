@@ -195,8 +195,6 @@ export function segmentInstancesRequestStop(segmentInstanceId: string) {
             }
          });
       }
-      state = getState();
-      return state;
    };
 }
 

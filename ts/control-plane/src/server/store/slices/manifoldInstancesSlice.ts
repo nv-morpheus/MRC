@@ -321,6 +321,7 @@ function manifoldInstanceUpdateActualSegment(
    }
 
    const requestedMapping: { [key: string]: boolean } = isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments;
+   const actualMapping: { [key: string]: boolean } = isInput ? manifold.actualInputSegments : manifold.actualOutputSegments;
 
    // figure out if we are adding or removing
    if (segment.address in requestedMapping) {
@@ -328,13 +329,11 @@ function manifoldInstanceUpdateActualSegment(
       dispatch(manifoldInstancesSlice.actions.attachActualSegment({ manifold: manifold, is_input: isInput, segment: segment }));
 
       // Increment the ref count of the segment [{"type": "ManifoldInstance", "id": "id"}]
-      dispatch(segmentInstanceIncRefCount({ segment: segment }));      
+      dispatch(segmentInstanceIncRefCount({ segment: segment }));
    } else {
       // One of two cases: 
       //   1) Server asked the client to remove the segment and they did in which, and now we need to remove it from the actual
       //   2) Client is sending us an invalid segmentId
-      const actualMapping: { [key: string]: boolean } = isInput ? manifold.actualInputSegments : manifold.actualOutputSegments;
-
       if (segment.address in actualMapping) {
          dispatch(manifoldInstancesSlice.actions.detachActualSegment({ manifold: manifold, is_input: isInput, segment: segment }));
          dispatch(segmentInstanceDecRefCount({ segment: segment }));
@@ -355,14 +354,28 @@ export function manifoldInstancesUpdateActualSegments(
          throw new Error(`Could not find manifold with ID: ${manifoldInstanceId}`);
       }
 
-      Object.entries(actualInputSegments).forEach(([segmentId, isLocal]) => {
+      const actualInputToAdd = Object.entries(actualInputSegments).filter(([segmentId]) => !(segmentId in manifold.actualInputSegments));
+      const actualOutputToAdd = Object.entries(actualOutputSegments).filter(([segmentId]) => !(segmentId in manifold.actualOutputSegments));
+      const actualInputToRemove = Object.entries(manifold.actualInputSegments).filter(([segmentId]) => !(segmentId in actualInputSegments));
+      const actualOutputToRemove = Object.entries(manifold.actualOutputSegments).filter(([segmentId]) => !(segmentId in actualOutputSegments));
+
+      // perform any adds
+      actualInputToAdd.forEach(([segmentId, isLocal]) => {
          manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentId, isLocal);
       });
 
-      Object.entries(actualOutputSegments).forEach(([segmentId, isLocal]) => {
+      actualOutputToAdd.forEach(([segmentId, isLocal]) => {
          manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
       });
 
+      // perform any removes
+      actualInputToRemove.forEach(([segmentId, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentId, isLocal);
+      });
+
+      actualOutputToRemove.forEach(([segmentId, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
+      });
 
    };
 }
