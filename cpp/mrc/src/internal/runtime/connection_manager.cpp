@@ -79,9 +79,9 @@ bool ConnectionManager::on_created_requested(control_plane::state::Connection& i
 {
     if (needs_local_update)
     {
-        m_data_plane_manager = std::make_unique<DataPlaneManager>(*this);
+        // m_data_plane_manager = std::make_unique<DataPlaneManager>(*this);
 
-        this->child_service_start(*m_pipelines_manager, true);
+        // this->child_service_start(*m_data_plane_manager, true);
 
         // Create the pipeline manager
         m_pipelines_manager = std::make_unique<PipelinesManager>(*this);

@@ -58,7 +58,7 @@ DataPlaneSystemManager::~DataPlaneSystemManager()
 std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> DataPlaneSystemManager::get_output_channel(
     SegmentAddress address)
 {
-    this->runnable().main()
+    throw exceptions::MrcRuntimeError("Not implemented (get_output_channel)");
 }
 
 void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
@@ -95,7 +95,7 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
 
 void DataPlaneSystemManager::process_state_update(const control_plane::state::ControlPlaneState& state)
 {
-    m_previous_state = state;
+    // m_previous_state = state;
 }
 
 DataPlaneManager::DataPlaneManager(IInternalRuntimeProvider& runtime, size_t partition_id) :

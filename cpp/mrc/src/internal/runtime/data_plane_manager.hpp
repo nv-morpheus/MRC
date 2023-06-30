@@ -63,7 +63,7 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     void process_state_update(const control_plane::state::ControlPlaneState& state);
 
-    control_plane::state::ControlPlaneState m_previous_state;
+    // control_plane::state::ControlPlaneState m_previous_state;
 };
 
 class DataPlaneManager : public AsyncService, public InternalRuntimeProvider
