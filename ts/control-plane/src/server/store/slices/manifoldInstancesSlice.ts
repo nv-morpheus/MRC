@@ -155,10 +155,10 @@ export const manifoldInstancesSlice = createSlice({
             segment: ISegmentInstance;
          }>
       ) => {
-         const manifold = action.payload.manifold;
+         const found = manifoldInstancesAdapter.getOne(state, action.payload.manifold.id);
 
-         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? manifold.requestedInputSegments : manifold.requestedOutputSegments;
-         const actualMap: { [key: string]: boolean } = action.payload.is_input ? manifold.actualInputSegments : manifold.actualOutputSegments;
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
+         const actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
 
          const isLocal = requestedMap[action.payload.segment.address];
          if (isLocal === undefined) {
