@@ -216,15 +216,24 @@ TEST_F(TestCoroRingBuffer, MultiProducerMultiConsumer)
         {
             switch (i % 3)
             {
-            case 0:
+            case 0: {
                 co_await rb.write(i);
                 break;
-            case 1:
-                co_await rb.write(i).resume_immediately();
+            }
+            case 1: {
+                // Must save this to a temporary to workaround compiler bug in GCC==11.3 (working in 11.2/11.4). See:
+                // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=103871#c10
+                auto& task = rb.write(i).resume_immediately();
+                co_await task;
                 break;
-            case 2:
-                co_await rb.write(i).resume_on(&tp);
+            }
+            case 2: {
+                // Must save this to a temporary to workaround compiler bug in GCC==11.3 (working in 11.2/11.4). See:
+                // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=103871#c10
+                auto& task = rb.write(i).resume_on(&tp);
+                co_await task;
                 break;
+            }
             }
         }
 
