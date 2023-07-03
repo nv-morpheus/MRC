@@ -224,6 +224,7 @@ export const manifoldInstancesSlice = createSlice({
                if (numRequestedOutputs > 0) {
                   Object.keys(found.requestedOutputSegments).forEach((segmentAddress) => {
                      delete found.requestedOutputSegments[parseInt(segmentAddress)];
+                     // TODO: we need decrement the segment's refcount
                   });
                } else {
                   // If we don't have any outputs. tell the manifold it is OK to shutdown
