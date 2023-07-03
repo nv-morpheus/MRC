@@ -479,9 +479,11 @@ export function segmentInstancesConfigureSlice() {
 
          // Increment the ref count on our manifolds
       },
-      async (instance) => { },
-      async (instance) => { },
-      async (instance) => { },
+      async (instance) => {},
+      async (instance) => {},
+      async (instance, listenerApi) => {
+         const manifolds = syncManifolds(listenerApi, instance);
+      },
       async (instance, listenerApi) => {
          listenerApi.dispatch(segmentInstancesRemove(instance));
       }

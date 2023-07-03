@@ -56,11 +56,11 @@
 
 namespace mrc::segment {
 
-SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
+SegmentInstance::SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                                  std::shared_ptr<const SegmentDefinition> definition,
                                  SegmentAddress instance_id,
                                  uint64_t pipeline_instance_id) :
-  ResourceManagerBase(runtime, instance_id, MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
+  PartitionResourceManager(runtime, instance_id, MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
   m_definition(std::move(definition)),
   m_pipeline_instance_id(pipeline_instance_id),
   m_address(instance_id),
@@ -68,7 +68,10 @@ SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
   m_info(::mrc::segment::info(instance_id))
 {}
 
-SegmentInstance::~SegmentInstance() = default;
+SegmentInstance::~SegmentInstance()
+{
+    PartitionResourceManager::call_in_destructor();
+}
 
 const std::string& SegmentInstance::name() const
 {

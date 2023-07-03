@@ -43,7 +43,7 @@ class IngressPortBase;
 namespace mrc::pipeline {
 class ManifoldDefinition;
 
-class ManifoldInstance final : public runtime::ResourceManagerBase<control_plane::state::ManifoldInstance>
+class ManifoldInstance final : public runtime::SystemResourceManager<control_plane::state::ManifoldInstance>
 {
   public:
     ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,

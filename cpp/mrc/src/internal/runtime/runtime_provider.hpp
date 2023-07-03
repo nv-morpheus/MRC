@@ -36,6 +36,7 @@ class Registry;
 namespace mrc::runtime {
 
 class PipelinesManager;
+class DataPlaneManager;
 
 struct IInternalRuntime
 {
@@ -47,6 +48,8 @@ struct IInternalRuntime
     virtual runnable::IRunnableResources& runnable() = 0;
 
     virtual control_plane::Client& control_plane() const = 0;
+
+    // virtual DataPlaneManager& data_plane() const = 0;
 
     virtual PipelinesManager& pipelines_manager() const = 0;
 
@@ -71,6 +74,8 @@ class IInternalRuntimeProvider : public virtual runnable::IRunnableResourcesProv
 class InternalRuntimeProvider : public virtual IInternalRuntimeProvider
 {
   public:
+    using interface_t = IInternalRuntimeProvider;
+
     static InternalRuntimeProvider create(IInternalRuntime& runtime);
 
   protected:
@@ -82,6 +87,46 @@ class InternalRuntimeProvider : public virtual IInternalRuntimeProvider
 
   private:
     IInternalRuntime& m_runtime;
+};
+
+struct IInternalPartitionRuntime : public IInternalRuntime
+{
+    virtual ~IInternalPartitionRuntime() = default;
+
+    virtual size_t partition_id() const = 0;
+
+    virtual DataPlaneManager& data_plane() const = 0;
+};
+
+class IInternalPartitionRuntimeProvider : public virtual IInternalRuntimeProvider
+{
+  protected:
+    IInternalPartitionRuntime& runtime() override = 0;
+
+    const IInternalPartitionRuntime& runtime() const;
+
+  private:
+    friend class InternalPartitionRuntimeProvider;
+};
+
+// Concrete implementation of IInternalPartitionRuntimeProvider. Use this if IInternalPartitionRuntime is available
+// during construction. Inherits virtually to ensure only one IInternalPartitionRuntimeProvider
+class InternalPartitionRuntimeProvider : public virtual IInternalPartitionRuntimeProvider
+{
+  public:
+    using interface_t = IInternalPartitionRuntimeProvider;
+
+    static InternalPartitionRuntimeProvider create(IInternalPartitionRuntime& runtime);
+
+  protected:
+    InternalPartitionRuntimeProvider(const InternalPartitionRuntimeProvider& other);
+    InternalPartitionRuntimeProvider(IInternalPartitionRuntimeProvider& other);
+    InternalPartitionRuntimeProvider(IInternalPartitionRuntime& runtime);
+
+    IInternalPartitionRuntime& runtime() override;
+
+  private:
+    IInternalPartitionRuntime& m_runtime;
 };
 
 }  // namespace mrc::runtime

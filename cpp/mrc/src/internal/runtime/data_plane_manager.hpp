@@ -28,7 +28,10 @@
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 
+#include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/async_service.hpp"
+#include "mrc/edge/forward.hpp"
+#include "mrc/node/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
@@ -47,28 +50,35 @@ class RunnableResources;
 
 namespace mrc::runtime {
 
-/**
- * @brief Partition Resources define the set of Resources available to a given Partition
- *
- * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
- * constructed and owned by the resources::Manager to ensure validity of the references.
- */
-class SegmentsManager : public AsyncService, public InternalPartitionRuntimeProvider
+class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvider
 {
   public:
-    SegmentsManager(runtime::IInternalPartitionRuntimeProvider& runtime, size_t partition_id);
-    ~SegmentsManager() override;
+    DataPlaneSystemManager(IInternalRuntimeProvider& runtime);
+    ~DataPlaneSystemManager() override;
+
+    std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> get_output_channel(SegmentAddress address);
+
+  private:
+    void do_service_start(std::stop_token stop_token) override;
+
+    void process_state_update(const control_plane::state::ControlPlaneState& state);
+
+    control_plane::state::ControlPlaneState m_previous_state;
+};
+
+class DataPlaneManager : public AsyncService, public InternalRuntimeProvider
+{
+  public:
+    DataPlaneManager(IInternalRuntimeProvider& runtime, size_t partition_id);
+    ~DataPlaneManager() override;
+
+    std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> get_output_channel(SegmentAddress address);
+    std::shared_ptr<edge::IWritableAcceptor<codable::EncodedStorage>> get_input_channel(SegmentAddress address);
 
     void sync_state(const control_plane::state::Worker& worker);
 
   private:
     void do_service_start(std::stop_token stop_token) override;
-
-    void create_segment(const control_plane::state::SegmentInstance& instance);
-    void erase_segment(SegmentAddress address);
-
-    // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
 };
 
 }  // namespace mrc::runtime

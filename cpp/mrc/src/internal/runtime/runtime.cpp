@@ -20,6 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/runtime/connection_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/segments_manager.hpp"
@@ -105,7 +106,7 @@ control_plane::Client& Runtime::control_plane() const
 
 PipelinesManager& Runtime::pipelines_manager() const
 {
-    return *m_pipelines_manager;
+    return m_connection_manager->pipelines_manager();
 }
 
 metrics::Registry& Runtime::metrics_registry() const
@@ -148,14 +149,22 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // Start the client and wait for it to be ready
     this->child_service_start(*m_control_plane_client, true);
 
+    // Now create the system data plane client object
+
+    // Create the connection manager to handle state updates
+    m_connection_manager = std::make_unique<ConnectionManager>(*this, m_control_plane_client->machine_id());
+
+    // Start the connection manager and wait for it to be ready to guarantee the workers have been created
+    this->child_service_start(*m_connection_manager, true);
+
     // // Create/Initialize the runtime resources object (Could go before the control plane client)
     // m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
     // m_sys_resources->initialize();
 
-    // Before creating the partitions, create the pipelines manager
-    m_pipelines_manager = std::make_unique<PipelinesManager>(*this, m_control_plane_client->machine_id());
+    // // Before creating the partitions, create the pipelines manager
+    // m_pipelines_manager = std::make_unique<PipelinesManager>(*this, m_control_plane_client->machine_id());
 
-    this->child_service_start(*m_pipelines_manager);
+    // this->child_service_start(*m_pipelines_manager);
 
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_sys_resources->partition_count(); i++)

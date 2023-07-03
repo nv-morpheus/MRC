@@ -24,7 +24,6 @@
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
-#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_instance.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 
@@ -47,28 +46,39 @@ class RunnableResources;
 
 namespace mrc::runtime {
 
+class SegmentsManager;
+class DataPlaneManager;
+
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition
  *
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class SegmentsManager : public AsyncService, public InternalPartitionRuntimeProvider
+class WorkerManager : public PartitionResourceManager<control_plane::state::Worker>
 {
   public:
-    SegmentsManager(runtime::IInternalPartitionRuntimeProvider& runtime, size_t partition_id);
-    ~SegmentsManager() override;
+    WorkerManager(PartitionRuntime& runtime, InstanceID worker_id);
+    ~WorkerManager() override;
 
-    void sync_state(const control_plane::state::Worker& worker);
+    DataPlaneManager& data_plane() const;
 
   private:
-    void do_service_start(std::stop_token stop_token) override;
+    control_plane::state::Worker filter_resource(const control_plane::state::ControlPlaneState& state) const override;
 
-    void create_segment(const control_plane::state::SegmentInstance& instance);
-    void erase_segment(SegmentAddress address);
+    bool on_created_requested(control_plane::state::Worker& instance, bool needs_local_update) override;
 
-    // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
+    void on_completed_requested(control_plane::state::Worker& instance) override;
+
+    void on_running_state_updated(control_plane::state::Worker& instance) override;
+
+    void on_stopped_requested(control_plane::state::Worker& instance) override;
+
+    std::unique_ptr<SegmentsManager> m_segments_manager;
+    std::unique_ptr<DataPlaneManager> m_data_plane_manager;
+
+    size_t m_partition_id{0};
+    InstanceID m_worker_id{0};
 };
 
 }  // namespace mrc::runtime

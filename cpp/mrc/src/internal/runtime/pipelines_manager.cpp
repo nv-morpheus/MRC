@@ -36,11 +36,15 @@
 
 namespace mrc::runtime {
 
-PipelinesManager::PipelinesManager(Runtime& runtime, InstanceID connection_id) :
-  ResourceManagerBase(runtime, connection_id, MRC_CONCAT_STR("PipelinesManager[" << connection_id << "]"))
+PipelinesManager::PipelinesManager(IInternalRuntimeProvider& runtime) :
+  AsyncService(MRC_CONCAT_STR("PipelinesManager")),
+  InternalRuntimeProvider(runtime)
 {}
 
-PipelinesManager::~PipelinesManager() = default;
+PipelinesManager::~PipelinesManager()
+{
+    AsyncService::call_in_destructor();
+}
 
 void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs)
 {
@@ -139,37 +143,37 @@ pipeline::PipelineInstance& PipelinesManager::get_instance(uint64_t instance_id)
     return *m_instances[instance_id];
 }
 
-control_plane::state::Connection PipelinesManager::filter_resource(
-    const control_plane::state::ControlPlaneState& state) const
+void PipelinesManager::do_service_start(std::stop_token stop_token)
 {
-    if (!state.connections().contains(this->id()))
-    {
-        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Could not Connection with ID: " << this->id()));
-    }
-    return state.connections().at(this->id());
+    Promise<void> completed_promise;
+
+    std::stop_callback stop_callback(stop_token, [&completed_promise]() {
+        completed_promise.set_value();
+    });
+
+    this->mark_started();
+
+    completed_promise.get_future().get();
 }
 
-void PipelinesManager::on_running_state_updated(control_plane::state::Connection& instance)
+void PipelinesManager::sync_state(const control_plane::state::Connection& connection)
 {
+    // Before creating/removing, sync the state of all children
+
     // Check for assignments
     auto cur_pipelines = extract_keys(m_instances);
-    auto new_pipelines = extract_keys(instance.assigned_pipelines());
+    auto new_pipelines = extract_keys(connection.assigned_pipelines());
 
     auto [create_pipelines, remove_pipelines] = compare_difference(cur_pipelines, new_pipelines);
 
     // construct new segments and attach to manifold
     for (const auto& id : create_pipelines)
     {
-        // auto partition_id = new_segments_map.at(address);
-        // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
-        //           << " on resource partition: " << partition_id;
-        this->create_pipeline(instance.assigned_pipelines().at(id));
+        this->create_pipeline(connection.assigned_pipelines().at(id));
     }
 
-    // detach from manifold or stop old segments
     for (const auto& id : remove_pipelines)
     {
-        // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
         this->erase_pipeline(id);
     }
 }

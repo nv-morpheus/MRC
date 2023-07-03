@@ -40,6 +40,8 @@ class SystemResources;
 
 namespace mrc::runtime {
 
+class ConnectionManager;
+
 /**
  * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
@@ -100,6 +102,7 @@ class Runtime final : public mrc::runtime::ISystemRuntime,
 
     std::vector<std::unique_ptr<SegmentsManager>> m_partition_managers;
 
+    std::unique_ptr<ConnectionManager> m_connection_manager;
     std::unique_ptr<PipelinesManager> m_pipelines_manager;
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 

@@ -44,10 +44,15 @@ class RunnableResources final : public system::HostPartitionProvider, public IRu
 
     mrc::core::FiberTaskQueue& main() final;
     const mrc::core::FiberTaskQueue& main() const;
+
+    mrc::core::FiberTaskQueue& network() final;
+    const mrc::core::FiberTaskQueue& network() const;
+
     mrc::runnable::LaunchControl& launch_control() final;
 
   private:
     system::FiberTaskQueue& m_main;
+    system::FiberTaskQueue& m_network;
     std::unique_ptr<mrc::runnable::LaunchControl> m_launch_control;
 };
 

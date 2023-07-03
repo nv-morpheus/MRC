@@ -77,6 +77,7 @@ class SystemResources final : public system::SystemProvider, public virtual runn
     const std::unique_ptr<system::ThreadingResources> m_threading_resources;
 
     std::unique_ptr<runnable::RunnableResources> m_sys_runnable;
+    std::unique_ptr<ucx::UcxResources> m_sys_ucx;
 
     std::vector<runnable::RunnableResources> m_runnable;           // one per host partition
     std::vector<std::optional<ucx::UcxResources>> m_ucx;           // one per flattened partition if network is enabled

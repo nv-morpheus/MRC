@@ -172,6 +172,12 @@ void ManifoldNodeBase::run(runnable::Context& ctx)
             }
             boost::this_fiber::sleep_for(std::chrono::microseconds(backoff));
         }
+        else if (status == channel::Status::closed)
+        {
+            // Then we have nothing left to do. Exit the loop
+            m_is_running = false;
+            break;
+        }
         else
         {
             // Should not happen
