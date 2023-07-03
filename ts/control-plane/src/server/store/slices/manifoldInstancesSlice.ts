@@ -21,6 +21,16 @@ import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { AppDispatch, RootState, AppGetState } from "@mrc/server/store/store";
 import { yield_immediate } from "@mrc/common/utils";
+import { hasIn } from "lodash";
+
+function filterMappingByLocality(mapping: { [key: number]: boolean }, isLocal: boolean) : [string, boolean][] {
+   // Ugh Object.entries & Object.keys both cast to string
+   return Object.entries(mapping).filter(([_, segmentLocal]) => segmentLocal===isLocal);
+}
+function getNumLocal(mapping : { [key: string]: boolean }) : number {
+   // Counts the number of local segments in either an input or output mapping
+   return filterMappingByLocality(mapping, true).length;
+}
 
 const manifoldInstancesAdapter = createWrappedEntityAdapter<IManifoldInstance>({
    selectId: (w) => w.id,
@@ -138,7 +148,20 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error("Segment not attached to manifold");
          }
 
+         const isLocal = requestedMap[action.payload.segment.address];
          delete requestedMap[action.payload.segment.address];
+
+         if (isLocal) {
+            // If we have 0 local inputs, then all of the remote outputs can be detached
+            // If we have 0 local outputs, then all of our remote inputs can be detached
+            const numRequestedLocal: number = getNumLocal(requestedMap);
+            if (numRequestedLocal === 0) {
+               const requestedInvMap: { [key: number]: boolean } = action.payload.is_input ? found.requestedOutputSegments : found.requestedInputSegments;
+               const requestedInvRemotes: [string, boolean][] = filterMappingByLocality(requestedInvMap, false);
+               requestedInvRemotes.forEach(([segmentAddress, _]) => {delete requestedInvMap[parseInt(segmentAddress)];});
+               console.log("breakpoint");
+            }
+         }
 
       },
 
@@ -180,7 +203,7 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
 
-         let actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
+         const actualMap: { [key: number]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
 
          if (!(action.payload.segment.address in actualMap)) {
             throw new Error("Segment not attached to manifold");
@@ -188,11 +211,30 @@ export const manifoldInstancesSlice = createSlice({
 
          delete actualMap[action.payload.segment.address];
 
-         // TODO: Figure out who/what/when to shutdown a manifold
-         // if (Object.keys(found.actualInputSegments).length === 0 && Object.keys(found.actualOutputSegments).length === 0) {
-         //    // Tell the manifold it is OK to shutdown
-         //    found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
-         // }
+         
+         const numRequestedInputs: number = Object.keys(found.requestedInputSegments).length;
+         const numActualInputs: number = Object.keys(found.actualInputSegments).length;
+         const hasInputs: boolean = numActualInputs !== 0 || numRequestedInputs !== 0;
+
+         // When actual inputs go to 0, and we have no requested inputs, we can request the outputs to be detached
+         if (!hasInputs) {
+            const numRequestedOutputs: number = Object.keys(found.requestedOutputSegments).length;
+
+            if (action.payload.is_input) {
+               if (numRequestedOutputs > 0) {
+                  Object.keys(found.requestedOutputSegments).forEach((segmentAddress) => {
+                     delete found.requestedOutputSegments[parseInt(segmentAddress)];
+                  });
+               } else {
+                  // If we don't have any outputs. tell the manifold it is OK to shutdown
+                  found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
+               }
+            } else if (Object.keys(actualMap).length === 0 && numRequestedOutputs === 0) {
+               // If we're detaching an output, we don't have any new outputs being requested, and we don't have any inputs
+               // then tell the manifold it is OK to shutdown
+               found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
+            }
+         } 
       },
    },
    extraReducers: (builder) => {
