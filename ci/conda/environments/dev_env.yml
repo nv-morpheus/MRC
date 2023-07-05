@@ -61,7 +61,7 @@ dependencies:
   - pytest-timeout
   - python=3.10
   - scikit-build>=0.17
-  - spdlog=1.8.5
+  - spdlog>=1.11.0,<1.12
   - sysroot_linux-64=2.17
   - ucx=1.13
   - yapf

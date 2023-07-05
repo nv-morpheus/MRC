@@ -70,7 +70,7 @@ requirements:
     - pybind11-stubgen 0.10.5
     - python {{ python }}
     - scikit-build >=0.17
-    - spdlog 1.8.5
+    - spdlog >=1.11.0,<1.12
     - ucx
     # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
     - cudatoolkit {{ cuda_version }}.*
