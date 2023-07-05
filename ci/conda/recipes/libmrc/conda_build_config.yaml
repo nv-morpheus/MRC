@@ -31,8 +31,8 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -1
-  - 22.12
   - 23.02
+  - 23.06
 
 # Multiple versions of abseil are required to satisfy the solver for some
 # environments. RAPIDS 22.06 only works with gRPC 1.45 and 22.08 only works with

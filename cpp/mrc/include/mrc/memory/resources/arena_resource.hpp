@@ -23,6 +23,7 @@
 #include <cuda_runtime_api.h>
 #include <glog/logging.h>
 #include <rmm/detail/error.hpp>
+#include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
 #include <spdlog/common.h>
 

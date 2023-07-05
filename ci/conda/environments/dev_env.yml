@@ -48,7 +48,7 @@ dependencies:
   - lcov=1.15
   - libhwloc=2.5
   - libprotobuf=3.21
-  - librmm=23.02
+  - librmm=23.06
   - libtool
   - ninja=1.10
   - nlohmann_json=3.9
