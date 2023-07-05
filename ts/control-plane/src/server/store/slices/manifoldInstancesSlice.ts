@@ -271,35 +271,38 @@ function syncSegmentNameForManifold(
             resourceActualStatusToNumber(s.state.actualStatus) >=
             resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
             resourceActualStatusToNumber(s.state.actualStatus) <
-            resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
+            resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed) &&
+            resourceRequestedStatusToNumber(s.state.requestedStatus) <  resourceRequestedStatusToNumber(ResourceRequestedStatus.Requested_Stopped)
       )
       .map((s) => s.id);
 
    const currentSegmentIds = Object.keys(isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments);
 
-   // Determine any that need to be added
-   const toAdd = activeSegmentIds.filter((s) => !currentSegmentIds.includes(s));
+   // Determine any that need to be added, but only if we aren't currently shutting down this manifold
+   if (resourceRequestedStatusToNumber(manifold.state.requestedStatus) <  resourceRequestedStatusToNumber(ResourceRequestedStatus.Requested_Stopped)) {
+      const toAdd = activeSegmentIds.filter((s) => !currentSegmentIds.includes(s));
 
-   toAdd.forEach((segId) => {
-      const seg = segmentInstancesSelectById(state, segId);
+      toAdd.forEach((segId) => {
+         const seg = segmentInstancesSelectById(state, segId);
 
-      if (!seg) {
-         throw new Error(`Could not find segment with ID: ${segId}`);
-      }
+         if (!seg) {
+            throw new Error(`Could not find segment with ID: ${segId}`);
+         }
 
-      // Figure out if this is local
-      const is_local = manifold.pipelineInstanceId === seg.pipelineInstanceId;
+         // Figure out if this is local
+         const is_local = manifold.pipelineInstanceId === seg.pipelineInstanceId;
 
-      // Dispatch the attach action
-      dispatch(
-         manifoldInstancesSlice.actions.attachRequestedSegment({
-            is_input: isInput,
-            is_local: is_local,
-            manifold: manifold,
-            segment: seg,
-         })
-      );
-   });
+         // Dispatch the attach action
+         dispatch(
+            manifoldInstancesSlice.actions.attachRequestedSegment({
+               is_input: isInput,
+               is_local: is_local,
+               manifold: manifold,
+               segment: seg,
+            })
+         );
+      });
+   }
 
    // Determine any that need to be removed
    const toRemove = currentSegmentIds.filter((s) => !activeSegmentIds.includes(s));
