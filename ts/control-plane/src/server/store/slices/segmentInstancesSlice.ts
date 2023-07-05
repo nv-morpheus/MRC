@@ -178,6 +178,11 @@ export function segmentInstancesRequestStop(segmentInstanceId: string) {
          throw new Error(`Segment Instance with ID: ${segmentInstanceId} not found`);
       }
 
+      dispatch(segmentInstancesSlice.actions.updateResourceActualState({
+         resource: found,
+         status: ResourceActualStatus.Actual_Stopping
+      }));
+
       if (found.state.refCount == 0) { 
           // Segment has no dependees OK to stop now
          dispatch(segmentInstancesSlice.actions.updateResourceRequestedState({
