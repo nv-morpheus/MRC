@@ -189,8 +189,9 @@ export class ConnectionManager {
       resource_type: ResourceStateTypeStrings
    ): Connection | Worker | PipelineInstance | SegmentInstance | ManifoldInstance | null {
       // Now return the correct instance from the updated state
+      const state = this.getClientState();
       if (resource_type === "Connections") {
-         const entities = this.getClientState().connections!.entities;
+         const entities = state.connections!.entities;
 
          if (!(id in entities)) {
             return null;
@@ -198,7 +199,7 @@ export class ConnectionManager {
 
          return entities[id];
       } else if (resource_type === "Workers") {
-         const entities = this.getClientState().workers!.entities;
+         const entities = state.workers!.entities;
 
          if (!(id in entities)) {
             return null;
@@ -206,7 +207,7 @@ export class ConnectionManager {
 
          return entities[id];
       } else if (resource_type === "PipelineInstances") {
-         const entities = this.getClientState().pipelineInstances!.entities;
+         const entities = state.pipelineInstances!.entities;
 
          if (!(id in entities)) {
             return null;
@@ -214,7 +215,7 @@ export class ConnectionManager {
 
          return entities[id];
       } else if (resource_type === "SegmentInstances") {
-         const entities = this.getClientState().segmentInstances!.entities;
+         const entities = state.segmentInstances!.entities;
 
          if (!(id in entities)) {
             return null;
@@ -222,7 +223,7 @@ export class ConnectionManager {
 
          return entities[id];
       } else if (resource_type === "ManifoldInstances") {
-         const entities = this.getClientState().manifoldInstances!.entities;
+         const entities = state.manifoldInstances!.entities;
 
          if (!(id in entities)) {
             return null;
