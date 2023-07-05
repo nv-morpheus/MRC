@@ -8,7 +8,7 @@ import { ConnectionManager } from "@mrc/client/connection_manager";
 import { PipelineManager } from "@mrc/client/pipeline_manager";
 import { WorkersManager } from "@mrc/client/workers_manager";
 import { IPipelineConfiguration } from "@mrc/common/entities";
-import { PingRequest} from "@mrc/proto/mrc/protos/architect";
+import { PingRequest } from "@mrc/proto/mrc/protos/architect";
 import {
    ManifoldOptions_Policy,
    PipelineInstance,
@@ -785,368 +785,377 @@ describe("Manifold", () => {
       // Now update the attached manifolds for each segment
    });
 
-   test("Second Connection", async () => {
-      let state = pipelineManager.connectionManager.getClientState();
-      expect(state.manifoldInstances!.ids).toHaveLength(1);
-      expect(pipelineManager.manifoldsManager.manifoldIds).toEqual(state.manifoldInstances!.ids);
+   describe("Second Connection", () => {
+      let pipelineManager2: PipelineManager;
 
-      const manifold1 = pipelineManager.manifoldsManager.manifolds[0];
-      let manifold1State = manifold1.getState();
-
-      // Verify that with a single connection, the `my_seg1` segment has a single local connection to `my_seg2`
-      expect(state.segmentInstances!.ids).toHaveLength(2);
-      const pipe1seg1Id: number = parseInt(state.segmentInstances!.ids[0]);
-      const pipe1seg2Id: number = parseInt(state.segmentInstances!.ids[1]);
-
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
-
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
-
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(0);
-
-      // update requested to actual
-      await manifold1.syncActualSegments();
-      
-      // requested segments should be actual segments now
-      state = pipelineManager.connectionManager.getClientState();
-      manifold1State = manifold1.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
-      expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
-
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
-      expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
-     
-      // Might need to change this to a search if the order stops being deterministic
-      let pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
-      expect(pipe1seg1.name).toEqual("my_seg1");
-      expect(pipe1seg1.state!.refCount).toEqual(1);
-
-      let pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
-      expect(pipe1seg2.name).toEqual("my_seg2");
-      expect(pipe1seg2.state!.refCount).toEqual(1);
-
-      // Now create a second connection
-      const pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
-      await pipelineManager2.ensureResourcesCreated();
-
-      // Now see what the state is, we should have 2 manifolds, 2 actual segments and 2 requested segments
-      state = pipelineManager2.connectionManager.getClientState();
-      expect(state.manifoldInstances!.ids).toHaveLength(2);
-      expect(state.segmentInstances!.ids).toHaveLength(4);
-
-      manifold1State = manifold1.getState();
-      const manifold2 = pipelineManager2.manifoldsManager.manifolds[0];
-      let manifold2State = manifold2.getState();
-
-      const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[2]);
-      const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[3]);
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
-      expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
-      expect(manifold1State.requestedInputSegments[pipe2seg1Id]).toBe(false);
-      expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
-      expect(manifold1State.requestedOutputSegments[pipe2seg2Id]).toBe(false);
-
-
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
-      expect(manifold2State.requestedInputSegments[pipe1seg1Id]).toBe(false);
-      expect(manifold2State.requestedInputSegments[pipe2seg1Id]).toBe(true);
-      expect(manifold2State.requestedOutputSegments[pipe1seg2Id]).toBe(false);
-      expect(manifold2State.requestedOutputSegments[pipe2seg2Id]).toBe(true);
-
-      // Both manifolds need to update their requested/actual segments
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
-            
-      state = pipelineManager2.connectionManager.getClientState();
-
-      // fetch an updated version of the first manifold
-      manifold1State = manifold1.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
-      expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
-
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
-      expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
-
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
-      expect(manifold2State.actualInputSegments).toEqual(manifold2State.requestedInputSegments);
-
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
-      expect(manifold2State.actualOutputSegments).toEqual(manifold2State.requestedOutputSegments);
-
-      pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
-      expect(pipe1seg1.state!.refCount).toEqual(2);
-
-      pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
-      expect(pipe1seg2.state!.refCount).toEqual(2);
-
-      const pipe2seg1 = state.segmentInstances!.entities[pipe2seg1Id!];
-      expect(pipe2seg1.name).toEqual("my_seg1");
-      expect(pipe2seg1.state!.refCount).toEqual(2);
-
-      const pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
-      expect(pipe2seg2.name).toEqual("my_seg2");
-      expect(pipe2seg2.state!.refCount).toEqual(2);
-
-      for (const worker of pipelineManager2.workersManager.workers) {
-         for (const seg of worker.segments) {
-            await seg.requestSegmentStop();
+      afterEach(async () => {
+         if (pipelineManager2 !== undefined && pipelineManager2.isRegistered) {
+            await pipelineManager2.unregister();
          }
-      }
+      });
 
-      // Both manifolds should have some of their reqiested segments removed
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+      test("Ref Counting", async () => {
+         let state = pipelineManager.connectionManager.getClientState();
+         expect(state.manifoldInstances!.ids).toHaveLength(1);
+         expect(pipelineManager.manifoldsManager.manifoldIds).toEqual(state.manifoldInstances!.ids);
 
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
+         const manifold1 = pipelineManager.manifoldsManager.manifolds[0];
+         let manifold1State = manifold1.getState();
 
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
-      
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
+         // Verify that with a single connection, the `my_seg1` segment has a single local connection to `my_seg2`
+         expect(state.segmentInstances!.ids).toHaveLength(2);
+         const pipe1seg1Id: number = parseInt(state.segmentInstances!.ids[0]);
+         const pipe1seg2Id: number = parseInt(state.segmentInstances!.ids[1]);
 
-      // veirfy the refcount went down
-      state = pipelineManager2.connectionManager.getClientState();
-      pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
-      expect(pipe1seg1.name).toEqual("my_seg1");
-      expect(pipe1seg1.state!.refCount).toEqual(1);
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
 
-      pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
-      expect(pipe1seg2.name).toEqual("my_seg2");
-      expect(pipe1seg2.state!.refCount).toEqual(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
 
-      for (const worker of pipelineManager2.workersManager.workers) {
-         for (const seg of worker.segments) {
-            let segmentState = seg.getState();
-            expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
-            await seg.syncActualStatus();
-            segmentState = seg.getState();
-            expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
-            await seg.sendSegmenStopped();
-            segmentState = seg.getState();
-            expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
-         }
-      }
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(0);
 
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
+         // update requested to actual
+         await manifold1.syncActualSegments();
 
-      // Manifold2 should have been asked to shut down, manifold1 should still be running
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
-      
-      // Still shouldn't be connected to anything
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
+         // requested segments should be actual segments now
+         state = pipelineManager.connectionManager.getClientState();
+         manifold1State = manifold1.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
+         expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
 
-      expect(manifold1State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
-      expect(manifold2State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
+         expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
 
-      await manifold2.syncActualStatus();
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
-      
-      await manifold2.updateActualStatus(ResourceActualStatus.Actual_Stopped);
-      manifold2State = manifold2.getState();
-      expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
+         // Might need to change this to a search if the order stops being deterministic
+         let pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+         expect(pipe1seg1.name).toEqual("my_seg1");
+         expect(pipe1seg1.state!.refCount).toEqual(1);
 
-      await pipelineManager2.unregister();
+         let pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+         expect(pipe1seg2.name).toEqual("my_seg2");
+         expect(pipe1seg2.state!.refCount).toEqual(1);
 
-      state = pipelineManager.connectionManager.getClientState();
-      expect(state.manifoldInstances!.ids).toHaveLength(1);
+         // Now create a second connection
+         pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
+         await pipelineManager2.ensureResourcesCreated();
 
-      // make sure we didn't mess up the first manifold somehow
-      manifold1State = manifold1.getState();
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(manifold1State.actualInputSegments[pipe1seg1Id]).toBe(true);
+         // Now see what the state is, we should have 2 manifolds, 2 actual segments and 2 requested segments
+         state = pipelineManager2.connectionManager.getClientState();
+         expect(state.manifoldInstances!.ids).toHaveLength(2);
+         expect(state.segmentInstances!.ids).toHaveLength(4);
 
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
-      expect(manifold1State.actualOutputSegments[pipe1seg2Id]).toBe(true);
+         manifold1State = manifold1.getState();
+         const manifold2 = pipelineManager2.manifoldsManager.manifolds[0];
+         let manifold2State = manifold2.getState();
 
-   });
+         const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[2]);
+         const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[3]);
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
+         expect(manifold1State.requestedInputSegments[pipe1seg1Id]).toBe(true);
+         expect(manifold1State.requestedInputSegments[pipe2seg1Id]).toBe(false);
+         expect(manifold1State.requestedOutputSegments[pipe1seg2Id]).toBe(true);
+         expect(manifold1State.requestedOutputSegments[pipe2seg2Id]).toBe(false);
 
-   test("Second Connection shutdown second input", async () => {
-      let state = pipelineManager.connectionManager.getClientState();
-      const manifold1 = pipelineManager.manifoldsManager.manifolds[0];
 
-      const pipe1seg1Id: number = parseInt(state.segmentInstances!.ids[0]);
-      const pipe1seg2Id: number = parseInt(state.segmentInstances!.ids[1]);
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
+         expect(manifold2State.requestedInputSegments[pipe1seg1Id]).toBe(false);
+         expect(manifold2State.requestedInputSegments[pipe2seg1Id]).toBe(true);
+         expect(manifold2State.requestedOutputSegments[pipe1seg2Id]).toBe(false);
+         expect(manifold2State.requestedOutputSegments[pipe2seg2Id]).toBe(true);
 
-      await manifold1.syncActualSegments();
-      let manifold1State = manifold1.getState();
+         // Both manifolds need to update their requested/actual segments
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
 
-      // Now create a second connection
-      const pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
-      await pipelineManager2.ensureResourcesCreated();
+         state = pipelineManager2.connectionManager.getClientState();
 
-      // Now see what the state is, we should have 2 manifolds, 2 actual segments and 2 requested segments
-      state = pipelineManager2.connectionManager.getClientState();
-      expect(state.manifoldInstances!.ids).toHaveLength(2);
-      expect(state.segmentInstances!.ids).toHaveLength(4);
+         // fetch an updated version of the first manifold
+         manifold1State = manifold1.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
+         expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
 
-      manifold1State = manifold1.getState();
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+         expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
 
-      const manifold2 = pipelineManager2.manifoldsManager.manifolds[0];
-      let manifold2State = manifold2.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
+         expect(manifold2State.actualInputSegments).toEqual(manifold2State.requestedInputSegments);
 
-      const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[2]);
-      const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[3]);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
+         expect(manifold2State.actualOutputSegments).toEqual(manifold2State.requestedOutputSegments);
 
-      // Both manifolds need to update their requested/actual segments
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
-            
-      state = pipelineManager2.connectionManager.getClientState();
+         pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+         expect(pipe1seg1.state!.refCount).toEqual(2);
 
-      // fetch an updated version of the first manifold
-      manifold1State = manifold1.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
-      expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
+         pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+         expect(pipe1seg2.state!.refCount).toEqual(2);
 
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
-      expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
+         const pipe2seg1 = state.segmentInstances!.entities[pipe2seg1Id!];
+         expect(pipe2seg1.name).toEqual("my_seg1");
+         expect(pipe2seg1.state!.refCount).toEqual(2);
 
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
-      expect(manifold2State.actualInputSegments).toEqual(manifold2State.requestedInputSegments);
+         const pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
+         expect(pipe2seg2.name).toEqual("my_seg2");
+         expect(pipe2seg2.state!.refCount).toEqual(2);
 
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
-      expect(manifold2State.actualOutputSegments).toEqual(manifold2State.requestedOutputSegments);
-
-      // Now we need to stop the first segment in pipe2
-      let foundPipe2Seg1: boolean = false;
-      for (const worker of pipelineManager2.workersManager.workers) {
-         for (const seg of worker.segments) {
-            if (parseInt(seg.segmentId) === pipe2seg1Id) {
-               foundPipe2Seg1 = true;
+         for (const worker of pipelineManager2.workersManager.workers) {
+            for (const seg of worker.segments) {
                await seg.requestSegmentStop();
             }
          }
-      }
 
-      expect(foundPipe2Seg1).toBe(true);
+         // Both manifolds should have some of their reqiested segments removed
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
 
-      // Both manifolds should have some of their reqiested segments removed
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
 
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
 
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
-      
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
 
-      // pipe2seg2 should have gotten a stop request
-      let foundPipe2Seg2: boolean = false;
-      for (const worker of pipelineManager2.workersManager.workers) {
-         for (const seg of worker.segments) {
-            if (parseInt(seg.segmentId) === pipe2seg2Id) {
-               foundPipe2Seg2 = true;
+         // veirfy the refcount went down
+         state = pipelineManager2.connectionManager.getClientState();
+         pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+         expect(pipe1seg1.name).toEqual("my_seg1");
+         expect(pipe1seg1.state!.refCount).toEqual(1);
+
+         pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+         expect(pipe1seg2.name).toEqual("my_seg2");
+         expect(pipe1seg2.state!.refCount).toEqual(1);
+
+         for (const worker of pipelineManager2.workersManager.workers) {
+            for (const seg of worker.segments) {
                let segmentState = seg.getState();
                expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
-               await seg.requestSegmentStop();
+               await seg.syncActualStatus();
+               segmentState = seg.getState();
+               expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
+               await seg.sendSegmenStopped();
+               segmentState = seg.getState();
+               expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
             }
          }
-      }
 
-      expect(foundPipe2Seg2).toBe(true);
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
 
-      let pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
-      
+         // Manifold2 should have been asked to shut down, manifold1 should still be running
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
 
-      // veirfy the refcount went down
-      state = pipelineManager2.connectionManager.getClientState();
-      let pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
-      expect(pipe1seg1.name).toEqual("my_seg1");
-      expect(pipe1seg1.state!.refCount).toEqual(1);
+         // Still shouldn't be connected to anything
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
 
-      let pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
-      expect(pipe1seg2.name).toEqual("my_seg2");
-      expect(pipe1seg2.state!.refCount).toEqual(1);
+         expect(manifold1State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
+         expect(manifold2State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
 
-      await manifold1.syncActualSegments();
-      await manifold2.syncActualSegments();
+         await manifold2.syncActualStatus();
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
 
-      // Manifold2 should have been asked to shut down, manifold1 should still be running
-      manifold1State = manifold1.getState();
-      manifold2State = manifold2.getState();
-      expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
-      expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
-      
-      // Still shouldn't be connected to anything
-      expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
-      expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
+         await manifold2.updateActualStatus(ResourceActualStatus.Actual_Stopped);
+         manifold2State = manifold2.getState();
+         expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
 
-      expect(manifold1State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
-      expect(manifold2State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+         await pipelineManager2.unregister();
 
-      await manifold2.updateActualStatus(ResourceActualStatus.Actual_Stopped);
-      await pipelineManager2.unregister();
+         state = pipelineManager.connectionManager.getClientState();
+         expect(state.manifoldInstances!.ids).toHaveLength(1);
 
+         // make sure we didn't mess up the first manifold somehow
+         manifold1State = manifold1.getState();
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(manifold1State.actualInputSegments[pipe1seg1Id]).toBe(true);
+
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
+         expect(manifold1State.actualOutputSegments[pipe1seg2Id]).toBe(true);
+
+      });
+
+      test("Shutdown second input", async () => {
+         let state = pipelineManager.connectionManager.getClientState();
+         const manifold1 = pipelineManager.manifoldsManager.manifolds[0];
+
+         const pipe1seg1Id: number = parseInt(state.segmentInstances!.ids[0]);
+         const pipe1seg2Id: number = parseInt(state.segmentInstances!.ids[1]);
+
+         await manifold1.syncActualSegments();
+         let manifold1State = manifold1.getState();
+
+         // Now create a second connection
+         pipelineManager2 = PipelineManager.create(pipeline_config, ["test data2"], client);
+         await pipelineManager2.ensureResourcesCreated();
+
+         // Now see what the state is, we should have 2 manifolds, 2 actual segments and 2 requested segments
+         state = pipelineManager2.connectionManager.getClientState();
+         expect(state.manifoldInstances!.ids).toHaveLength(2);
+         expect(state.segmentInstances!.ids).toHaveLength(4);
+
+         manifold1State = manifold1.getState();
+
+         const manifold2 = pipelineManager2.manifoldsManager.manifolds[0];
+         let manifold2State = manifold2.getState();
+
+         const pipe2seg1Id: number = parseInt(state.segmentInstances!.ids[2]);
+         const pipe2seg2Id: number = parseInt(state.segmentInstances!.ids[3]);
+
+         // Both manifolds need to update their requested/actual segments
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
+
+         state = pipelineManager2.connectionManager.getClientState();
+
+         // fetch an updated version of the first manifold
+         manifold1State = manifold1.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
+         expect(manifold1State.actualInputSegments).toEqual(manifold1State.requestedInputSegments);
+
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+         expect(manifold1State.actualOutputSegments).toEqual(manifold1State.requestedOutputSegments);
+
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
+         expect(manifold2State.actualInputSegments).toEqual(manifold2State.requestedInputSegments);
+
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
+         expect(manifold2State.actualOutputSegments).toEqual(manifold2State.requestedOutputSegments);
+
+         // Now we need to stop the first segment in pipe2
+         let foundPipe2Seg1: boolean = false;
+         for (const worker of pipelineManager2.workersManager.workers) {
+            for (const seg of worker.segments) {
+               if (parseInt(seg.segmentId) === pipe2seg1Id) {
+                  foundPipe2Seg1 = true;
+                  await seg.requestSegmentStop();
+               }
+            }
+         }
+
+         expect(foundPipe2Seg1).toBe(true);
+
+         // Both manifolds should have some of their reqiested segments removed
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(2);
+
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(2);
+
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(1);
+
+         // pipe2seg2 should have gotten a stop request
+         let foundPipe2Seg2: boolean = false;
+         for (const worker of pipelineManager2.workersManager.workers) {
+            for (const seg of worker.segments) {
+               if (parseInt(seg.segmentId) === pipe2seg2Id) {
+                  foundPipe2Seg2 = true;
+                  let segmentState = seg.getState();
+                  expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+                  await seg.requestSegmentStop();
+               }
+            }
+         }
+
+         expect(foundPipe2Seg2).toBe(true);
+
+         let pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
+
+
+         // veirfy the refcount went down
+         state = pipelineManager2.connectionManager.getClientState();
+         let pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+         expect(pipe1seg1.name).toEqual("my_seg1");
+         expect(pipe1seg1.state!.refCount).toEqual(1);
+
+         let pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+         expect(pipe1seg2.name).toEqual("my_seg2");
+         expect(pipe1seg2.state!.refCount).toEqual(1);
+
+         await manifold1.syncActualSegments();
+         await manifold2.syncActualSegments();
+
+         // Manifold2 should have been asked to shut down, manifold1 should still be running
+         manifold1State = manifold1.getState();
+         manifold2State = manifold2.getState();
+         expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(1);
+         expect(Object.keys(manifold1State.actualOutputSegments)).toHaveLength(1);
+
+         // Still shouldn't be connected to anything
+         expect(Object.keys(manifold2State.requestedInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualInputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(0);
+         expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(0);
+
+         expect(manifold1State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
+         expect(manifold2State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+
+         await manifold2.updateActualStatus(ResourceActualStatus.Actual_Stopped);
+         manifold2State = manifold2.getState();
+         expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Completed);
+      });
    });
-
 
 });
