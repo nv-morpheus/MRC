@@ -49,6 +49,7 @@
 #include <coroutine>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>

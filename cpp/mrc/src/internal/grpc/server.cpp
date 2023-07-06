@@ -26,8 +26,6 @@
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runnable/runner.hpp"
 
-#include <grpcpp/security/server_credentials.h>
-
 #include <memory>
 #include <utility>
 

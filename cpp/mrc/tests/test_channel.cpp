@@ -35,6 +35,7 @@
 #include <cstdint>     // for uint64_t
 #include <functional>  // for ref, reference_wrapper
 #include <memory>
+#include <string>
 #include <utility>
 // IWYU thinks algorithm is needed for: auto channel = std::make_shared<RecentChannel<int>>(2);
 // IWYU pragma: no_include <algorithm>

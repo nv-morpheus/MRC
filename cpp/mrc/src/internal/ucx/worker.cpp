@@ -24,7 +24,8 @@
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
-#include <ucp/api/ucp.h>           // for ucp_*
+#include <ucp/api/ucp.h>  // for ucp_*
+#include <ucp/api/ucp_compat.h>
 #include <ucp/api/ucp_def.h>       // for ucp_worker_h
 #include <ucs/type/status.h>       // for ucs_status_string, UCS_OK
 #include <ucs/type/thread_mode.h>  // for UCS_THREAD_MODE_MULTI
