@@ -915,6 +915,8 @@ describe("Manifold", () => {
          for (const worker of pipelineManager2.workersManager.workers) {
             for (const seg of worker.segments) {
                await seg.requestSegmentStop();
+               let segmentState = seg.getState();
+               expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
             }
          }
 
@@ -957,13 +959,9 @@ describe("Manifold", () => {
 
          for (const worker of pipelineManager2.workersManager.workers) {
             for (const seg of worker.segments) {
+               await seg.sendSegmenStopped();
                let segmentState = seg.getState();
                expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
-               await seg.syncActualStatus();
-               segmentState = seg.getState();
-               expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
-               await seg.sendSegmenStopped();
-               segmentState = seg.getState();
                expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
             }
          }
