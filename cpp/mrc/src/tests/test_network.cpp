@@ -58,7 +58,6 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <atomic>
 #include <cstddef>

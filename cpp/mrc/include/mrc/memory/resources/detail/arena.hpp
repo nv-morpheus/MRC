@@ -23,7 +23,6 @@
 #include <rmm/detail/error.hpp>
 #include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
-#include <spdlog/common.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -401,29 +400,30 @@ class global_arena final
         }
     }
 
-    /**
-     * @brief Dump memory to log.
-     *
-     * @param logger the spdlog logger to use
-     */
-    void dump_memory_log(std::shared_ptr<spdlog::logger> const& logger) const
-    {
-        lock_guard lock(mtx_);
+    // /**
+    //  * @brief Dump memory to log.
+    //  *
+    //  * @param logger the spdlog logger to use
+    //  */
+    // void dump_memory_log(std::shared_ptr<spdlog::logger> const& logger) const
+    // {
+    //     lock_guard lock(mtx_);
 
-        logger->info("  Maximum size: {}", rmm::detail::bytes{maximum_size_});
-        logger->info("  Current size: {}", rmm::detail::bytes{current_size_});
+    //     logger->info("  Maximum size: {}", rmm::detail::bytes{maximum_size_});
+    //     logger->info("  Current size: {}", rmm::detail::bytes{current_size_});
 
-        logger->info("  # free blocks: {}", free_blocks_.size());
-        if (!free_blocks_.empty())
-        {
-            logger->info("  Total size of free blocks: {}", rmm::detail::bytes{total_block_size(free_blocks_)});
-            auto const largest_free = *std::max_element(free_blocks_.begin(), free_blocks_.end(), block_size_compare);
-            logger->info("  Size of largest free block: {}", rmm::detail::bytes{largest_free.size()});
-        }
+    //     logger->info("  # free blocks: {}", free_blocks_.size());
+    //     if (!free_blocks_.empty())
+    //     {
+    //         logger->info("  Total size of free blocks: {}", rmm::detail::bytes{total_block_size(free_blocks_)});
+    //         auto const largest_free = *std::max_element(free_blocks_.begin(), free_blocks_.end(),
+    //         block_size_compare); logger->info("  Size of largest free block: {}",
+    //         rmm::detail::bytes{largest_free.size()});
+    //     }
 
-        logger->info("  # upstream blocks={}", upstream_blocks_.size());
-        logger->info("  Total size of upstream blocks: {}", rmm::detail::bytes{total_block_size(upstream_blocks_)});
-    }
+    //     logger->info("  # upstream blocks={}", upstream_blocks_.size());
+    //     logger->info("  Total size of upstream blocks: {}", rmm::detail::bytes{total_block_size(upstream_blocks_)});
+    // }
 
   private:
     using lock_guard = std::lock_guard<std::mutex>;
@@ -566,22 +566,23 @@ class arena
         free_blocks_.clear();
     }
 
-    /**
-     * Dump memory to log.
-     *
-     * @param logger the spdlog logger to use
-     */
-    void dump_memory_log(std::shared_ptr<spdlog::logger> const& logger) const
-    {
-        lock_guard lock(mtx_);
-        logger->info("    # free blocks: {}", free_blocks_.size());
-        if (!free_blocks_.empty())
-        {
-            logger->info("    Total size of free blocks: {}", rmm::detail::bytes{total_block_size(free_blocks_)});
-            auto const largest_free = *std::max_element(free_blocks_.begin(), free_blocks_.end(), block_size_compare);
-            logger->info("    Size of largest free block: {}", rmm::detail::bytes{largest_free.size()});
-        }
-    }
+    // /**
+    //  * Dump memory to log.
+    //  *
+    //  * @param logger the spdlog logger to use
+    //  */
+    // void dump_memory_log(std::shared_ptr<spdlog::logger> const& logger) const
+    // {
+    //     lock_guard lock(mtx_);
+    //     logger->info("    # free blocks: {}", free_blocks_.size());
+    //     if (!free_blocks_.empty())
+    //     {
+    //         logger->info("    Total size of free blocks: {}", rmm::detail::bytes{total_block_size(free_blocks_)});
+    //         auto const largest_free = *std::max_element(free_blocks_.begin(), free_blocks_.end(),
+    //         block_size_compare); logger->info("    Size of largest free block: {}",
+    //         rmm::detail::bytes{largest_free.size()});
+    //     }
+    // }
 
   private:
     using lock_guard = std::lock_guard<std::mutex>;

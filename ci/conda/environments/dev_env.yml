@@ -38,10 +38,10 @@ dependencies:
   - gflags=2.2
   - git>=2.35.3 # Needed for wildcards on safe.directory
   - glog=0.6
-  - gmock=1.10
+  - gmock=1.13
   - graphviz=3.0
-  - grpc-cpp=1.48
-  - gtest=1.10
+  - grpc-cpp=1.51
+  - gtest=1.13
   - gxx=11.2 # Specifies which versions of GXX and GCC to use
   - isort
   - jinja2=3.0
@@ -61,9 +61,8 @@ dependencies:
   - pytest-timeout
   - python=3.10
   - scikit-build>=0.17
-  - spdlog>=1.11.0,<1.12
   - sysroot_linux-64=2.17
-  - ucx=1.13
+  - ucx=1.14
   - yapf
 
   # Remove once `mamba repoquery whoneeds cudatoolkit` is empty. For now, we need to specify a version

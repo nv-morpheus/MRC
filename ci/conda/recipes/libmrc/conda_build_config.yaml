@@ -26,12 +26,14 @@ cuda_compiler_version:
   - 11.8
 
 python:
+  - 3.8
   - 3.10
   - 3.10
 
 # Setup the dependencies to build with multiple versions of RAPIDS
-rapids_version: # Keep around compatibility with current version -1
+rapids_version: # Keep around compatibility with current version -2
   - 23.02
+  - 23.04
   - 23.06
 
 # Multiple versions of abseil are required to satisfy the solver for some
@@ -41,16 +43,20 @@ rapids_version: # Keep around compatibility with current version -1
 libabseil:
   - 20230125.0
   - 20230125.0
+  - 20230125.0
 
 grpc_cpp:
+  - 1.51
   - 1.51
   - 1.51
 
 ucx:
   - 1.13
   - 1.14
+  - 1.14
 
 libprotobuf:
+  - 3.21
   - 3.21
   - 3.21
 
