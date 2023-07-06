@@ -67,7 +67,7 @@ void SegmentsManager::do_service_start(std::stop_token stop_token)
     completed_promise.get_future().get();
 }
 
-void SegmentsManager::sync_state(const control_plane::state::Worker& worker)
+bool SegmentsManager::sync_state(const control_plane::state::Worker& worker)
 {
     // Check for assignments
     auto cur_segments = extract_keys(m_instances);
@@ -108,6 +108,9 @@ void SegmentsManager::sync_state(const control_plane::state::Worker& worker)
         // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
         this->erase_segment(address);
     }
+
+    // Return true if we have a possible shutdown scenario
+    return !remove_segments.empty() && new_segments.empty();
 }
 
 // void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& instance)
@@ -194,13 +197,13 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
 
     auto [added_iterator, did_add] = m_instances.emplace(
         instance_state.address(),
-        std::make_unique<segment::SegmentInstance>(*this,
+        std::make_shared<segment::SegmentInstance>(*this,
                                                    definition,
                                                    instance_state.address(),
                                                    instance_state.pipeline_instance().id()));
 
     // Now start as a child service
-    this->child_service_start(*added_iterator->second);
+    this->child_service_start(added_iterator->second);
 
     // // Create the resource on the correct runnable
     // m_runtime.resources()

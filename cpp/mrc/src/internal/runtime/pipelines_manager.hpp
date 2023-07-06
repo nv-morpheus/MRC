@@ -61,7 +61,7 @@ class PipelinesManager : public AsyncService, public InternalRuntimeProvider
 
     std::map<uint64_t, std::shared_ptr<pipeline::PipelineDefinition>> m_definitions;
 
-    std::map<uint64_t, std::unique_ptr<pipeline::PipelineInstance>> m_instances;
+    std::map<uint64_t, std::shared_ptr<pipeline::PipelineInstance>> m_instances;
 
     friend class ConnectionManager;
 };

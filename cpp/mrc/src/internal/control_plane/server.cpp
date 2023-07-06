@@ -169,9 +169,9 @@ void Server::do_service_start(std::stop_token stop_token)
 
         args.emplace_back(node_service_js);
 
-        m_node_service = std::make_unique<NodeService>(*this, args);
+        m_node_service = std::make_shared<NodeService>(*this, args);
 
-        this->child_service_start(*m_node_service);
+        this->child_service_start(m_node_service);
     }
 
     // Mark that we have started

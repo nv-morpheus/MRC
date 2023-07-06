@@ -73,6 +73,7 @@ describe("Single", () => {
                peerInfo: connection.peerInfo,
                assignedPipelineIds: [],
                workerIds: [],
+               mappedPipelineDefinitions: [],
                state: {
                   actualStatus: ResourceActualStatus.Actual_Created,
                   refCount: 0,

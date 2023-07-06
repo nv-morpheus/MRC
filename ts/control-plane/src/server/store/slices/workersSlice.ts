@@ -145,7 +145,18 @@ export const workersSelectByMachineId = (state: RootState, machine_id: string) =
    selectByMachineId(state.workers, machine_id);
 
 export function workersConfigureSlice() {
-   createWatcher("Workers", workersAdd, workersSelectById, async () => {}, undefined, undefined, undefined, undefined);
+   createWatcher(
+      "Workers",
+      workersAdd,
+      workersSelectById,
+      async () => {},
+      undefined,
+      undefined,
+      undefined,
+      async (instance, listenerApi) => {
+         listenerApi.dispatch(workersRemove(instance));
+      }
+   );
 
    return workersSlice.reducer;
 }

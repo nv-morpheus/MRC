@@ -84,6 +84,11 @@ class ResourceManagerBase : public AsyncService, public RuntimeProviderT
     }
 
   protected:
+    control_plane::state::ResourceActualStatus get_local_actual_status() const
+    {
+        return m_local_status;
+    }
+
     void mark_completed()
     {
         CHECK_EQ(m_local_status, control_plane::state::ResourceActualStatus::Running) << "Can only mark completed "

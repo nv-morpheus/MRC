@@ -74,8 +74,8 @@ class WorkerManager : public PartitionResourceManager<control_plane::state::Work
 
     void on_stopped_requested(control_plane::state::Worker& instance) override;
 
-    std::unique_ptr<SegmentsManager> m_segments_manager;
-    std::unique_ptr<DataPlaneManager> m_data_plane_manager;
+    std::shared_ptr<SegmentsManager> m_segments_manager;
+    std::shared_ptr<DataPlaneManager> m_data_plane_manager;
 
     size_t m_partition_id{0};
     InstanceID m_worker_id{0};

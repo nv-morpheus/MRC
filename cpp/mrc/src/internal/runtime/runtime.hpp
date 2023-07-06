@@ -97,17 +97,17 @@ class Runtime final : public mrc::runtime::ISystemRuntime,
     // std::unique_ptr<system::ThreadingResources> m_sys_threading_resources;
     // std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
 
-    std::vector<std::unique_ptr<PartitionRuntime>> m_partitions;
+    std::vector<std::shared_ptr<PartitionRuntime>> m_partitions;
 
-    std::unique_ptr<control_plane::Server> m_control_plane_server;
-    std::unique_ptr<control_plane::Client> m_control_plane_client;
+    std::shared_ptr<control_plane::Server> m_control_plane_server;
+    std::shared_ptr<control_plane::Client> m_control_plane_client;
 
-    std::unique_ptr<DataPlaneSystemManager> m_data_plane_manager;
+    std::shared_ptr<DataPlaneSystemManager> m_data_plane_manager;
 
-    std::vector<std::unique_ptr<SegmentsManager>> m_partition_managers;
+    std::vector<std::shared_ptr<SegmentsManager>> m_partition_managers;
 
-    std::unique_ptr<ConnectionManager> m_connection_manager;
-    std::unique_ptr<PipelinesManager> m_pipelines_manager;
+    std::shared_ptr<ConnectionManager> m_connection_manager;
+    std::shared_ptr<PipelinesManager> m_pipelines_manager;
     std::unique_ptr<metrics::Registry> m_metrics_registry;
 
     // std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;

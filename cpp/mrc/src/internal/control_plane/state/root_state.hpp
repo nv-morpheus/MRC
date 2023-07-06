@@ -216,6 +216,8 @@ struct Connection : public ResourceTopLevelMessage<protos::Connection>
 
     std::map<uint64_t, const PipelineInstance&> assigned_pipelines() const;
 
+    std::map<uint64_t, const PipelineDefinition&> mapped_pipeline_definitions() const;
+
     //   private:
     //     std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
     //     const protos::Connection& m_message;
@@ -231,6 +233,8 @@ struct Worker : public ResourceTopLevelMessage<protos::Worker>
     std::string worker_address() const;
 
     uint64_t machine_id() const;
+
+    const Connection& connection() const;
 
     std::map<uint64_t, const SegmentInstance&> assigned_segments() const;
 };

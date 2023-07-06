@@ -59,7 +59,7 @@ class SegmentsManager : public AsyncService, public InternalPartitionRuntimeProv
     SegmentsManager(runtime::IInternalPartitionRuntimeProvider& runtime, size_t partition_id);
     ~SegmentsManager() override;
 
-    void sync_state(const control_plane::state::Worker& worker);
+    bool sync_state(const control_plane::state::Worker& worker);
 
   private:
     void do_service_start(std::stop_token stop_token) override;
@@ -68,7 +68,7 @@ class SegmentsManager : public AsyncService, public InternalPartitionRuntimeProv
     void erase_segment(SegmentAddress address);
 
     // Running segment instances
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_instances;
+    std::map<SegmentAddress, std::shared_ptr<segment::SegmentInstance>> m_instances;
 };
 
 }  // namespace mrc::runtime

@@ -83,9 +83,9 @@ bool ConnectionManager::on_created_requested(control_plane::state::Connection& i
         // this->child_service_start(*m_data_plane_manager, true);
 
         // Create the pipeline manager
-        m_pipelines_manager = std::make_unique<PipelinesManager>(*this);
+        m_pipelines_manager = std::make_shared<PipelinesManager>(*this);
 
-        this->child_service_start(*m_pipelines_manager, true);
+        this->child_service_start(m_pipelines_manager, true);
 
         // // Send the message to create the workers
         // // First thing, need to register this worker with the control plane
@@ -149,6 +149,15 @@ void ConnectionManager::on_completed_requested(control_plane::state::Connection&
 void ConnectionManager::on_running_state_updated(control_plane::state::Connection& instance)
 {
     m_pipelines_manager->sync_state(instance);
+
+    // See if our stop condition is met. Wait until a pipeline mapping has been applied
+    if (!instance.mapped_pipeline_definitions().empty() && instance.assigned_pipelines().empty() &&
+        instance.workers().empty() &&
+        this->get_local_actual_status() < control_plane::state::ResourceActualStatus::Completed)
+    {
+        // If all manifolds and segments have been removed, we can mark ourselves as completed
+        this->mark_completed();
+    }
 }
 
 void ConnectionManager::on_stopped_requested(control_plane::state::Connection& instance)

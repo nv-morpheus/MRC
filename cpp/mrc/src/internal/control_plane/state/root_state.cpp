@@ -200,6 +200,18 @@ std::map<uint64_t, const PipelineInstance&> Connection::assigned_pipelines() con
     return child_objs;
 }
 
+std::map<uint64_t, const PipelineDefinition&> Connection::mapped_pipeline_definitions() const
+{
+    std::map<uint64_t, const PipelineDefinition&> child_objs;
+
+    for (const auto& id : m_message.mapped_pipeline_definitions())
+    {
+        child_objs.emplace(id, MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, id));
+    }
+
+    return child_objs;
+}
+
 // Worker::Worker(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Worker& message) :
 //   ControlPlaneStateBase(message),
 //   m_root_state(std::move(state)),
@@ -222,10 +234,10 @@ uint64_t Worker::machine_id() const
     return m_message.machine_id();
 }
 
-// const ResourceState& Worker::state() const
-// {
-//     return m_state;
-// }
+const Connection& Worker::connection() const
+{
+    return MAP_AT_WITH_CHECK(m_root_state->connections, this->machine_id());
+}
 
 std::map<uint64_t, const SegmentInstance&> Worker::assigned_segments() const
 {

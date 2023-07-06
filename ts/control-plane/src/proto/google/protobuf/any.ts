@@ -124,7 +124,7 @@ export interface Any {
 }
 
 function createBaseAny(): Any {
-  return { $type: "google.protobuf.Any", typeUrl: "", value: new Uint8Array(0) };
+  return { $type: "google.protobuf.Any", typeUrl: "", value: new Uint8Array() };
 }
 
 export const Any = {
@@ -141,31 +141,22 @@ export const Any = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Any {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseAny();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.typeUrl = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.value = reader.bytes();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -174,7 +165,7 @@ export const Any = {
     return {
       $type: Any.$type,
       typeUrl: isSet(object.typeUrl) ? String(object.typeUrl) : "",
-      value: isSet(object.value) ? bytesFromBase64(object.value) : new Uint8Array(0),
+      value: isSet(object.value) ? bytesFromBase64(object.value) : new Uint8Array(),
     };
   },
 
@@ -182,7 +173,7 @@ export const Any = {
     const obj: any = {};
     message.typeUrl !== undefined && (obj.typeUrl = message.typeUrl);
     message.value !== undefined &&
-      (obj.value = base64FromBytes(message.value !== undefined ? message.value : new Uint8Array(0)));
+      (obj.value = base64FromBytes(message.value !== undefined ? message.value : new Uint8Array()));
     return obj;
   },
 
@@ -193,7 +184,7 @@ export const Any = {
   fromPartial(object: DeepPartial<Any>): Any {
     const message = createBaseAny();
     message.typeUrl = object.typeUrl ?? "";
-    message.value = object.value ?? new Uint8Array(0);
+    message.value = object.value ?? new Uint8Array();
     return message;
   },
 };

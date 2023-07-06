@@ -26,11 +26,13 @@
 #include "mrc/utils/string_utils.hpp"
 
 #include <chrono>
+#include <concepts>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <stop_token>
 #include <string>
+#include <type_traits>
 
 namespace mrc {
 
@@ -111,8 +113,19 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void service_set_description(std::string description);
     void mark_started();
 
-    void child_service_start(AsyncService& child, bool await_live = false);
-    void child_service_start(std::unique_ptr<AsyncService> child, bool await_live = false);
+    template <typename T>
+        requires std::derived_from<T, AsyncService>
+    void child_service_start(std::unique_ptr<T>&& child, bool await_live = false)
+    {
+        return this->child_service_start_impl(std::unique_ptr<AsyncService>(std::move(child)), await_live);
+    }
+
+    template <typename T>
+        requires std::derived_from<T, AsyncService>
+    void child_service_start(std::shared_ptr<T> child, bool await_live = false)
+    {
+        return this->child_service_start_impl(std::shared_ptr<AsyncService>(std::move(child)), await_live);
+    }
 
     template <typename RunnableT, typename... ContextArgsT>
     void child_runnable_start(std::string name,
@@ -123,6 +136,9 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     SharedFuture<void> completed_future() const;
 
   private:
+    void child_service_start_impl(std::shared_ptr<AsyncService> child, bool await_live = false);
+    void child_service_start_impl(std::unique_ptr<AsyncService>&& child, bool await_live = false);
+
     // Advances the state. New state value must be greater than or equal to current state. Using a value less than the
     // current state will generate an error
     bool forward_state(AsyncServiceState new_state, bool assert_forward = false);
@@ -148,8 +164,8 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     CondVarAny m_cv;
     mutable RecursiveMutex m_mutex;
 
-    std::map<std::string, std::unique_ptr<AsyncService>> m_owned_children;
-    std::vector<std::reference_wrapper<AsyncService>> m_children;
+    std::map<std::string, std::shared_ptr<AsyncService>> m_owned_children;
+    std::vector<std::shared_ptr<AsyncService>> m_children;
     // std::vector<SharedFuture<void>> m_child_futures;
 };
 

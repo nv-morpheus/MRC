@@ -135,10 +135,10 @@ void PartitionRuntime::do_service_start(std::stop_token stop_token)
 
     auto worker_id = resp->instance_ids(0);
 
-    m_worker_manager = std::make_unique<WorkerManager>(*this, worker_id);
+    m_worker_manager = std::make_shared<WorkerManager>(*this, worker_id);
 
     // Start the child service
-    this->child_service_start(*m_worker_manager, true);
+    this->child_service_start(m_worker_manager, true);
 
     this->mark_started();
 

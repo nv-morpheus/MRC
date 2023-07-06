@@ -25,6 +25,7 @@
 #include "mrc/core/async_service.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
@@ -46,6 +47,11 @@ ManifoldInstance::ManifoldInstance(runtime::IInternalRuntimeProvider& runtime,
 ManifoldInstance::~ManifoldInstance()
 {
     SystemResourceManager::call_in_destructor();
+}
+
+const std::string& ManifoldInstance::port_name() const
+{
+    return m_definition->name();
 }
 
 void ManifoldInstance::register_local_output(SegmentAddress address,
@@ -196,47 +202,21 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     m_input_port_nodes  = std::move(input_port_nodes);
     m_output_port_nodes = std::move(output_port_nodes);
 
-    // Set the message that we have updated the policy
-
     // Now save the actual values for next iteration
     m_actual_input_segments  = instance.requested_input_segments();
     m_actual_output_segments = instance.requested_output_segments();
 
-    // // Check for ingress assignments
-    // auto cur_output = extract_keys(m_actual_output_segments);
-    // auto new_output = extract_keys(instance.requested_output_segments());
+    // Send the message that we have updated the actual segments
+    auto request = protos::ManifoldUpdateActualAssignmentsRequest();
 
-    // auto [create_output, remove_output] = compare_difference(cur_output, new_output);
+    request.set_manifold_instance_id(this->id());
+    request.mutable_actual_input_segments()->insert(m_actual_input_segments.begin(), m_actual_input_segments.end());
+    request.mutable_actual_output_segments()->insert(m_actual_output_segments.begin(), m_actual_output_segments.end());
 
-    // // construct new segments and attach to manifold
-    // for (const auto& address : create_output)
-    // {
-    //     this->add_output(address, instance.requested_output_segments().at(address));
-    // }
-
-    // // detach from manifold or stop old segments
-    // for (const auto& address : remove_output)
-    // {
-    //     this->remove_input(address);
-    // }
-
-    // // Check for egress assignments
-    // auto cur_input = extract_keys(m_actual_input_segments);
-    // auto new_input = extract_keys(instance.requested_input_segments());
-
-    // auto [create_input, remove_input] = compare_difference(cur_input, new_input);
-
-    // // construct new segments and attach to manifold
-    // for (const auto& address : create_input)
-    // {
-    //     this->add_input(address, instance.requested_input_segments().at(address));
-    // }
-
-    // // detach from manifold or stop old segments
-    // for (const auto& address : remove_input)
-    // {
-    //     this->remove_output(address);
-    // }
+    auto response =
+        this->runtime().control_plane().template await_unary<protos::ManifoldUpdateActualAssignmentsResponse>(
+            protos::EventType::ClientUnaryManifoldUpdateActualAssignments,
+            request);
 }
 
 void ManifoldInstance::add_input(SegmentAddress address, bool is_local)

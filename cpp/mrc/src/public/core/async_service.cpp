@@ -116,25 +116,25 @@ SharedFuture<void> AsyncService::service_start()
             // Give the children a chance to stop gracefully
             for (auto& child : m_children)
             {
-                child.get().service_stop();
+                child->service_stop();
             }
 
             // Wait a small amount of time for the children to stop gracefully
             for (auto& child : m_children)
             {
-                auto child_future = child.get().completed_future();
+                auto child_future = child->completed_future();
 
                 // Only wait() here. Dont care about child errors since we already have an exception
                 if (child_future.wait_for(std::chrono::milliseconds(100)) == boost::fibers::future_status::timeout)
                 {
                     // Didnt stop in time. Kill the service
-                    child.get().service_kill();
+                    child->service_kill();
 
                     // Try and wait one more time (just in case)
                     if (child_future.wait_for(std::chrono::milliseconds(100)) == boost::fibers::future_status::timeout)
                     {
                         LOG(ERROR) << this->debug_prefix()
-                                   << " could not shut down child in 200 ms. Child: " << child.get().debug_prefix();
+                                   << " could not shut down child in 200 ms. Child: " << child->debug_prefix();
                     }
                 }
             }
@@ -167,13 +167,13 @@ SharedFuture<void> AsyncService::service_start()
         // exceptions)
         for (auto& child : m_children)
         {
-            child.get().completed_future().wait();
+            child->completed_future().wait();
         }
 
         // Now join them to pull any exceptions
         for (auto& child : m_children)
         {
-            child.get().service_await_join();
+            child->service_await_join();
         }
     });
 
@@ -203,12 +203,12 @@ void AsyncService::service_stop()
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
     // Ensures this only gets executed once
-    if (this->forward_state(AsyncServiceState::Stopping))
+    if (this->ensure_state(AsyncServiceState::Stopping))
     {
         // Now, before signaling the stop source, make sure all children are stopped
         for (auto& child : m_children)
         {
-            child.get().service_stop();
+            child->service_stop();
         }
 
         DCHECK(m_stop_source.stop_possible()) << this->debug_prefix() << " Invalid state. Cannot request a stop";
@@ -228,7 +228,7 @@ void AsyncService::service_kill()
         // Kill all children first
         for (auto& child : m_children)
         {
-            child.get().service_kill();
+            child->service_kill();
         }
 
         // Attempt the service specific kill operation
@@ -341,7 +341,7 @@ void AsyncService::mark_started()
     // DO NOT HOLD THE LOCK HERE!
     for (auto& child : children)
     {
-        child.get().service_await_live();
+        child->service_await_live();
     }
 
     // Set the live promise before updating the state so it is ready when the CV is released
@@ -350,7 +350,12 @@ void AsyncService::mark_started()
     forward_state(AsyncServiceState::Running, true);
 }
 
-void AsyncService::child_service_start(AsyncService& child, bool await_live)
+SharedFuture<void> AsyncService::completed_future() const
+{
+    return m_completed_future;
+}
+
+void AsyncService::child_service_start_impl(std::shared_ptr<AsyncService> child, bool await_live)
 {
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
@@ -363,68 +368,41 @@ void AsyncService::child_service_start(AsyncService& child, bool await_live)
                                                                                                   "Running state";
 
         m_children.emplace_back(child);
-        child.service_start();
+        child->service_start();
     }
 
     if (await_live)
     {
-        child.service_await_live();
+        child->service_await_live();
     }
 }
 
-void AsyncService::child_service_start(std::unique_ptr<AsyncService> child, bool await_live)
+void AsyncService::child_service_start_impl(std::unique_ptr<AsyncService>&& child, bool await_live)
 {
     CHECK(child) << this->debug_prefix() << " cannot start null child";
 
-    auto* saved_child_ptr = child.get();
+    // Convert to a shared pointer so we can save it
+    std::shared_ptr<AsyncService> child_shared = std::move(child);
 
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-        const auto& name = child->service_name();
+        const auto& name = child_shared->service_name();
 
         CHECK(!m_owned_children.contains(name)) << "Child service with name '" << name << "' already added!";
 
         // Save it to the owned children list
-        auto [added_iterator, did_add] = m_owned_children.emplace(name, std::move(child));
+        m_owned_children.emplace(name, child_shared);
 
         // Now add the child reference
-        this->child_service_start(*added_iterator->second);
+        this->child_service_start_impl(child_shared);
     }
 
     if (await_live)
     {
-        saved_child_ptr->service_await_live();
+        child_shared->service_await_live();
     }
 }
-
-SharedFuture<void> AsyncService::completed_future() const
-{
-    return m_completed_future;
-}
-
-// void AsyncService::child_runnable_start(const mrc::runnable::LaunchOptions& options,
-// std::unique_ptr<runnable::Launcher> launcher)
-// {
-//     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-
-//     // The state must be running
-//     CHECK(m_state == AsyncServiceState::Starting || m_state == AsyncServiceState::Running) << "Can only start child "
-//                                                                                               "service in Starting or
-//                                                                                               " "Running state";
-
-//     m_child_futures.emplace_back(this->runnable().main().enqueue([this]() {
-//         std::shared_ptr<runnable::Runner> runner =
-//             this->runnable().launch_control().prepare_launcher(options, std::move(runnable))->ignition();
-
-//         // Add a stop callback to notify the cv anytime a stop is requested
-//         std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
-//             runner->stop();
-//         });
-
-//         runner->await_join();
-//     }));
-// }
 
 bool AsyncService::forward_state(AsyncServiceState new_state, bool assert_forward)
 {

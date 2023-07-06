@@ -645,24 +645,19 @@ export const PingRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PingRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePingRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -705,24 +700,19 @@ export const PingResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PingResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePingResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -765,24 +755,19 @@ export const ShutdownRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ShutdownRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseShutdownRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -825,24 +810,19 @@ export const ShutdownResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ShutdownResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseShutdownResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -894,45 +874,28 @@ export const Event = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Event {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseEvent();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.event = eventTypeFromJSON(reader.int32());
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.message = Any.decode(reader, reader.uint32());
-          continue;
+          break;
         case 4:
-          if (tag !== 34) {
-            break;
-          }
-
           message.error = Error.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -992,31 +955,22 @@ export const Error = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Error {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseError();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.code = errorCodeFromJSON(reader.int32());
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.message = reader.string();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1062,17 +1016,16 @@ export const Ack = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Ack {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseAck();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1113,24 +1066,19 @@ export const ClientConnectedResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ClientConnectedResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseClientConnectedResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.machineId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1179,31 +1127,22 @@ export const RegisterWorkersRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RegisterWorkersRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterWorkersRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.ucxWorkerAddresses.push(reader.bytes());
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.pipeline = Pipeline.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1222,7 +1161,7 @@ export const RegisterWorkersRequest = {
     const obj: any = {};
     if (message.ucxWorkerAddresses) {
       obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) =>
-        base64FromBytes(e !== undefined ? e : new Uint8Array(0))
+        base64FromBytes(e !== undefined ? e : new Uint8Array())
       );
     } else {
       obj.ucxWorkerAddresses = [];
@@ -1267,41 +1206,29 @@ export const RegisterWorkersResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RegisterWorkersResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterWorkersResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.machineId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag === 16) {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
-
-            continue;
-          }
-
-          if (tag === 18) {
+          if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-
-            continue;
+          } else {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
           }
-
+          break;
+        default:
+          reader.skipType(tag & 7);
           break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1365,38 +1292,25 @@ export const ResourceUpdateStatusRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceUpdateStatusRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceUpdateStatusRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.resourceType = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.resourceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.status = resourceActualStatusFromJSON(reader.int32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1448,24 +1362,19 @@ export const ResourceUpdateStatusResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceUpdateStatusResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceUpdateStatusResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.ok = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1511,31 +1420,22 @@ export const ResourceIncrementRefRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceIncrementRefRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceIncrementRefRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.resourceType = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.resourceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1584,24 +1484,19 @@ export const ResourceIncrementRefResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceIncrementRefResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceIncrementRefResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.ok = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1647,31 +1542,22 @@ export const ResourceDecrementRefRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceDecrementRefRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceDecrementRefRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.resourceType = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.resourceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1720,24 +1606,19 @@ export const ResourceDecrementRefResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceDecrementRefResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceDecrementRefResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.ok = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1783,31 +1664,22 @@ export const ResourceStopRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceStopRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceStopRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.resourceType = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.resourceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1856,24 +1728,19 @@ export const ResourceStopResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceStopResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceStopResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.ok = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1918,34 +1785,26 @@ export const LookupWorkersRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): LookupWorkersRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseLookupWorkersRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag === 8) {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
-
-            continue;
-          }
-
-          if (tag === 10) {
+          if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-
-            continue;
+          } else {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
           }
-
+          break;
+        default:
+          reader.skipType(tag & 7);
           break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1995,24 +1854,19 @@ export const LookupWorkersResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): LookupWorkersResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseLookupWorkersResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.workerAddresses.push(WorkerAddress.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2067,31 +1921,22 @@ export const CreateSubscriptionServiceRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): CreateSubscriptionServiceRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCreateSubscriptionServiceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.roles.push(reader.string());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2159,45 +2004,28 @@ export const RegisterSubscriptionServiceRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RegisterSubscriptionServiceRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterSubscriptionServiceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.subscribeToRoles.push(reader.string());
-          continue;
+          break;
         case 4:
-          if (tag !== 32) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2264,38 +2092,25 @@ export const RegisterSubscriptionServiceResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): RegisterSubscriptionServiceResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseRegisterSubscriptionServiceResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2366,52 +2181,31 @@ export const ActivateSubscriptionServiceRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ActivateSubscriptionServiceRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseActivateSubscriptionServiceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.subscribeToRoles.push(reader.string());
-          continue;
+          break;
         case 4:
-          if (tag !== 32) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 5:
-          if (tag !== 40) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2481,38 +2275,25 @@ export const DropSubscriptionServiceRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): DropSubscriptionServiceRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseDropSubscriptionServiceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2575,55 +2356,35 @@ export const UpdateSubscriptionServiceRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): UpdateSubscriptionServiceRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateSubscriptionServiceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.nonce = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 4:
-          if (tag === 32) {
-            message.tags.push(longToString(reader.uint64() as Long));
-
-            continue;
-          }
-
-          if (tag === 34) {
+          if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.tags.push(longToString(reader.uint64() as Long));
             }
-
-            continue;
+          } else {
+            message.tags.push(longToString(reader.uint64() as Long));
           }
-
+          break;
+        default:
+          reader.skipType(tag & 7);
           break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2685,31 +2446,22 @@ export const TaggedInstance = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): TaggedInstance {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseTaggedInstance();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2758,24 +2510,19 @@ export const PipelineRegisterConfigRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRegisterConfigRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineRegisterConfigRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.config = PipelineConfiguration.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2824,24 +2571,19 @@ export const PipelineRegisterConfigResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineRegisterConfigResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineRegisterConfigResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.pipelineDefinitionId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2890,31 +2632,22 @@ export const PipelineAddMappingRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineAddMappingRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineAddMappingRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.definitionId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.mapping = PipelineMapping.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2966,24 +2699,19 @@ export const PipelineAddMappingResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineAddMappingResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineAddMappingResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.pipelineInstanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3048,24 +2776,16 @@ export const ManifoldUpdateActualAssignmentsRequest = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldUpdateActualAssignmentsRequest {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldUpdateActualAssignmentsRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.manifoldInstanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           const entry2 = ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.decode(
             reader,
             reader.uint32(),
@@ -3073,12 +2793,8 @@ export const ManifoldUpdateActualAssignmentsRequest = {
           if (entry2.value !== undefined) {
             message.actualInputSegments[entry2.key] = entry2.value;
           }
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           const entry3 = ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.decode(
             reader,
             reader.uint32(),
@@ -3086,12 +2802,11 @@ export const ManifoldUpdateActualAssignmentsRequest = {
           if (entry3.value !== undefined) {
             message.actualOutputSegments[entry3.key] = entry3.value;
           }
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3188,31 +2903,22 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
     input: _m0.Reader | Uint8Array,
     length?: number,
   ): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.key = reader.uint32();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.value = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3277,31 +2983,22 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = 
     input: _m0.Reader | Uint8Array,
     length?: number,
   ): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.key = reader.uint32();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.value = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3357,24 +3054,19 @@ export const ManifoldUpdateActualAssignmentsResponse = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldUpdateActualAssignmentsResponse {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldUpdateActualAssignmentsResponse();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.ok = reader.bool();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3440,59 +3132,34 @@ export const StateUpdate = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): StateUpdate {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseStateUpdate();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.serviceName = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.nonce = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 4:
-          if (tag !== 34) {
-            break;
-          }
-
           message.connections = UpdateConnectionsState.decode(reader, reader.uint32());
-          continue;
+          break;
         case 5:
-          if (tag !== 42) {
-            break;
-          }
-
           message.updateSubscriptionService = UpdateSubscriptionServiceState.decode(reader, reader.uint32());
-          continue;
+          break;
         case 6:
-          if (tag !== 50) {
-            break;
-          }
-
           message.dropSubscriptionService = DropSubscriptionServiceState.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3571,24 +3238,19 @@ export const UpdateConnectionsState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): UpdateConnectionsState {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateConnectionsState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.taggedInstances.push(TaggedInstance.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3643,31 +3305,22 @@ export const UpdateSubscriptionServiceState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): UpdateSubscriptionServiceState {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateSubscriptionServiceState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.taggedInstances.push(TaggedInstance.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3725,31 +3378,22 @@ export const DropSubscriptionServiceState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): DropSubscriptionServiceState {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseDropSubscriptionServiceState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.role = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.tag = longToString(reader.uint64() as Long);
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3795,17 +3439,16 @@ export const ControlMessage = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlMessage {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlMessage();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3848,34 +3491,26 @@ export const OnComplete = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): OnComplete {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseOnComplete();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag === 8) {
-            message.segmentAddresses.push(reader.uint32());
-
-            continue;
-          }
-
-          if (tag === 10) {
+          if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.segmentAddresses.push(reader.uint32());
             }
-
-            continue;
+          } else {
+            message.segmentAddresses.push(reader.uint32());
           }
-
+          break;
+        default:
+          reader.skipType(tag & 7);
           break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3927,24 +3562,19 @@ export const UpdateAssignments = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): UpdateAssignments {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseUpdateAssignments();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.assignments.push(SegmentAssignment.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4025,72 +3655,44 @@ export const SegmentAssignment = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): SegmentAssignment {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSegmentAssignment();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.machineId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.address = reader.uint32();
-          continue;
+          break;
         case 5:
-          if (tag !== 42) {
-            break;
-          }
-
           const entry5 = SegmentAssignment_EgressPolicesEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
             message.egressPolices[entry5.key] = entry5.value;
           }
-          continue;
+          break;
         case 6:
-          if (tag !== 48) {
-            break;
-          }
-
           message.issueEventOnComplete = reader.bool();
-          continue;
+          break;
         case 7:
-          if (tag === 56) {
-            message.networkIngressPorts.push(reader.uint32());
-
-            continue;
-          }
-
-          if (tag === 58) {
+          if ((tag & 7) === 2) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.networkIngressPorts.push(reader.uint32());
             }
-
-            continue;
+          } else {
+            message.networkIngressPorts.push(reader.uint32());
           }
-
+          break;
+        default:
+          reader.skipType(tag & 7);
           break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4178,31 +3780,22 @@ export const SegmentAssignment_EgressPolicesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): SegmentAssignment_EgressPolicesEntry {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSegmentAssignment_EgressPolicesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.key = reader.uint32();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.value = EgressPolicy.decode(reader, reader.uint32());
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4259,38 +3852,25 @@ export const Topology = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Topology {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseTopology();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.hwlocXmlString = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.cpuSet = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.gpuInfo.push(GpuInfo.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4369,59 +3949,34 @@ export const GpuInfo = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): GpuInfo {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseGpuInfo();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.cpuSet = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.name = reader.string();
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.uuid = reader.string();
-          continue;
+          break;
         case 4:
-          if (tag !== 34) {
-            break;
-          }
-
           message.pcieBusId = reader.string();
-          continue;
+          break;
         case 5:
-          if (tag !== 40) {
-            break;
-          }
-
           message.memoryCapacity = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 6:
-          if (tag !== 48) {
-            break;
-          }
-
           message.cudaDeviceId = reader.int32();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4485,31 +4040,22 @@ export const Pipeline = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Pipeline {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipeline();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.name = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.segments.push(SegmentDefinition.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4568,38 +4114,25 @@ export const WorkerAddress = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): WorkerAddress {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseWorkerAddress();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.machineId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.instanceId = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.workerAddress = reader.string();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4660,45 +4193,28 @@ export const InstancesResources = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): InstancesResources {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseInstancesResources();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.hostMemory = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 2:
-          if (tag !== 18) {
-            break;
-          }
-
           message.cpus.push(CPU.decode(reader, reader.uint32()));
-          continue;
+          break;
         case 3:
-          if (tag !== 26) {
-            break;
-          }
-
           message.gpus.push(GPU.decode(reader, reader.uint32()));
-          continue;
+          break;
         case 4:
-          if (tag !== 34) {
-            break;
-          }
-
           message.nics.push(NIC.decode(reader, reader.uint32()));
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4768,31 +4284,22 @@ export const CPU = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): CPU {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseCPU();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 8) {
-            break;
-          }
-
           message.cores = reader.uint32();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.numaNodes = reader.uint32();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4850,45 +4357,28 @@ export const GPU = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): GPU {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseGPU();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if (tag !== 10) {
-            break;
-          }
-
           message.name = reader.string();
-          continue;
+          break;
         case 2:
-          if (tag !== 16) {
-            break;
-          }
-
           message.cores = reader.uint32();
-          continue;
+          break;
         case 3:
-          if (tag !== 24) {
-            break;
-          }
-
           message.memory = longToString(reader.uint64() as Long);
-          continue;
+          break;
         case 4:
-          if (tag !== 37) {
-            break;
-          }
-
           message.computeCapability = reader.float();
-          continue;
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4940,17 +4430,16 @@ export const NIC = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): NIC {
-    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseNIC();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skipType(tag & 7);
     }
     return message;
   },

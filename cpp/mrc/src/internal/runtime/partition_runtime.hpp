@@ -103,7 +103,7 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
     resources::PartitionResources& m_resources;
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
 
-    std::unique_ptr<WorkerManager> m_worker_manager;
+    std::shared_ptr<WorkerManager> m_worker_manager;
 };
 
 }  // namespace mrc::runtime

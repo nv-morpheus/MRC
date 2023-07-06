@@ -134,7 +134,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
         {
             m_control_plane_server = std::make_unique<control_plane::Server>(*m_sys_resources);
 
-            this->child_service_start(*m_control_plane_server, true);
+            this->child_service_start(m_control_plane_server, true);
         }
         else
         {
@@ -150,19 +150,19 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // auto runnable          = runnable::RunnableResources(*sys_resources, 0);
     // auto part_base         = resources::PartitionResourceBase(runnable, 0);
 
-    m_control_plane_client = std::make_unique<control_plane::Client>(*m_sys_resources);
+    m_control_plane_client = std::make_shared<control_plane::Client>(*m_sys_resources);
 
     // Start the client and wait for it to be ready
-    this->child_service_start(*m_control_plane_client, true);
+    this->child_service_start(m_control_plane_client, true);
 
     // Now create the system data plane client object
-    m_data_plane_manager = std::make_unique<DataPlaneSystemManager>(*this);
+    m_data_plane_manager = std::make_shared<DataPlaneSystemManager>(*this);
 
     // Create the connection manager to handle state updates
-    m_connection_manager = std::make_unique<ConnectionManager>(*this, m_control_plane_client->machine_id());
+    m_connection_manager = std::make_shared<ConnectionManager>(*this, m_control_plane_client->machine_id());
 
     // Start the connection manager and wait for it to be ready to guarantee the workers have been created
-    this->child_service_start(*m_connection_manager, true);
+    this->child_service_start(m_connection_manager, true);
 
     // // Create/Initialize the runtime resources object (Could go before the control plane client)
     // m_sys_resources = std::make_unique<resources::SystemResources>(std::move(sys_resources));
@@ -176,9 +176,9 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // For each partition, create and start a partition manager
     for (size_t i = 0; i < m_sys_resources->partition_count(); i++)
     {
-        auto& part_runtime = m_partitions.emplace_back(std::make_unique<PartitionRuntime>(*this, i));
+        auto& part_runtime = m_partitions.emplace_back(std::make_shared<PartitionRuntime>(*this, i));
 
-        this->child_service_start(*part_runtime);
+        this->child_service_start(part_runtime);
     }
 
     // // Now ensure they are all alive
@@ -190,7 +190,10 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // Indicate we have started (forces children to be ready before returning)
     this->mark_started();
 
-    // Exit here. This will rely on the children to determine when we are completed
+    // Wait for the connection manager to say we are done
+    m_connection_manager->service_await_join();
+
+    m_control_plane_client->service_stop();
 }
 
 // void Runtime::do_service_start()

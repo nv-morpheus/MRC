@@ -30,6 +30,7 @@ export const connection: IConnection = {
    peerInfo: "localhost:1234",
    workerIds: [],
    assignedPipelineIds: [],
+   mappedPipelineDefinitions: [],
    state: {
       actualStatus: ResourceActualStatus.Actual_Created,
       refCount: 0,

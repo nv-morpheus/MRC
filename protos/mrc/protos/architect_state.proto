@@ -105,8 +105,11 @@ message Connection {
    // The pipeline instances that are assigned to this machine
    repeated uint64 assigned_pipeline_ids = 4;
 
+   // The pipeline definitions that are assigned to this machine
+   repeated uint64 mapped_pipeline_definitions = 5;
+
    // Current state
-   ResourceState state = 5;
+   ResourceState state = 6;
 }
 
 message Worker {

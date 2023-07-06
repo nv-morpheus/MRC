@@ -239,6 +239,7 @@ class Architect implements ArchitectServiceImplementation {
          peerInfo: context.peer,
          workerIds: [],
          assignedPipelineIds: [],
+         mappedPipelineDefinitions: [],
          state: {
             actualStatus: ResourceActualStatus.Actual_Created,
             refCount: 0,
@@ -294,8 +295,9 @@ class Architect implements ArchitectServiceImplementation {
       const event_stream = async function* () {
          try {
             for await (const req of stream) {
-               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${req.tag
-                  }`;
+               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${
+                  req.tag
+               }`;
 
                const yeilded_events: Event[] = [];
 
@@ -358,7 +360,8 @@ class Architect implements ArchitectServiceImplementation {
 
          for await (const out_event of combined_iterable) {
             console.log(
-               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${out_event.tag
+               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${
+                  out_event.tag
                }`
             );
             yield out_event;
@@ -437,7 +440,7 @@ class Architect implements ArchitectServiceImplementation {
                const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
 
                if (found_worker) {
-                  this._store.dispatch(workersRemove(found_worker));  // TODO: removing a worker should cascade to segments
+                  this._store.dispatch(workersRemove(found_worker)); // TODO: removing a worker should cascade to segments
                }
 
                yield unaryResponse(event, Ack.create());
@@ -535,11 +538,13 @@ class Architect implements ArchitectServiceImplementation {
             case EventType.ClientUnaryManifoldUpdateActualAssignments: {
                const payload = unpackEvent<ManifoldUpdateActualAssignmentsRequest>(event.msg);
 
-               this._store.dispatch(manifoldInstancesUpdateActualSegments(
-                  payload.manifoldInstanceId,
-                  payload.actualInputSegments,
-                  payload.actualOutputSegments
-               ));
+               this._store.dispatch(
+                  manifoldInstancesUpdateActualSegments(
+                     payload.manifoldInstanceId,
+                     payload.actualInputSegments,
+                     payload.actualOutputSegments
+                  )
+               );
 
                yield unaryResponse(
                   event,
@@ -648,9 +653,7 @@ class Architect implements ArchitectServiceImplementation {
 
                switch (payload.resourceType) {
                   case "SegmentInstances": {
-                     this._store.dispatch(
-                        segmentInstancesRequestStop(payload.resourceId)
-                     );
+                     this._store.dispatch(segmentInstancesRequestStop(payload.resourceId));
 
                      break;
                   }

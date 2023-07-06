@@ -17,6 +17,7 @@ import {
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
+import { pipelineDefinitionsSetMapping } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 
 const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
    selectId: (x) => x.id,
@@ -148,6 +149,16 @@ export const connectionsSlice = createSlice({
             }
          } else {
             throw new Error("Cannot remove pipeline instance, connection not found.");
+         }
+      });
+      builder.addCase(pipelineDefinitionsSetMapping, (state, action) => {
+         // Handle removing a worker
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.mapping.machineId);
+
+         if (foundConnection) {
+            foundConnection.mappedPipelineDefinitions.push(action.payload.definition_id);
+         } else {
+            throw new Error("Cannot find matching connection for pipeline mapping.");
          }
       });
    },

@@ -105,7 +105,7 @@ class PipelineInstance final : public runtime::SystemResourceManager<control_pla
 
     // uint64_t m_instance_id;
 
-    std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
+    std::map<SegmentAddress, std::shared_ptr<segment::SegmentInstance>> m_segments;
     std::map<PortName, std::shared_ptr<ManifoldInstance>> m_manifold_instances_by_name;
     std::map<uint64_t, std::shared_ptr<ManifoldInstance>> m_manifold_instances;
 

@@ -213,6 +213,14 @@ void PipelineInstance::on_completed_requested(control_plane::state::PipelineInst
 void PipelineInstance::on_running_state_updated(control_plane::state::PipelineInstance& instance)
 {
     this->sync_manifolds(instance);
+
+    // See if our stop condition is met
+    if (instance.manifolds().empty() && instance.segments().empty() &&
+        this->get_local_actual_status() < control_plane::state::ResourceActualStatus::Completed)
+    {
+        // If all manifolds and segments have been removed, we can mark ourselves as completed
+        this->mark_completed();
+    }
 }
 
 void PipelineInstance::on_stopped_requested(control_plane::state::PipelineInstance& instance)
@@ -262,12 +270,33 @@ void PipelineInstance::create_manifold(const control_plane::state::ManifoldInsta
     m_manifold_instances_by_name[port_name] = added_iterator->second;
 
     // Need to wait for it to be live before continuing
-    this->child_service_start(*added_iterator->second);
+    this->child_service_start(added_iterator->second);
 }
 
 void PipelineInstance::destroy_manifold(InstanceID manifold_id)
 {
-    throw std::runtime_error("Not implemented");
+    CHECK(m_manifold_instances.contains(manifold_id)) << "Invalid state: manifold does not exist. ID: " << manifold_id;
+
+    auto& manifold = m_manifold_instances.at(manifold_id);
+
+    // Stop the manifold
+    manifold->service_stop();
+
+    // Wait a small time for it to shutdown gracefully
+    if (!manifold->service_await_join(std::chrono::milliseconds(100)))
+    {
+        LOG(WARNING) << "ManifoldInstance[" << manifold_id << "] did not stop gracefully. Killing service";
+
+        // Didnt stop gracefully, kill
+        manifold->service_kill();
+
+        // Try waiting one more time, just in case
+        manifold->service_await_join(std::chrono::milliseconds(100));
+    }
+
+    CHECK_EQ(m_manifold_instances_by_name.erase(manifold->port_name()), 1) << "Invalid state: manifold not found by "
+                                                                              "name";
+    CHECK_EQ(m_manifold_instances.erase(manifold_id), 1) << "Invalid state: manifold not found by ID";
 }
 
 manifold::Interface& PipelineInstance::manifold(const PortName& port_name)

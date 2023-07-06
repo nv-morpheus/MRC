@@ -235,14 +235,33 @@ void PipelinesManager::create_pipeline(const control_plane::state::PipelineInsta
     // Resource was activated, lets now create the object
     auto [added_iterator, did_add] = m_instances.emplace(
         instance.id(),
-        std::make_unique<pipeline::PipelineInstance>(*this, definition, instance.id()));
+        std::make_shared<pipeline::PipelineInstance>(*this, definition, instance.id()));
 
     // Now start as a child service
-    this->child_service_start(*added_iterator->second);
+    this->child_service_start(added_iterator->second);
 }
 
 void PipelinesManager::erase_pipeline(InstanceID pipeline_id)
 {
-    throw std::runtime_error("Not implemented");
+    CHECK(m_instances.contains(pipeline_id)) << "Invalid state: pipeline does not exist. ID: " << pipeline_id;
+
+    auto& pipeline = m_instances.at(pipeline_id);
+
+    // Stop the pipeline
+    pipeline->service_stop();
+
+    // Wait a small time for it to shutdown gracefully
+    if (!pipeline->service_await_join(std::chrono::milliseconds(100)))
+    {
+        LOG(WARNING) << "PipelineInstance[" << pipeline << "] did not stop gracefully. Killing service";
+
+        // Didnt stop gracefully, kill
+        pipeline->service_kill();
+
+        // Try waiting one more time, just in case
+        pipeline->service_await_join(std::chrono::milliseconds(100));
+    }
+
+    CHECK_EQ(m_instances.erase(pipeline_id), 1) << "Invalid state: pipeline not found by ID";
 }
 }  // namespace mrc::runtime

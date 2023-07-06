@@ -80,14 +80,14 @@ bool WorkerManager::on_created_requested(control_plane::state::Worker& instance,
     if (needs_local_update)
     {
         // Create the data plane manager
-        m_data_plane_manager = std::make_unique<DataPlaneManager>(*this, m_partition_id);
+        m_data_plane_manager = std::make_shared<DataPlaneManager>(*this, m_partition_id);
 
-        this->child_service_start(*m_data_plane_manager, true);
+        this->child_service_start(m_data_plane_manager, true);
 
         // Create the segment manager
-        m_segments_manager = std::make_unique<SegmentsManager>(*this, m_partition_id);
+        m_segments_manager = std::make_shared<SegmentsManager>(*this, m_partition_id);
 
-        this->child_service_start(*m_segments_manager, true);
+        this->child_service_start(m_segments_manager, true);
     }
 
     return true;
@@ -108,7 +108,17 @@ void WorkerManager::on_running_state_updated(control_plane::state::Worker& insta
 {
     m_data_plane_manager->sync_state(instance);
 
-    m_segments_manager->sync_state(instance);
+    // Returns true if all segments have been removed (and none starting)
+    if (m_segments_manager->sync_state(instance))
+    {
+        // See if our stop condition is met. Wait until a pipeline mapping has been applied
+        if (!instance.connection().mapped_pipeline_definitions().empty() && instance.assigned_segments().empty() &&
+            this->get_local_actual_status() < control_plane::state::ResourceActualStatus::Completed)
+        {
+            // If all manifolds and segments have been removed, we can mark ourselves as completed
+            this->mark_completed();
+        }
+    }
 }
 
 void WorkerManager::on_stopped_requested(control_plane::state::Worker& instance)

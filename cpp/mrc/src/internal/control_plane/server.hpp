@@ -117,7 +117,7 @@ class Server : public AsyncService, public runnable::RunnableResourcesProvider
     bool m_launch_node{true};
 
     // Node service
-    std::unique_ptr<NodeService> m_node_service;
+    std::shared_ptr<NodeService> m_node_service;
 
     // // grpc
     // rpc::Server m_server;

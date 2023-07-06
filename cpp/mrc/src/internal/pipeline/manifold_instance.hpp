@@ -52,6 +52,8 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
                      InstanceID instance_id);
     ~ManifoldInstance() override;
 
+    const std::string& port_name() const;
+
     void register_local_output(SegmentAddress address, std::shared_ptr<segment::IngressPortBase> ingress_port);
     void register_local_input(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> egress_port);
 
