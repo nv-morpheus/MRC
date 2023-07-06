@@ -51,6 +51,7 @@ namespace mrc::runtime {
 class Runtime;
 class PipelinesManager;
 class WorkerManager;
+class DataPlaneSystemManager;
 
 class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
                                public AsyncService,
@@ -74,7 +75,7 @@ class PartitionRuntime final : public mrc::runtime::IPartitionRuntime,
 
     control_plane::Client& control_plane() const override;
 
-    DataPlaneManager& data_plane() const override;
+    DataPlaneSystemManager& data_plane() const override;
 
     PipelinesManager& pipelines_manager() const override;
 

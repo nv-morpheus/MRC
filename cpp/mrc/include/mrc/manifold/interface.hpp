@@ -17,11 +17,14 @@
 
 #pragma once
 
+#include "mrc/core/utils.hpp"
 #include "mrc/edge/forward.hpp"
 #include "mrc/types.hpp"
 
 #include <atomic>
 #include <memory>
+#include <set>
+#include <vector>
 
 namespace mrc::manifold {
 
@@ -100,18 +103,28 @@ class ManifoldPolicy
   public:
     ManifoldPolicy() = default;
 
-    ManifoldPolicy(std::vector<ManifoldPolicyInputInfo> inputs, std::vector<ManifoldPolicyOutputInfo> outputs) :
+    ManifoldPolicy(std::vector<ManifoldPolicyInputInfo> inputs,
+                   std::map<SegmentAddress, ManifoldPolicyOutputInfo> outputs) :
       inputs(std::move(inputs)),
       outputs(std::move(outputs))
-    {}
+    {
+        auto keys = extract_keys(this->outputs);
+
+        m_output_addresses = std::vector<SegmentAddress>(keys.begin(), keys.end());
+    }
 
     ManifoldPolicy(const ManifoldPolicy& other) :
       inputs(other.inputs),
       outputs(other.outputs),
-      m_msg_counter(other.m_msg_counter.load())
+      m_msg_counter(other.m_msg_counter.load()),
+      m_output_addresses(other.m_output_addresses)
     {}
 
-    ManifoldPolicy(ManifoldPolicy&& other) : inputs(other.inputs), outputs(other.outputs), m_msg_counter(0)
+    ManifoldPolicy(ManifoldPolicy&& other) :
+      inputs(other.inputs),
+      outputs(other.outputs),
+      m_msg_counter(0),
+      m_output_addresses(std::move(other.m_output_addresses))
     {
         m_msg_counter = m_msg_counter.exchange(0);
     }
@@ -123,9 +136,10 @@ class ManifoldPolicy
             return *this;
         }
 
-        inputs        = other.inputs;
-        outputs       = other.outputs;
-        m_msg_counter = other.m_msg_counter.load();
+        inputs             = other.inputs;
+        outputs            = other.outputs;
+        m_msg_counter      = other.m_msg_counter.load();
+        m_output_addresses = other.m_output_addresses;
 
         return *this;
     }
@@ -137,23 +151,25 @@ class ManifoldPolicy
             return *this;
         }
 
-        inputs        = std::move(other.inputs);
-        outputs       = std::move(other.outputs);
-        m_msg_counter = other.m_msg_counter.exchange(0);
+        inputs             = std::move(other.inputs);
+        outputs            = std::move(other.outputs);
+        m_msg_counter      = other.m_msg_counter.exchange(0);
+        m_output_addresses = std::move(other.m_output_addresses);
 
         return *this;
     }
 
     std::vector<ManifoldPolicyInputInfo> inputs;
-    std::vector<ManifoldPolicyOutputInfo> outputs;
+    std::map<SegmentAddress, ManifoldPolicyOutputInfo> outputs;
 
     SegmentAddress get_next_tag()
     {
-        return this->outputs[m_msg_counter++ % this->outputs.size()].address;
+        return m_output_addresses[m_msg_counter++ % m_output_addresses.size()];
     }
 
   private:
     std::atomic_size_t m_msg_counter{0};
+    std::vector<SegmentAddress> m_output_addresses;
 };
 
 struct Interface
@@ -168,7 +184,9 @@ struct Interface
     virtual void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     virtual void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
-    virtual void update_policy(ManifoldPolicy policy) = 0;
+    virtual edge::IWritableProviderBase& get_input_sink() const = 0;
+
+    virtual void update_policy(ManifoldPolicy&& policy) = 0;
 
     // virtual void add_remote_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     // virtual void add_remote_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;

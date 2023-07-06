@@ -207,7 +207,12 @@ template <typename KeyT>
 class IMultiWritableAcceptorBase
 {
   public:
-    virtual size_t writable_edge_count() const                                                   = 0;
+    virtual bool has_writable_edge(const KeyT& key) const = 0;
+    virtual void release_writable_edge(const KeyT& key)   = 0;
+    virtual void release_writable_edges()                 = 0;
+    virtual size_t writable_edge_count() const            = 0;
+    virtual std::vector<KeyT> writable_edge_keys() const  = 0;
+
     virtual void set_writable_edge_handle(KeyT key, std::shared_ptr<WritableEdgeHandle> ingress) = 0;
 };
 

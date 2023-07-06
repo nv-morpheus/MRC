@@ -75,6 +75,8 @@ class Runtime final : public mrc::runtime::ISystemRuntime,
 
     control_plane::Client& control_plane() const override;
 
+    DataPlaneSystemManager& data_plane() const override;
+
     PipelinesManager& pipelines_manager() const override;
 
     metrics::Registry& metrics_registry() const override;
@@ -99,6 +101,8 @@ class Runtime final : public mrc::runtime::ISystemRuntime,
 
     std::unique_ptr<control_plane::Server> m_control_plane_server;
     std::unique_ptr<control_plane::Client> m_control_plane_client;
+
+    std::unique_ptr<DataPlaneSystemManager> m_data_plane_manager;
 
     std::vector<std::unique_ptr<SegmentsManager>> m_partition_managers;
 

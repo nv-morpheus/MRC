@@ -21,6 +21,7 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/connection_manager.hpp"
+#include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/segments_manager.hpp"
@@ -104,6 +105,11 @@ control_plane::Client& Runtime::control_plane() const
     return *m_control_plane_client;
 }
 
+DataPlaneSystemManager& Runtime::data_plane() const
+{
+    return *m_data_plane_manager;
+}
+
 PipelinesManager& Runtime::pipelines_manager() const
 {
     return m_connection_manager->pipelines_manager();
@@ -150,6 +156,7 @@ void Runtime::do_service_start(std::stop_token stop_token)
     this->child_service_start(*m_control_plane_client, true);
 
     // Now create the system data plane client object
+    m_data_plane_manager = std::make_unique<DataPlaneSystemManager>(*this);
 
     // Create the connection manager to handle state updates
     m_connection_manager = std::make_unique<ConnectionManager>(*this, m_control_plane_client->machine_id());

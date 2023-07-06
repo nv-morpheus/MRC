@@ -36,7 +36,7 @@ class Registry;
 namespace mrc::runtime {
 
 class PipelinesManager;
-class DataPlaneManager;
+class DataPlaneSystemManager;
 
 struct IInternalRuntime
 {
@@ -49,7 +49,7 @@ struct IInternalRuntime
 
     virtual control_plane::Client& control_plane() const = 0;
 
-    // virtual DataPlaneManager& data_plane() const = 0;
+    virtual DataPlaneSystemManager& data_plane() const = 0;
 
     virtual PipelinesManager& pipelines_manager() const = 0;
 
@@ -95,7 +95,7 @@ struct IInternalPartitionRuntime : public IInternalRuntime
 
     virtual size_t partition_id() const = 0;
 
-    virtual DataPlaneManager& data_plane() const = 0;
+    // virtual DataPlaneSystemManager& data_plane() const = 0;
 };
 
 class IInternalPartitionRuntimeProvider : public virtual IInternalRuntimeProvider

@@ -28,27 +28,32 @@ class IDecodableStorage;
 class EncodedStorage;
 }  // namespace mrc::codable
 
+namespace mrc::runtime {
+class LocalDescriptor;
+}
+
 namespace mrc::remote_descriptor {
 
 class Storage final
 {
   public:
-    Storage() = default;
-    explicit Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage);
+    // Storage() = default;
+    explicit Storage(std::unique_ptr<mrc::runtime::LocalDescriptor> descriptor);
 
     ~Storage();
 
     DELETE_COPYABILITY(Storage);
     DEFAULT_MOVEABILITY(Storage);
 
-    const mrc::codable::IDecodableStorage& encoding() const;
+    const codable::IDecodableStorage& encoding() const;
 
     std::size_t tokens_count() const;
 
     std::size_t decrement_tokens(std::size_t decrement_count);
 
   private:
-    std::unique_ptr<mrc::codable::EncodedStorage> m_storage;
+    std::unique_ptr<mrc::runtime::LocalDescriptor> m_descriptor;
+    std::unique_ptr<codable::IDecodableStorage> m_storage;
     std::int32_t m_tokens{INT32_MAX};
 };
 

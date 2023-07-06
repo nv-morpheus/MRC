@@ -48,7 +48,8 @@ void EdgeAdapterRegistry::register_ingress_converter(std::type_index input_type,
 {
     std::lock_guard<std::recursive_mutex> lock(s_mutex);
 
-    VLOG(20) << "Registering ingress converter for " << type_name(input_type) << " " << type_name(output_type);
+    VLOG(20) << "Registering ingress converter for " << type_name(input_type) << "[" << input_type.hash_code() << "]->"
+             << type_name(output_type) << "[" << output_type.hash_code() << "]";
     auto readers_map = EdgeAdapterRegistry::registered_ingress_converters[input_type];
 
     auto reader_found = readers_map.find(output_type);
@@ -67,7 +68,8 @@ void EdgeAdapterRegistry::register_egress_converter(std::type_index input_type,
 {
     std::lock_guard<std::recursive_mutex> lock(s_mutex);
 
-    VLOG(20) << "Registering egress converter for " << type_name(input_type) << " " << type_name(output_type);
+    VLOG(20) << "Registering egress converter for " << type_name(input_type) << "[" << input_type.hash_code() << "]->"
+             << type_name(output_type) << "[" << output_type.hash_code() << "]";
     auto readers_map = EdgeAdapterRegistry::registered_egress_converters[input_type];
 
     auto reader_found = readers_map.find(output_type);

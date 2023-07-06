@@ -395,9 +395,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-            // pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
-            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
+            // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
             m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
             apply_callback(m_launchers[name], name);
@@ -414,9 +414,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-            // pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
-            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
+            // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
             m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
             apply_callback(m_launchers[name], name);

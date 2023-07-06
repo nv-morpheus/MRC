@@ -20,6 +20,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
@@ -144,6 +145,7 @@ class TestExecutor : public ::testing::Test
         auto options = std::make_unique<Options>();
         options->topology().user_cpuset("0");
         options->topology().restrict_gpus(true);
+        options->placement().resources_strategy(PlacementResources::Dedicated);
         return options;
     }
 };

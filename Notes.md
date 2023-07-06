@@ -109,6 +109,7 @@ Resources:
 
 ## Data Plane
 
+Existing Objects:
 - `IStorage`
   - Allows access to chunks of memory
   - Holds memory as "objects"
@@ -124,6 +125,38 @@ Resources:
 - `EncodedObject<T>` : `EncodedStorage`
   - Typed version of `EncodedStorage`.
   - Handles calling `mrc::codable::encode(object, *storage);` for you with the supplied object type
+
+New Object Ideas:
+- `IDescriptor`
+  - Descriptor is an object which holds a piece of data. That data can either be:
+    - In memory already as a type T, ready to be retrieved
+    - Can be encoded into a storage object (i.e. just pulled from UCX)
+  - Purpose of this object is to facilitate the lifetime of data as it moves between segments
+    - When you create a `IDescriptor` you are transferring ownership of that piece of data
+    - Ownership of the object can be transferred out of the `IDescriptor` by retrieving the storage object backing the
+      data
+      - Retrieving the storage can be triggered by either accessing the value locally, or by accessing the storage
+        object (for remote)
+  - `std::unique_ptr<IDecodableStorage> get_storage() = 0`
+    - Gets the storage associated with this descriptor.
+    - When called, the storage is moved out of the `IDescriptor` and it no longer has any data associated with it
+  - `T decode<T>()`
+    - Allows you to retrieve the value from the storage on a type erased object
+    - calls `get_storage()` internally
+- `RemoteDescriptor: IDescriptor`
+  - Came from UCX. Holds onto some `DecodableStorageView` for accessing data
+- `Descriptor<T>: IDescriptor`
+  - Typed version of `IDescriptor
+  - `T get_value() = 0`
+    - Falls back to `this->decode<T>()`
+- `ResidentDescriptor<T>: Descriptor<T>`
+  - Used for local segment->segment connections
+  - Holds onto a piece of data `T` and returns it directly when `get_value` is called
+  - Can also serialize it on demand if `get_storage` is called
+- `CodedDescriptor<T>: Descriptor<T>`
+  - Used for remote segment->segment connections
+  - Transferrs ownership of T immediately to a storage object
+
 
 Steps for the Publisher:
 1. Encoding from `T` -> `EncodedStorage`
@@ -157,3 +190,20 @@ Steps for the Subscriber:
 3. From `RemoteDescriptor` -> `T`
    1. Via `RemoteDescriptor::decode<T>()`
    2. Runs on the calling thread from the `Subscriber<T>`
+
+
+Publisher<T> Data Path:
+ * `T` -> `CodedDescriptor<T>` -> `LocalDescriptorHandle` -> `DescriptorMessage` -> `protos::RemoteDescriptor` -> `TransientBuffer` -> Data Plane Tagged Send
+ * `T` -> `CodedDescriptor<T>`
+   * Creates the encoding on the egress thread
+ * `CodedDescriptor<T>` -> `LocalDescriptorHandle`
+   * Registers the `CodedDescriptor<T>` with the Remote Descriptor Manager to track tokens and lifetime
+   * Returns a `LocalDescriptorHandle` which tracks an internal `Storage` and can be turned into a Protobuf
+ * `LocalDescriptorHandle` -> `DescriptorMessage`
+   * Pairs the descriptor handle with a destination
+ * `DescriptorMessage` -> `protos::RemoteDescriptor`
+   * extracts the protobuf from the `LocalDescriptorHandle` (releasing it from tracking the `Storage` lifetime)
+ *
+ *
+ * Subscriber<T> Data Path:
+ * Data Plane Tagged Received -> Transient Buffer -> RemoteDescriptor -> Subscriber/Source<T> ->

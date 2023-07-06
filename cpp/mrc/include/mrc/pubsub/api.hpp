@@ -38,7 +38,7 @@ enum class PublisherPolicy
 };
 
 class IPublisherService : public virtual control_plane::ISubscriptionService,
-                          public node::ReadableAcceptor<std::unique_ptr<codable::EncodedStorage>>
+                          public node::ReadableAcceptor<std::unique_ptr<runtime::LocalDescriptor>>
 {
   public:
     ~IPublisherService() override = default;

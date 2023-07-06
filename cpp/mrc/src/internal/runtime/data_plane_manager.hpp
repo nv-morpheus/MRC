@@ -32,9 +32,12 @@
 #include "mrc/core/async_service.hpp"
 #include "mrc/edge/forward.hpp"
 #include "mrc/node/forward.hpp"
+#include "mrc/node/queue.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 
 namespace mrc::memory {
@@ -56,7 +59,9 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
     DataPlaneSystemManager(IInternalRuntimeProvider& runtime);
     ~DataPlaneSystemManager() override;
 
-    std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> get_output_channel(SegmentAddress address);
+    std::shared_ptr<node::Queue<std::unique_ptr<Descriptor>>> get_incoming_port_channel(InstanceID port_address) const;
+    std::shared_ptr<edge::IWritableProvider<std::unique_ptr<Descriptor>>> get_outgoing_port_channel(
+        InstanceID port_address) const;
 
   private:
     void do_service_start(std::stop_token stop_token) override;
@@ -64,6 +69,9 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
     void process_state_update(const control_plane::state::ControlPlaneState& state);
 
     // control_plane::state::ControlPlaneState m_previous_state;
+
+    mutable Mutex m_port_mutex;
+    std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_incoming_port_channels;
 };
 
 class DataPlaneManager : public AsyncService, public InternalRuntimeProvider
