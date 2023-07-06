@@ -1,6 +1,7 @@
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import { IConnection, IWorker } from "@mrc/common/entities";
 import {
+   segmentInstancesRequestStop,
    segmentInstancesSelectById,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
@@ -29,6 +30,8 @@ import {
    Event,
    EventType,
    eventTypeToJSON,
+   ManifoldUpdateActualAssignmentsRequest,
+   ManifoldUpdateActualAssignmentsResponse,
    PingRequest,
    PingResponse,
    PipelineAddMappingRequest,
@@ -37,6 +40,7 @@ import {
    PipelineRegisterConfigResponse,
    RegisterWorkersRequest,
    RegisterWorkersResponse,
+   ResourceStopResponse,
    ResourceUpdateStatusRequest,
    ResourceUpdateStatusResponse,
    ServerStreamingMethodResult,
@@ -73,6 +77,7 @@ import {
 import { getRootStore, RootStore, stopAction } from "@mrc/server/store/store";
 import {
    manifoldInstancesSelectById,
+   manifoldInstancesUpdateActualSegments,
    manifoldInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/manifoldInstancesSlice";
 import {
@@ -289,9 +294,8 @@ class Architect implements ArchitectServiceImplementation {
       const event_stream = async function* () {
          try {
             for await (const req of stream) {
-               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${
-                  req.tag
-               }`;
+               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${req.tag
+                  }`;
 
                const yeilded_events: Event[] = [];
 
@@ -354,8 +358,7 @@ class Architect implements ArchitectServiceImplementation {
 
          for await (const out_event of combined_iterable) {
             console.log(
-               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${
-                  out_event.tag
+               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${out_event.tag
                }`
             );
             yield out_event;
@@ -434,7 +437,7 @@ class Architect implements ArchitectServiceImplementation {
                const found_worker = workersSelectById(this._store.getState(), payload.instanceId);
 
                if (found_worker) {
-                  this._store.dispatch(workersRemove(found_worker));
+                  this._store.dispatch(workersRemove(found_worker));  // TODO: removing a worker should cascade to segments
                }
 
                yield unaryResponse(event, Ack.create());
@@ -524,6 +527,24 @@ class Architect implements ArchitectServiceImplementation {
                   event,
                   PipelineAddMappingResponse.create({
                      pipelineInstanceId: pipeline_id,
+                  })
+               );
+
+               break;
+            }
+            case EventType.ClientUnaryManifoldUpdateActualAssignments: {
+               const payload = unpackEvent<ManifoldUpdateActualAssignmentsRequest>(event.msg);
+
+               this._store.dispatch(manifoldInstancesUpdateActualSegments(
+                  payload.manifoldInstanceId,
+                  payload.actualInputSegments,
+                  payload.actualOutputSegments
+               ));
+
+               yield unaryResponse(
+                  event,
+                  ManifoldUpdateActualAssignmentsResponse.create({
+                     ok: true,
                   })
                );
 
@@ -619,6 +640,24 @@ class Architect implements ArchitectServiceImplementation {
                }
 
                yield unaryResponse(event, ResourceUpdateStatusResponse.create({ ok: true }));
+
+               break;
+            }
+            case EventType.ClientUnaryResourceStopRequest: {
+               const payload = unpackEvent<ResourceUpdateStatusRequest>(event.msg);
+
+               switch (payload.resourceType) {
+                  case "SegmentInstances": {
+                     this._store.dispatch(
+                        segmentInstancesRequestStop(payload.resourceId)
+                     );
+
+                     break;
+                  }
+                  default:
+                     throw new Error(`Unsupported resource type: ${payload.resourceType}`);
+               }
+               yield unaryResponse(event, ResourceStopResponse.create({ ok: true }));
 
                break;
             }

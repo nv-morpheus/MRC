@@ -273,6 +273,10 @@ export class ConnectionManager {
          })
       );
 
+      if (!response.ok) {
+         throw new Error("Failed to update resource status");
+      }
+
       // Now return the correct instance from the updated state
       // Have to branch for all types to get around TSC issue here: https://github.com/microsoft/TypeScript/issues/14107
       if (resource_type === "Connections") {

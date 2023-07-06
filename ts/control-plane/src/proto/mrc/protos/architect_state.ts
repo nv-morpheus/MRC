@@ -302,67 +302,6 @@ export function resourceActualStatusToNumber(object: ResourceActualStatus): numb
   }
 }
 
-export enum SegmentStates {
-  Initialized = "Initialized",
-  Running = "Running",
-  Stopped = "Stopped",
-  Completed = "Completed",
-  UNRECOGNIZED = "UNRECOGNIZED",
-}
-
-export function segmentStatesFromJSON(object: any): SegmentStates {
-  switch (object) {
-    case 0:
-    case "Initialized":
-      return SegmentStates.Initialized;
-    case 1:
-    case "Running":
-      return SegmentStates.Running;
-    case 2:
-    case "Stopped":
-      return SegmentStates.Stopped;
-    case 3:
-    case "Completed":
-      return SegmentStates.Completed;
-    case -1:
-    case "UNRECOGNIZED":
-    default:
-      return SegmentStates.UNRECOGNIZED;
-  }
-}
-
-export function segmentStatesToJSON(object: SegmentStates): string {
-  switch (object) {
-    case SegmentStates.Initialized:
-      return "Initialized";
-    case SegmentStates.Running:
-      return "Running";
-    case SegmentStates.Stopped:
-      return "Stopped";
-    case SegmentStates.Completed:
-      return "Completed";
-    case SegmentStates.UNRECOGNIZED:
-    default:
-      return "UNRECOGNIZED";
-  }
-}
-
-export function segmentStatesToNumber(object: SegmentStates): number {
-  switch (object) {
-    case SegmentStates.Initialized:
-      return 0;
-    case SegmentStates.Running:
-      return 1;
-    case SegmentStates.Stopped:
-      return 2;
-    case SegmentStates.Completed:
-      return 3;
-    case SegmentStates.UNRECOGNIZED:
-    default:
-      return -1;
-  }
-}
-
 export enum SegmentMappingPolicies {
   OnePerWorker = "OnePerWorker",
   UNRECOGNIZED = "UNRECOGNIZED",
@@ -1118,25 +1057,38 @@ export const ResourceState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ResourceState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseResourceState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.requestedStatus = resourceRequestedStatusFromJSON(reader.int32());
-          break;
+          continue;
         case 3:
+          if (tag !== 24) {
+            break;
+          }
+
           message.actualStatus = resourceActualStatusFromJSON(reader.int32());
-          break;
+          continue;
         case 4:
+          if (tag !== 32) {
+            break;
+          }
+
           message.refCount = reader.int32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1216,45 +1168,72 @@ export const Connection = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Connection {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseConnection();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.peerInfo = reader.string();
-          break;
+          continue;
         case 3:
-          if ((tag & 7) === 2) {
+          if (tag === 24) {
+            message.workerIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 26) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.workerIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.workerIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 4:
-          if ((tag & 7) === 2) {
+          if (tag === 32) {
+            message.assignedPipelineIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 34) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.assignedPipelineIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.assignedPipelineIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 5:
+          if (tag !== 42) {
+            break;
+          }
+
           message.state = ResourceState.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1313,7 +1292,7 @@ function createBaseWorker(): Worker {
   return {
     $type: "mrc.protos.Worker",
     id: "0",
-    workerAddress: new Uint8Array(),
+    workerAddress: new Uint8Array(0),
     machineId: "0",
     state: undefined,
     assignedSegmentIds: [],
@@ -1345,38 +1324,62 @@ export const Worker = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): Worker {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseWorker();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.workerAddress = reader.bytes();
-          break;
+          continue;
         case 3:
+          if (tag !== 24) {
+            break;
+          }
+
           message.machineId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           message.state = ResourceState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 5:
-          if ((tag & 7) === 2) {
+          if (tag === 40) {
+            message.assignedSegmentIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 42) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.assignedSegmentIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.assignedSegmentIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1385,7 +1388,7 @@ export const Worker = {
     return {
       $type: Worker.$type,
       id: isSet(object.id) ? String(object.id) : "0",
-      workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(),
+      workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(0),
       machineId: isSet(object.machineId) ? String(object.machineId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       assignedSegmentIds: Array.isArray(object?.assignedSegmentIds)
@@ -1399,7 +1402,7 @@ export const Worker = {
     message.id !== undefined && (obj.id = message.id);
     message.workerAddress !== undefined &&
       (obj.workerAddress = base64FromBytes(
-        message.workerAddress !== undefined ? message.workerAddress : new Uint8Array(),
+        message.workerAddress !== undefined ? message.workerAddress : new Uint8Array(0),
       ));
     message.machineId !== undefined && (obj.machineId = message.machineId);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
@@ -1418,7 +1421,7 @@ export const Worker = {
   fromPartial(object: DeepPartial<Worker>): Worker {
     const message = createBaseWorker();
     message.id = object.id ?? "0";
-    message.workerAddress = object.workerAddress ?? new Uint8Array();
+    message.workerAddress = object.workerAddress ?? new Uint8Array(0);
     message.machineId = object.machineId ?? "0";
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
@@ -1456,28 +1459,37 @@ export const PipelineConfiguration = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineConfiguration();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           const entry1 = PipelineConfiguration_SegmentsEntry.decode(reader, reader.uint32());
           if (entry1.value !== undefined) {
             message.segments[entry1.key] = entry1.value;
           }
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = PipelineConfiguration_ManifoldsEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.manifolds[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1581,28 +1593,45 @@ export const PipelineConfiguration_SegmentConfiguration = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_SegmentConfiguration {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineConfiguration_SegmentConfiguration();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.ingressPorts.push(reader.string());
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.egressPorts.push(reader.string());
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           message.options = SegmentOptions.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1685,28 +1714,45 @@ export const PipelineConfiguration_ManifoldConfiguration = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_ManifoldConfiguration {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineConfiguration_ManifoldConfiguration();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.typeId = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.typeString = reader.string();
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           message.options = ManifoldOptions.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1769,22 +1815,31 @@ export const PipelineConfiguration_SegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_SegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineConfiguration_SegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineConfiguration_SegmentConfiguration.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1839,22 +1894,31 @@ export const PipelineConfiguration_ManifoldsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineConfiguration_ManifoldsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineConfiguration_ManifoldsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineConfiguration_ManifoldConfiguration.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -1913,25 +1977,34 @@ export const PipelineMapping = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineMapping {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineMapping();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.machineId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = PipelineMapping_SegmentsEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.segments[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2012,25 +2085,38 @@ export const PipelineMapping_SegmentMapping = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineMapping_SegmentMapping {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineMapping_SegmentMapping();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.segmentName = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.byPolicy = PipelineMapping_SegmentMapping_ByPolicy.decode(reader, reader.uint32());
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.byWorker = PipelineMapping_SegmentMapping_ByWorker.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2088,19 +2174,24 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineMapping_SegmentMapping_ByPolicy {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineMapping_SegmentMapping_ByPolicy();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.value = segmentMappingPoliciesFromJSON(reader.int32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2148,26 +2239,34 @@ export const PipelineMapping_SegmentMapping_ByWorker = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineMapping_SegmentMapping_ByWorker {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineMapping_SegmentMapping_ByWorker();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.workerIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.workerIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.workerIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2220,22 +2319,31 @@ export const PipelineMapping_SegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineMapping_SegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineMapping_SegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineMapping_SegmentMapping.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2324,50 +2432,78 @@ export const PipelineDefinition = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.int64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.config = PipelineConfiguration.decode(reader, reader.uint32());
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           const entry3 = PipelineDefinition_MappingsEntry.decode(reader, reader.uint32());
           if (entry3.value !== undefined) {
             message.mappings[entry3.key] = entry3.value;
           }
-          break;
+          continue;
         case 4:
-          if ((tag & 7) === 2) {
+          if (tag === 32) {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 34) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 5:
+          if (tag !== 42) {
+            break;
+          }
+
           const entry5 = PipelineDefinition_SegmentsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
             message.segments[entry5.key] = entry5.value;
           }
-          break;
+          continue;
         case 6:
+          if (tag !== 50) {
+            break;
+          }
+
           const entry6 = PipelineDefinition_ManifoldsEntry.decode(reader, reader.uint32());
           if (entry6.value !== undefined) {
             message.manifolds[entry6.key] = entry6.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2530,50 +2666,82 @@ export const PipelineDefinition_SegmentDefinition = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_SegmentDefinition {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_SegmentDefinition();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.parentId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           const entry4 = PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry.decode(reader, reader.uint32());
           if (entry4.value !== undefined) {
             message.ingressManifoldIds[entry4.key] = entry4.value;
           }
-          break;
+          continue;
         case 5:
+          if (tag !== 42) {
+            break;
+          }
+
           const entry5 = PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
             message.egressManifoldIds[entry5.key] = entry5.value;
           }
-          break;
+          continue;
         case 6:
+          if (tag !== 50) {
+            break;
+          }
+
           message.options = SegmentOptions.decode(reader, reader.uint32());
-          break;
+          continue;
         case 7:
-          if ((tag & 7) === 2) {
+          if (tag === 56) {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2689,22 +2857,31 @@ export const PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry = {
     input: _m0.Reader | Uint8Array,
     length?: number,
   ): PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = longToString(reader.uint64() as Long);
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2766,22 +2943,31 @@ export const PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = longToString(reader.uint64() as Long);
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -2874,50 +3060,82 @@ export const PipelineDefinition_ManifoldDefinition = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_ManifoldDefinition();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.parentId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.portName = reader.string();
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           const entry4 = PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.decode(reader, reader.uint32());
           if (entry4.value !== undefined) {
             message.inputSegmentIds[entry4.key] = entry4.value;
           }
-          break;
+          continue;
         case 5:
+          if (tag !== 42) {
+            break;
+          }
+
           const entry5 = PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
             message.outputSegmentIds[entry5.key] = entry5.value;
           }
-          break;
+          continue;
         case 6:
+          if (tag !== 50) {
+            break;
+          }
+
           message.options = ManifoldOptions.decode(reader, reader.uint32());
-          break;
+          continue;
         case 7:
-          if ((tag & 7) === 2) {
+          if (tag === 56) {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3030,22 +3248,31 @@ export const PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = longToString(reader.uint64() as Long);
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3107,22 +3334,31 @@ export const PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = longToString(reader.uint64() as Long);
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3181,22 +3417,31 @@ export const PipelineDefinition_MappingsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_MappingsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_MappingsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineMapping.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3250,22 +3495,31 @@ export const PipelineDefinition_SegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_SegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_SegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineDefinition_SegmentDefinition.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3320,22 +3574,31 @@ export const PipelineDefinition_ManifoldsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineDefinition_ManifoldsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineDefinition_ManifoldsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.key = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineDefinition_ManifoldDefinition.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3414,48 +3677,79 @@ export const PipelineInstance = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PipelineInstance {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePipelineInstance();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.definitionId = longToString(reader.int64() as Long);
-          break;
+          continue;
         case 3:
+          if (tag !== 24) {
+            break;
+          }
+
           message.machineId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           message.state = ResourceState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 5:
-          if ((tag & 7) === 2) {
+          if (tag === 40) {
+            message.segmentIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 42) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.segmentIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.segmentIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 6:
-          if ((tag & 7) === 2) {
+          if (tag === 48) {
+            message.manifoldIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.manifoldIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.manifoldIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3531,29 +3825,41 @@ export const SegmentDefinition = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): SegmentDefinition {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSegmentDefinition();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 3:
-          if ((tag & 7) === 2) {
+          if (tag === 24) {
+            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 26) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.instanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3645,57 +3951,100 @@ export const SegmentInstance = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): SegmentInstance {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSegmentInstance();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.pipelineDefinitionId = longToString(reader.int64() as Long);
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 4:
+          if (tag !== 32) {
+            break;
+          }
+
           message.address = reader.uint32();
-          break;
+          continue;
         case 5:
+          if (tag !== 40) {
+            break;
+          }
+
           message.workerId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 6:
+          if (tag !== 48) {
+            break;
+          }
+
           message.pipelineInstanceId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 7:
+          if (tag !== 58) {
+            break;
+          }
+
           message.state = ResourceState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 8:
-          if ((tag & 7) === 2) {
+          if (tag === 64) {
+            message.egressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 66) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.egressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.egressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 9:
-          if ((tag & 7) === 2) {
+          if (tag === 72) {
+            message.ingressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 74) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ingressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ingressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -3834,58 +4183,99 @@ export const ManifoldInstance = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldInstance();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.id = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.pipelineDefinitionId = longToString(reader.int64() as Long);
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.portName = reader.string();
-          break;
+          continue;
         case 4:
+          if (tag !== 32) {
+            break;
+          }
+
           message.machineId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 5:
+          if (tag !== 40) {
+            break;
+          }
+
           message.pipelineInstanceId = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 6:
+          if (tag !== 50) {
+            break;
+          }
+
           message.state = ResourceState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 7:
+          if (tag !== 58) {
+            break;
+          }
+
           const entry7 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry7.value !== undefined) {
             message.requestedInputSegments[entry7.key] = entry7.value;
           }
-          break;
+          continue;
         case 8:
+          if (tag !== 66) {
+            break;
+          }
+
           const entry8 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry8.value !== undefined) {
             message.requestedOutputSegments[entry8.key] = entry8.value;
           }
-          break;
+          continue;
         case 9:
+          if (tag !== 74) {
+            break;
+          }
+
           const entry9 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry9.value !== undefined) {
             message.actualInputSegments[entry9.key] = entry9.value;
           }
-          break;
+          continue;
         case 10:
+          if (tag !== 82) {
+            break;
+          }
+
           const entry10 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry10.value !== undefined) {
             message.actualOutputSegments[entry10.key] = entry10.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4033,22 +4423,31 @@ export const ManifoldInstance_RequestedInputSegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedInputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldInstance_RequestedInputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4107,22 +4506,31 @@ export const ManifoldInstance_RequestedOutputSegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_RequestedOutputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldInstance_RequestedOutputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4181,22 +4589,31 @@ export const ManifoldInstance_ActualInputSegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualInputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldInstance_ActualInputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4250,22 +4667,31 @@ export const ManifoldInstance_ActualOutputSegmentsEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldInstance_ActualOutputSegmentsEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldInstance_ActualOutputSegmentsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = reader.uint32();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.value = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4347,40 +4773,73 @@ export const ControlPlaneState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.nonce = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.connections = ControlPlaneState_ConnectionsState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.workers = ControlPlaneState_WorkerssState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 4:
+          if (tag !== 34) {
+            break;
+          }
+
           message.pipelineDefinitions = ControlPlaneState_PipelineDefinitionsState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 5:
+          if (tag !== 42) {
+            break;
+          }
+
           message.pipelineInstances = ControlPlaneState_PipelineInstancesState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 6:
+          if (tag !== 50) {
+            break;
+          }
+
           message.segmentDefinitions = ControlPlaneState_SegmentDefinitionsState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 7:
+          if (tag !== 58) {
+            break;
+          }
+
           message.segmentInstances = ControlPlaneState_SegmentInstancesState.decode(reader, reader.uint32());
-          break;
+          continue;
         case 8:
+          if (tag !== 66) {
+            break;
+          }
+
           message.manifoldInstances = ControlPlaneState_ManifoldInstancesState.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4495,32 +4954,44 @@ export const ControlPlaneState_ConnectionsState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ConnectionsState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_ConnectionsState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_ConnectionsState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4597,22 +5068,31 @@ export const ControlPlaneState_ConnectionsState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ConnectionsState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_ConnectionsState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = Connection.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4679,32 +5159,44 @@ export const ControlPlaneState_WorkerssState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_WorkerssState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_WorkerssState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_WorkerssState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4775,22 +5267,31 @@ export const ControlPlaneState_WorkerssState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_WorkerssState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_WorkerssState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = Worker.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4857,32 +5358,44 @@ export const ControlPlaneState_PipelineDefinitionsState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_PipelineDefinitionsState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_PipelineDefinitionsState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_PipelineDefinitionsState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -4961,22 +5474,31 @@ export const ControlPlaneState_PipelineDefinitionsState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_PipelineDefinitionsState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_PipelineDefinitionsState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineDefinition.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5043,32 +5565,44 @@ export const ControlPlaneState_PipelineInstancesState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_PipelineInstancesState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_PipelineInstancesState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_PipelineInstancesState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5145,22 +5679,31 @@ export const ControlPlaneState_PipelineInstancesState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_PipelineInstancesState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_PipelineInstancesState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = PipelineInstance.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5227,32 +5770,44 @@ export const ControlPlaneState_SegmentDefinitionsState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_SegmentDefinitionsState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_SegmentDefinitionsState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_SegmentDefinitionsState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5331,22 +5886,31 @@ export const ControlPlaneState_SegmentDefinitionsState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_SegmentDefinitionsState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_SegmentDefinitionsState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = SegmentDefinition.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5413,32 +5977,44 @@ export const ControlPlaneState_SegmentInstancesState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_SegmentInstancesState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_SegmentInstancesState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_SegmentInstancesState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5515,22 +6091,31 @@ export const ControlPlaneState_SegmentInstancesState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_SegmentInstancesState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_SegmentInstancesState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = SegmentInstance.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5597,32 +6182,44 @@ export const ControlPlaneState_ManifoldInstancesState = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ManifoldInstancesState {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_ManifoldInstancesState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          if ((tag & 7) === 2) {
+          if (tag === 8) {
+            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
+          }
+
+          if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ids.push(longToString(reader.uint64() as Long));
             }
-          } else {
-            message.ids.push(longToString(reader.uint64() as Long));
+
+            continue;
           }
+
           break;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           const entry2 = ControlPlaneState_ManifoldInstancesState_EntitiesEntry.decode(reader, reader.uint32());
           if (entry2.value !== undefined) {
             message.entities[entry2.key] = entry2.value;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5699,22 +6296,31 @@ export const ControlPlaneState_ManifoldInstancesState_EntitiesEntry = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ControlPlaneState_ManifoldInstancesState_EntitiesEntry {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseControlPlaneState_ManifoldInstancesState_EntitiesEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.key = longToString(reader.uint64() as Long);
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.value = ManifoldInstance.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5779,22 +6385,31 @@ export const SegmentOptions = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): SegmentOptions {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseSegmentOptions();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.placementStrategy = segmentOptions_PlacementStrategyFromJSON(reader.int32());
-          break;
+          continue;
         case 2:
+          if (tag !== 18) {
+            break;
+          }
+
           message.scalingOptions = ScalingOptions.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5852,22 +6467,31 @@ export const ScalingOptions = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ScalingOptions {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseScalingOptions();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.strategy = scalingOptions_ScalingStrategyFromJSON(reader.int32());
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.initialCount = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5918,19 +6542,24 @@ export const ManifoldOptions = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): ManifoldOptions {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseManifoldOptions();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.policy = manifoldOptions_PolicyFromJSON(reader.int32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -5982,25 +6611,38 @@ export const PortInfo = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): PortInfo {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBasePortInfo();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.portName = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.typeId = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag !== 26) {
+            break;
+          }
+
           message.typeString = reader.string();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -6055,22 +6697,31 @@ export const IngressPort = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): IngressPort {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseIngressPort();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.id = reader.uint32();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -6125,25 +6776,38 @@ export const EgressPort = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): EgressPort {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseEgressPort();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 10) {
+            break;
+          }
+
           message.name = reader.string();
-          break;
+          continue;
         case 2:
+          if (tag !== 16) {
+            break;
+          }
+
           message.id = reader.uint32();
-          break;
+          continue;
         case 3:
+          if (tag !== 24) {
+            break;
+          }
+
           message.policyType = egressPort_PolicyTypeFromJSON(reader.int32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -6197,19 +6861,24 @@ export const IngressPolicy = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): IngressPolicy {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseIngressPolicy();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          if (tag !== 8) {
+            break;
+          }
+
           message.networkEnabled = reader.bool();
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
+          continue;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },
@@ -6260,29 +6929,41 @@ export const EgressPolicy = {
   },
 
   decode(input: _m0.Reader | Uint8Array, length?: number): EgressPolicy {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseEgressPolicy();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 3:
+          if (tag !== 24) {
+            break;
+          }
+
           message.policy = egressPolicy_PolicyFromJSON(reader.int32());
-          break;
+          continue;
         case 4:
-          if ((tag & 7) === 2) {
+          if (tag === 32) {
+            message.segmentAddresses.push(reader.uint32());
+
+            continue;
+          }
+
+          if (tag === 34) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.segmentAddresses.push(reader.uint32());
             }
-          } else {
-            message.segmentAddresses.push(reader.uint32());
+
+            continue;
           }
-          break;
-        default:
-          reader.skipType(tag & 7);
+
           break;
       }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
     }
     return message;
   },

@@ -16,6 +16,7 @@ import { generateId, sleep, yield_, yield_immediate } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 import {
    manifoldInstancesAdd,
+   manifoldInstancesDetachRequestedSegment,
    manifoldInstancesSelectByNameAndPipelineDef,
    manifoldInstancesSelectByPipelineId,
    manifoldInstancesSyncSegments,
@@ -94,6 +95,38 @@ export const segmentInstancesSlice = createSlice({
 
          found.state.actualStatus = action.payload.status;
       },
+
+      incRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
+         // TODO: refCount should be renamed to "dependees" and should be a list in the form of
+         // [{"type": "ManifoldInstance", "id": "id"} ...]
+         const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
+         if (!found) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} not found`);
+         }
+
+         found.state.refCount++;
+      },
+
+      decRefCount: (state, action: PayloadAction<{ segment: ISegmentInstance }>) => {
+         const found = segmentInstancesAdapter.getOne(state, action.payload.segment.id);
+         if (!found) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} not found`);
+         } else if (found.state.refCount == 0) {
+            throw new Error(`Segment Instance with ID: ${action.payload.segment.id} has refCount 0`);
+         }
+
+         found.state.refCount--;
+
+         if (found.state.refCount == 0) {
+            // Segment has no dependees OK to stop now
+            // TODO: We need some way to distinguish between a segment which simply has no more depenees and should run
+            // to completion (ex. `Requested_Completed`), and a segment which already requested to stop.
+            // This handles the second situation.
+            found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
+         }
+
+      },
+
    },
    extraReducers: (builder) => {
       builder.addCase(connectionsRemove, (state, action) => {
@@ -133,6 +166,35 @@ export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
       instances.forEach((s) => {
          dispatch(segmentInstancesAdd(s));
       });
+   };
+}
+
+export function segmentInstancesRequestStop(segmentInstanceId: string) {
+   return (dispatch: AppDispatch, getState: AppGetState) => {
+      // In the future we will have more than just manifolds that depend on segments, see comment in `incRefCount`
+      let state = getState();
+      const found = segmentInstancesSelectById(state, segmentInstanceId);
+      if (!found) {
+         throw new Error(`Segment Instance with ID: ${segmentInstanceId} not found`);
+      }
+
+      if (found.state.refCount == 0) { 
+          // Segment has no dependees OK to stop now
+         dispatch(segmentInstancesSlice.actions.updateResourceRequestedState({
+            resource: found,
+            status: ResourceRequestedStatus.Requested_Stopped
+         }));
+      } else {
+         Object.values(state.manifoldInstances.entities).forEach((m) => {
+            if (m!== undefined) {
+               if (found.address in (m?.requestedInputSegments ?? {})) {
+                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: true, segment: found}));
+               } else if (found.address in (m?.requestedOutputSegments ?? {})) {
+                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: false, segment: found}));
+               }
+            }
+         });
+      }
    };
 }
 
@@ -176,11 +238,15 @@ export function segmentInstancesDestroy(instance: ISegmentInstance) {
    };
 }
 
+
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
 export const {
    add: segmentInstancesAdd,
+   incRefCount: segmentInstanceIncRefCount,
+   decRefCount: segmentInstanceDecRefCount,
    // addMany: segmentInstancesAddMany,
+   // requestStop: segmentInstancesRequestStop,
    remove: segmentInstancesRemove,
    updateResourceRequestedState: segmentInstancesUpdateResourceRequestedState,
    updateResourceActualState: segmentInstancesUpdateResourceActualState,

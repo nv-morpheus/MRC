@@ -13,20 +13,26 @@ import { WorkersManager } from "@mrc/client/workers_manager";
 import {
    Ack,
    EventType,
+   ManifoldUpdateActualAssignmentsRequest,
+   ManifoldUpdateActualAssignmentsResponse,
    PipelineAddMappingRequest,
    PipelineAddMappingResponse,
    PipelineRegisterConfigRequest,
    PipelineRegisterConfigResponse,
 } from "@mrc/proto/mrc/protos/architect";
 import { ConnectionManager } from "@mrc/client/connection_manager";
+import { ManifoldsManager } from "./manifolds_manager";
 
 export class PipelineManager {
    private _pipelineDefinitionId: string | undefined;
    private _pipelineInstanceId: string | undefined;
 
    private _isCreated = false;
+   private _manifoldsManager: ManifoldsManager;
 
-   constructor(public readonly workersManager: WorkersManager, public config: IPipelineConfiguration) {}
+   constructor(public readonly workersManager: WorkersManager, public config: IPipelineConfiguration) {
+      this._manifoldsManager = new ManifoldsManager(this);
+   }
 
    public static create(
       config: IPipelineConfiguration,
@@ -49,6 +55,10 @@ export class PipelineManager {
 
    get connectionManager() {
       return this.workersManager.connectionManager;
+   }
+
+   get manifoldsManager() {
+      return this._manifoldsManager;
    }
 
    get isRegistered() {
@@ -197,4 +207,6 @@ export class PipelineManager {
 
       return response;
    }
+
+
 }
