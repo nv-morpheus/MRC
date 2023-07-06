@@ -38,11 +38,10 @@ set(DOXYGEN_INTERACTIVE_SVG YES)
 
 doxygen_add_docs(
   mrc_docs
-  "include"
+  "cpp"
+  "LICENSE"
   "protos"
   "python"
-  "src"
-  "LICENSE"
   "README.md"
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   COMMENT "Generate html documentation"
@@ -51,6 +50,6 @@ doxygen_add_docs(
 # Add the binary dir before including quickstart
 list(PREPEND CMAKE_PREFIX_PATH "${PROJECT_BINARY_DIR}")
 
-add_subdirectory(quickstart)
+# add_subdirectory(quickstart)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

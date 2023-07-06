@@ -130,7 +130,7 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
     }
 
     // Next check the static converters
-    if (mrc::edge::EdgeAdapterRegistry::has_egress_converter(target_type.full_type(), egress->get_type().full_type()))
+    if (mrc::edge::EdgeAdapterRegistry::has_egress_converter(egress->get_type().full_type(), target_type.full_type()))
     {
         try
         {

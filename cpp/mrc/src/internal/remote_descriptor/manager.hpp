@@ -97,9 +97,13 @@ class Manager final : private Service,
 
     void release_handle(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle) final;
 
-    mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object) final;
+    // mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object)
+    // final;
 
-    static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd);
+    mrc::runtime::LocalDescriptorHandle register_local_descriptor(
+        std::unique_ptr<mrc::runtime::LocalDescriptor> object) override;
+
+    // static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd);
 
   private:
     static std::uint32_t active_message_id();

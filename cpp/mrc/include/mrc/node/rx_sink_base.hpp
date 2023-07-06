@@ -129,6 +129,9 @@ void RxSinkBase<T>::progress_engine(rxcpp::subscriber<T>& s)
         this->watcher_prologue(WatchableEvent::channel_read, &data);
     }
 
+    // Release the edge connection before going out of scope
+    this->release_edge_connection();
+
     s.on_completed();
 }
 

@@ -18,20 +18,24 @@
 #pragma once
 
 #include "mrc/channel/buffered_channel.hpp"
+#include "mrc/core/utils.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/queue.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/runnable/runnable.hpp"
 #include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/ranges.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <atomic>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 #include <utility>
 
@@ -43,85 +47,113 @@ namespace mrc::runnable {
 struct IRunnableResources;
 }  // namespace mrc::runnable
 
+namespace mrc::runtime {
+class Descriptor;
+}
+
 namespace mrc::manifold {
 
-class Manifold : public Interface
+// class Manifold : public Interface
+// {
+//   public:
+//     Manifold(PortName port_name, runnable::IRunnableResources& resources);
+//     ~Manifold() override;
+
+//     const PortName& port_name() const final;
+
+//   protected:
+//     runnable::IRunnableResources& resources();
+
+//     const std::string& info() const;
+
+//   private:
+//     void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+//     void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+
+//     void update_policy(ManifoldPolicy policy) override {}
+
+//     virtual void do_add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+//     virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+
+//     PortName m_port_name;
+//     runnable::IRunnableResources& m_resources;
+//     std::string m_info;
+// };
+
+// class ManifoldNodeBase : public virtual edge::IWritableProviderBase,
+//                          public virtual edge::IMultiWritableAcceptorBase<SegmentAddress>,
+//                          public runnable::RunnableWithContext<runnable::Context>
+// {
+//   public:
+//     virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source);
+
+//     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink);
+
+//   protected:
+//     ManifoldPolicy& current_policy();
+//     const ManifoldPolicy& current_policy() const;
+
+//     virtual edge::IWritableAcceptorBase& get_output(SegmentAddress address) const = 0;
+//     virtual void drop_outputs()                                                   = 0;
+
+//   private:
+//     void run(runnable::Context& ctx) final;
+
+//     void update_policy(ManifoldPolicy policy);
+
+//     virtual void do_update_policy(const ManifoldPolicy& policy);
+
+//     virtual channel::Status process_one() = 0;
+
+//     bool m_is_running{true};
+//     channel::BufferedChannel<mrc::PackagedTask<void()>> m_updates;
+//     ManifoldPolicy m_current_policy;
+
+//     friend class ManifoldBase;
+// };
+
+// // Utility class to avoid tagger and untagger getting mixed up
+// class ManifoldTaggerBase : public ManifoldNodeBase
+// {
+//   public:
+//     void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) override;
+
+//   protected:
+//     SegmentAddress get_next_tag();
+
+//   private:
+//     void do_update_policy(const ManifoldPolicy& policy) override;
+
+//     std::atomic_size_t m_msg_counter{0};
+// };
+
+class ManifoldTaggerBase2 : public virtual edge::IWritableProviderBase,
+                            public virtual edge::IMultiWritableAcceptorBase<InstanceID>
 {
   public:
-    Manifold(PortName port_name, runnable::IRunnableResources& resources);
-    ~Manifold() override;
-
-    const PortName& port_name() const final;
-
   protected:
-    runnable::IRunnableResources& resources();
+    // Mutex used to protect the output from being updated while in use
+    std::shared_mutex m_output_mutex;
 
-    const std::string& info() const;
+    InstanceID get_next_tag()
+    {
+        return m_current_policy.get_next_tag();
+    }
 
   private:
-    void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
-    void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+    void update_policy(ManifoldPolicy&& policy);
 
-    void update_policy(ManifoldPolicy policy) override {}
+    virtual void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) = 0;
 
-    virtual void do_add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
-    virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
-
-    PortName m_port_name;
-    runnable::IRunnableResources& m_resources;
-    std::string m_info;
-};
-
-class ManifoldNodeBase : public virtual edge::IWritableProviderBase,
-                         public virtual edge::IMultiWritableAcceptorBase<SegmentAddress>,
-                         public runnable::RunnableWithContext<runnable::Context>
-{
-  public:
-    virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source);
-
-    virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink);
-
-  protected:
-    ManifoldPolicy& current_policy();
-    const ManifoldPolicy& current_policy() const;
-
-    virtual edge::IWritableAcceptorBase& get_output(SegmentAddress address) const = 0;
-    virtual void drop_outputs()                                                   = 0;
-
-  private:
-    void run(runnable::Context& ctx) final;
-
-    void update_policy(ManifoldPolicy policy);
-
-    virtual void do_update_policy(const ManifoldPolicy& policy);
-
-    virtual channel::Status process_one() = 0;
-
-    bool m_is_running{true};
-    channel::BufferedChannel<mrc::PackagedTask<void()>> m_updates;
+    std::atomic_size_t m_msg_counter{0};
     ManifoldPolicy m_current_policy;
 
     friend class ManifoldBase;
 };
 
-// Utility class to avoid tagger and untagger getting mixed up
-class ManifoldTaggerBase : public ManifoldNodeBase
-{
-  public:
-    void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) override;
-
-  protected:
-    SegmentAddress get_next_tag();
-
-  private:
-    void do_update_policy(const ManifoldPolicy& policy) override;
-
-    std::atomic_size_t m_msg_counter{0};
-};
-
-// Utility class to avoid tagger and untagger getting mixed up
-class ManifoldUnTaggerBase : public ManifoldNodeBase
-{};
+// // Utility class to avoid tagger and untagger getting mixed up
+// class ManifoldUnTaggerBase : public ManifoldNodeBase
+// {};
 
 // template <typename T>
 // class ManifoldTagger : public ManifoldTaggerBase,
@@ -179,13 +211,12 @@ class ManifoldUnTaggerBase : public ManifoldNodeBase
 //     }
 // };
 
-class ManifoldBase : public Interface, runnable::RunnableResourcesProvider
+class ManifoldBase : public Interface, public runnable::RunnableResourcesProvider
 {
   public:
     ManifoldBase(runnable::IRunnableResources& resources,
                  std::string port_name,
-                 std::unique_ptr<ManifoldTaggerBase> tagger,
-                 std::unique_ptr<ManifoldUnTaggerBase> untagger);
+                 std::unique_ptr<ManifoldTaggerBase2> tagger);
 
     const PortName& port_name() const override;
 
@@ -201,7 +232,9 @@ class ManifoldBase : public Interface, runnable::RunnableResourcesProvider
 
     void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
 
-    void update_policy(ManifoldPolicy policy) override;
+    edge::IWritableProviderBase& get_input_sink() const override;
+
+    void update_policy(ManifoldPolicy&& policy) override;
 
     void update_inputs() override;
     void update_outputs() override;
@@ -210,11 +243,7 @@ class ManifoldBase : public Interface, runnable::RunnableResourcesProvider
     // runnable::IRunnableResources& m_resources;
     std::string m_info;
 
-    std::unique_ptr<ManifoldTaggerBase> m_tagger_node;
-    std::unique_ptr<ManifoldUnTaggerBase> m_untagger_node;
-
-    std::unique_ptr<runnable::Runner> m_tagger_runner;
-    std::unique_ptr<runnable::Runner> m_untagger_runner;
+    std::unique_ptr<ManifoldTaggerBase2> m_router_node;
 };
 
 // template <typename T>

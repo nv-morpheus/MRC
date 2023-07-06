@@ -88,11 +88,9 @@ control_plane::Client& PartitionRuntime::control_plane() const
     return m_system_runtime.control_plane();
 }
 
-DataPlaneManager& PartitionRuntime::data_plane() const
+DataPlaneSystemManager& PartitionRuntime::data_plane() const
 {
-    CHECK(m_worker_manager) << "The partition must be started before using the data_plane()";
-
-    return m_worker_manager->data_plane();
+    return m_system_runtime.data_plane();
 }
 
 PipelinesManager& PartitionRuntime::pipelines_manager() const

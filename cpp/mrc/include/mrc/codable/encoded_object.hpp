@@ -31,8 +31,6 @@ class EncodedStorage
     explicit EncodedStorage(std::unique_ptr<mrc::codable::IDecodableStorage> encoding);
     virtual ~EncodedStorage() = default;
 
-    IDecodableStorage& encoding() const;
-
   private:
     std::unique_ptr<mrc::codable::IDecodableStorage> m_encoding;
 };

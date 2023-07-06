@@ -22,6 +22,7 @@
 #include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
+#include "mrc/node/queue.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -83,6 +84,10 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
 
     std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
     std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
+
+    std::map<InstanceID, std::shared_ptr<node::Queue<std::unique_ptr<runtime::Descriptor>>>> m_input_port_nodes;
+    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::Descriptor>>>>
+        m_output_port_nodes;
 
     std::map<SegmentAddress, bool> m_actual_input_segments;
     std::map<SegmentAddress, bool> m_actual_output_segments;

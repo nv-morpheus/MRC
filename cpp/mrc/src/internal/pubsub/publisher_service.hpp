@@ -21,6 +21,7 @@
 
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -33,7 +34,7 @@
 #include <unordered_map>
 
 namespace mrc::data_plane {
-struct RemoteDescriptorMessage;
+struct LocalDescriptorMessage;
 }  // namespace mrc::data_plane
 namespace mrc::runtime {
 class RemoteDescriptor;
@@ -108,8 +109,8 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // apply policy
-    virtual void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
-                              mrc::runtime::RemoteDescriptor&& rd) = 0;
+    virtual void apply_policy(rxcpp::subscriber<data_plane::LocalDescriptorMessage>& sub,
+                              runtime::LocalDescriptorHandle descriptor_handle) = 0;
 
     // called immediate on completion of update_tagged_instances
     virtual void on_update() = 0;

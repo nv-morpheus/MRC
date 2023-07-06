@@ -21,13 +21,14 @@
 #include "internal/resources/system_resources.hpp"
 #include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/runtime.hpp"
-#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/async_service.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/interface.hpp"
 #include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <stdexcept>
@@ -50,17 +51,29 @@ ManifoldInstance::~ManifoldInstance()
 void ManifoldInstance::register_local_output(SegmentAddress address,
                                              std::shared_ptr<segment::IngressPortBase> ingress_port)
 {
-    CHECK(!m_local_output.contains(address)) << "Local segment with address: " << address << ", already registered";
+    // CHECK(!m_local_output.contains(address)) << "Local segment with address: " << address << ", already registered";
 
-    m_local_output[address] = ingress_port;
+    // m_local_output[address] = ingress_port;
+
+    auto incoming_channel = this->runtime().data_plane().get_incoming_port_channel(address);
+
+    // Save the channel to keep it alive
+    m_input_port_nodes[address] = incoming_channel;
+
+    mrc::make_edge(*incoming_channel, ingress_port->get_upstream_sink());
 }
 
 void ManifoldInstance::register_local_input(SegmentAddress address,
                                             std::shared_ptr<segment::EgressPortBase> egress_port)
 {
-    CHECK(!m_local_input.contains(address)) << "Local segment with address: " << address << ", already registered";
+    // CHECK(!m_local_input.contains(address)) << "Local segment with address: " << address << ", already registered";
+    // egress_port.m_local_input[address] = egress_port;
 
-    m_local_input[address] = egress_port;
+    auto& outgoing_channel = m_interface->get_input_sink();
+
+    // Probably want to save the channel here
+
+    mrc::make_edge(egress_port->get_downstream_source(), outgoing_channel);
 }
 
 void ManifoldInstance::unregister_local_output(SegmentAddress address)
@@ -128,7 +141,11 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     }
 
     std::vector<manifold::ManifoldPolicyInputInfo> manifold_inputs;
-    std::vector<manifold::ManifoldPolicyOutputInfo> manifold_outputs;
+    std::map<SegmentAddress, manifold::ManifoldPolicyOutputInfo> manifold_outputs;
+
+    std::map<InstanceID, std::shared_ptr<node::Queue<std::unique_ptr<runtime::Descriptor>>>> input_port_nodes;
+    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::Descriptor>>>>
+        output_port_nodes;
 
     // First, loop over all requested inputs and hook these up so they are available
     for (const auto& [seg_id, is_local] : instance.requested_input_segments())
@@ -154,22 +171,30 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     {
         if (is_local)
         {
-            // Use nullptr if its local (because we never see the internal connection)
-            manifold_outputs.emplace_back(seg_id, true, 1, nullptr);
+            // Gets the same queue that the data plane uses to send data to the manifold
+            auto remote_edge = this->runtime().data_plane().get_incoming_port_channel(seg_id);
+
+            input_port_nodes[seg_id] = remote_edge;
+
+            manifold_outputs.emplace(seg_id, manifold::ManifoldPolicyOutputInfo(seg_id, true, 1, remote_edge.get()));
         }
         else
         {
-            auto remote_edge = this->runtime().data_plane().get_output_channel(seg_id);
-
-            manifold_outputs.emplace_back(seg_id, false, 1, remote_edge.get());
-
             // Get an edge from the data plane for this particular, remote segment
-            throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
+            auto remote_edge = this->runtime().data_plane().get_outgoing_port_channel(seg_id);
+
+            output_port_nodes[seg_id] = remote_edge;
+
+            manifold_outputs.emplace(seg_id, manifold::ManifoldPolicyOutputInfo(seg_id, false, 1, remote_edge.get()));
         }
     }
 
     // Update the policy on the manifold interface
     m_interface->update_policy(manifold::ManifoldPolicy(std::move(manifold_inputs), std::move(manifold_outputs)));
+
+    // Now persist the port nodes so they stay alive
+    m_input_port_nodes  = std::move(input_port_nodes);
+    m_output_port_nodes = std::move(output_port_nodes);
 
     // Set the message that we have updated the policy
 

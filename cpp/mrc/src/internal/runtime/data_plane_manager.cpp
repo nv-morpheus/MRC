@@ -26,7 +26,6 @@
 #include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
-#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
@@ -42,6 +41,7 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 
 namespace mrc::runtime {
 
@@ -55,10 +55,33 @@ DataPlaneSystemManager::~DataPlaneSystemManager()
     AsyncService::call_in_destructor();
 }
 
-std::shared_ptr<edge::IWritableProvider<codable::EncodedStorage>> DataPlaneSystemManager::get_output_channel(
-    SegmentAddress address)
+std::shared_ptr<node::Queue<std::unique_ptr<Descriptor>>> DataPlaneSystemManager::get_incoming_port_channel(
+    InstanceID port_address) const
 {
-    this->runnable().main()
+    std::unique_lock lock(m_port_mutex);
+
+    if (m_incoming_port_channels.contains(port_address))
+    {
+        // Now check that its alive otherwise we fall through
+        if (auto port = m_incoming_port_channels.at(port_address).lock())
+        {
+            return port;
+        }
+    }
+
+    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
+
+    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<Descriptor>>>();
+
+    mutable_this->m_incoming_port_channels[port_address] = port_channel;
+
+    return port_channel;
+}
+
+std::shared_ptr<edge::IWritableProvider<std::unique_ptr<Descriptor>>> DataPlaneSystemManager::get_outgoing_port_channel(
+    InstanceID port_address) const
+{
+    throw exceptions::MrcRuntimeError("Not implemented (get_outgoing_port_channel)");
 }
 
 void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
@@ -95,7 +118,7 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
 
 void DataPlaneSystemManager::process_state_update(const control_plane::state::ControlPlaneState& state)
 {
-    m_previous_state = state;
+    // m_previous_state = state;
 }
 
 DataPlaneManager::DataPlaneManager(IInternalRuntimeProvider& runtime, size_t partition_id) :

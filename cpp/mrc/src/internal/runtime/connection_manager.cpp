@@ -31,7 +31,6 @@
 #include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
-#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
@@ -79,9 +78,9 @@ bool ConnectionManager::on_created_requested(control_plane::state::Connection& i
 {
     if (needs_local_update)
     {
-        m_data_plane_manager = std::make_unique<DataPlaneManager>(*this);
+        // m_data_plane_manager = std::make_unique<DataPlaneManager>(*this);
 
-        this->child_service_start(*m_pipelines_manager, true);
+        // this->child_service_start(*m_data_plane_manager, true);
 
         // Create the pipeline manager
         m_pipelines_manager = std::make_unique<PipelinesManager>(*this);

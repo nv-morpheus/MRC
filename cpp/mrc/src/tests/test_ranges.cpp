@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/utils/ranges.hpp"
+#include "mrc/utils/ranges.hpp"
 
 #include <gtest/gtest.h>
 
