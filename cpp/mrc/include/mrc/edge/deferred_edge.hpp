@@ -30,7 +30,7 @@
 
 namespace mrc::edge {
 
-class DeferredWritableMultiEdgeBase : public IMultiWritableAcceptorBase<std::size_t>,
+class DeferredWritableMultiEdgeBase : public virtual IMultiWritableAcceptorBase<std::size_t>,
                                       public virtual IEdgeWritableBase,
                                       public virtual EdgeBase
 {

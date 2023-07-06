@@ -31,6 +31,9 @@ struct IRunnableResources
     virtual core::FiberTaskQueue& main() = 0;
     const core::FiberTaskQueue& main() const;
 
+    virtual core::FiberTaskQueue& network() = 0;
+    const core::FiberTaskQueue& network() const;
+
     virtual runnable::LaunchControl& launch_control() = 0;
 
     // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;

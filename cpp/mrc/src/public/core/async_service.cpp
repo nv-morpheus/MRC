@@ -63,7 +63,7 @@ const AsyncServiceState& AsyncService::state() const
     return m_state;
 }
 
-SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
+SharedFuture<void> AsyncService::service_start()
 {
     // Lock here since we do stuff after checking the state which should be synced
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
@@ -71,8 +71,8 @@ SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
     // This throws if we are already started
     this->forward_state(AsyncServiceState::Starting, true);
 
-    // Copy the stop_source state (either it was passed in or created)
-    m_stop_source = stop_source;
+    // // Copy the stop_source state (either it was passed in or created)
+    // m_stop_source = stop_source;
 
     // Save to a shared future so we can also check the return in join()
     m_completed_future = this->runnable().main().enqueue([this]() {
@@ -82,15 +82,15 @@ SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
                 << this->debug_prefix() << " Inconsistent state. Could not set to Completed";
         });
 
-        // Add a stop callback to notify the cv anytime a stop is requested
-        std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
-            std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+        // // Add a stop callback to notify the cv anytime a stop is requested
+        // std::stop_callback stop_callback(m_stop_source.get_token(), [this]() {
+        //     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-            // Ensure that our state is set to stopping
-            this->ensure_state(AsyncServiceState::Stopping);
+        //     // Ensure that our state is set to stopping
+        //     this->ensure_state(AsyncServiceState::Stopping);
 
-            m_cv.notify_all();
-        });
+        //     m_cv.notify_all();
+        // });
 
         try
         {
@@ -182,16 +182,17 @@ SharedFuture<void> AsyncService::service_start(std::stop_source stop_source)
 
 void AsyncService::service_await_live()
 {
-    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+    // std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-    // DVLOG(20) << this->debug_prefix() << " entering service_await_live(). State: " << m_state;
+    // // DVLOG(20) << this->debug_prefix() << " entering service_await_live(). State: " << m_state;
 
-    m_cv.wait(lock, [this]() {
-        // DVLOG(20) << this->debug_prefix() << " checking service_await_live(). State: " << m_state;
-        return m_state >= AsyncServiceState::Running || m_stop_source.stop_requested();
-    });
+    // // We use a CV here to release the lock while we wait for the state to be updated
+    // m_cv.wait(lock, [this]() {
+    //     // DVLOG(20) << this->debug_prefix() << " checking service_await_live(). State: " << m_state;
+    //     return m_state >= AsyncServiceState::Running;
+    // });
 
-    // DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
+    // // DVLOG(20) << this->debug_prefix() << " leaving service_await_live(). State: " << m_state;
 
     // Call get() on the live future to throw any error that occurred during startup
     m_live_promise.get_future().get();
@@ -204,6 +205,12 @@ void AsyncService::service_stop()
     // Ensures this only gets executed once
     if (this->forward_state(AsyncServiceState::Stopping))
     {
+        // Now, before signaling the stop source, make sure all children are stopped
+        for (auto& child : m_children)
+        {
+            child.get().service_stop();
+        }
+
         DCHECK(m_stop_source.stop_possible()) << this->debug_prefix() << " Invalid state. Cannot request a stop";
 
         m_stop_source.request_stop();
@@ -356,7 +363,7 @@ void AsyncService::child_service_start(AsyncService& child, bool await_live)
                                                                                                   "Running state";
 
         m_children.emplace_back(child);
-        child.service_start(m_stop_source);
+        child.service_start();
     }
 
     if (await_live)

@@ -29,7 +29,6 @@
 #include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
-#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
@@ -56,7 +55,7 @@ namespace mrc::pipeline {
 PipelineInstance::PipelineInstance(runtime::IInternalRuntimeProvider& runtime,
                                    std::shared_ptr<const PipelineDefinition> definition,
                                    InstanceID instance_id) :
-  ResourceManagerBase(runtime, instance_id, MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
+  SystemResourceManager(runtime, instance_id, MRC_CONCAT_STR("PipelineInstance[" << instance_id << "]")),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);
@@ -65,7 +64,7 @@ PipelineInstance::PipelineInstance(runtime::IInternalRuntimeProvider& runtime,
 
 PipelineInstance::~PipelineInstance()
 {
-    AsyncService::call_in_destructor();
+    SystemResourceManager::call_in_destructor();
 }
 
 ManifoldInstance& PipelineInstance::get_manifold_instance(const PortName& port_name) const

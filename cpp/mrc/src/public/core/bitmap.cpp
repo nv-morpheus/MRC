@@ -18,7 +18,8 @@
 #include "mrc/core/bitmap.hpp"
 
 #include "internal/utils/parse_ints.hpp"
-#include "internal/utils/ranges.hpp"
+
+#include "mrc/utils/ranges.hpp"
 
 #include <glog/logging.h>
 #include <hwloc/bitmap.h>
@@ -158,10 +159,12 @@ std::vector<std::uint32_t> Bitmap::vec() const
     hwloc_bitmap_foreach_end();
     return v;
 }
+
 std::string Bitmap::str() const
 {
     return print_ranges(find_ranges(vec()));
 }
+
 void Bitmap::for_each_bit(std::function<void(std::uint32_t, std::uint32_t)> lambda) const
 {
     const auto count = weight();

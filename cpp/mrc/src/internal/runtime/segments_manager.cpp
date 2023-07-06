@@ -22,10 +22,10 @@
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/ucx/worker.hpp"
-#include "internal/utils/ranges.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
@@ -39,128 +39,39 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <rxcpp/rx.hpp>
 
+#include <chrono>
 #include <memory>
 
 namespace mrc::runtime {
 
-SegmentsManager::SegmentsManager(PartitionRuntime& runtime, InstanceID worker_id) :
-  ResourceManagerBase(runtime, worker_id, MRC_CONCAT_STR("SegmentsManager[" << runtime.partition_id() << "]")),
-  m_partition_id(runtime.partition_id()),
-  m_worker_id(worker_id)
+SegmentsManager::SegmentsManager(runtime::IInternalPartitionRuntimeProvider& runtime, size_t partition_id) :
+  AsyncService(MRC_CONCAT_STR("SegmentsManager[" << partition_id << "]")),
+  InternalPartitionRuntimeProvider(runtime)
 {}
 
-SegmentsManager::~SegmentsManager() = default;
-
-control_plane::state::Worker SegmentsManager::filter_resource(const control_plane::state::ControlPlaneState& state) const
+SegmentsManager::~SegmentsManager()
 {
-    if (!state.workers().contains(this->id()))
-    {
-        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Could not find Worker with ID: " << this->id()));
-    }
-    return state.workers().at(this->id());
+    AsyncService::call_in_destructor();
 }
 
-// void SegmentsManager::do_service_start(std::stop_token stop_token)
-// {
-//     // First thing, need to register this worker with the control plane
-//     protos::RegisterWorkersRequest req;
-
-//     req.add_ucx_worker_addresses(m_runtime.resources().ucx()->worker().address());
-
-//     auto resp = m_runtime.control_plane().await_unary<protos::RegisterWorkersResponse>(
-//         protos::ClientUnaryRegisterWorkers,
-//         std::move(req));
-
-//     CHECK_EQ(resp->instance_ids_size(), 1);
-
-//     m_worker_id = resp->instance_ids(0);
-
-//     Promise<void> completed_promise;
-
-//     // Now, subscribe to the control plane state updates and filter only on updates to this instance ID
-//     m_runtime.control_plane()
-//         .state_update_obs()
-//         .tap([](const control_plane::state::ControlPlaneState& state) {
-//             VLOG(10) << "State Update: SegmentsManager";
-//         })
-//         .filter([this](const control_plane::state::ControlPlaneState& state) {
-//             return state.workers().contains(m_worker_id);
-//         })
-//         .map([this](control_plane::state::ControlPlaneState state) -> control_plane::state::Worker {
-//             return state.workers().at(m_worker_id);
-//         })
-//         .take_while([stop_token](control_plane::state::Worker& worker) {
-//             // Process events until the worker is indicated to be destroyed
-//             return worker.state().actual_status() < control_plane::state::ResourceActualStatus::Destroyed &&
-//                    !stop_token.stop_requested();
-//         })
-//         // .distinct_until_changed([](const control_plane::state::Worker& curr, const control_plane::state::Worker&
-//         // prev) {
-//         //     return curr == prev;
-//         // })
-//         .subscribe(
-//             [this](control_plane::state::Worker worker) {
-//                 // Handle updates to the worker
-//                 this->process_state_update(worker);
-//             },
-//             [this](std::exception_ptr ex_ptr) {
-//                 try
-//                 {
-//                     std::rethrow_exception(ex_ptr);
-//                 } catch (const std::exception& ex)
-//                 {
-//                     LOG(ERROR) << "Error in " << this->debug_prefix() << ex.what();
-//                 }
-//             },
-//             [&completed_promise] {
-//                 completed_promise.set_value();
-//             });
-
-//     // Yield until the observable is finished
-//     completed_promise.get_future().get();
-
-//     // Now that we are unsubscribed, drop the worker
-//     protos::TaggedInstance msg;
-//     msg.set_instance_id(m_worker_id);
-
-//     CHECK(m_runtime.control_plane().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
-// }
-
-// void SegmentsManager::do_service_stop() {}
-
-// void SegmentsManager::do_service_kill() {}
-
-// void SegmentsManager::do_service_await_live()
-// {
-//     m_live_promise.get_future().get();
-// }
-
-// void SegmentsManager::do_service_await_join()
-// {
-//     m_shutdown_future.get();
-// }
-
-bool SegmentsManager::on_created_requested(control_plane::state::Worker& instance, bool needs_local_update)
+void SegmentsManager::do_service_start(std::stop_token stop_token)
 {
-    return true;
+    Promise<void> completed_promise;
+
+    std::stop_callback stop_callback(stop_token, [&completed_promise]() {
+        completed_promise.set_value();
+    });
+
+    this->mark_started();
+
+    completed_promise.get_future().get();
 }
 
-void SegmentsManager::on_completed_requested(control_plane::state::Worker& instance)
-{
-    // // Activate our worker
-    // protos::RegisterWorkersResponse resp;
-    // resp.set_machine_id(0);
-    // resp.add_instance_ids(m_worker_id);
-
-    // // Need to activate our worker
-    // this->runtime().control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
-}
-
-void SegmentsManager::on_running_state_updated(control_plane::state::Worker& instance)
+void SegmentsManager::sync_state(const control_plane::state::Worker& worker)
 {
     // Check for assignments
     auto cur_segments = extract_keys(m_instances);
-    auto new_segments = extract_keys(instance.assigned_segments());
+    auto new_segments = extract_keys(worker.assigned_segments());
 
     // auto [create_segments, remove_segments] = compare_difference(cur_segments, new_segments);
 
@@ -188,7 +99,7 @@ void SegmentsManager::on_running_state_updated(control_plane::state::Worker& ins
         // auto partition_id = new_segments_map.at(address);
         // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
         //           << " on resource partition: " << partition_id;
-        this->create_segment(instance.assigned_segments().at(address));
+        this->create_segment(worker.assigned_segments().at(address));
     }
 
     // detach from manifold or stop old segments
@@ -197,11 +108,6 @@ void SegmentsManager::on_running_state_updated(control_plane::state::Worker& ins
         // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
         this->erase_segment(address);
     }
-}
-
-void SegmentsManager::on_stopped_requested(control_plane::state::Worker& instance)
-{
-    this->service_stop();
 }
 
 // void SegmentsManager::process_state_update(mrc::control_plane::state::Worker& instance)
@@ -337,6 +243,12 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
     DVLOG(10) << "Manager created SegmentInstance: " << instance_state.id() << "/" << instance_state.name();
 }
 
-void SegmentsManager::erase_segment(SegmentAddress address) {}
+void SegmentsManager::erase_segment(SegmentAddress address)
+{
+    CHECK(m_instances[address]->service_await_join(std::chrono::milliseconds(100)))
+        << "SegmentInstance[" << address << "] did not shut down quickly";
+
+    CHECK_EQ(m_instances.erase(address), 1) << "SegmentInstance[" << address << "] could not be removed";
+}
 
 }  // namespace mrc::runtime

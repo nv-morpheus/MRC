@@ -51,4 +51,32 @@ IInternalRuntime& InternalRuntimeProvider::runtime()
     return m_runtime;
 }
 
+const IInternalPartitionRuntime& IInternalPartitionRuntimeProvider::runtime() const
+{
+    // Return the other overload
+    return const_cast<IInternalPartitionRuntimeProvider*>(this)->runtime();
+}
+
+InternalPartitionRuntimeProvider InternalPartitionRuntimeProvider::create(IInternalPartitionRuntime& runtime)
+{
+    return {runtime};
+}
+
+InternalPartitionRuntimeProvider::InternalPartitionRuntimeProvider(const InternalPartitionRuntimeProvider& other) :
+  m_runtime(other.m_runtime)
+{}
+
+InternalPartitionRuntimeProvider::InternalPartitionRuntimeProvider(IInternalPartitionRuntimeProvider& other) :
+  m_runtime(other.runtime())
+{}
+
+InternalPartitionRuntimeProvider::InternalPartitionRuntimeProvider(IInternalPartitionRuntime& runtime) :
+  m_runtime(runtime)
+{}
+
+IInternalPartitionRuntime& InternalPartitionRuntimeProvider::runtime()
+{
+    return m_runtime;
+}
+
 }  // namespace mrc::runtime

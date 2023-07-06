@@ -27,10 +27,4 @@ EncodedStorage::EncodedStorage(std::unique_ptr<mrc::codable::IDecodableStorage> 
     CHECK(m_encoding);
 }
 
-IDecodableStorage& EncodedStorage::encoding() const
-{
-    CHECK(m_encoding);
-    return *m_encoding;
-}
-
 }  // namespace mrc::codable

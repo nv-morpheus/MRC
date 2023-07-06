@@ -17,14 +17,17 @@
 
 #pragma once
 
+#include "mrc/codable/fundamental_types.hpp"
+#include "mrc/edge/edge_connector.hpp"
 #include "mrc/manifold/factory.hpp"
 #include "mrc/node/port_registry.hpp"
-// #include "mrc/node/rx_source_base.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/type_utils.hpp"
 
+#include <memory>
 #include <type_traits>
 #include <typeinfo>
 
@@ -180,6 +183,37 @@ struct PortBuilderUtil
             port_util->manifold_builder_fn = create_manifold_builder<port_dtype_t>();
 
             node::PortRegistry::register_port_util(port_util);
+
+            // Register the necessary edge converters to convert to/from Descriptors
+
+            // T -> ResidentDescriptor<T>
+            edge::EdgeConnector<PortDataTypeT, std::unique_ptr<runtime::ResidentDescriptor<PortDataTypeT>>>::
+                register_converter([](PortDataTypeT&& data) {
+                    return std::make_unique<runtime::ResidentDescriptor<PortDataTypeT>>(std::move(data));
+                });
+
+            // T -> CodedDescriptor<T>
+            edge::EdgeConnector<PortDataTypeT, std::unique_ptr<runtime::CodedDescriptor<PortDataTypeT>>>::
+                register_converter([](PortDataTypeT&& data) {
+                    return std::make_unique<runtime::CodedDescriptor<PortDataTypeT>>(std::move(data));
+                });
+
+            // Descriptor -> T
+            edge::EdgeConnector<std::unique_ptr<runtime::Descriptor>, PortDataTypeT>::register_converter(
+                [](std::unique_ptr<runtime::Descriptor>&& descriptor) {
+                    // Move into a temp object so it goes out of scope
+                    auto temp_descriptor = std::move(descriptor);
+
+                    return temp_descriptor->await_decode<PortDataTypeT>();
+                });
+
+            // ResidentDescriptor<T> -> Descriptor
+            edge::EdgeConnector<std::unique_ptr<runtime::ResidentDescriptor<PortDataTypeT>>,
+                                std::unique_ptr<runtime::Descriptor>>::register_converter();
+
+            // CodedDescriptor<T> -> Descriptor
+            edge::EdgeConnector<std::unique_ptr<runtime::CodedDescriptor<PortDataTypeT>>,
+                                std::unique_ptr<runtime::Descriptor>>::register_converter();
         }
     }
 };

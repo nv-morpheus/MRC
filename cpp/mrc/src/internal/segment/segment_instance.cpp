@@ -56,11 +56,11 @@
 
 namespace mrc::segment {
 
-SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
+SegmentInstance::SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                                  std::shared_ptr<const SegmentDefinition> definition,
                                  SegmentAddress instance_id,
                                  uint64_t pipeline_instance_id) :
-  ResourceManagerBase(runtime, instance_id, MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
+  PartitionResourceManager(runtime, instance_id, MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
   m_definition(std::move(definition)),
   m_pipeline_instance_id(pipeline_instance_id),
   m_address(instance_id),
@@ -68,7 +68,10 @@ SegmentInstance::SegmentInstance(runtime::IInternalRuntimeProvider& runtime,
   m_info(::mrc::segment::info(instance_id))
 {}
 
-SegmentInstance::~SegmentInstance() = default;
+SegmentInstance::~SegmentInstance()
+{
+    PartitionResourceManager::call_in_destructor();
+}
 
 const std::string& SegmentInstance::name() const
 {
@@ -392,9 +395,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-            // pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
 
-            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
+            // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
             m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
             apply_callback(m_launchers[name], name);
@@ -411,9 +414,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-            // pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
 
-            node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
+            // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
             m_launchers[name] = node->prepare_launcher(this->runnable().launch_control());
             apply_callback(m_launchers[name], name);
