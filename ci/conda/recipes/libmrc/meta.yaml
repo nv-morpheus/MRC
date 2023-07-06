@@ -29,7 +29,7 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   script_env:
-    - CMAKE_CUDA_ARCHITECTURES=ALL
+    - CMAKE_CUDA_ARCHITECTURES=RAPIDS
     - MRC_CACHE_DIR
     - PARALLEL_LEVEL
   include_recipe: False
@@ -43,7 +43,7 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake >=3.24
-    - cuda-cudart-dev # Needed by CMake to compile a test application
+    - nvidia/label/cuda-11.8.0::cuda-cudart-dev # Needed by CMake to compile a test application
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -52,7 +52,7 @@ requirements:
   host:
     # Libraries necessary to build. Keep sorted!
     - boost-cpp
-    - cuda-cudart-dev
+    - nvidia/label/cuda-11.8.0::cuda-cudart-dev
     - cuda-nvml-dev
     - doxygen 1.9.2.*
     - flatbuffers 2.0.*
@@ -95,7 +95,7 @@ outputs:
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
-        - cuda-cudart # Needed to allow pin_compatible to work
+        - nvidia/label/cuda-11.8.0::cuda-cudart # Needed to allow pin_compatible to work
         - glog
         - grpc-cpp
         - libabseil # Needed for transitive run_exports from grpc-cpp. Does not need a version
