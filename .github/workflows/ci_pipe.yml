@@ -19,10 +19,16 @@ run-name: CI Pipeline
 on:
   workflow_call:
     inputs:
+      pr_info:
+        required: true
+        type: string
       run_check:
         required: true
         type: boolean
       run_package_conda:
+        required: true
+        type: boolean
+      upload_conda_package:
         required: true
         type: boolean
       container:
@@ -38,6 +44,11 @@ on:
         required: true
       NGC_API_KEY:
         required: true
+
+# We only support ubuntu, so bash is the default
+defaults:
+  run:
+    shell: bash
 
 env:
   CHANGE_TARGET: "${{ github.base_ref }}"
@@ -313,4 +324,5 @@ jobs:
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-        run: ./mrc/ci/scripts/github/conda.sh
+          SCRIPT_ARGS: "${{ inputs.upload_conda_package && 'upload' || '' }}"
+        run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS
