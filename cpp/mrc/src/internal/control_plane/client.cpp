@@ -35,9 +35,7 @@
 #include "mrc/runnable/runner.hpp"
 
 #include <google/protobuf/any.pb.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/security/credentials.h>
 #include <rxcpp/rx.hpp>
 
 #include <ostream>

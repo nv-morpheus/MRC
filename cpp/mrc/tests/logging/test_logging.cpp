@@ -21,6 +21,8 @@
 
 #include <glog/logging.h>
 
+#include <string>
+
 namespace mrc {
 
 TEST_CLASS(Logging);

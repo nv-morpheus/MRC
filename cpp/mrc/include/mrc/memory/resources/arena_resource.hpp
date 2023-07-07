@@ -23,8 +23,8 @@
 #include <cuda_runtime_api.h>
 #include <glog/logging.h>
 #include <rmm/detail/error.hpp>
+#include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
-#include <spdlog/common.h>
 
 #include <cstddef>
 #include <map>
@@ -107,12 +107,7 @@ class arena_resource final : public adaptor<Upstream>
       adaptor<Upstream>(std::move(upstream_mr)),
       global_arena_(std::make_shared<global_arena>(&this->resource(), initial_size, maximum_size)),
       dump_log_on_failure_(dump_log_on_failure)
-    {
-        if (dump_log_on_failure_)
-        {
-            logger_ = spdlog::basic_logger_mt("arena_memory_dump", "rmm_arena_memory_dump.log");
-        }
-    }
+    {}
 
     ~arena_resource() override = default;
 
@@ -316,8 +311,6 @@ class arena_resource final : public adaptor<Upstream>
     // std::map<cudaStream_t, arena> stream_arenas_;
     /// If true, dump memory information to log on allocation failure.
     bool dump_log_on_failure_;  // NOLINT
-    /// The logger for memory dump.
-    std::shared_ptr<spdlog::logger> logger_{};  // NOLINT
     /// Mutex for read and write locks.
     mutable std::shared_timed_mutex mtx_;  // NOLINT
 };

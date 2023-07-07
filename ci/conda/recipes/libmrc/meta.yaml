@@ -29,7 +29,7 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   script_env:
-    - CMAKE_CUDA_ARCHITECTURES=ALL
+    - CMAKE_CUDA_ARCHITECTURES=RAPIDS
     - MRC_CACHE_DIR
     - PARALLEL_LEVEL
   include_recipe: False
@@ -58,9 +58,9 @@ requirements:
     - flatbuffers 2.0.*
     - gflags
     - glog
-    - gmock 1.10.*
+    - gmock 1.13.*
     - grpc-cpp
-    - gtest 1.10.*
+    - gtest 1.13.*
     - libabseil
     - libhwloc 2.5.*
     - libprotobuf
@@ -70,7 +70,6 @@ requirements:
     - pybind11-stubgen 0.10.5
     - python {{ python }}
     - scikit-build >=0.17
-    - spdlog 1.8.5
     - ucx
     # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
     - cudatoolkit {{ cuda_version }}.*

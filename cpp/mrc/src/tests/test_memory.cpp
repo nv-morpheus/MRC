@@ -34,7 +34,6 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <array>
 #include <atomic>
