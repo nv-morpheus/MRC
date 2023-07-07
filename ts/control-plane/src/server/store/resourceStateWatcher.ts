@@ -128,6 +128,10 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
                         }
                         break;
                      case ResourceActualStatus.Actual_Stopping:
+                        // Perform any processing
+                        await this._onStopped(instance, listenerApi);
+
+                        break;
                      case ResourceActualStatus.Actual_Stopped:
                         if (
                            resourceRequestedStatusToNumber(instance.state.requestedStatus) <

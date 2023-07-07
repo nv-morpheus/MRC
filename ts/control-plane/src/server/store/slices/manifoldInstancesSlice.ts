@@ -148,21 +148,7 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error("Segment not attached to manifold");
          }
 
-         const isLocal = requestedMap[action.payload.segment.address];
          delete requestedMap[action.payload.segment.address];
-
-         if (isLocal) {
-            // If we have 0 local inputs, then all of the remote outputs can be detached
-            // If we have 0 local outputs, then all of our remote inputs can be detached
-            const numRequestedLocal: number = getNumLocal(requestedMap);
-            if (numRequestedLocal === 0) {
-               const requestedInvMap: { [key: number]: boolean } = action.payload.is_input ? found.requestedOutputSegments : found.requestedInputSegments;
-               const requestedInvRemotes: [string, boolean][] = filterMappingByLocality(requestedInvMap, false);
-               requestedInvRemotes.forEach(([segmentAddress, _]) => {delete requestedInvMap[parseInt(segmentAddress)];});
-               console.log("breakpoint");
-            }
-         }
-
       },
 
       attachActualSegment: (
@@ -288,13 +274,13 @@ function syncSegmentNameForManifold(
       }
 
       // Figure out if this is local
-      const is_local = manifold.pipelineInstanceId === seg.pipelineInstanceId;
+      const isLocal = manifold.pipelineInstanceId === seg.pipelineInstanceId;
 
       // Dispatch the attach action
       dispatch(
          manifoldInstancesSlice.actions.attachRequestedSegment({
             is_input: isInput,
-            is_local: is_local,
+            is_local: isLocal,
             manifold: manifold,
             segment: seg,
          })
@@ -318,6 +304,29 @@ function syncSegmentNameForManifold(
          segment: seg,
       }));
    });
+}
+
+function ensureOneLocal(dispatch: AppDispatch, state: RootState, manifold: IManifoldInstance, isInput: boolean) {
+   // If we have 0 local inputs, then all of the remote outputs can be detached
+   // If we have 0 local outputs, then all of our remote inputs can be detached
+   const requestedMap = isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments;
+   if (getNumLocal(requestedMap) === 0) {
+      const requestedInvMap = isInput ? manifold.requestedOutputSegments : manifold.requestedInputSegments;
+      const requestedInvRemotes: [string, boolean][] = filterMappingByLocality(requestedInvMap, false);
+      
+      requestedInvRemotes.forEach(([segId, _]) => {
+         const seg = segmentInstancesSelectById(state, segId);
+         if (!seg) {
+            throw new Error(`Could not find segment with ID: ${segId}`);
+         }
+   
+         dispatch(manifoldInstancesSlice.actions.detachRequestedSegment({
+            is_input: !isInput,
+            manifold: manifold,
+            segment: seg,
+         }));
+      });
+   }
 }
 
 export function manifoldInstancesSyncSegments(manifoldId: string) {
@@ -345,15 +354,19 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
 
       const manifold_def = pipeline_def.manifolds[found.portName];
 
-      // For each ingress, sync all segments
+      // For each egress, sync all segments
       Object.entries(manifold_def.outputSegmentIds).forEach(([segmentName]) => {
          syncSegmentNameForManifold(dispatch, state, found, segmentName, false);
       });
 
-      // For each egress, sync all segments
+      // For each ingress, sync all segments
       Object.entries(manifold_def.inputSegmentIds).forEach(([segmentName]) => {
          syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
       });
+
+      // Ensure that we have at least one local input and one local output
+      ensureOneLocal(dispatch, state, found, false);
+      ensureOneLocal(dispatch, state, found, true);
    };
 }
 
