@@ -53,6 +53,9 @@ export CMAKE_C_COMPILER_LAUNCHER="ccache"
 export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 export CMAKE_CUDA_COMPILER_LAUNCHER="ccache"
 
+# Avoid confirmation messages during the conda build
+export CONDA_ALWAYS_YES=true
+
 # Holds the arguments in an array to allow for complex json objects
 CONDA_ARGS_ARRAY=()
 

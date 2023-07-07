@@ -18,10 +18,10 @@
 #pragma once
 
 #include <cuda_runtime_api.h>
+#include <glog/logging.h>
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
-#include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
 
 #include <algorithm>
@@ -122,7 +122,7 @@ class block
      */
     [[nodiscard]] std::pair<block, block> split(std::size_t size) const
     {
-        RMM_LOGGING_ASSERT(size_ >= size);
+        DCHECK(size_ >= size);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         if (size_ > size)
         {
@@ -141,7 +141,7 @@ class block
      */
     [[nodiscard]] block merge(block const& blk) const
     {
-        RMM_LOGGING_ASSERT(is_contiguous_before(blk));
+        DCHECK(is_contiguous_before(blk));
         return {pointer_, size_ + blk.size_};
     }
 

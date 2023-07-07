@@ -23,7 +23,6 @@
 #include <cuda_runtime_api.h>
 #include <glog/logging.h>
 #include <rmm/detail/error.hpp>
-#include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
 
 #include <cstddef>
@@ -242,7 +241,7 @@ class arena_resource final : public adaptor<Upstream>
      * @return arena& The arena associated with the given stream.
     arena& get_stream_arena(cuda_stream_view stream)
     {
-        RMM_LOGGING_ASSERT(!use_per_thread_arena(stream));
+        DCHECK(!use_per_thread_arena(stream));
         {
             read_lock lock(mtx_);
             auto const iter = stream_arenas_.find(stream.value());
