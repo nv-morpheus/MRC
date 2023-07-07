@@ -19,9 +19,6 @@ run-name: CI Pipeline
 on:
   workflow_call:
     inputs:
-      pr_info:
-        required: true
-        type: string
       run_check:
         required: true
         type: boolean
@@ -35,6 +32,9 @@ on:
         required: true
         type: string
       test_container:
+        required: true
+        type: string
+      pr_info:
         required: true
         type: string
     secrets:
@@ -74,41 +74,6 @@ permissions:
   statuses: none
 
 jobs:
-  debug_package:
-    name: Debug Package
-    if: ${{ inputs.run_package_conda }}
-    runs-on: linux-amd64-cpu16
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-          fetch-depth: 0
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: conda
-        shell: bash
-        env:
-          CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-          SCRIPT_ARGS: ${{ inputs.upload_conda_package && 'test' || 'fail' }}
-        run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS
-
   check:
     if: ${{ inputs.run_check }}
     name: Check
@@ -359,5 +324,5 @@ jobs:
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-          SCRIPT_ARGS: "${{ inputs.upload_conda_package && 'test' || '' }}"
+          SCRIPT_ARGS: "${{ inputs.upload_conda_package && 'upload' || '' }}"
         run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS
