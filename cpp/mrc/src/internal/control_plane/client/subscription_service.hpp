@@ -36,7 +36,7 @@ namespace mrc::runnable {
 struct LaunchOptions;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 class Instance;
 class RoleUpdater;
@@ -162,4 +162,4 @@ class RoleUpdater final
     friend Instance;
 };
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

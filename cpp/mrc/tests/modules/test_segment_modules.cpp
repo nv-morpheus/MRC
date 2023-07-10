@@ -17,8 +17,6 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
 #include "mrc/modules/segment_modules.hpp"
@@ -26,6 +24,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
@@ -68,7 +67,7 @@ TEST_F(TestSegmentModules, ModuleInitializationTest)
 {
     using namespace modules;
 
-    auto init_wrapper = [](segment::Builder& builder) {
+    auto init_wrapper = [](segment::IBuilder& builder) {
         auto config_1            = nlohmann::json();
         auto config_2            = nlohmann::json();
         config_2["config_key_1"] = true;
@@ -130,7 +129,7 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
     unsigned int packets_2{0};
     unsigned int packets_3{0};
 
-    auto init_wrapper = [&packets_1, &packets_2, &packets_3](segment::Builder& builder) {
+    auto init_wrapper = [&packets_1, &packets_2, &packets_3](segment::IBuilder& builder) {
         auto simple_mod       = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
         auto configurable_mod = builder.make_module<ConfigurableModule>("ModuleEndToEndTest_mod2");
 
@@ -224,7 +223,7 @@ TEST_F(TestSegmentModules, ModuleAsSourceTest)
 
     unsigned int packet_count{0};
 
-    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count](segment::IBuilder& builder) {
         auto config = nlohmann::json();
         unsigned int source_count{42};
         config["source_count"] = source_count;
@@ -259,7 +258,7 @@ TEST_F(TestSegmentModules, ModuleAsSinkTest)
 
     unsigned int packet_count{0};
 
-    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count](segment::IBuilder& builder) {
         auto source = builder.make_source<bool>("source", [&packet_count](rxcpp::subscriber<bool>& sub) {
             if (sub.is_subscribed())
             {
@@ -297,7 +296,7 @@ TEST_F(TestSegmentModules, ModuleChainingTest)
     using namespace modules;
 
     auto sink_mod     = std::make_shared<SinkModule>("ModuleChainingTest_mod2");
-    auto init_wrapper = [&sink_mod](segment::Builder& builder) {
+    auto init_wrapper = [&sink_mod](segment::IBuilder& builder) {
         auto config = nlohmann::json();
         unsigned int source_count{42};
         config["source_count"] = source_count;
@@ -328,7 +327,7 @@ TEST_F(TestSegmentModules, ModuleNestingTest)
 
     unsigned int packet_count{0};
 
-    auto init_wrapper = [&packet_count](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count](segment::IBuilder& builder) {
         auto nested_mod = builder.make_module<NestedModule>("ModuleNestingTest_mod1");
 
         auto nested_sink = builder.make_sink<std::string>("nested_sink", [&packet_count](std::string input) {
@@ -360,7 +359,7 @@ TEST_F(TestSegmentModules, ModuleTemplateTest)
     unsigned int packet_count_1{0};
     unsigned int packet_count_2{0};
 
-    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::IBuilder& builder) {
         using data_type_1_t = int;
         using data_type_2_t = std::string;
 
@@ -426,7 +425,7 @@ TEST_F(TestSegmentModules, ModuleTemplateWithInitTest)
     unsigned int packet_count_1{0};
     unsigned int packet_count_2{0};
 
-    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::Builder& builder) {
+    auto init_wrapper = [&packet_count_1, &packet_count_2](segment::IBuilder& builder) {
         using data_type_1_t = int;
         using data_type_2_t = std::string;
 

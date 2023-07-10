@@ -147,7 +147,7 @@ const std::string& SegmentModule::name() const
     return m_module_instance_name;
 }
 
-void SegmentModule::operator()(segment::Builder& builder)
+void SegmentModule::operator()(segment::IBuilder& builder)
 {
     this->initialize(builder);
 }

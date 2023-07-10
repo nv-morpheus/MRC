@@ -69,7 +69,7 @@ pybind11::cpp_function ModuleRegistryProxy::get_module_constructor(const std::st
 
 void ModuleRegistryProxy::register_module(std::string name,
                                           const registry_version_t& release_version,
-                                          std::function<void(mrc::segment::Builder&)> fn_py_initializer)
+                                          std::function<void(mrc::segment::IBuilder&)> fn_py_initializer)
 {
     register_module(name, "default", release_version, fn_py_initializer);
 }
@@ -77,7 +77,7 @@ void ModuleRegistryProxy::register_module(std::string name,
 void ModuleRegistryProxy::register_module(std::string name,
                                           std::string registry_namespace,
                                           const registry_version_t& release_version,
-                                          std::function<void(mrc::segment::Builder&)> fn_py_initializer)
+                                          std::function<void(mrc::segment::IBuilder&)> fn_py_initializer)
 {
     VLOG(2) << "Registering python module: " << registry_namespace << "::" << name;
     auto fn_constructor = [fn_py_initializer](std::string name, nlohmann::json config) {

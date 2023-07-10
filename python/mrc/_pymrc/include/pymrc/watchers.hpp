@@ -27,7 +27,7 @@
 #include <string>
 
 namespace mrc::segment {
-class Builder;
+class IBuilder;
 struct ObjectProperties;
 }  // namespace mrc::segment
 
@@ -54,19 +54,19 @@ class LatencyWatcher : public latency_watcher_t
     LatencyWatcher(std::shared_ptr<pymrc::Executor> executor, std::function<void(latency_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
-                      const std::function<void(mrc::segment::Builder&, LatencyWatcher&)>& init);
+                      const std::function<void(mrc::segment::IBuilder&, LatencyWatcher&)>& init);
 
-    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::IBuilder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
-        mrc::segment::Builder& seg,
+        mrc::segment::IBuilder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg,
+        mrc::segment::IBuilder& seg,
         const std::string& name,
         std::function<void(pybind11::object py_obj)> sink_f);
 
@@ -85,19 +85,19 @@ class ThroughputWatcher : public throughput_watcher_t
                       std::function<void(throughput_ensemble_t&)> payload_init);
 
     void make_segment(const std::string& name,
-                      const std::function<void(mrc::segment::Builder&, ThroughputWatcher&)>& init);
+                      const std::function<void(mrc::segment::IBuilder&, ThroughputWatcher&)>& init);
 
-    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::Builder& seg,
+    std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_source(mrc::segment::IBuilder& seg,
                                                                        const std::string& name,
                                                                        bool force_sequential = false);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_traced_node(
-        mrc::segment::Builder& seg,
+        mrc::segment::IBuilder& seg,
         const std::string& name,
         std::function<pybind11::object(pybind11::object py_obj)> map_f);
 
     std::shared_ptr<mrc::segment::ObjectProperties> make_tracer_sink(
-        mrc::segment::Builder& seg,
+        mrc::segment::IBuilder& seg,
         const std::string& name,
         std::function<void(pybind11::object py_obj)> sink_f);
 

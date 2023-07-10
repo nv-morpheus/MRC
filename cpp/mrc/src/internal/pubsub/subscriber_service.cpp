@@ -17,13 +17,13 @@
 
 #include "internal/pubsub/subscriber_service.hpp"
 
-#include "internal/data_plane/resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
@@ -43,7 +43,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 SubscriberService::SubscriberService(std::string service_name, runtime::Partition& runtime) :
   Base(std::move(service_name), runtime)
@@ -111,4 +111,4 @@ void SubscriberService::update_tagged_instances(const std::string& role,
 {
     LOG(FATAL) << "subscribers should not receive updates";
 }
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

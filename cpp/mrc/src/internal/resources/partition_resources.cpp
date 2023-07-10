@@ -17,13 +17,13 @@
 
 #include "internal/resources/partition_resources.hpp"
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
-PartitionResources::PartitionResources(runnable::Resources& runnable_resources,
+PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,
                                        std::size_t partition_id,
                                        memory::HostResources& host,
                                        std::optional<memory::DeviceResources>& device,
-                                       std::optional<network::Resources>& network) :
+                                       std::optional<network::NetworkResources>& network) :
   PartitionResourceBase(runnable_resources, partition_id),
   m_host(host),
   m_device(device),
@@ -40,8 +40,8 @@ std::optional<memory::DeviceResources>& PartitionResources::device()
     return m_device;
 }
 
-std::optional<network::Resources>& PartitionResources::network()
+std::optional<network::NetworkResources>& PartitionResources::network()
 {
     return m_network;
 }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

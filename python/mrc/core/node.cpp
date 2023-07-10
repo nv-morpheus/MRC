@@ -52,7 +52,7 @@ PYBIND11_MODULE(node, py_mod)
     py::class_<mrc::segment::Object<node::BroadcastTypeless>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(py_mod, "Broadcast")
-        .def(py::init<>([](mrc::segment::Builder& builder, std::string name) {
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name) {
             auto node = builder.construct_object<node::BroadcastTypeless>(name);
 
             return node;

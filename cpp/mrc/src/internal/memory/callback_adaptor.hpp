@@ -20,8 +20,9 @@
 #include "mrc/memory/adaptors.hpp"
 
 #include <atomic>
+#include <functional>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 template <typename UpstreamT>
 class CallbackAdaptor;
@@ -108,4 +109,4 @@ class CallbackAdaptor final : public mrc::memory::adaptor<UpstreamT>
     std::vector<deallocate_callback_t> m_deallocate_callbacks;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

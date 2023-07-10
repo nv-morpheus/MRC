@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <optional>
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 const mrc::codable::protos::EncodedObject& StorageView::proto() const
 {
@@ -62,4 +62,4 @@ std::optional<StorageView::obj_idx_t> StorageView::parent_obj_idx_for_object(con
     return parent_object_idx;
 }
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

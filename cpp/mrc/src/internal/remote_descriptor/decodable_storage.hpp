@@ -25,11 +25,11 @@
 #include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/utils/macros.hpp"
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 class DecodableStorage final : public codable::DecodableStorageView,
                                public codable::StorageView,
@@ -54,4 +54,4 @@ class DecodableStorage final : public codable::DecodableStorageView,
     resources::PartitionResources& m_resources;
 };
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

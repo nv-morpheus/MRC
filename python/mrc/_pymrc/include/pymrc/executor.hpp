@@ -24,9 +24,12 @@
 #include <memory>
 
 namespace mrc {
-class Executor;
 class Options;
 }  // namespace mrc
+
+namespace mrc::pipeline {
+class IExecutor;
+}
 
 namespace mrc::pymrc {
 class Pipeline;
@@ -66,12 +69,12 @@ class Executor
     void join();
     std::shared_ptr<Awaitable> join_async();
 
-    std::shared_ptr<mrc::Executor> get_executor() const;
+    std::shared_ptr<pipeline::IExecutor> get_executor() const;
 
   private:
     SharedFuture<void> m_join_future;
 
-    std::shared_ptr<mrc::Executor> m_exec;
+    std::shared_ptr<pipeline::IExecutor> m_exec;
 };
 
 class PyBoostFuture

@@ -20,7 +20,7 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/subscription_service.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
@@ -42,7 +42,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 Instance::Instance(Client& client,
                    InstanceID instance_id,
@@ -220,4 +220,4 @@ Client& Instance::client()
 //     }
 // }
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

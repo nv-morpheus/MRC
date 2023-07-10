@@ -27,7 +27,7 @@
 #include <queue>
 #include <utility>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 template <typename BlockTypeT>
 class BlockManager final
@@ -133,4 +133,4 @@ class BlockManager final
     std::map<std::uintptr_t, block_type> m_block_map;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

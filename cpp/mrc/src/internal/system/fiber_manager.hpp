@@ -34,14 +34,14 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-class Resources;
+class ThreadingResources;
 
 class FiberManager final
 {
   public:
-    FiberManager(const Resources& resources);
+    FiberManager(const ThreadingResources& resources);
     ~FiberManager();
 
     DELETE_COPYABILITY(FiberManager);
@@ -111,4 +111,4 @@ class FiberManager final
     std::map<std::uint32_t, std::unique_ptr<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -32,7 +32,7 @@ namespace mrc::memory {
 struct memory_resource;
 }  // namespace mrc::memory
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 /**
  * @brief A short-lived buffer based on a portion of a data::SharedResable<memory::buffer>
@@ -205,4 +205,4 @@ class TransientPool
     mrc::data::SharedReusable<mrc::memory::buffer> m_buffer;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

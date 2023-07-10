@@ -26,7 +26,7 @@
 
 namespace mrc::runnable {
 class Context;
-class Engines;
+class IEngines;
 class Runner;
 
 /**
@@ -37,7 +37,7 @@ class Launcher final
   public:
     Launcher(std::unique_ptr<Runner> runner,
              std::vector<std::shared_ptr<Context>>&& contexts,
-             std::shared_ptr<Engines> engines);
+             std::shared_ptr<IEngines> engines);
 
     ~Launcher();
 
@@ -61,7 +61,7 @@ class Launcher final
   private:
     std::unique_ptr<Runner> m_runner;
     std::vector<std::shared_ptr<Context>> m_contexts;
-    std::shared_ptr<Engines> m_engines;
+    std::shared_ptr<IEngines> m_engines;
     std::mutex m_mutex;
 };
 

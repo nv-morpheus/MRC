@@ -20,7 +20,7 @@
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
@@ -49,7 +49,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 template <typename T>
 static Expected<T> unpack_request(Server::event_t& event)
@@ -86,7 +86,7 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
     return {};
 }
 
-Server::Server(runnable::Resources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
 
 Server::~Server() = default;
 
@@ -681,4 +681,4 @@ Expected<decltype(Server::m_subscription_services)::const_iterator> Server::get_
     return search;
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

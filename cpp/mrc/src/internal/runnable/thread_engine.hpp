@@ -18,7 +18,7 @@
 #pragma once
 
 #include "internal/runnable/engine.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/types.hpp"
@@ -28,19 +28,19 @@
 #include <optional>
 #include <thread>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class Thread;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 namespace mrc::runnable {
 enum class EngineType;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class ThreadEngine final : public Engine
 {
   public:
-    explicit ThreadEngine(CpuSet cpu_set, const system::Resources& system);
+    explicit ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& system);
     ~ThreadEngine() final;
 
     EngineType engine_type() const final;
@@ -52,8 +52,8 @@ class ThreadEngine final : public Engine
     Future<void> do_launch_task(std::function<void()> task) final;
 
     CpuSet m_cpu_set;
-    const system::Resources& m_system;
+    const system::ThreadingResources& m_system;
     std::unique_ptr<system::Thread> m_thread;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

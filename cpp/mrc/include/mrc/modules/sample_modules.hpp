@@ -45,7 +45,7 @@ class SimpleModule : public SegmentModule
     bool m_was_configured{false};
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 
   private:
@@ -68,7 +68,7 @@ class ConfigurableModule : public SegmentModule
     bool m_was_configured{false};
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 
   private:
@@ -89,7 +89,7 @@ class SourceModule : public SegmentModule
     SourceModule(std::string module_name, nlohmann::json config);
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -108,7 +108,7 @@ class SinkModule : public SegmentModule
     unsigned int m_packet_count{0};
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -129,7 +129,7 @@ class NestedModule : public SegmentModule
     NestedModule(std::string module_name, nlohmann::json config);
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -147,7 +147,7 @@ class TemplateModule : public SegmentModule
     TemplateModule(std::string module_name);
     TemplateModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -161,7 +161,7 @@ TemplateModule<OutputTypeT>::TemplateModule(std::string module_name, nlohmann::j
 {}
 
 template <typename OutputTypeT>
-void TemplateModule<OutputTypeT>::initialize(segment::Builder& builder)
+void TemplateModule<OutputTypeT>::initialize(segment::IBuilder& builder)
 {
     unsigned int count{1};
 
@@ -208,7 +208,7 @@ class TemplateWithInitModule : public SegmentModule
     TemplateWithInitModule(std::string module_name);
     TemplateWithInitModule(std::string module_name, nlohmann::json config);
 
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -224,7 +224,7 @@ TemplateWithInitModule<OutputTypeT, Initializer>::TemplateWithInitModule(std::st
 {}
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>
-void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::Builder& builder)
+void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::IBuilder& builder)
 {
     unsigned int count{1};
 

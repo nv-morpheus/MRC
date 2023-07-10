@@ -28,7 +28,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 FiberPool::FiberPool(CpuSet cpu_set, std::vector<std::reference_wrapper<FiberTaskQueue>>&& queues) :
   m_cpu_set(std::move(cpu_set)),
@@ -53,4 +53,4 @@ core::FiberTaskQueue& FiberPool::task_queue(const std::size_t& index)
     return m_queues.at(index);
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

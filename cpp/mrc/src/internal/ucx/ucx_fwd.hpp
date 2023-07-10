@@ -17,10 +17,10 @@
 
 #pragma once
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 class Context;
 class Worker;
 class Endpoint;
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

@@ -34,7 +34,6 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <array>
 #include <atomic>
@@ -60,12 +59,12 @@ class TestMemory : public ::testing::Test
 
 TEST_F(TestMemory, UcxRegisterePinnedMemoryArena)
 {
-    auto context  = std::make_shared<internal::ucx::Context>();
-    auto regcache = std::make_shared<internal::ucx::RegistrationCache>(context);
+    auto context  = std::make_shared<ucx::Context>();
+    auto regcache = std::make_shared<ucx::RegistrationCache>(context);
 
     auto pinned    = std::make_unique<pinned_memory_resource>();
     auto logger    = memory::make_unique_resource<logging_resource>(std::move(pinned), "pinned_resource");
-    auto ucx       = memory::make_shared_resource<internal::ucx::RegistrationResource>(std::move(logger), regcache, 0);
+    auto ucx       = memory::make_shared_resource<ucx::RegistrationResource>(std::move(logger), regcache, 0);
     auto arena     = memory::make_shared_resource<arena_resource>(ucx, 64_MiB);
     auto arena_log = memory::make_shared_resource<logging_resource>(arena, "arena_resource");
 
@@ -91,12 +90,12 @@ TEST_F(TestMemory, UcxRegisterePinnedMemoryArena)
 
 TEST_F(TestMemory, UcxRegisteredCudaMemoryArena)
 {
-    auto context  = std::make_shared<internal::ucx::Context>();
-    auto regcache = std::make_shared<internal::ucx::RegistrationCache>(context);
+    auto context  = std::make_shared<ucx::Context>();
+    auto regcache = std::make_shared<ucx::RegistrationCache>(context);
 
     auto cuda      = std::make_unique<cuda_malloc_resource>(0);
     auto logger    = memory::make_unique_resource<logging_resource>(std::move(cuda), "cuda_resource");
-    auto ucx       = memory::make_shared_resource<internal::ucx::RegistrationResource>(std::move(logger), regcache, 0);
+    auto ucx       = memory::make_shared_resource<ucx::RegistrationResource>(std::move(logger), regcache, 0);
     auto arena     = memory::make_shared_resource<arena_resource>(ucx, 64_MiB);
     auto arena_log = memory::make_shared_resource<logging_resource>(arena, "arena_resource");
 
@@ -114,7 +113,7 @@ TEST_F(TestMemory, UcxRegisteredCudaMemoryArena)
 
 TEST_F(TestMemory, CallbackAdaptor)
 {
-    internal::memory::CallbackBuilder builder;
+    memory::CallbackBuilder builder;
 
     std::atomic_size_t calls = 0;
     std::atomic_size_t bytes = 0;
@@ -134,8 +133,7 @@ TEST_F(TestMemory, CallbackAdaptor)
 
     auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
     auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
-                                                                                         std::move(builder));
+    auto callback = mrc::memory::make_shared_resource<memory::CallbackAdaptor>(std::move(logger), std::move(builder));
 
     EXPECT_EQ(calls, 0);
     EXPECT_EQ(bytes, 0);
@@ -176,7 +174,7 @@ class TickOnDestruct
 
 TEST_F(TestMemory, TransientPool)
 {
-    internal::memory::CallbackBuilder builder;
+    memory::CallbackBuilder builder;
 
     std::atomic_size_t calls = 0;
     std::atomic_size_t bytes = 0;
@@ -196,10 +194,9 @@ TEST_F(TestMemory, TransientPool)
 
     auto malloc   = std::make_unique<mrc::memory::malloc_memory_resource>();
     auto logger   = mrc::memory::make_unique_resource<mrc::memory::logging_resource>(std::move(malloc), "malloc");
-    auto callback = mrc::memory::make_shared_resource<internal::memory::CallbackAdaptor>(std::move(logger),
-                                                                                         std::move(builder));
+    auto callback = mrc::memory::make_shared_resource<memory::CallbackAdaptor>(std::move(logger), std::move(builder));
 
-    internal::memory::TransientPool pool(10_MiB, 4, callback);
+    memory::TransientPool pool(10_MiB, 4, callback);
 
     EXPECT_ANY_THROW(pool.await_buffer(11_MiB));
 
@@ -236,14 +233,14 @@ TEST_F(TestMemory, TransientPool)
     auto buffer = pool.await_buffer(6_MiB);
 
     // default constructible
-    internal::memory::TransientBuffer other;
+    memory::TransientBuffer other;
 
     // move and test void* gets properly nullified
     other = std::move(buffer);
     EXPECT_EQ(buffer.data(), nullptr);
 
     std::byte* start = static_cast<std::byte*>(other.data()) + 1;
-    internal::memory::TransientBuffer offset_buffer(start, other.bytes() - 1, other);
+    memory::TransientBuffer offset_buffer(start, other.bytes() - 1, other);
     other.release();
     offset_buffer.release();
 

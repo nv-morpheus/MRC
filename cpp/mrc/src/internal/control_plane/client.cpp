@@ -20,7 +20,7 @@
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/grpc/progress_engine.hpp"
 #include "internal/grpc/promise_handler.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 
 #include "mrc/channel/status.hpp"
@@ -35,14 +35,12 @@
 #include "mrc/runnable/runner.hpp"
 
 #include <google/protobuf/any.pb.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/security/credentials.h>
 #include <rxcpp/rx.hpp>
 
 #include <ostream>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
   resources::PartitionResourceBase(base),
@@ -193,7 +191,7 @@ void Client::do_handle_event(event_t&& event)
 }
 
 std::map<InstanceID, std::unique_ptr<client::Instance>> Client::register_ucx_addresses(
-    std::vector<std::optional<ucx::Resources>>& ucx_resources)
+    std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
 {
     forward_state(State::RegisteringWorkers);
     auto instances = m_connections_manager->register_ucx_addresses(ucx_resources);
@@ -262,4 +260,4 @@ void Client::request_update()
     // }
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

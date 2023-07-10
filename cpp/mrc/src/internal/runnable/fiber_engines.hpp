@@ -28,15 +28,15 @@
 namespace mrc::core {
 class FiberTaskQueue;
 }  // namespace mrc::core
-namespace mrc::internal::system {
+namespace mrc::system {
 class FiberPool;
-}  // namespace mrc::internal::system
+}  // namespace mrc::system
 namespace mrc::runnable {
 enum class EngineType;
 struct LaunchOptions;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 class FiberEngines final : public Engines
 {
@@ -64,4 +64,4 @@ class FiberEngines final : public Engines
     FiberMetaData m_meta;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

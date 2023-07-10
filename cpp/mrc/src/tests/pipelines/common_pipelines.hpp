@@ -21,8 +21,8 @@
 
 namespace test::pipelines {
 
-std::unique_ptr<mrc::pipeline::Pipeline> finite_single_segment();
-std::unique_ptr<mrc::pipeline::Pipeline> finite_single_segment_will_throw();
-std::unique_ptr<mrc::pipeline::Pipeline> finite_multisegment();
+std::unique_ptr<mrc::pipeline::IPipeline> finite_single_segment();
+std::unique_ptr<mrc::pipeline::IPipeline> finite_single_segment_will_throw();
+std::unique_ptr<mrc::pipeline::IPipeline> finite_multisegment();
 
 }  // namespace test::pipelines

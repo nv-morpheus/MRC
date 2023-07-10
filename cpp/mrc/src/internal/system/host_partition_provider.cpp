@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class HostPartition;
 
 HostPartitionProvider::HostPartitionProvider(const SystemProvider& _system, std::size_t _host_partition_id) :
@@ -44,4 +44,4 @@ const HostPartition& HostPartitionProvider::host_partition() const
     CHECK_LT(m_host_partition_id, system().partitions().host_partitions().size());
     return system().partitions().host_partitions().at(m_host_partition_id);
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

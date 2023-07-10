@@ -37,7 +37,7 @@ namespace mrc::modules {
 template <typename DataTypeT>
 class MirrorTapOrchestrator
 {
-    using initializer_t = std::function<void(segment::Builder& builder)>;
+    using initializer_t = std::function<void(segment::IBuilder& builder)>;
     using type_t        = MirrorTapOrchestrator<DataTypeT>;
 
   public:
@@ -48,7 +48,7 @@ class MirrorTapOrchestrator
     initializer_t tap(initializer_t initializer, const std::string tap_from, const std::string tap_to)
     {
         using namespace modules;
-        return [this, initializer, tap_from, tap_to](segment::Builder& builder) {
+        return [this, initializer, tap_from, tap_to](segment::IBuilder& builder) {
             initializer(builder);
             builder.init_module(m_tap);
 
@@ -59,7 +59,7 @@ class MirrorTapOrchestrator
     initializer_t stream_to(initializer_t initializer, const std::string entry_point)
     {
         using namespace modules;
-        return [this, initializer, entry_point](segment::Builder& builder) {
+        return [this, initializer, entry_point](segment::IBuilder& builder) {
             initializer(builder);
 
             builder.init_module(m_stream);

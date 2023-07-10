@@ -17,13 +17,12 @@
 
 #include "mrc/modules/plugins.hpp"
 
-#include <boost/filesystem/detail/path_traits.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <dlfcn.h>
 #include <glog/logging.h>
 
+#include <chrono>
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -31,7 +30,7 @@
 #include <string>
 #include <utility>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace mrc::modules {
 

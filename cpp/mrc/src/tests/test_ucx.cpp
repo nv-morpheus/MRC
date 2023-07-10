@@ -27,6 +27,7 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <ucp/api/ucp.h>
+#include <ucp/api/ucp_compat.h>
 #include <ucs/type/status.h>
 
 #include <chrono>
@@ -41,7 +42,7 @@
 #include <string>
 
 using namespace mrc;
-using namespace internal::ucx;
+using namespace ucx;
 
 class TestUCX : public ::testing::Test
 {

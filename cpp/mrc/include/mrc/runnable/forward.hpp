@@ -30,7 +30,7 @@ class FiberContext;
 template <typename ContextT>
 class ThreadContext;
 
-class Engine;
+class IEngine;
 class FiberEngine;
 class ThreadEngine;
 

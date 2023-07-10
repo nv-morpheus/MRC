@@ -23,7 +23,7 @@
 
 #include <set>
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 // protobuf convenience methods
 template <typename T>
@@ -48,4 +48,4 @@ Expected<T> unpack(const google::protobuf::Any& message)
     return Error::create("unable to unpack message to the requested type");
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

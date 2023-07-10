@@ -22,7 +22,7 @@
 
 #include <ostream>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 Request::Request() = default;
 
@@ -60,4 +60,4 @@ bool Request::await_complete()
     LOG(FATAL) << "error in ucx callback";
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

@@ -18,7 +18,7 @@
 
 #include "mrc/channel/ingress.hpp"
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 template <typename T>
 struct StreamWriter : public mrc::channel::Ingress<T>
@@ -30,4 +30,4 @@ struct StreamWriter : public mrc::channel::Ingress<T>
     virtual std::size_t get_id() const = 0;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

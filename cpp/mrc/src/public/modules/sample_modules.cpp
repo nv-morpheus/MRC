@@ -39,7 +39,7 @@ SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void SimpleModule::initialize(segment::Builder& builder)
+void SimpleModule::initialize(segment::IBuilder& builder)
 {
     if (config().contains("simple_key_1"))
     {
@@ -109,7 +109,7 @@ ConfigurableModule::ConfigurableModule(std::string module_name, nlohmann::json c
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void ConfigurableModule::initialize(segment::Builder& builder)
+void ConfigurableModule::initialize(segment::IBuilder& builder)
 {
     if (config().contains("config_key_1"))
     {
@@ -154,7 +154,7 @@ SourceModule::SourceModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void SourceModule::initialize(segment::Builder& builder)
+void SourceModule::initialize(segment::IBuilder& builder)
 {
     unsigned int count{1};
 
@@ -189,7 +189,7 @@ SinkModule::SinkModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void SinkModule::initialize(segment::Builder& builder)
+void SinkModule::initialize(segment::IBuilder& builder)
 {
     auto sink = builder.make_sink<bool>("sink", [this](bool input) {
         m_packet_count++;
@@ -210,7 +210,7 @@ NestedModule::NestedModule(std::string module_name, nlohmann::json config) :
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void NestedModule::initialize(segment::Builder& builder)
+void NestedModule::initialize(segment::IBuilder& builder)
 {
     auto configurable_mod = builder.make_module<ConfigurableModule>("NestedModule_submod2");
 

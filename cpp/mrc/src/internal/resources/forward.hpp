@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace mrc::internal {
+namespace mrc {
 
 namespace runtime {
 class Partition;
@@ -30,7 +30,7 @@ class PartitionResources;
 }  // namespace resources
 
 namespace runnable {
-class Resources;
+class RunnableResources;
 }  // namespace runnable
 
 namespace memory {
@@ -40,22 +40,22 @@ class DeviceResources;
 
 // control plane and data plane
 namespace network {
-class Resources;
+class NetworkResources;
 }  // namespace network
 
 namespace ucx {
-class Resources;
+class UcxResources;
 }  // namespace ucx
 
 namespace control_plane {
-class Resources;
+class ControlPlaneResources;
 namespace client {
 class Instance;
 }
 }  // namespace control_plane
 
 namespace data_plane {
-class Resources;
+class DataPlaneResources;
 }  // namespace data_plane
 
-}  // namespace mrc::internal
+}  // namespace mrc

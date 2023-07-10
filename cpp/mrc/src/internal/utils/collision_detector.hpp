@@ -21,7 +21,7 @@
 #include <map>
 #include <string>
 
-namespace mrc::internal::utils {
+namespace mrc::utils {
 
 /**
  * @brief Creates 16-bit hash for a given string.
@@ -60,4 +60,4 @@ class CollisionDetector
     std::map<std::uint16_t, std::string> m_hashes;
 };
 
-}  // namespace mrc::internal::utils
+}  // namespace mrc::utils

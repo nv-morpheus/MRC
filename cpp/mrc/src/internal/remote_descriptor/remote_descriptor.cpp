@@ -23,7 +23,7 @@
 // #include "mrc/codable/api.hpp"
 // #include "mrc/protos/codable.pb.h"
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 // RemoteDescriptor::~RemoteDescriptor()
 // {
@@ -62,4 +62,4 @@ namespace mrc::internal::remote_descriptor {
 //     return std::move(rd.m_impl);
 // }
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

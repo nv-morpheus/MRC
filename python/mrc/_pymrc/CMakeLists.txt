@@ -32,7 +32,6 @@ add_library(pymrc
   src/segment_modules.cpp
   src/segment.cpp
   src/subscriber.cpp
-  src/system.cpp
   src/types.cpp
   src/utilities/acquire_gil.cpp
   src/utilities/deserializers.cpp

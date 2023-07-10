@@ -134,7 +134,7 @@ PYBIND11_MODULE(nodes, m)
                std::shared_ptr<mrc::segment::Object<DataObjectSource>>>(m,
                                                                         "DataObjectSource",
                                                                         py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name, size_t count) {
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name, size_t count) {
                  auto stage = parent.construct_object<DataObjectSource>(name, count);
 
                  return stage;
@@ -146,7 +146,7 @@ PYBIND11_MODULE(nodes, m)
     py::class_<mrc::segment::Object<DataObjectNode>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<DataObjectNode>>>(m, "DataObjectNode", py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name) {
                  auto stage = parent.construct_object<DataObjectNode>(name);
 
                  return stage;
@@ -157,7 +157,7 @@ PYBIND11_MODULE(nodes, m)
     py::class_<mrc::segment::Object<DataObjectSink>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<DataObjectSink>>>(m, "DataObjectSink", py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name) {
                  auto stage = parent.construct_object<DataObjectSink>(name);
 
                  return stage;

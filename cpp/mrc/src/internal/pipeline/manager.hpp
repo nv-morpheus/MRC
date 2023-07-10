@@ -26,15 +26,15 @@
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class Manager;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::pipeline {
-class Pipeline;
+namespace mrc::pipeline {
+class PipelineDefinition;
 
 /**
  * @brief Responsible for coordinating and controlling a Pipeline running on a set of resources/partitions.
@@ -46,10 +46,10 @@ class Pipeline;
 class Manager : public Service
 {
   public:
-    Manager(std::shared_ptr<Pipeline> pipeline, resources::Manager& resources);
+    Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources);
     ~Manager() override;
 
-    const Pipeline& pipeline() const;
+    const PipelineDefinition& pipeline() const;
 
     void push_updates(SegmentAddresses&& segment_addresses);
 
@@ -64,9 +64,9 @@ class Manager : public Service
     void do_service_await_join() final;
 
     resources::Manager& m_resources;
-    std::shared_ptr<Pipeline> m_pipeline;
+    std::shared_ptr<PipelineDefinition> m_pipeline;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

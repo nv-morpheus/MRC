@@ -17,7 +17,6 @@
 
 #include "internal/runnable/thread_engines.hpp"
 
-#include "internal/runnable/engine.hpp"
 #include "internal/runnable/thread_engine.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -32,7 +31,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 void ThreadEngines::initialize_launchers()
 {
@@ -50,11 +49,11 @@ void ThreadEngines::initialize_launchers()
     });
 }
 
-ThreadEngines::ThreadEngines(CpuSet cpu_set, const system::Resources& system) :
+ThreadEngines::ThreadEngines(CpuSet cpu_set, const system::ThreadingResources& system) :
   ThreadEngines(LaunchOptions("custom_options", cpu_set.weight()), cpu_set, std::move(system))
 {}
 
-ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::Resources& system) :
+ThreadEngines::ThreadEngines(LaunchOptions launch_options, CpuSet cpu_set, const system::ThreadingResources& system) :
   Engines(std::move(launch_options)),
   m_cpu_set(std::move(cpu_set)),
   m_system(std::move(system))
@@ -66,4 +65,4 @@ runnable::EngineType ThreadEngines::engine_type() const
 {
     return EngineType::Thread;
 }
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

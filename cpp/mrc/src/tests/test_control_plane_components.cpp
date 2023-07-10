@@ -33,7 +33,7 @@
 #include <vector>
 
 using namespace mrc;
-using namespace mrc::internal::control_plane;
+using namespace mrc::control_plane;
 
 class TestControlPlaneComponents : public ::testing::Test
 {};

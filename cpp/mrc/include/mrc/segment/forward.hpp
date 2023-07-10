@@ -20,7 +20,7 @@
 namespace mrc::segment {
 
 class Definition;
-class Builder;
+class IBuilder;
 
 class ObjectProperties;
 

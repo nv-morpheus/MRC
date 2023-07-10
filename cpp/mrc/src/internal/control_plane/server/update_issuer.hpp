@@ -19,7 +19,7 @@
 
 #include <string>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 struct UpdateIssuer
 {
@@ -28,4 +28,4 @@ struct UpdateIssuer
     virtual const std::string& service_name() const = 0;
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server
