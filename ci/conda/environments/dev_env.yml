@@ -40,7 +40,7 @@ dependencies:
   - glog=0.6
   - gmock=1.13
   - graphviz=3.0
-  - grpc-cpp=1.51
+  - libgrpc=1.54.0
   - gtest=1.13
   - gxx=11.2 # Specifies which versions of GXX and GCC to use
   - isort
