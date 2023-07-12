@@ -20,8 +20,11 @@
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/node/node_parent.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 #include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -42,8 +45,16 @@
 
 namespace mrc::node {
 
+class ZipBase
+{
+  public:
+    virtual ~ZipBase() = default;
+};
+
 template <typename... TypesT>
-class Zip : public WritableAcceptor<std::tuple<TypesT...>>
+class Zip : public ZipBase,
+            public WritableAcceptor<std::tuple<TypesT...>>,
+            public NodeParent<edge::IWritableProvider<TypesT>...>
 {
     template <typename T>
     using queue_t = BufferedChannel<T>;
@@ -61,6 +72,13 @@ class Zip : public WritableAcceptor<std::tuple<TypesT...>>
     static auto build_queues(size_t channel_size)
     {
         return std::make_tuple(std::make_unique<queue_t<TypesT>>(channel_size)...);
+    }
+
+    template <std::size_t... Is>
+    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...>
+    build_child_pairs(Zip* self, std::index_sequence<Is...> /*unused*/)
+    {
+        return std::make_tuple(std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(self->get_sink<Is>()))...);
     }
 
     template <std::size_t I = 0>
@@ -89,12 +107,18 @@ class Zip : public WritableAcceptor<std::tuple<TypesT...>>
         m_queue_counts.fill(0);
     }
 
-    virtual ~Zip() = default;
+    ~Zip() override = default;
 
     template <size_t N>
-    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, TypesT...>>> get_sink() const
+    edge::IWritableProvider<NthTypeOf<N, TypesT...>>& get_sink() const
     {
-        return std::get<N>(m_upstream_holders);
+        return *std::get<N>(m_upstream_holders);
+    }
+
+    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...> get_children_refs()
+        const override
+    {
+        return build_child_pairs(const_cast<Zip*>(this), std::index_sequence_for<TypesT...>{});
     }
 
   protected:
@@ -242,7 +266,7 @@ class Zip : public WritableAcceptor<std::tuple<TypesT...>>
         }
     }
 
-    boost::fibers::mutex m_mutex;
+    mutable Mutex m_mutex;
 
     // Once an upstream is closed, this is set representing the max number of values in a queue before its closed
     size_t m_max_queue_count{std::numeric_limits<size_t>::max()};

@@ -1030,8 +1030,8 @@ TEST_F(TestEdges, Zip)
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
-    mrc::make_edge(*source1, *zip->get_sink<0>());
-    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
     mrc::make_edge(*zip, *sink);
 
     source1->run();
@@ -1057,8 +1057,8 @@ TEST_F(TestEdges, ZipEarlyClose)
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
-    mrc::make_edge(*source1, *zip->get_sink<0>());
-    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
     mrc::make_edge(*zip, *sink);
 
     source1->run();
@@ -1077,9 +1077,39 @@ TEST_F(TestEdges, ZipLateClose)
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
-    mrc::make_edge(*source1, *zip->get_sink<0>());
-    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
     mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, ZipEarlyReset)
+{
+    // Have one source emit different counts than the other
+    auto source1 = std::make_shared<node::TestSource<int>>(4);
+    auto source2 = std::make_shared<node::TestSource<float>>(3);
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    // After the edges have been made, reset the zip to ensure that it can be kept alive by its children
+    zip.reset();
 
     source1->run();
     source2->run();
