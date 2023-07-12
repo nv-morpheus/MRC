@@ -45,10 +45,10 @@ libabseil:
   - 20230125.0
   - 20230125.0
 
-grpc_cpp:
+libgrpc:
   - 1.51
   - 1.51
-  - 1.51
+  - 1.54
 
 ucx:
   - 1.13
@@ -64,7 +64,7 @@ zip_keys:
   - python
   - rapids_version
   - libabseil
-  - grpc_cpp
+  - libgrpc
   - ucx
   - libprotobuf
 
@@ -78,7 +78,6 @@ gflags:
   - 2.2
 glog:
   - 0.6
-
 
 pin_run_as_build:
   boost-cpp:
