@@ -1,0 +1,81 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Release Procedures
+
+on:
+  workflow_dispatch:
+    inputs:
+      current_version:
+        description: 'Current version of the project'
+        required: true
+        type: string
+      next_version:
+        description: 'Next version of the project'
+        required: true
+        type: string
+      create_codefreeze_pr:
+        description: 'Creates/Updates the codefreeze PR'
+        required: true
+        type: boolean
+        default: false
+      create_next_release_branch:
+        description: 'Creates the next release branch and configures tags'
+        required: true
+        type: boolean
+        default: false
+      update_next_release_versions:
+        description: 'Runs the update-version script and creates a PR with the changes'
+        required: true
+        type: boolean
+        default: false
+      update_changelog:
+        description: 'Updates the CHANGELOG.md file for the current release and commits the changes'
+        required: true
+        type: boolean
+        default: false
+      merge_release_branch:
+        description: 'Merges the code freeze release branch, creates the release tag, and creates a new Github release'
+        required: true
+        type: boolean
+        default: false
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PROJECT_MANAGEMENT_PAT }}
+  REPO_NAME: 'MRC'
+  VERSION: ${{ inputs.current_version }}
+  FULL_VERSION: ${{ inputs.current_version }}.00
+  NEXT_VERSION: ${{ inputs.next_version }}
+  NEXT_FULL_VERSION: ${{ inputs.next_version }}.00
+
+jobs:
+  create_codefreeze_pr:
+    if: ${{ inputs.create_codefreeze_pr }}
+    name: Create Codefreeze PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          lfs: false
+          path: 'mrc'
+          fetch-depth: 0
+      - name: Create PR
+        run: |
+          cat ci/release/pr_code_freeze_template.md | envsubst | \
+            gh pr create --base main --head branch-${VERSION} \
+              --title "[RELEASE] ${REPO_NAME} v${VERSION}" \
+              --body-file - \
+              --label "! - Release"
