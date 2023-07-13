@@ -52,7 +52,7 @@ jobs:
       - name: Get PR Info
         id: get-pr-info
         uses: rapidsai/shared-action-workflows/get-pr-info@branch-23.08
-        if: ${{ startsWith(github.ref_name, 'pull-request/') && false }}
+        if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     outputs:
       is_pr: ${{ startsWith(github.ref_name, 'pull-request/') }}
       is_main_branch: ${{ startsWith(github.ref_name, 'branch-') }}
