@@ -30,7 +30,7 @@ on:
       conda_upload_label:
         description: 'The label to use when uploading the conda package. Leave empty to disable uploading'
         required: true
-        type: boolean
+        type: string
       container:
         description: 'The container to use for all stages except the test stage'
         required: true
