@@ -20,21 +20,27 @@ on:
   workflow_call:
     inputs:
       run_check:
+        description: 'Runs the check stage to verify code integrity'
         required: true
         type: boolean
-      run_package_conda:
+      conda_run_build:
+        description: 'Runs the conda-build stage to ensure the conda package builds successfully'
         required: true
         type: boolean
-      upload_conda_package:
+      conda_upload_label:
+        description: 'The label to use when uploading the conda package. Leave empty to disable uploading'
         required: true
-        type: boolean
+        type: string
       container:
+        description: 'The container to use for all stages except the test stage'
         required: true
         type: string
       test_container:
+        description: 'The container to use for the test stage'
         required: true
         type: string
       pr_info:
+        description: 'The JSON string containing the PR information'
         required: true
         type: string
     secrets:
@@ -293,7 +299,7 @@ jobs:
 
   package:
     name: Package
-    if: ${{ inputs.run_package_conda }}
+    if: ${{ inputs.conda_run_build }}
     needs: [benchmark, documentation, test]
     runs-on: linux-amd64-cpu16
     timeout-minutes: 60
@@ -324,5 +330,6 @@ jobs:
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-          SCRIPT_ARGS: "${{ inputs.upload_conda_package && 'upload' || '' }}"
+          SCRIPT_ARGS: "${{ inputs.conda_upload_label != '' && 'upload' || '' }}"
+          CONDA_PKG_LABEL: "${{ inputs.conda_upload_label }}"
         run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS
