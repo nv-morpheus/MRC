@@ -68,6 +68,7 @@ jobs:
       upload_conda_package: ${{ fromJSON(needs.prepare.outputs.is_main_branch) }}
       container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230711
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230711
+      pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
