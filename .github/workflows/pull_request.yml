@@ -52,11 +52,12 @@ jobs:
       - name: Get PR Info
         id: get-pr-info
         uses: rapidsai/shared-action-workflows/get-pr-info@branch-23.08
+        if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     outputs:
-      pr_info: ${{ steps.get-pr-info.outputs.pr-info }}
       is_pr: ${{ startsWith(github.ref_name, 'pull-request/') }}
       is_main_branch: ${{ startsWith(github.ref_name, 'branch-') }}
-      has_conda_build_label: ${{ contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') }}
+      has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
+      pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
   ci_pipe:
     name: CI Pipeline
     needs: [prepare]
@@ -67,7 +68,6 @@ jobs:
       upload_conda_package: ${{ fromJSON(needs.prepare.outputs.is_main_branch) }}
       container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230711
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230711
-      pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
