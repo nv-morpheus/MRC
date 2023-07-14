@@ -29,6 +29,23 @@ if [[ "${SKIP_COPYRIGHT}" == "" ]]; then
    python3 ./ci/scripts/copyright.py --fix-all --git-modified-only ./ 2>&1
 fi
 
+# Run include-what-you-use (before clang-format so it can fix the include order)
+if [[ "${SKIP_IWYU}" == "" ]]; then
+
+   if [[ "${IWYU_TOOL}" == "" ]]; then
+      IWYU_TOOL=$(find_iwyu_tool)
+   fi
+
+   if [[ -x "${IWYU_TOOL}" ]]; then
+      echo "Running include-what-you-use from '${IWYU_TOOL}'..."
+      set -x
+      ${IWYU_TOOL} -j $(get_num_proc) -p ${BUILD_DIR} cpp python | fix_includes.py --nosafe_headers --nocomments
+      set +x
+   else
+      echo "Skipping include-what-you-use. Could not find iwyu_tool.py at '${IWYU_TOOL}'"
+   fi
+fi
+
 # Run clang-format
 if [[ "${SKIP_CLANG_FORMAT}" == "" ]]; then
 
@@ -53,21 +70,6 @@ if [[ "${SKIP_CLANG_TIDY}" == "" ]]; then
       get_unified_diff ${CPP_FILE_REGEX} | ${CLANG_TIDY_DIFF} -p1 -j 0 -path ${BUILD_DIR} -fix -quiet 2>&1
    else
       echo "Skipping clang-tidy. Could not find clang-tidy-diff.py at '${CLANG_TIDY_DIFF}'"
-   fi
-fi
-
-# Run include-what-you-use
-if [[ "${SKIP_IWYU}" == "" ]]; then
-
-   if [[ "${IWYU_TOOL}" == "" ]]; then
-      IWYU_TOOL=$(find_iwyu_tool)
-   fi
-
-   if [[ -x "${IWYU_TOOL}" ]]; then
-      echo "Running include-what-you-use from '${IWYU_TOOL}'..."
-      ${IWYU_TOOL} -j 0 -p ${BUILD_DIR} ${CPP_MODIFIED_FILES[@]} 2>&1
-   else
-      echo "Skipping include-what-you-use. Could not find iwyu_tool.py at '${IWYU_TOOL}'"
    fi
 fi
 
