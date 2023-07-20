@@ -15,8 +15,8 @@
 
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
 {% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
-{% set py_version = environ.get('CONDA_PY', '3.8') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '11.4').split('.')[:2]) %}
+{% set py_version = environ.get('CONDA_PY', '3.10') %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '11.8').split('.')[:2]) %}
 {% set cuda_major = cuda_version.split('.')[0] %}
 
 package:
@@ -29,7 +29,7 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   script_env:
-    - CMAKE_CUDA_ARCHITECTURES=ALL
+    - CMAKE_CUDA_ARCHITECTURES=RAPIDS
     - MRC_CACHE_DIR
     - PARALLEL_LEVEL
   include_recipe: False
@@ -43,6 +43,7 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake >=3.24
+    - cuda-cudart-dev # Needed by CMake to compile a test application
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -50,28 +51,28 @@ requirements:
     - sysroot_linux-64 >=2.17
   host:
     # Libraries necessary to build. Keep sorted!
-    - abseil-cpp
     - boost-cpp
-    - cuda-nvml-dev {{ cuda_version }}.*
-    - cudatoolkit {{ cuda_version }}.*
-    - cython 0.29.*
+    - cuda-cudart-dev
+    - cuda-nvml-dev
     - doxygen 1.9.2.*
     - flatbuffers 2.0.*
     - gflags
     - glog
-    - gmock 1.10.*
-    - grpc-cpp
-    - gtest 1.10.*
+    - gmock 1.13.*
+    - libgrpc
+    - gtest 1.13.*
+    - libabseil
     - libhwloc 2.5.*
     - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
-    - pybind11-stubgen 0.10
+    - pybind11-stubgen 0.10.5
     - python {{ python }}
-    - scikit-build >=0.12
-    - spdlog 1.8.5
+    - scikit-build >=0.17
     - ucx
+    # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
+    - cudatoolkit {{ cuda_version }}.*
 
 outputs:
   - name: libmrc
@@ -92,23 +93,27 @@ outputs:
         - sysroot_linux-64 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
-        - abseil-cpp # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - boost-cpp
-        - flatbuffers 2.0.*
-        - gflags
+        - cuda-cudart # Needed to allow pin_compatible to work
         - glog
-        - grpc-cpp
+        - libgrpc
+        - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
         - libhwloc 2.5.*
-        - libprotobuf # Needed for transitive run_exports from grpc-cpp. Does not need a version
+        - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.*
         - ucx
+        # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
+        - cudatoolkit {{ cuda_version }}.*
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
-        - {{ pin_compatible('flatbuffers', max_pin='x.x')}}
+        - {{ pin_compatible('cuda-cudart', min_pin='x.x', max_pin='x') }}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - boost-cpp # Needed to use pin_run_as_build
+      run_constrained:
+        # Since we dont explicitly require this but other packages might, constrain the versions
+        - {{ pin_compatible('cudatoolkit', min_pin='x.x', max_pin='x') }}
     test:
       script: test_libmrc.sh
       files:
@@ -121,13 +126,16 @@ outputs:
         - {{ pin_subpackage("mrc", max_pin="x.x") }}
       ignore_run_exports:
         - pypy
+      missing_dso_whitelist:
+        - $RPATH/ld-linux-x86-64.so.2 # From python
+        - $RPATH/libc.so.6 # From python
+        - $RPATH/libpthread.so.0 # Sample modules
       include_recipe: False
     script: move_mrc_files.sh
     requirements:
       host:
         # Only should need libmrc and python. Keep sorted!
         - {{ pin_subpackage('libmrc', exact=True) }}
-        - abseil-cpp # mrc does not require abseil at build time. See https://github.com/conda-forge/arrow-cpp-feedstock/issues/814
         - python {{ python }}
       run:
         - {{ pin_subpackage('libmrc', exact=True) }}
@@ -146,11 +154,11 @@ outputs:
         - numpy
         - nvtx
         - pytest
-        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving abseil-cpp
+        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
-  home: https://www.nvidia.com/
-  summary: A GPU accelerated streaming data library with python bindings
-  license: Apache-2.0
+  home: https://github.com/nv-morpheus/MRC
   license_family: Apache
   license_file: LICENSE
+  license: Apache-2.0
+  summary: A GPU accelerated streaming data library with python bindings

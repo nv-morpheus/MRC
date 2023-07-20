@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -41,12 +41,12 @@ struct ICodableStorage;
 namespace mrc::codable::protos {
 class RemoteDescriptor;
 }  // namespace mrc::codable::protos
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;
-}  // namespace mrc::internal::resources
-namespace mrc::internal::runtime {
+}  // namespace mrc::resources
+namespace mrc::runtime {
 class Partition;
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -54,7 +54,7 @@ namespace mrc::runtime {
 struct IRemoteDescriptorHandle;
 }  // namespace mrc::runtime
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 struct RemoteDescriptorDecrementMessage;
 
 /**
@@ -124,7 +124,7 @@ class Manager final : private Service,
 
     mutable std::mutex m_mutex;
 
-    friend internal::runtime::Partition;
+    friend runtime::Partition;
 };
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

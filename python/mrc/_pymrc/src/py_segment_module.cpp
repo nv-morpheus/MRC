@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -33,7 +33,7 @@ PythonSegmentModule::PythonSegmentModule(std::string module_name, nlohmann::json
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void PythonSegmentModule::initialize(segment::Builder& builder)
+void PythonSegmentModule::initialize(segment::IBuilder& builder)
 {
     VLOG(2) << "Calling PythonSegmentModule::initialize";
     m_py_initialize(builder);

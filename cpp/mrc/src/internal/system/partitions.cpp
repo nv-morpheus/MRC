@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -56,9 +56,9 @@ static void div_even(std::int32_t n, std::int32_t np, std::int32_t me, std::int3
     }
 }
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-Partitions::Partitions(const System& system) : Partitions(system.topology(), system.options()) {}
+Partitions::Partitions(const SystemDefinition& system) : Partitions(system.topology(), system.options()) {}
 
 Partitions::Partitions(const Topology& topology, const Options& options)
 {
@@ -337,4 +337,4 @@ const std::vector<DevicePartition>& Partitions::device_partitions() const
 {
     return m_device_partitions;
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

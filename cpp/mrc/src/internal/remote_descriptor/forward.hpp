@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,8 +17,8 @@
 
 #pragma once
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 class Manager;
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

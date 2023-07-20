@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,9 +18,9 @@
 #include "internal/data_plane/server.hpp"
 
 #include "internal/data_plane/tags.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/core/task_queue.hpp"
@@ -51,7 +51,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 namespace {
 
@@ -143,7 +143,7 @@ class DataPlaneServerWorker final : public node::GenericSource<network_event_t>
 };
 
 Server::Server(resources::PartitionResourceBase& provider,
-               ucx::Resources& ucx,
+               ucx::UcxResources& ucx,
                memory::HostResources& host,
                memory::TransientPool& transient_pool,
                InstanceID instance_id) :
@@ -348,4 +348,4 @@ void DataPlaneServerWorker::on_tagged_msg(rxcpp::subscriber<network_event_t>& su
     }
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

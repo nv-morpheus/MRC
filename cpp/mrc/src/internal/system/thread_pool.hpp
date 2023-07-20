@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
@@ -37,7 +37,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 /**
  * @brief Fiber-friendly ThreadPool
@@ -60,7 +60,7 @@ namespace mrc::internal::system {
 class ThreadPool final
 {
   public:
-    ThreadPool(const system::Resources&, CpuSet cpuset, std::size_t channel_size = 128);
+    ThreadPool(const system::ThreadingResources&, CpuSet cpuset, std::size_t channel_size = 128);
     ~ThreadPool();
 
     template <class F, class... ArgsT>
@@ -93,4 +93,4 @@ class ThreadPool final
     std::vector<system::Thread> m_threads;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

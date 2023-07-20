@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,7 +29,7 @@ class buffer_view;
 struct memory_resource;
 }  // namespace mrc::memory
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 /**
  * @brief Storage implements the IDecodableStorage interface for an EncodedObject/Storage
@@ -53,4 +53,4 @@ class DecodableStorageView : public virtual mrc::codable::IDecodableStorage, pub
     std::shared_ptr<mrc::memory::memory_resource> device_memory_resource() const final;
 };
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

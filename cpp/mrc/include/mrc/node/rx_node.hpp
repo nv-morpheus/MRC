@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -233,6 +233,10 @@ class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor
             [this](OutputT message) {
                 // Forward to the writable edge
                 this->get_writable_edge()->await_write(std::move(message));
+            },
+            [this](std::exception_ptr ptr) {
+                WritableAcceptor<OutputT>::release_edge_connection();
+                runnable::Context::get_runtime_context().set_exception(std::move(ptr));
             },
             [this]() {
                 // On completion, release connections

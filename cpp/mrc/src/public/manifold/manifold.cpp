@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -28,17 +28,19 @@
 
 namespace mrc::manifold {
 
-Manifold::Manifold(PortName port_name, pipeline::Resources& resources) :
+Manifold::Manifold(PortName port_name, runnable::IRunnableResources& resources) :
   m_port_name(std::move(port_name)),
   m_resources(resources)
 {}
+
+Manifold::~Manifold() = default;
 
 const PortName& Manifold::port_name() const
 {
     return m_port_name;
 }
 
-pipeline::Resources& Manifold::resources()
+runnable::IRunnableResources& Manifold::resources()
 {
     return m_resources;
 }

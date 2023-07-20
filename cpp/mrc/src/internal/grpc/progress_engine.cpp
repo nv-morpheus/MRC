@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,6 @@
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
-#include <grpc/support/time.h>
 #include <grpcpp/grpcpp.h>
 
 #include <chrono>
@@ -28,7 +27,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 ProgressEngine::ProgressEngine(std::shared_ptr<grpc::CompletionQueue> cq) : m_cq(std::move(cq)) {}
 
@@ -68,4 +67,4 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
 
 void ProgressEngine::on_stop(const rxcpp::subscription& subscription) {}
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -30,7 +30,7 @@ class FiberContext;
 template <typename ContextT>
 class ThreadContext;
 
-class Engine;
+class IEngine;
 class FiberEngine;
 class ThreadEngine;
 

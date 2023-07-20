@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,9 +25,9 @@
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/pipeline/executor.hpp"
+#include "mrc/pipeline/pipeline.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>

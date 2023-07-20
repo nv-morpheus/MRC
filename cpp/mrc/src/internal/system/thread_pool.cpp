@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,16 +17,16 @@
 
 #include "internal/system/thread_pool.hpp"
 
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 
 #include <cstdint>
 #include <thread>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-ThreadPool::ThreadPool(const system::Resources& resources, CpuSet cpuset, std::size_t channel_size) :
+ThreadPool::ThreadPool(const system::ThreadingResources& resources, CpuSet cpuset, std::size_t channel_size) :
   m_cpuset(std::move(cpuset)),
   m_channel(channel_size)
 {
@@ -65,4 +65,4 @@ void ThreadPool::shutdown()
     m_channel.close();
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

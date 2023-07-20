@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,7 +21,7 @@
 
 #include <atomic>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 class Callbacks;
 class Client;
@@ -61,4 +61,4 @@ class Request final
     friend Callbacks;
 };
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

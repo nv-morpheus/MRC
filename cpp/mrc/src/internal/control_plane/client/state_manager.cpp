@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/error.hpp"
 #include "mrc/edge/edge_builder.hpp"
@@ -35,7 +35,7 @@
 #include <exception>
 #include <utility>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 StateManager::StateManager(Client& client) : m_client(client) {}
 
@@ -100,4 +100,4 @@ void StateManager::await_join()
     CHECK(m_runner);
     m_runner->await_join();
 }
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

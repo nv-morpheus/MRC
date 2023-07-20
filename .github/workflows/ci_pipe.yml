@@ -20,15 +20,27 @@ on:
   workflow_call:
     inputs:
       run_check:
+        description: 'Runs the check stage to verify code integrity'
         required: true
         type: boolean
-      run_package_conda:
+      conda_run_build:
+        description: 'Runs the conda-build stage to ensure the conda package builds successfully'
         required: true
         type: boolean
+      conda_upload_label:
+        description: 'The label to use when uploading the conda package. Leave empty to disable uploading'
+        required: true
+        type: string
       container:
+        description: 'The container to use for all stages except the test stage'
         required: true
         type: string
       test_container:
+        description: 'The container to use for the test stage'
+        required: true
+        type: string
+      pr_info:
+        description: 'The JSON string containing the PR information'
         required: true
         type: string
     secrets:
@@ -38,6 +50,11 @@ on:
         required: true
       NGC_API_KEY:
         required: true
+
+# We only support ubuntu, so bash is the default
+defaults:
+  run:
+    shell: bash
 
 env:
   CHANGE_TARGET: "${{ github.base_ref }}"
@@ -66,7 +83,7 @@ jobs:
   check:
     if: ${{ inputs.run_check }}
     name: Check
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -97,7 +114,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: [self-hosted, linux, amd64, cpu16]
+    runs-on: linux-amd64-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -132,7 +149,7 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
+    runs-on: linux-amd64-gpu-v100-latest-1
     timeout-minutes: 60
     container:
       credentials:
@@ -171,7 +188,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: [self-hosted, linux, amd64, gpu-v100-525-1]
+    runs-on: linux-amd64-gpu-v100-latest-1
     timeout-minutes: 60
     container:
       credentials:
@@ -182,6 +199,7 @@ jobs:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
         PARALLEL_LEVEL: '10'
       image: ${{ inputs.test_container }}
+      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
     strategy:
       fail-fast: true
 
@@ -212,7 +230,7 @@ jobs:
   documentation:
     name: Documentation
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -243,7 +261,7 @@ jobs:
   benchmark:
     name: Benchmark
     needs: [build]
-    runs-on: [self-hosted, linux, amd64, cpu4]
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 60
     container:
       credentials:
@@ -281,9 +299,9 @@ jobs:
 
   package:
     name: Package
-    if: ${{ inputs.run_package_conda }}
+    if: ${{ inputs.conda_run_build }}
     needs: [benchmark, documentation, test]
-    runs-on: [self-hosted, linux, amd64, cpu16]
+    runs-on: linux-amd64-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -312,4 +330,6 @@ jobs:
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-        run: ./mrc/ci/scripts/github/conda.sh
+          SCRIPT_ARGS: "${{ inputs.conda_upload_label != '' && 'upload' || '' }}"
+          CONDA_PKG_LABEL: "${{ inputs.conda_upload_label }}"
+        run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS

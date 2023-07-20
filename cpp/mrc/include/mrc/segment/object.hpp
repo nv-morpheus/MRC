@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,8 +38,9 @@ struct ObjectProperties
 {
     virtual ~ObjectProperties() = 0;
 
-    virtual std::string name() const      = 0;
-    virtual std::string type_name() const = 0;
+    virtual void set_name(const std::string& name) = 0;
+    virtual std::string name() const               = 0;
+    virtual std::string type_name() const          = 0;
 
     virtual bool is_sink() const   = 0;
     virtual bool is_source() const = 0;
@@ -198,7 +199,8 @@ class Object : public virtual ObjectProperties
     }
 
   protected:
-    void set_name(const std::string& name);
+    // Move to protected to allow only the IBuilder to set the name
+    void set_name(const std::string& name) override;
 
   private:
     std::string m_name{};

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 #include "internal/runtime/partition.hpp"
 
 #include "internal/codable/codable_storage.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/pubsub/publisher_round_robin.hpp"
 #include "internal/pubsub/subscriber_service.hpp"
 #include "internal/remote_descriptor/manager.hpp"
@@ -31,7 +31,7 @@
 #include <optional>
 #include <ostream>
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 Partition::Partition(resources::PartitionResources& resources) : m_resources(resources)
 {
@@ -84,4 +84,4 @@ std::unique_ptr<mrc::codable::ICodableStorage> Partition::make_codable_storage()
     return std::make_unique<codable::CodableStorage>(m_resources);
 }
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

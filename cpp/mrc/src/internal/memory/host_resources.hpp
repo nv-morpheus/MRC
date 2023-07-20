@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,17 +24,17 @@
 #include <cstddef>
 #include <memory>
 
-namespace mrc::internal::runnable {
-class Resources;
-}  // namespace mrc::internal::runnable
-namespace mrc::internal::ucx {
+namespace mrc::runnable {
+class RunnableResources;
+}  // namespace mrc::runnable
+namespace mrc::ucx {
 class RegistrationCallbackBuilder;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 namespace mrc::memory {
 struct memory_resource;
 }  // namespace mrc::memory
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 /**
  * @brief Object that provides access to host memory_resource objects for a given host partition
@@ -42,7 +42,7 @@ namespace mrc::internal::memory {
 class HostResources final : private system::HostPartitionProvider
 {
   public:
-    HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
+    HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks);
 
     mrc::memory::buffer make_buffer(std::size_t bytes);
 
@@ -56,4 +56,4 @@ class HostResources final : private system::HostPartitionProvider
     std::shared_ptr<mrc::memory::memory_resource> m_arena;
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

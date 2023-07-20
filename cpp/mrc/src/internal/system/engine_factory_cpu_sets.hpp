@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -27,7 +27,7 @@ namespace mrc {
 class Options;
 }  // namespace mrc
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class Topology;
 
@@ -58,4 +58,4 @@ extern EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& top
                                                              const Options& options,
                                                              const CpuSet& cpu_set);
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

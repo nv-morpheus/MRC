@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -157,7 +157,7 @@ class Runner
         Promise<void> m_live_promise;
         SharedFuture<void> m_live_future;
         SharedFuture<void> m_join_future;
-        std::shared_ptr<Engine> m_engine;
+        std::shared_ptr<IEngine> m_engine;
         std::shared_ptr<Context> m_context;
 
         friend class Runner;
@@ -170,7 +170,7 @@ class Runner
     const std::vector<Instance>& instances() const;
 
   protected:
-    void enqueue(std::shared_ptr<Engines>, std::vector<std::shared_ptr<Context>>&&);
+    void enqueue(std::shared_ptr<IEngines>, std::vector<std::shared_ptr<Context>>&&);
 
     /**
      * @brief Access the const version of the Runnable
@@ -221,7 +221,7 @@ class SpecializedRunner : public Runner
     ~SpecializedRunner() override = default;
 
     template <typename... ArgsT>
-    void enqueue(std::shared_ptr<Engines> launcher, ArgsT&&... args)
+    void enqueue(std::shared_ptr<IEngines> launcher, ArgsT&&... args)
     {
         DCHECK(launcher && launcher->size());
 
@@ -241,7 +241,7 @@ class SpecializedRunner : public Runner
 
   protected:
     template <typename WrappedContextT, typename... ArgsT>
-    auto make_contexts(const Engines& launcher, ArgsT&&... args)
+    auto make_contexts(const IEngines& launcher, ArgsT&&... args)
     {
         const auto size = launcher.size();
         std::vector<std::shared_ptr<Context>> contexts;

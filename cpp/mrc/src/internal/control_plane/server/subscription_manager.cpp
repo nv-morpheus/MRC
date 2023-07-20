@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -30,7 +30,7 @@
 #include <cstdint>
 #include <ostream>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 Role::Role(std::string service_name, std::string role_name) :
   m_service_name(std::move(service_name)),
@@ -292,4 +292,4 @@ Expected<> SubscriptionService::update_role(const protos::UpdateSubscriptionServ
     }
     return {};
 }
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

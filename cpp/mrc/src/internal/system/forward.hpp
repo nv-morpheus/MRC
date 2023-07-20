@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,7 +17,7 @@
 
 #pragma once
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 class System;
 class Topology;
@@ -30,4 +30,4 @@ class FiberTaskQueue;
 class FiberPool;
 class FiberManager;
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

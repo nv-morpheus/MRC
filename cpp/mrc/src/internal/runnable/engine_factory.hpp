@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include "internal/runnable/engines.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 
@@ -29,11 +28,11 @@ enum class EngineType;
 struct EngineFactory;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
-std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::ThreadingResources& system,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable);
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

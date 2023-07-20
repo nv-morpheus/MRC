@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,7 +25,7 @@
 #include <ostream>
 #include <string>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 /**
  * @brief GpuInfo describes an NVIDIA GPU within the hwloc topology
@@ -75,4 +75,4 @@ class GpuInfo
     }
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@
 #include <cstddef>  // for size_t
 #include <tuple>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 class Context final : public Primitive<ucp_context_h>
 {
@@ -39,4 +39,4 @@ class Context final : public Primitive<ucp_context_h>
     void unregister_memory(ucp_mem_h, void* rbuffer = nullptr);
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

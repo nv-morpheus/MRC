@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -158,23 +158,42 @@ class RingBuffer
             return (!m_stopped ? RingBufferOpStatus::Success : RingBufferOpStatus::Stopped);
         }
 
-        WriteOperation& use_scheduling_policy(SchedulePolicy policy)
+        WriteOperation& use_scheduling_policy(SchedulePolicy policy) &
         {
             m_policy = policy;
             return *this;
         }
 
-        WriteOperation& resume_immediately()
+        WriteOperation use_scheduling_policy(SchedulePolicy policy) &&
+        {
+            m_policy = policy;
+            return std::move(*this);
+        }
+
+        WriteOperation& resume_immediately() &
         {
             m_policy = SchedulePolicy::Immediate;
             return *this;
         }
 
-        WriteOperation& resume_on(ThreadPool* thread_pool)
+        WriteOperation resume_immediately() &&
+        {
+            m_policy = SchedulePolicy::Immediate;
+            return std::move(*this);
+        }
+
+        WriteOperation& resume_on(ThreadPool* thread_pool) &
         {
             m_policy = SchedulePolicy::Reschedule;
             set_resume_on_thread_pool(thread_pool);
             return *this;
+        }
+
+        WriteOperation resume_on(ThreadPool* thread_pool) &&
+        {
+            m_policy = SchedulePolicy::Reschedule;
+            set_resume_on_thread_pool(thread_pool);
+            return std::move(*this);
         }
 
       private:

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -36,7 +36,7 @@ namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 class Client;
 
@@ -96,4 +96,4 @@ class StateManager
 };
 
 }  // namespace client
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,7 +25,7 @@
 
 #include <memory>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 /**
  * @brief Memory Resource adaptor to provide UCX registration to allocated blocks.
@@ -72,4 +72,4 @@ class RegistrationResource : public mrc::memory::adaptor<PointerT>
     const int m_cuda_device_id;
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

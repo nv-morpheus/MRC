@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 from setuptools import setup
 
 import versioneer
@@ -23,22 +23,19 @@ import versioneer
 # - Python package generation ------------------------------------------------
 
 setup(
-    name='mrc',
+    name="mrc",
     description="mrc",
     version=versioneer.get_version(),
     classifiers=[
-        "Intended Audience :: Developers",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9"
+        "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.10"
     ],
     author="NVIDIA Corporation",
     setup_requires=[],
     include_package_data=True,
-    packages=find_packages(include=['mrc', 'mrc.*'], exclude=['tests']),
+    packages=find_namespace_packages(include=["mrc*"], exclude=["tests", "mrc.core.segment.module_definitions"]),
     package_data={
         "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
     },
     license="Apache",
-    cmdclass=versioneer.get_cmdclass())
+    cmdclass=versioneer.get_cmdclass(),
+    zip_safe=False)

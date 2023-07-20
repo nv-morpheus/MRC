@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -33,7 +33,7 @@ namespace mrc::pymrc {
 
 namespace py = pybind11;
 
-void PySegmentModule::initialize(segment::Builder& builder)
+void PySegmentModule::initialize(segment::IBuilder& builder)
 {
     PYBIND11_OVERLOAD_PURE(void, mrc::modules::SegmentModule, initialize, builder);
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,9 +17,7 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
 #include "mrc/cuda/device_guard.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/experimental/modules/stream_buffer/stream_buffer_base.hpp"
 #include "mrc/experimental/modules/stream_buffer/stream_buffer_immediate.hpp"
 #include "mrc/experimental/modules/stream_buffer/stream_buffer_module.hpp"
@@ -28,6 +26,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
@@ -58,7 +57,7 @@ TEST_F(TestStreamBufferModule, InitailizationTest)
 {
     using namespace modules;
 
-    auto init_wrapper = [](segment::Builder& builder) {
+    auto init_wrapper = [](segment::IBuilder& builder) {
         auto config1        = nlohmann::json();
         auto mirror_buffer1 = builder.make_module<StreamBufferModuleImmediate>("mirror_tap", config1);
     };
@@ -84,7 +83,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputT
     unsigned int packet_count{100000};
     unsigned int packets_main{0};
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(test_name + "_main_source",
                                                        [packet_count](rxcpp::subscriber<std::string>& sub) {
                                                            if (sub.is_subscribed())
@@ -135,7 +134,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferConstantRateTh
     unsigned int packet_count{10000};
     unsigned int packets_main{0};
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(
             test_name + "_main_source",
             [packet_count](rxcpp::subscriber<std::string>& sub) {
@@ -188,7 +187,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferVariableRateTh
     unsigned int packet_count{100000};
     unsigned int packets_main{0};
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(
             test_name + "_main_source",
             [packet_count](rxcpp::subscriber<std::string>& sub) {
@@ -248,7 +247,7 @@ TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferBurstThroughpu
 
     auto config = nlohmann::json{{"buffer_size", 1024}};
 
-    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, packet_count, test_name](segment::IBuilder& builder) {
         auto source = builder.make_source<std::string>(
             test_name + "_main_source",
             [packet_count](rxcpp::subscriber<std::string>& sub) {

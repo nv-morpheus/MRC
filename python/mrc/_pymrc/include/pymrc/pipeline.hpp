@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,10 +24,10 @@
 #include <string>
 
 namespace mrc::pipeline {
-class Pipeline;
+class IPipeline;
 }  // namespace mrc::pipeline
 namespace mrc::segment {
-class Builder;
+class IBuilder;
 }  // namespace mrc::segment
 
 namespace mrc::pymrc {
@@ -46,7 +46,7 @@ class Pipeline
      * @param name Segment name
      * @param init initializer used to define segment internals
      */
-    void make_segment(const std::string& name, const std::function<void(mrc::segment::Builder&)>& init);
+    void make_segment(const std::string& name, const std::function<void(mrc::segment::IBuilder&)>& init);
 
     /**
      * @brief
@@ -60,12 +60,17 @@ class Pipeline
     void make_segment(const std::string& name,
                       pybind11::list ingress_port_info,
                       pybind11::list egress_port_info,
-                      const std::function<void(mrc::segment::Builder&)>& init);
+                      const std::function<void(mrc::segment::IBuilder&)>& init);
 
-    std::unique_ptr<mrc::pipeline::Pipeline> swap();
+    /**
+     * @brief Get the wrapped object held by this Python proxy object
+     *
+     * @return std::shared_ptr<pipeline::IPipeline>
+     */
+    std::shared_ptr<pipeline::IPipeline> get_wrapped() const;
 
   private:
-    std::unique_ptr<mrc::pipeline::Pipeline> m_pipeline;
+    std::shared_ptr<mrc::pipeline::IPipeline> m_pipeline;
 };
 
 #pragma GCC visibility pop

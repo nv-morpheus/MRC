@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,7 +23,6 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/segment/segment.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -55,9 +54,9 @@ class StatGatherTest : public ::testing::Test
         std::uniform_int_distribution<> dist(10, 100);
 
         m_iterations = dist(generator);
-        m_pipeline   = pipeline::make_pipeline();
+        m_pipeline   = mrc::make_pipeline();
 
-        auto init = [this](segment::Builder& segment) {
+        auto init = [this](segment::IBuilder& segment) {
             auto src = segment.make_source<std::string>("src", [this](rxcpp::subscriber<std::string> s) {
                 for (auto i = 0; i < m_iterations; ++i)
                 {
@@ -92,15 +91,13 @@ class StatGatherTest : public ::testing::Test
             segment.make_edge(internal_2, sink);
         };
 
-        auto segdef = Segment::create("segment_stats_test", init);
-
-        m_pipeline->register_segment(segdef);
+        m_pipeline->make_segment("segment_stats_test", init);
     }
 
     void TearDown() override {}
 
     std::size_t m_iterations;
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipeline> m_pipeline;
     std::shared_ptr<TestSegmentResources> m_resources;
     std::set<std::string> m_components = {"src", "internal_1", "internal_2", "sink"};
 };

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -30,8 +30,16 @@ namespace mrc {
 
 class Options;
 }  // namespace mrc
-namespace mrc::internal::system {
-class System;
-}  // namespace mrc::internal::system
 
-std::shared_ptr<mrc::internal::system::System> make_system(std::function<void(mrc::Options&)> updater = nullptr);
+namespace mrc::system {
+class SystemDefinition;
+class ThreadingResources;
+}  // namespace mrc::system
+
+namespace mrc::tests {
+std::unique_ptr<system::SystemDefinition> make_system(std::function<void(Options&)> updater = nullptr);
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::function<void(Options&)> updater = nullptr);
+
+std::unique_ptr<system::ThreadingResources> make_threading_resources(std::unique_ptr<system::SystemDefinition> system);
+}  // namespace mrc::tests

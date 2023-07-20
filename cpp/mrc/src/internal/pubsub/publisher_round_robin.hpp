@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,20 +25,20 @@
 #include <memory>
 #include <unordered_map>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 struct RemoteDescriptorMessage;
-}  // namespace mrc::internal::data_plane
-namespace mrc::internal::runtime {
+}  // namespace mrc::data_plane
+namespace mrc::runtime {
 class Partition;
-}  // namespace mrc::internal::runtime
-namespace mrc::internal::ucx {
+}  // namespace mrc::runtime
+namespace mrc::ucx {
 class Endpoint;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx
 namespace mrc::runtime {
 class RemoteDescriptor;
 }  // namespace mrc::runtime
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 class PublisherRoundRobin final : public PublisherService
 {
@@ -60,4 +60,4 @@ class PublisherRoundRobin final : public PublisherService
     friend runtime::Partition;
 };
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -63,11 +63,11 @@ LatencyWatcher::LatencyWatcher(std::shared_ptr<pymrc::Executor> executor,
 {}
 
 void LatencyWatcher::make_segment(const std::string& name,
-                                  const std::function<void(mrc::segment::Builder&, LatencyWatcher&)>& init)
+                                  const std::function<void(mrc::segment::IBuilder&, LatencyWatcher&)>& init)
 {
     pymrc::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) {
+    auto tracer_init_wrapper = [this, init](mrc::segment::IBuilder& seg) {
         init(seg, *this);
     };
 
@@ -75,7 +75,7 @@ void LatencyWatcher::make_segment(const std::string& name,
     m_executor->register_pipeline(pipeline);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_source(mrc::segment::Builder& seg,
+std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_source(mrc::segment::IBuilder& seg,
                                                                                    const std::string& name,
                                                                                    bool force_sequential)
 {
@@ -90,7 +90,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_sour
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_traced_node(
-    mrc::segment::Builder& seg,
+    mrc::segment::IBuilder& seg,
     const std::string& name,
     std::function<py::object(py::object py_obj)> map_f)
 {
@@ -117,7 +117,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_traced_node
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> LatencyWatcher::make_tracer_sink(
-    mrc::segment::Builder& seg,
+    mrc::segment::IBuilder& seg,
     const std::string& name,
     std::function<void(py::object py_obj)> sink_f)
 {
@@ -161,11 +161,11 @@ ThroughputWatcher::ThroughputWatcher(std::shared_ptr<pymrc::Executor> executor,
 {}
 
 void ThroughputWatcher::make_segment(const std::string& name,
-                                     const std::function<void(mrc::segment::Builder&, ThroughputWatcher&)>& init)
+                                     const std::function<void(mrc::segment::IBuilder&, ThroughputWatcher&)>& init)
 {
     pymrc::Pipeline pipeline;
 
-    auto tracer_init_wrapper = [this, init](mrc::segment::Builder& seg) {
+    auto tracer_init_wrapper = [this, init](mrc::segment::IBuilder& seg) {
         init(seg, *this);
     };
 
@@ -173,7 +173,7 @@ void ThroughputWatcher::make_segment(const std::string& name,
     m_executor->register_pipeline(pipeline);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_source(mrc::segment::Builder& seg,
+std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_source(mrc::segment::IBuilder& seg,
                                                                                       const std::string& name,
                                                                                       bool force_sequential)
 {
@@ -188,7 +188,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_s
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_traced_node(
-    mrc::segment::Builder& seg,
+    mrc::segment::IBuilder& seg,
     const std::string& name,
     std::function<py::object(py::object x)> map_f)
 {
@@ -215,7 +215,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_traced_n
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> ThroughputWatcher::make_tracer_sink(
-    mrc::segment::Builder& seg,
+    mrc::segment::IBuilder& seg,
     const std::string& name,
     std::function<void(py::object x)> sink_f)
 {

@@ -103,6 +103,9 @@ def test_stat_gather_operators():
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
+    # Convert to global names
+    required_components = [(f"/stat_gather_operators/{name}", node_type) for name, node_type in required_components]
+
     framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
@@ -128,6 +131,9 @@ def test_stat_gather_channels():
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
+
+    # Convert to global names
+    required_components = [(f"/stat_gather_channels/{name}", node_type) for name, node_type in required_components]
 
     framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
@@ -155,6 +161,9 @@ def test_stat_gather_full():
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
 
+    # Convert to global names
+    required_components = [(f"/stat_gather_full/{name}", node_type) for name, node_type in required_components]
+
     framework_stats_info = mrc.benchmarking.get_tracing_stats()
     component_metrics = framework_stats_info["aggregations"]["components"]["metrics"]
 
@@ -178,6 +187,9 @@ def test_stat_gather_full_noreset():
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
+
+    # Convert to global names
+    required_components = [(f"/stat_gather_full_noreset/{name}", node_type) for name, node_type in required_components]
 
     # TODO(devin): If we have two segments in the same binary, with the same node names, they will have their stats
     #   merged. Is this what we want?
@@ -207,6 +219,11 @@ def test_stat_gather_full_noreset_start_stop():
     required_components = [("python_source_double", "src"), ("python_node_2x_1", "internal"),
                            ("python_node_2x_2", "internal"), ("python_node_2x_3", "internal"),
                            ("python_sink_double", "sink")]
+
+    # Convert to global names
+    required_components = [
+        (f"/stat_gather_full_noreset_start_stop/{name}", node_type) for name, node_type in required_components
+    ]
 
     active_trace_count = 0
     for i in range(1, 10):

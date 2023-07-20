@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -27,7 +27,7 @@
 #include <cstddef>  // for size_t
 #include <string>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 class Context;
 class Endpoint;
 
@@ -53,4 +53,4 @@ class Worker : public Primitive<ucp_worker_h>
     std::size_t m_address_length;
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

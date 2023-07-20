@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -31,12 +31,12 @@ namespace mrc::edge {
 template <typename T>
 class IWritableAcceptor;
 }  // namespace mrc::edge
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 class Client;
-}  // namespace mrc::internal::control_plane
-namespace mrc::internal::network {
-class Resources;
-}  // namespace mrc::internal::network
+}  // namespace mrc::control_plane
+namespace mrc::network {
+class NetworkResources;
+}  // namespace mrc::network
 namespace mrc::protos {
 class DropSubscriptionServiceState;
 class StateUpdate;
@@ -46,7 +46,7 @@ namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 class ISubscriptionServiceUpdater;
 
@@ -86,7 +86,7 @@ class Instance final : private resources::PartitionResourceBase, private Service
     std::multimap<std::string, std::shared_ptr<ISubscriptionServiceUpdater>> m_subscription_services;
     std::unique_ptr<mrc::runnable::Runner> m_update_handler;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

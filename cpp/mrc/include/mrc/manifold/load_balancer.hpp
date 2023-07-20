@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,9 +25,9 @@
 #include "mrc/node/operators/muxer.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/source_channel_owner.hpp"
-#include "mrc/pipeline/resources.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/launchable.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
@@ -68,7 +68,7 @@ class LoadBalancer : public CompositeManifold<MuxedIngress<T>, RoundRobinEgress<
     using base_t = CompositeManifold<MuxedIngress<T>, RoundRobinEgress<T>>;
 
   public:
-    LoadBalancer(PortName port_name, pipeline::Resources& resources) : base_t(std::move(port_name), resources)
+    LoadBalancer(PortName port_name, runnable::IRunnableResources& resources) : base_t(std::move(port_name), resources)
     {
         m_launch_options.engine_factory_name = "main";
         m_launch_options.pe_count            = 1;

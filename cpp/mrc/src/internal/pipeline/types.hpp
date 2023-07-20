@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,7 +21,7 @@
 
 #include <map>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
 using PartitionID      = std::uint32_t;                          // NOLINT
 using SegmentAddresses = std::map<SegmentAddress, PartitionID>;  // NOLINT
@@ -39,4 +39,4 @@ struct ControlMessage
     SegmentAddresses addresses;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -27,7 +27,7 @@ namespace mrc::manifold {
 template <typename T>
 struct Factory final
 {
-    static std::shared_ptr<Interface> make_manifold(PortName port_name, pipeline::Resources& resources)
+    static std::shared_ptr<Interface> make_manifold(PortName port_name, runnable::IRunnableResources& resources)
     {
         return std::make_shared<LoadBalancer<T>>(std::move(port_name), resources);
     }

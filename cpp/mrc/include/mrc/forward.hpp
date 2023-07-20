@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@ class Executor;
 struct PlacementGroup;
 
 namespace pipeline {
-class Pipeline;
+class PipelineDefinition;
 }  // namespace pipeline
 
 struct CpuSet;

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,8 +19,8 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/runnable/resources.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
 
@@ -38,7 +38,7 @@
 #include <string>
 #include <utility>
 
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 
 ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
 {
@@ -57,7 +57,7 @@ const std::vector<InstanceID>& ConnectionsManager::instance_ids() const
 }
 
 std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::register_ucx_addresses(
-    std::vector<std::optional<ucx::Resources>>& ucx_resources)
+    std::vector<std::optional<ucx::UcxResources>>& ucx_resources)
 {
     CHECK(client().state() == Client::State::RegisteringWorkers);
 
@@ -187,4 +187,4 @@ const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>
     return m_update_channels;
 }
 
-}  // namespace mrc::internal::control_plane::client
+}  // namespace mrc::control_plane::client

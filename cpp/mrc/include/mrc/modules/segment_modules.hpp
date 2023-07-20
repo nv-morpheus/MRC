@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,7 +26,8 @@
 #include <vector>
 
 namespace mrc::segment {
-class Builder;
+class IBuilder;
+class BuilderDefinition;
 }  // namespace mrc::segment
 
 namespace mrc::segment {
@@ -37,8 +38,6 @@ namespace mrc::modules {
 
 class SegmentModule
 {
-    friend mrc::segment::Builder;
-
   public:
     using segment_module_port_map_t      = std::map<std::string, std::shared_ptr<segment::ObjectProperties>>;
     using segment_module_port_t          = std::shared_ptr<segment::ObjectProperties>;
@@ -122,7 +121,7 @@ class SegmentModule
      * Functional entrypoint for module constructor during build -- this lets us act like a std::function
      * @param builder
      */
-    void operator()(segment::Builder& builder);
+    void operator()(segment::IBuilder& builder);
 
     /**
      * Retrieve the class name for the module, defaults to 'segment_module'
@@ -137,7 +136,7 @@ class SegmentModule
      * Entrypoint for module constructor during build
      * @param builder
      */
-    virtual void initialize(segment::Builder& builder) = 0;
+    virtual void initialize(segment::IBuilder& builder) = 0;
 
     /* Interface Functions */
     /**
@@ -190,6 +189,8 @@ class SegmentModule
     segment_module_port_map_t m_output_ports{};
 
     const nlohmann::json m_config;
+
+    friend class segment::BuilderDefinition;
 };
 
 }  // namespace mrc::modules

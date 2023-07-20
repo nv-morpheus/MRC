@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -35,13 +35,13 @@ class StateUpdate;
 class UpdateSubscriptionServiceRequest;
 }  // namespace mrc::protos
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 class Role;
 class ClientInstance;
 
 /**
- * @brief A specialize TaggedManager to synchronize tag and instance_id information across between a collection of
+ * @brief A specialized TaggedIssuer to synchronize tag and instance_id information across between a collection of
  * client-side objects with common linkages, e.g. the Publisher/Subscriber services which form the building blocks for
  * Ingress/EgressPorts use instances of SubscriptionService for Publishers to get control plane updates to the list of
  * Subscribers.
@@ -158,4 +158,4 @@ class Role final : public VersionedState
     std::map<std::uint64_t, std::pair<std::uint64_t, std::shared_ptr<server::ClientInstance>>> m_latched_members;
 };
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

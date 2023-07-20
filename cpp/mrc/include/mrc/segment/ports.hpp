@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -36,6 +36,8 @@ class Ports
   public:
     using port_builder_fn_t = std::function<std::shared_ptr<BaseT>(const SegmentAddress&, const PortName&)>;
 
+    Ports() = default;
+
     Ports(std::vector<std::string> names, std::vector<port_builder_fn_t> builder_fns)
     {
         if (names.size() != builder_fns.size())
@@ -71,9 +73,16 @@ class Ports
     }
 
   private:
+    const std::map<std::string, std::function<std::shared_ptr<BaseT>(const SegmentAddress&)>>& get_initializers() const
+    {
+        return m_initializers;
+    }
+
     std::vector<std::string> m_names;
     std::map<std::string, std::function<std::shared_ptr<BaseT>(const SegmentAddress&)>> m_initializers;
+
     friend Definition;
+    friend class SegmentDefinition;
 };
 
 }  // namespace mrc::segment

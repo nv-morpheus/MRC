@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,11 +19,10 @@
 
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
@@ -56,7 +55,7 @@ class LatencyBenchmarkTests : public ::testing::Test
         std::uniform_int_distribution<> dist(10, 100);
 
         m_iterations = dist(generator);
-        auto init    = [this](segment::Builder& segment) {
+        auto init    = [this](segment::IBuilder& segment) {
             std::string src_name  = "nsrc";
             std::string int_name  = "n1";
             std::string sink_name = "nsink";
@@ -85,7 +84,7 @@ class LatencyBenchmarkTests : public ::testing::Test
             segment.make_edge(internal, sink);
         };
 
-        auto pipeline = pipeline::make_pipeline();
+        auto pipeline = mrc::make_pipeline();
         auto segment  = pipeline->make_segment("bench_segment", init);
 
         std::shared_ptr<Executor> executor = std::make_shared<Executor>();
@@ -118,7 +117,7 @@ class ThroughputBenchmarkTests : public ::testing::Test
         std::uniform_int_distribution<> dist(10, 100);
 
         m_iterations = dist(generator);
-        auto init    = [this](segment::Builder& segment) {
+        auto init    = [this](segment::IBuilder& segment) {
             std::string src_name  = "nsrc";
             std::string int_name  = "n1";
             std::string sink_name = "nsink";
@@ -147,7 +146,7 @@ class ThroughputBenchmarkTests : public ::testing::Test
             segment.make_edge(internal, sink);
         };
 
-        auto pipeline = pipeline::make_pipeline();
+        auto pipeline = mrc::make_pipeline();
         auto segment  = pipeline->make_segment("bench_segment", init);
 
         std::shared_ptr<Executor> executor = std::make_shared<Executor>();

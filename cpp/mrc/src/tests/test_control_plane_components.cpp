@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -33,7 +33,7 @@
 #include <vector>
 
 using namespace mrc;
-using namespace mrc::internal::control_plane;
+using namespace mrc::control_plane;
 
 class TestControlPlaneComponents : public ::testing::Test
 {};

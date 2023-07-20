@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,7 +20,7 @@
 #include <ucp/api/ucp.h>
 #include <ucs/type/status.h>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 struct Callbacks final
 {
@@ -29,4 +29,4 @@ struct Callbacks final
     static void recv(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data);
 };
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

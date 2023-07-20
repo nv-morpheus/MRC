@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include "internal/ucx/common.hpp"
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 template <typename T>
 class Primitive : public std::enable_shared_from_this<Primitive<T>>
@@ -43,4 +43,4 @@ class Primitive : public std::enable_shared_from_this<Primitive<T>>
     T m_handle;
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

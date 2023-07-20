@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/core/fiber_meta_data.hpp"
+#include "mrc/core/utils.hpp"
 #include "mrc/types.hpp"
 
 #include <boost/fiber/all.hpp>
@@ -70,8 +71,14 @@ class FiberTaskQueue
 
         // track detached fibers - main fiber will wait on all detached fibers to finish
         packaged_task<void()> wrapped_task([this, t = std::move(task)]() mutable {
+            auto decrement_detached = Unwinder::create([this]() {
+                --m_detached;
+            });
+
+            // Call the task
             t();
-            --m_detached;
+
+            // Detached will get automatically decremented even if there is an exception
         });
         ++m_detached;
 

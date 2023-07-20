@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,15 +19,15 @@
 
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/data_plane/callbacks.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/data_plane/request.hpp"
-#include "internal/data_plane/resources.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/remote_descriptor/manager.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/channel/buffered_channel.hpp"
@@ -55,12 +55,12 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 using namespace mrc::memory::literals;
 
 Client::Client(resources::PartitionResourceBase& base,
-               ucx::Resources& ucx,
+               ucx::UcxResources& ucx,
                control_plane::client::ConnectionsManager& connections_manager,
                memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
@@ -302,7 +302,7 @@ void Client::do_service_start()
     mrc::make_edge(*m_rd_channel, *rd_writer);
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_inflight_remote_descriptor_sends
-    auto launch_options = Resources::launch_options(16);
+    auto launch_options = DataPlaneResources::launch_options(16);
 
     // launch rd_writer
     m_rd_writer = runnable().launch_control().prepare_launcher(launch_options, std::move(rd_writer))->ignition();
@@ -329,4 +329,4 @@ void Client::do_service_await_join()
     m_rd_writer->await_join();
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

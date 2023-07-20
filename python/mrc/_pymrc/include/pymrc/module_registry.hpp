@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace mrc::segment {
-class Builder;
+class IBuilder;
 }  // namespace mrc::segment
 
 namespace mrc::pymrc {
@@ -53,12 +53,12 @@ class ModuleRegistryProxy
 
     static void register_module(std::string name,
                                 const registry_version_t& release_version,
-                                std::function<void(mrc::segment::Builder&)> fn_py_initializer);
+                                std::function<void(mrc::segment::IBuilder&)> fn_py_initializer);
 
     static void register_module(std::string name,
                                 std::string registry_namespace,
                                 const registry_version_t& release_version,
-                                std::function<void(mrc::segment::Builder&)> fn_py_initializer);
+                                std::function<void(mrc::segment::IBuilder&)> fn_py_initializer);
 
     static void unregister_module(const std::string& name, const std::string& registry_namespace, bool optional = true);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include "internal/data_plane/client.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -30,7 +30,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 void PublisherRoundRobin::on_update()
 {
@@ -65,4 +65,4 @@ void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::RemoteDescr
     }
 }
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -311,18 +311,18 @@ GENERATE_NODE_TYPES(TestNodeComponent, NodeComponent);
 GENERATE_NODE_TYPES(TestSink, Sink);
 GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
 
-#define CREATE_TEST_NODE_CLASS(class_name)                                                                        \
-    py::class_<segment::Object<class_name>,                                                                       \
-               mrc::segment::ObjectProperties,                                                                    \
-               std::shared_ptr<segment::Object<class_name>>>(py_mod, #class_name)                                 \
-        .def(py::init<>(                                                                                          \
-                 [](mrc::segment::Builder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
-                     auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count); \
-                     return stage;                                                                                \
-                 }),                                                                                              \
-             py::arg("parent"),                                                                                   \
-             py::arg("name"),                                                                                     \
-             py::arg("counter"),                                                                                  \
+#define CREATE_TEST_NODE_CLASS(class_name)                                                                         \
+    py::class_<segment::Object<class_name>,                                                                        \
+               mrc::segment::ObjectProperties,                                                                     \
+               std::shared_ptr<segment::Object<class_name>>>(py_mod, #class_name)                                  \
+        .def(py::init<>(                                                                                           \
+                 [](mrc::segment::IBuilder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
+                     auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count);  \
+                     return stage;                                                                                 \
+                 }),                                                                                               \
+             py::arg("parent"),                                                                                    \
+             py::arg("name"),                                                                                      \
+             py::arg("counter"),                                                                                   \
              py::arg("msg_count") = 5);
 
 PYBIND11_MODULE(test_edges_cpp, py_mod)

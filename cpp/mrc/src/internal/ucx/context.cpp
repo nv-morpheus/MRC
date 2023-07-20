@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,6 +19,7 @@
 
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
+#include <ucp/api/ucp_compat.h>
 #include <ucp/api/ucp_def.h>
 #include <ucs/type/status.h>  // for ucs_status_string, UCS_OK
 
@@ -28,7 +29,7 @@
 #include <stdexcept>  // for runtime_error
 #include <tuple>      // for make_tuple, tuple
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 Context::Context()
 {
@@ -124,4 +125,4 @@ void Context::unregister_memory(ucp_mem_h handle, void* rbuffer)
     }
 }
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -147,7 +147,7 @@ const std::string& SegmentModule::name() const
     return m_module_instance_name;
 }
 
-void SegmentModule::operator()(segment::Builder& builder)
+void SegmentModule::operator()(segment::IBuilder& builder)
 {
     this->initialize(builder);
 }

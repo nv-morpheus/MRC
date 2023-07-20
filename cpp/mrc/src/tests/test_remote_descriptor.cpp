@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,14 +20,15 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/storage.hpp"
 #include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
@@ -55,15 +56,15 @@ class TestRD : public ::testing::Test
   protected:
     void SetUp() override
     {
-        auto resources = std::make_unique<internal::resources::Manager>(
-            internal::system::SystemProvider(make_system([](Options& options) {
+        auto resources = std::make_unique<resources::Manager>(
+            system::SystemProvider(tests::make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 options.enable_server(true);
                 options.architect_url("localhost:13337");
                 options.placement().resources_strategy(PlacementResources::Dedicated);
             })));
 
-        m_runtime = std::make_unique<internal::runtime::Runtime>(std::move(resources));
+        m_runtime = std::make_unique<runtime::Runtime>(std::move(resources));
     }
 
     void TearDown() override
@@ -71,7 +72,7 @@ class TestRD : public ::testing::Test
         m_runtime.reset();
     }
 
-    std::unique_ptr<internal::runtime::Runtime> m_runtime;
+    std::unique_ptr<runtime::Runtime> m_runtime;
 };
 
 TEST_F(TestRD, LifeCycle)
@@ -91,7 +92,7 @@ TEST_F(TestRD, LifeCycle)
             EXPECT_EQ(rd_manager.size(), 1);
 
             // use the internal implementation to transfer ownership and recreate
-            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
+            auto handle = remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
             // recreate from handle
@@ -132,7 +133,7 @@ TEST_F(TestRD, RemoteRelease)
             EXPECT_EQ(rd_manager_0.size(), 1);
             EXPECT_EQ(rd_manager_1.size(), 0);
 
-            auto handle = internal::remote_descriptor::Manager::unwrap_handle(std::move(rd));
+            auto handle = remote_descriptor::Manager::unwrap_handle(std::move(rd));
             EXPECT_FALSE(rd);
 
             auto rd2 = rd_manager_1.make_remote_descriptor(std::move(handle));

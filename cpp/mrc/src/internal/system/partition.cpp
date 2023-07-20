@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 const HostPartition& Partition::host() const
 {
@@ -60,4 +60,4 @@ size_t Partition::host_partition_id() const
     return m_host_partition_id;
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace mrc::internal::control_plane::server {
+namespace mrc::control_plane::server {
 
 Tagged::~Tagged() = default;
 
@@ -138,4 +138,4 @@ void TaggedIssuer::issue_update()
     do_issue_update();
 }
 
-}  // namespace mrc::internal::control_plane::server
+}  // namespace mrc::control_plane::server

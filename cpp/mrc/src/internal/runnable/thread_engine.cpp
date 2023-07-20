@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,8 +17,8 @@
 
 #include "internal/runnable/thread_engine.hpp"
 
-#include "internal/system/resources.hpp"
 #include "internal/system/thread.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/runnable/types.hpp"
@@ -30,9 +30,9 @@
 #include <optional>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
-ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::Resources& system) :
+ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& system) :
   m_cpu_set(std::move(cpu_set)),
   m_system(system)
 {}
@@ -61,4 +61,4 @@ runnable::EngineType ThreadEngine::engine_type() const
     return EngineType::Thread;
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

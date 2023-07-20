@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,9 +25,9 @@
  * @brief Graph of Pipeline Ports
  */
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-class Pipeline;
+class PipelineDefinition;
 
 struct PortConnections
 {
@@ -41,7 +41,7 @@ using PortMap = std::map<std::string, PortConnections>;  // NOLINT
 class PortGraph
 {
   public:
-    PortGraph(const Pipeline& pipeline);
+    PortGraph(const PipelineDefinition& pipeline);
 
     const PortMap& port_map() const;
 
@@ -62,4 +62,4 @@ class PortGraph
     std::set<std::string> m_sources;
 };
 
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline

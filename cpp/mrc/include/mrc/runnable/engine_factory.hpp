@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,7 +38,7 @@ struct EngineFactory
 {
     virtual ~EngineFactory()           = default;
     virtual EngineType backend() const = 0;  // todo(cpp20) constexpr virtual for the specific types
-    virtual std::shared_ptr<Engines> build_engines(const LaunchOptions& launch_options) = 0;
+    virtual std::shared_ptr<IEngines> build_engines(const LaunchOptions& launch_options) = 0;
 };
 
 }  // namespace mrc::runnable

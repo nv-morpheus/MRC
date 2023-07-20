@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,7 +22,7 @@
 
 #include <ostream>
 
-namespace mrc::internal::data_plane {
+namespace mrc::data_plane {
 
 Request::Request() = default;
 
@@ -60,4 +60,4 @@ bool Request::await_complete()
     LOG(FATAL) << "error in ucx callback";
 }
 
-}  // namespace mrc::internal::data_plane
+}  // namespace mrc::data_plane

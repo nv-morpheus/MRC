@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,7 +29,7 @@
 #include <memory>
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 class FiberTaskQueue;
 
 class FiberPool final : public core::FiberPool
@@ -70,4 +70,4 @@ class FiberPool final : public core::FiberPool
     std::vector<std::reference_wrapper<FiberTaskQueue>> m_queues;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

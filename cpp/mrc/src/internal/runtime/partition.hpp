@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -28,16 +28,16 @@
 namespace mrc::codable {
 struct ICodableStorage;
 }  // namespace mrc::codable
-namespace mrc::internal::resources {
+namespace mrc::resources {
 class PartitionResources;
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources
 namespace mrc::pubsub {
 class IPublisherService;
 class ISubscriberService;
 enum class PublisherPolicy;
 }  // namespace mrc::pubsub
 
-namespace mrc::internal::runtime {
+namespace mrc::runtime {
 
 class Partition final : public mrc::runtime::IPartition
 {
@@ -66,4 +66,4 @@ class Partition final : public mrc::runtime::IPartition
     std::shared_ptr<remote_descriptor::Manager> m_remote_descriptor_manager;
 };
 
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime

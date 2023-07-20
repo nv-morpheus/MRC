@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -74,8 +74,12 @@ class MyDataObjectNode
 
                     output.on_next(std::move(x));
                 },
-                [&](std::exception_ptr error_ptr) { output.on_error(error_ptr); },
-                [&]() { output.on_completed(); }));
+                [&](std::exception_ptr error_ptr) {
+                    output.on_error(error_ptr);
+                },
+                [&]() {
+                    output.on_completed();
+                }));
         };
     }
 
@@ -120,9 +124,10 @@ PYBIND11_MODULE(nodes, m)
 
     py::class_<mrc::segment::Object<MyDataObjectSource>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<MyDataObjectSource>>>(
-        m, "MyDataObjectSource", py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name, size_t count) {
+               std::shared_ptr<mrc::segment::Object<MyDataObjectSource>>>(m,
+                                                                          "MyDataObjectSource",
+                                                                          py::multiple_inheritance())
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name, size_t count) {
                  auto stage = parent.construct_object<MyDataObjectSource>(name, count);
 
                  return stage;
@@ -133,9 +138,10 @@ PYBIND11_MODULE(nodes, m)
 
     py::class_<mrc::segment::Object<MyDataObjectNode>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<MyDataObjectNode>>>(
-        m, "MyDataObjectNode", py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+               std::shared_ptr<mrc::segment::Object<MyDataObjectNode>>>(m,
+                                                                        "MyDataObjectNode",
+                                                                        py::multiple_inheritance())
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name) {
                  auto stage = parent.construct_object<MyDataObjectNode>(name);
 
                  return stage;
@@ -145,9 +151,10 @@ PYBIND11_MODULE(nodes, m)
 
     py::class_<mrc::segment::Object<MyDataObjectSink>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<MyDataObjectSink>>>(
-        m, "MyDataObjectSink", py::multiple_inheritance())
-        .def(py::init<>([](mrc::segment::Builder& parent, const std::string& name) {
+               std::shared_ptr<mrc::segment::Object<MyDataObjectSink>>>(m,
+                                                                        "MyDataObjectSink",
+                                                                        py::multiple_inheritance())
+        .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name) {
                  auto stage = parent.construct_object<MyDataObjectSink>(name);
 
                  return stage;

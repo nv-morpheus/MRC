@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,6 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/engine/segment/ibuilder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -116,29 +115,86 @@ void add_stats_watcher_if_rx_sink(T& thing, std::string name)
 
 namespace mrc::segment {
 
-class Builder final
+class IBuilder
 {
-    Builder(internal::segment::IBuilder& backend) : m_backend(backend) {}
-
   public:
-    DELETE_COPYABILITY(Builder);
-    DELETE_MOVEABILITY(Builder);
+    IBuilder()          = default;
+    virtual ~IBuilder() = default;
 
-    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index);
+    DELETE_COPYABILITY(IBuilder);
 
-    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index);
+    virtual const std::string& name() const = 0;
+
+    /**
+     * @brief Takes either a local or global object name and returns the global name and local name separately. Global
+     * names contain '/<SegmentName>/<m_namespace_prefix>/<name>' (leading '/') where local names are
+     * '<m_namespace_prefix>/<name>' (no leading '/')
+     *
+     * @param name Name to normalize
+     * @param ignore_namespace Whether or not to ignore the '<m_namespace_prefix>' portion. Useful for ports.
+     * @return std::tuple<std::string, std::string> Global name, Local name
+     */
+    virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                                bool ignore_namespace = false) const = 0;
+
+    virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
+
+    virtual std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) = 0;
+
+    /**
+     * Initialize a SegmentModule that was instantiated outside of the builder.
+     * @param module Module to initialize
+     */
+    virtual void init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule) = 0;
+
+    /**
+     * Register an input port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param input_name Unique name of the input port
+     * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
+     */
+    virtual void register_module_input(std::string input_name, std::shared_ptr<ObjectProperties> object) = 0;
+
+    /**
+     * Get the json configuration for the current module under configuration.
+     * @return nlohmann::json object.
+     */
+    virtual nlohmann::json get_current_module_config() = 0;
+
+    /**
+     * Register an output port on the given module -- note: this in generally only necessary for dynamically
+     * created modules that use an alternate initializer function independent of the derived class.
+     * See: PythonSegmentModule
+     * @param output_name Unique name of the output port
+     * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
+     */
+    virtual void register_module_output(std::string output_name, std::shared_ptr<ObjectProperties> object) = 0;
+
+    /**
+     * Load an existing, registered module, initialize it, and return it to the caller
+     * @param module_id Unique ID of the module to load
+     * @param registry_namespace Namespace where the module id is registered
+     * @param module_name Unique name of this instance of the module
+     * @param config Configuration to pass to the module
+     * @return Return a shared pointer to the new module, which is a derived class of SegmentModule
+     */
+    virtual std::shared_ptr<mrc::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
+                                                                                   const std::string& registry_namespace,
+                                                                                   std::string module_name,
+                                                                                   nlohmann::json config = {}) = 0;
+
+    template <typename ObjectT, typename... ArgsT>
+    std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args);
+
+    template <typename ObjectT>
+    std::shared_ptr<Object<ObjectT>> make_object(std::string name, std::unique_ptr<ObjectT> node);
 
     template <typename T>
     std::shared_ptr<Object<node::RxSinkBase<T>>> get_egress(std::string name);
 
     template <typename T>
     std::shared_ptr<Object<node::RxSourceBase<T>>> get_ingress(std::string name);
-
-    template <typename ObjectT>
-    std::shared_ptr<Object<ObjectT>> make_object(std::string name, std::unique_ptr<ObjectT> node);
-
-    template <typename ObjectT, typename... ArgsT>
-    std::shared_ptr<Object<ObjectT>> construct_object(std::string name, ArgsT&&... args);
 
     /**
      * Create a source node using the provided name and function, the function is lifted to an observable
@@ -249,49 +305,6 @@ class Builder final
     std::shared_ptr<ModuleTypeT> make_module(std::string module_name, nlohmann::json config = {});
 
     /**
-     * Initialize a SegmentModule that was instantiated outside of the builder.
-     * @param module Module to initialize
-     */
-    void init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule);
-
-    /**
-     * Register an input port on the given module -- note: this in generally only necessary for dynamically
-     * created modules that use an alternate initializer function independent of the derived class.
-     * See: PythonSegmentModule
-     * @param input_name Unique name of the input port
-     * @param object shared pointer to type erased Object associated with 'input_name' on this module instance.
-     */
-    void register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object);
-
-    /**
-     * Get the json configuration for the current module under configuration.
-     * @return nlohmann::json object.
-     */
-    nlohmann::json get_current_module_config();
-
-    /**
-     * Register an output port on the given module -- note: this in generally only necessary for dynamically
-     * created modules that use an alternate initializer function independent of the derived class.
-     * See: PythonSegmentModule
-     * @param output_name Unique name of the output port
-     * @param object shared pointer to type erased Object associated with 'output_name' on this module instance.
-     */
-    void register_module_output(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
-
-    /**
-     * Load an existing, registered module, initialize it, and return it to the caller
-     * @param module_id Unique ID of the module to load
-     * @param registry_namespace Namespace where the module id is registered
-     * @param module_name Unique name of this instance of the module
-     * @param config Configuration to pass to the module
-     * @return Return a shared pointer to the new module, which is a derived class of SegmentModule
-     */
-    std::shared_ptr<mrc::modules::SegmentModule> load_module_from_registry(const std::string& module_id,
-                                                                           const std::string& registry_namespace,
-                                                                           std::string module_name,
-                                                                           nlohmann::json config = {});
-
-    /**
      * Create an edge between two things that are convertible to ObjectProperties
      * @tparam SourceNodeTypeT Type hint for the source node -- optional -- this will be used if the type of the source
      * object cannot be directly determined.
@@ -332,44 +345,57 @@ class Builder final
                      SpliceOutputObjectT splice_output);
 
     template <typename ObjectT>
-    void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object);
+    void add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object);
 
     template <typename ObjectT, typename CallableT>
-    void add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object, CallableT&& callable);
+    void add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object, CallableT&& callable);
 
   private:
-    using sp_segment_module_t = std::shared_ptr<mrc::modules::SegmentModule>;
-
-    std::string m_namespace_prefix;
-    std::vector<std::string> m_namespace_stack{};
-    std::vector<sp_segment_module_t> m_module_stack{};
-
-    internal::segment::IBuilder& m_backend;
-
-    void ns_push(sp_segment_module_t smodule);
-
-    void ns_pop();
+    virtual ObjectProperties& find_object(const std::string& name)                             = 0;
+    virtual void add_object(const std::string& name, std::shared_ptr<ObjectProperties> object) = 0;
+    virtual std::shared_ptr<IngressPortBase> get_ingress_base(const std::string& name)         = 0;
+    virtual std::shared_ptr<EgressPortBase> get_egress_base(const std::string& name)           = 0;
+    virtual std::function<void(std::int64_t)> make_throughput_counter(const std::string& name) = 0;
 
     template <MRCObjectProxy ObjectReprT>
     ObjectProperties& to_object_properties(ObjectReprT& repr);
-
-    friend Definition;
 };
 
 template <typename ObjectT, typename... ArgsT>
-std::shared_ptr<Object<ObjectT>> Builder::construct_object(std::string name, ArgsT&&... args)
+std::shared_ptr<Object<ObjectT>> IBuilder::construct_object(std::string name, ArgsT&&... args)
 {
-    auto ns_name = m_namespace_prefix.empty() ? name : m_namespace_prefix + "/" + name;
-    auto uptr    = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+    auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
 
-    ::add_stats_watcher_if_rx_source(*uptr, ns_name);
-    ::add_stats_watcher_if_rx_sink(*uptr, ns_name);
+    return make_object(std::move(name), std::move(uptr));
+}
 
-    return make_object(std::move(ns_name), std::move(uptr));
+template <typename ObjectT>
+std::shared_ptr<Object<ObjectT>> IBuilder::make_object(std::string name, std::unique_ptr<ObjectT> node)
+{
+    std::shared_ptr<Object<ObjectT>> segment_object{nullptr};
+
+    if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
+    {
+        segment_object = std::make_shared<Runnable<ObjectT>>(std::move(node));
+        this->add_object(name, segment_object);
+    }
+    else
+    {
+        segment_object = std::make_shared<Component<ObjectT>>(std::move(node));
+        this->add_object(name, segment_object);
+    }
+
+    CHECK(segment_object);
+
+    // Now that we have been added, set the stats watchers using the object name
+    ::add_stats_watcher_if_rx_source(segment_object->object(), segment_object->name());
+    ::add_stats_watcher_if_rx_sink(segment_object->object(), segment_object->name());
+
+    return segment_object;
 }
 
 template <typename SourceTypeT, template <class, class = mrc::runnable::Context> class NodeTypeT, typename CreateFnT>
-auto Builder::make_source(std::string name, CreateFnT&& create_fn)
+auto IBuilder::make_source(std::string name, CreateFnT&& create_fn)
 {
     return construct_object<NodeTypeT<SourceTypeT>>(
         name,
@@ -377,25 +403,25 @@ auto Builder::make_source(std::string name, CreateFnT&& create_fn)
 }
 
 template <typename SourceTypeT, template <class, class = mrc::runnable::Context> class NodeTypeT>
-auto Builder::make_source(std::string name, rxcpp::observable<SourceTypeT> obs)
+auto IBuilder::make_source(std::string name, rxcpp::observable<SourceTypeT> obs)
 {
     return construct_object<NodeTypeT<SourceTypeT>>(name, obs);
 }
 
 template <typename SinkTypeT, template <class, class = mrc::runnable::Context> class NodeTypeT, typename... ArgsT>
-auto Builder::make_sink(std::string name, ArgsT&&... ops)
+auto IBuilder::make_sink(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT>>(name, rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
 }
 
 template <typename SinkTypeT, template <class> class NodeTypeT, typename... ArgsT>
-auto Builder::make_sink_component(std::string name, ArgsT&&... ops)
+auto IBuilder::make_sink_component(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT>>(name, rxcpp::make_observer<SinkTypeT>(std::forward<ArgsT>(ops)...));
 }
 
 template <typename SinkTypeT, template <class, class, class = mrc::runnable::Context> class NodeTypeT, typename... ArgsT>
-auto Builder::make_node(std::string name, ArgsT&&... ops)
+auto IBuilder::make_node(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT, SinkTypeT>>(name, std::forward<ArgsT>(ops)...);
 }
@@ -405,19 +431,19 @@ template <typename SinkTypeT,
           template <class, class, class = mrc::runnable::Context>
           class NodeTypeT,
           typename... ArgsT>
-auto Builder::make_node(std::string name, ArgsT&&... ops)
+auto IBuilder::make_node(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
 }
 
 template <typename SinkTypeT, typename SourceTypeT, template <class, class> class NodeTypeT, typename... ArgsT>
-auto Builder::make_node_component(std::string name, ArgsT&&... ops)
+auto IBuilder::make_node_component(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
 }
 
 template <typename ModuleTypeT>
-std::shared_ptr<ModuleTypeT> Builder::make_module(std::string module_name, nlohmann::json config)
+std::shared_ptr<ModuleTypeT> IBuilder::make_module(std::string module_name, nlohmann::json config)
 {
     static_assert(std::is_base_of_v<modules::SegmentModule, ModuleTypeT>);
 
@@ -428,7 +454,7 @@ std::shared_ptr<ModuleTypeT> Builder::make_module(std::string module_name, nlohm
 }
 
 template <typename SourceNodeTypeT, typename SinkNodeTypeT, MRCObjectProxy SourceObjectT, MRCObjectProxy SinkObjectT>
-void Builder::make_edge(SourceObjectT source, SinkObjectT sink)
+void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
 
 {
     DVLOG(10) << "forming edge between two segment objects";
@@ -473,10 +499,10 @@ template <typename EdgeDataTypeT,
           MRCObjectProxy SinkObjectT,
           MRCObjectProxy SpliceInputObjectT,
           MRCObjectProxy SpliceOutputObjectT>
-void Builder::splice_edge(SourceObjectT source,
-                          SinkObjectT sink,
-                          SpliceInputObjectT splice_input,
-                          SpliceOutputObjectT splice_output)
+void IBuilder::splice_edge(SourceObjectT source,
+                           SinkObjectT sink,
+                           SpliceInputObjectT splice_input,
+                           SpliceOutputObjectT splice_output)
 
 {
     auto& source_object = to_object_properties(source);
@@ -539,42 +565,10 @@ void Builder::splice_edge(SourceObjectT source,
     throw std::runtime_error("Attempt to splice unsupported edge types");
 }
 
-template <typename ObjectT>
-std::shared_ptr<Object<ObjectT>> Builder::make_object(std::string name, std::unique_ptr<ObjectT> node)
-{
-    // Note: name should have any prefix modifications done prior to getting here.
-    if (m_backend.has_object(name))
-    {
-        LOG(ERROR) << "A Object named " << name << " is already registered";
-        throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
-    }
-
-    std::shared_ptr<Object<ObjectT>> segment_object{nullptr};
-
-    if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
-    {
-        auto segment_name = m_backend.name() + "/" + name;
-        auto segment_node = std::make_shared<Runnable<ObjectT>>(segment_name, std::move(node));
-
-        m_backend.add_runnable(name, segment_node);
-        m_backend.add_object(name, segment_node);
-        segment_object = segment_node;
-    }
-    else
-    {
-        auto segment_node = std::make_shared<Component<ObjectT>>(std::move(node));
-        m_backend.add_object(name, segment_node);
-        segment_object = segment_node;
-    }
-
-    CHECK(segment_object);
-    return segment_object;
-}
-
 template <typename T>
-std::shared_ptr<Object<node::RxSinkBase<T>>> Builder::get_egress(std::string name)
+std::shared_ptr<Object<node::RxSinkBase<T>>> IBuilder::get_egress(std::string name)
 {
-    auto base = m_backend.get_egress_base(name);
+    auto base = this->get_egress_base(name);
     if (!base)
     {
         throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
@@ -590,9 +584,9 @@ std::shared_ptr<Object<node::RxSinkBase<T>>> Builder::get_egress(std::string nam
 }
 
 template <typename T>
-std::shared_ptr<Object<node::RxSourceBase<T>>> Builder::get_ingress(std::string name)
+std::shared_ptr<Object<node::RxSourceBase<T>>> IBuilder::get_ingress(std::string name)
 {
-    auto base = m_backend.get_ingress_base(name);
+    auto base = this->get_ingress_base(name);
     if (!base)
     {
         throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
@@ -608,20 +602,20 @@ std::shared_ptr<Object<node::RxSourceBase<T>>> Builder::get_ingress(std::string 
 }
 
 template <typename ObjectT>
-void Builder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object)
+void IBuilder::add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object)
 {
     auto runnable = std::dynamic_pointer_cast<Runnable<ObjectT>>(segment_object);
     CHECK(runnable);
     CHECK(segment_object->is_source());
     using source_type_t = typename ObjectT::source_type_t;
-    auto counter        = m_backend.make_throughput_counter(runnable->name());
+    auto counter        = this->make_throughput_counter(runnable->name());
     runnable->object().add_epilogue_tap([counter](const source_type_t& data) {
         counter(1);
     });
 }
 
 template <typename ObjectT, typename CallableT>
-void Builder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> segment_object, CallableT&& callable)
+void IBuilder::add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_object, CallableT&& callable)
 {
     auto runnable = std::dynamic_pointer_cast<Runnable<ObjectT>>(segment_object);
     CHECK(runnable);
@@ -629,7 +623,7 @@ void Builder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> s
     using source_type_t = typename ObjectT::source_type_t;
     using tick_fn_t     = std::function<std::int64_t(const source_type_t&)>;
     tick_fn_t tick_fn   = callable;
-    auto counter        = m_backend.make_throughput_counter(runnable->name());
+    auto counter        = this->make_throughput_counter(runnable->name());
     runnable->object().add_epilogue_tap([counter, tick_fn](const source_type_t& data) {
         counter(tick_fn(data));
     });
@@ -637,7 +631,7 @@ void Builder::add_throughput_counter(std::shared_ptr<segment::Object<ObjectT>> s
 
 /* Private Member Functions */
 template <MRCObjectProxy ObjectReprT>
-ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
+ObjectProperties& IBuilder::to_object_properties(ObjectReprT& repr)
 {
     ObjectProperties* object_properties_ptr{nullptr};
     if constexpr (is_shared_ptr_v<ObjectReprT>)
@@ -670,12 +664,15 @@ ObjectProperties& Builder::to_object_properties(ObjectReprT& repr)
     // String-like lookup
     else
     {
-        object_properties_ptr = std::addressof(m_backend.find_object(repr));
+        object_properties_ptr = std::addressof(this->find_object(repr));
     }
 
     CHECK(object_properties_ptr != nullptr) << "If this fails, something is wrong with the concept definition";
 
     return *object_properties_ptr;
 }
+
+// For backwards compatibility, make a type alias to `Builder`
+using Builder = IBuilder;  // NOLINT(readability-identifier-naming)
 
 }  // namespace mrc::segment

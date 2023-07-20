@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,7 +23,7 @@
 
 #include <boost/fiber/all.hpp>
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 /**
  * @brief MRC Sink to handle ProgressEvents which correspond to Promise<bool> tags
@@ -37,4 +37,4 @@ class PromiseHandler final : public mrc::node::GenericSink<ProgressEvent>
     }
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

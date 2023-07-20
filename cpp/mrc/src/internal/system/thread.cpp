@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -32,7 +32,7 @@
 #include <cstdint>
 #include <sstream>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 Thread::Thread(std::shared_ptr<const ThreadResources> resources, std::thread&& thread) :
   m_resources(std::move(resources)),
@@ -158,4 +158,4 @@ void ThreadResources::finalize_thread(const CpuSet& cpu_affinity) const
     }
 }
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

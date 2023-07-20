@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include "internal/resources/forward.hpp"
 
-namespace mrc::internal::codable {
+namespace mrc::codable {
 
 struct IStorageResources
 {
@@ -27,4 +27,4 @@ struct IStorageResources
     virtual resources::PartitionResources& resources() const = 0;
 };
 
-}  // namespace mrc::internal::codable
+}  // namespace mrc::codable

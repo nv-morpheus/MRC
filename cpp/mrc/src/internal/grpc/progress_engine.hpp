@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -29,7 +29,7 @@ namespace grpc {
 class CompletionQueue;
 }  // namespace grpc
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 /**
  * @brief gRPC event data pulled from a CQ
@@ -67,4 +67,4 @@ class ProgressEngine final : public mrc::node::GenericSource<ProgressEvent>
     std::shared_ptr<grpc::CompletionQueue> m_cq;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

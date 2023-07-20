@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,7 +21,7 @@
 
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 HostPartition::HostPartition(CpuSet cpu_set, NumaSet numa_set, std::size_t total_memory) :
   m_cpu_set(std::move(cpu_set)),
@@ -60,4 +60,4 @@ const EngineFactoryCpuSets& HostPartition::engine_factory_cpu_sets() const
 {
     return m_engine_factory_cpu_sets;
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

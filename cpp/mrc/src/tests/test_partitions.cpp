@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -42,7 +42,6 @@
 #include <vector>
 
 using namespace mrc;
-using namespace internal;
 using namespace system;
 
 // iwyu is getting confused between std::uint32_t and boost::uint32_t

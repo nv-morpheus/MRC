@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,7 +20,6 @@
 #include <glog/logging.h>
 #include <mrc/mrc.hpp>
 #include <mrc/node/rx_sink.hpp>
-#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 using namespace mrc::quickstart::cpp::common;
@@ -36,10 +35,10 @@ int main(int argc, char* argv[])
     Executor executor(std::move(options));
 
     // create pipeline object
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     // create a segment - a pipeline can consist of multiple segments; however in this example we will use only one
-    auto seg = segment::Definition::create("quickstart", [&counter](segment::Builder& s) {
+    auto seg = Segment::create("quickstart", [&counter](segment::IBuilder& s) {
         // Source
         // This first "node" is a source node which has no upstream dependencies. It is responsible for producing data
         // to be consume by downstream nodes
@@ -50,8 +49,9 @@ int main(int argc, char* argv[])
         // A Node is both a Source and a Sink, it connects to an upstream provider/source and a downstream
         // subscriber/sink. This examples accects an upstream int and provides a downstream float which is the input
         // value scaled by 2.5.
-        auto node = s.make_node<int, float>("int_x2_to_float",
-                                            rxcpp::operators::map([](const int& data) { return float(2.5F * data); }));
+        auto node = s.make_node<int, float>("int_x2_to_float", rxcpp::operators::map([](const int& data) {
+                                                return float(2.5F * data);
+                                            }));
 
         // Sink
         // Sinks are terminators. They only accept upstream connections and do not provide the ability to pass data on.
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     });
 
     // register segments with the pipeline
-    pipeline->register_segment(seg);
+    pipeline->register_segment(std::move(seg));
 
     // register the pipeline with the executor
     executor.register_pipeline(std::move(pipeline));

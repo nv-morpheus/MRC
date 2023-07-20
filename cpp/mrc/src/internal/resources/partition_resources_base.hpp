@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,11 +22,11 @@
 #include <cstddef>
 #include <functional>
 
-namespace mrc::internal::runnable {
-class Resources;
-}  // namespace mrc::internal::runnable
+namespace mrc::runnable {
+class RunnableResources;
+}  // namespace mrc::runnable
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 /**
  * @brief Provider of both a system::PartitionProvider and a runnable::Resource assigned to the particular partition
@@ -37,13 +37,13 @@ namespace mrc::internal::resources {
 class PartitionResourceBase : public system::PartitionProvider
 {
   public:
-    PartitionResourceBase(runnable::Resources& runnable, std::size_t partition_id);
+    PartitionResourceBase(runnable::RunnableResources& runnable, std::size_t partition_id);
 
-    runnable::Resources& runnable();
-    const runnable::Resources& runnable() const;
+    runnable::RunnableResources& runnable();
+    const runnable::RunnableResources& runnable() const;
 
   private:
-    std::reference_wrapper<runnable::Resources> m_runnable;
+    std::reference_wrapper<runnable::RunnableResources> m_runnable;
 };
 
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

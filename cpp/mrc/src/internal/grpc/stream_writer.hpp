@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 
 #include "mrc/channel/ingress.hpp"
 
-namespace mrc::internal::rpc {
+namespace mrc::rpc {
 
 template <typename T>
 struct StreamWriter : public mrc::channel::Ingress<T>
@@ -30,4 +30,4 @@ struct StreamWriter : public mrc::channel::Ingress<T>
     virtual std::size_t get_id() const = 0;
 };
 
-}  // namespace mrc::internal::rpc
+}  // namespace mrc::rpc

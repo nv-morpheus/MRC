@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -25,7 +25,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 Future<void> Engine::launch_task(std::function<void()> task)
 {
@@ -38,4 +38,4 @@ Future<void> Engine::launch_task(std::function<void()> task)
     return do_launch_task(std::move(task));
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

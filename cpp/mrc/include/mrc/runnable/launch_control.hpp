@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -101,7 +101,7 @@ class LaunchControl final
 
         // our launcher needs engines specific to the backend
         // engines are out way of running some task on the specified backend
-        std::shared_ptr<Engines> engines = build_engines(options);
+        std::shared_ptr<IEngines> engines = build_engines(options);
 
         // make contexts
         std::vector<std::shared_ptr<Context>> contexts;
@@ -202,7 +202,7 @@ class LaunchControl final
 
         // our launcher needs engines specific to the backend
         // engines are out way of running some task on the specified backend
-        std::shared_ptr<Engines> engines = build_engines(options);
+        std::shared_ptr<IEngines> engines = build_engines(options);
 
         // make contexts
         std::vector<std::shared_ptr<Context>> contexts;
@@ -281,7 +281,7 @@ class LaunchControl final
     //     return config().default_options;
     // }
 
-    std::shared_ptr<Engines> build_engines(const LaunchOptions& launch_options) const
+    std::shared_ptr<IEngines> build_engines(const LaunchOptions& launch_options) const
     {
         return get_engine_factory(launch_options.engine_factory_name).build_engines(launch_options);
     }
@@ -325,7 +325,7 @@ class LaunchControl final
      * @return auto
      */
     template <typename WrappedContextT, typename... ArgsT>
-    auto make_contexts(const Engines& engines, ArgsT&&... args)
+    auto make_contexts(const IEngines& engines, ArgsT&&... args)
     {
         const auto size = engines.size();
         std::vector<std::shared_ptr<Context>> contexts;

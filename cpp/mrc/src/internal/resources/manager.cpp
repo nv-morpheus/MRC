@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,20 +20,20 @@
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/control_plane/resources.hpp"
-#include "internal/data_plane/resources.hpp"  // IWYU pragma: keep
+#include "internal/control_plane/control_plane_resources.hpp"
+#include "internal/data_plane/data_plane_resources.hpp"  // IWYU pragma: keep
 #include "internal/memory/device_resources.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
-#include "internal/system/resources.hpp"
 #include "internal/system/system.hpp"
+#include "internal/system/threading_resources.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
-#include "internal/ucx/resources.hpp"
+#include "internal/ucx/ucx_resources.hpp"
 #include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
@@ -52,26 +52,24 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::resources {
+namespace mrc::resources {
 
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
 
-Manager::Manager(const system::SystemProvider& system) : Manager(std::make_unique<system::Resources>(system)) {}
-
-Manager::Manager(std::unique_ptr<system::Resources> resources) :
-  SystemProvider(*resources),
-  m_system(std::move(resources))
+Manager::Manager(const system::SystemProvider& system) :
+  SystemProvider(system),
+  m_threading(std::make_unique<system::ThreadingResources>(system))
 {
-    const auto& partitions      = system().partitions().flattened();
-    const auto& host_partitions = system().partitions().host_partitions();
-    const bool network_enabled  = !system().options().architect_url().empty();
+    const auto& partitions      = this->system().partitions().flattened();
+    const auto& host_partitions = this->system().partitions().host_partitions();
+    const bool network_enabled  = !this->system().options().architect_url().empty();
 
     // construct the runnable resources on each host_partition - launch control and main
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
     {
         VLOG(1) << "building runnable/launch_control resources on host_partition: " << i;
-        m_runnable.emplace_back(*m_system, i);
+        m_runnable.emplace_back(*m_threading, i);
     }
 
     std::vector<PartitionResourceBase> base_partition_resources;
@@ -90,8 +88,8 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             VLOG(1) << "building ucx resources for partition " << base.partition_id();
             auto network_task_queue_cpuset = base.partition().host().engine_factory_cpu_sets().fiber_cpu_sets.at(
                 "mrc_network");
-            auto& network_fiber_queue = m_system->get_task_queue(network_task_queue_cpuset.first());
-            std::optional<ucx::Resources> ucx;
+            auto& network_fiber_queue = m_threading->get_task_queue(network_task_queue_cpuset.first());
+            std::optional<ucx::UcxResources> ucx;
             ucx.emplace(base, network_fiber_queue);
             m_ucx.push_back(std::move(ucx));
         }
@@ -105,7 +103,7 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     std::map<InstanceID, std::unique_ptr<control_plane::client::Instance>> control_instances;
     if (network_enabled)
     {
-        m_control_plane   = std::make_shared<control_plane::Resources>(base_partition_resources.at(0));
+        m_control_plane   = std::make_shared<control_plane::ControlPlaneResources>(base_partition_resources.at(0));
         control_instances = m_control_plane->client().register_ucx_addresses(m_ucx);
         CHECK_EQ(m_control_plane->client().connections().instance_ids().size(), m_ucx.size());
     }
@@ -155,10 +153,10 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
             auto instance_id = m_control_plane->client().connections().instance_ids().at(base.partition_id());
             DCHECK(contains(control_instances, instance_id));  // todo(cpp20) contains
             auto instance = std::move(control_instances.at(instance_id));
-            network::Resources network(base,
-                                       *m_ucx.at(base.partition_id()),
-                                       m_host.at(base.partition().host_partition_id()),
-                                       std::move(instance));
+            network::NetworkResources network(base,
+                                              *m_ucx.at(base.partition_id()),
+                                              m_host.at(base.partition().host_partition_id()),
+                                              std::move(instance));
             m_network.emplace_back(std::move(network));
         }
         else
@@ -182,9 +180,9 @@ Manager::Manager(std::unique_ptr<system::Resources> resources) :
     // set thread local access to resources on all fiber task queues and any future thread created by the runtime
     for (auto& partition : m_partitions)
     {
-        m_system->register_thread_local_initializer(partition.partition().host().cpu_set(), [this, &partition] {
+        m_threading->register_thread_local_initializer(partition.partition().host().cpu_set(), [this, &partition] {
             m_thread_resources = this;
-            if (system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
+            if (this->system().partitions().device_to_host_strategy() == PlacementResources::Dedicated)
             {
                 m_thread_partition = &partition;
             }
@@ -267,4 +265,4 @@ Future<void> Manager::shutdown()
         }
     });
 }
-}  // namespace mrc::internal::resources
+}  // namespace mrc::resources

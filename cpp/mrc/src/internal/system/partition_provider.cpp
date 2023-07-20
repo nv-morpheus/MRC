@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
 PartitionProvider::PartitionProvider(SystemProvider& system, std::size_t partition_id) :
   SystemProvider(system),
@@ -41,4 +41,4 @@ const Partition& PartitionProvider::partition() const
 {
     return system().partitions().flattened().at(m_partition_id);
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,7 +26,7 @@
 #include <ostream>
 #include <utility>
 
-namespace mrc::internal::utils {
+namespace mrc::utils {
 
 std::uint16_t CollisionDetector::register_name(const std::string& name)
 {
@@ -82,4 +82,4 @@ const std::string& CollisionDetector::name(const std::uint16_t& hash) const
     return search->second;
 }
 
-}  // namespace mrc::internal::utils
+}  // namespace mrc::utils

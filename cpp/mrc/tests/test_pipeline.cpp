@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
+#include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/builder.hpp"
-#include "mrc/segment/definition.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
@@ -48,7 +47,7 @@ class TestPipeline : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_pipeline = std::move(pipeline::make_pipeline());
+        m_pipeline = std::move(mrc::make_pipeline());
         m_options  = std::make_unique<Options>();
 
         m_options->topology().user_cpuset("0");
@@ -56,7 +55,7 @@ class TestPipeline : public ::testing::Test
 
     void TearDown() override {}
 
-    std::unique_ptr<pipeline::Pipeline> m_pipeline;
+    std::unique_ptr<pipeline::IPipeline> m_pipeline;
     std::unique_ptr<Options> m_options;
 };
 
@@ -67,17 +66,16 @@ TEST_F(TestPipeline, LifeCycle)
     // note: i'm not sure if the top-level segment definition require types or just names
     // types might be useful for both count enforcement/zipping type-to-name, but also
     // make the instantiation of the serialization/deserialization network stack simplier
-    auto segment_initializer = [&counter](segment::Builder& seg) {
+    auto segment_initializer = [&counter](segment::IBuilder& seg) {
         ++counter;
         // Segment initialization code here.
     };
 
-    auto segment = segment::Definition::create("seg_1",
-                                               segment::IngressPorts<int>({"my_int"}),
-                                               segment::EgressPorts<float>({"my_float"}),
-                                               segment_initializer);
+    m_pipeline->make_segment("seg_1",
+                             segment::IngressPorts<int>({"my_int"}),
+                             segment::EgressPorts<float>({"my_float"}),
+                             segment_initializer);
 
-    m_pipeline->register_segment(segment);
     // EXPECT_EQ(m_pipeline->segment_count(), 1);
     EXPECT_EQ(counter.load(), 0);
 
@@ -96,11 +94,11 @@ TEST_F(TestPipeline, LifeCycle)
 
 TEST_F(TestPipeline, DuplicateSegments)
 {
-    auto segment_initializer = [](segment::Builder& seg) {};
-    auto seg_1               = segment::Definition::create("seg_1",
-                                             segment::IngressPorts<int>({"my_int1"}),
-                                             segment::EgressPorts<int>({"my_int2"}),
-                                             segment_initializer);
+    auto segment_initializer                        = [](segment::IBuilder& seg) {};
+    std::shared_ptr<const pipeline::ISegment> seg_1 = Segment::create("seg_1",
+                                                                      segment::IngressPorts<int>({"my_int1"}),
+                                                                      segment::EgressPorts<int>({"my_int2"}),
+                                                                      segment_initializer);
     m_pipeline->register_segment(seg_1);
     EXPECT_ANY_THROW(m_pipeline->register_segment(seg_1));
 }
@@ -112,27 +110,28 @@ TEST_F(TestPipeline, TwoSegment)
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
-    auto seg_1 = pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::Builder& seg) {
-        auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
-            LOG(INFO) << "emit 1";
-            s.on_next(1.0F);
-            LOG(INFO) << "emit 2";
-            s.on_next(2.0F);
-            LOG(INFO) << "emit 3";
-            s.on_next(3.0F);
-            LOG(INFO) << "issuing complete";
-            s.on_completed();
+    auto seg_1 =
+        pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::IBuilder& seg) {
+            auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+                LOG(INFO) << "emit 1";
+                s.on_next(1.0F);
+                LOG(INFO) << "emit 2";
+                s.on_next(2.0F);
+                LOG(INFO) << "emit 3";
+                s.on_next(3.0F);
+                LOG(INFO) << "issuing complete";
+                s.on_completed();
+            });
+
+            auto my_float_egress = seg.get_egress<float>("float_port");
+
+            seg.make_edge(rx_source, my_float_egress);
         });
 
-        auto my_float_egress = seg.get_egress<float>("float_port");
-
-        seg.make_edge(rx_source, my_float_egress);
-    });
-
     auto seg_2 =
-        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::Builder& seg) {
+        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::IBuilder& seg) {
             auto my_float_ingress = seg.get_ingress<float>("float_port");
 
             auto rx_sink = seg.make_sink<float>("rx_sink",
@@ -169,12 +168,11 @@ TEST_F(TestPipeline, TwoSegmentManualTag)
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     auto seg_1 =
-        pipeline->make_segment("seg_1", segment::EgressPorts<Tagged<float>>({"float_port"}), [](segment::Builder& seg) {
-            auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
-                s.on_next(1.0f);
+        pipeline->make_segment("seg_1", segment::EgressPorts<Tagged<float>>({"float_port"}), [](segment::IBuilder& seg)
+{ auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) { s.on_next(1.0f);
                 s.on_next(2.0f);
                 s.on_next(3.0f);
                 s.on_completed();
@@ -196,7 +194,7 @@ TEST_F(TestPipeline, TwoSegmentManualTag)
         });
 
     auto seg_2 =
-        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::Builder& seg) {
+        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::IBuilder& seg) {
             auto my_float_ingress = seg.get_ingress<float>("float_port");
 
             auto rx_sink = seg.make_sink<float>("rx_sink",
@@ -234,12 +232,11 @@ TEST_F(TestPipeline, TwoSegmentManualTagImmediateStop)
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     auto seg_1 =
-        pipeline->make_segment("seg_1", segment::EgressPorts<Tagged<float>>({"float_port"}), [](segment::Builder& seg) {
-            auto rx_source =
-                seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) { s.on_completed(); });
+        pipeline->make_segment("seg_1", segment::EgressPorts<Tagged<float>>({"float_port"}), [](segment::IBuilder& seg)
+{ auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) { s.on_completed(); });
 
             auto seg_2_addr = seg.make_address("seg_2");
 
@@ -257,7 +254,7 @@ TEST_F(TestPipeline, TwoSegmentManualTagImmediateStop)
         });
 
     auto seg_2 =
-        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::Builder& seg) {
+        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::IBuilder& seg) {
             auto my_float_ingress = seg.get_ingress<float>("float_port");
 
             auto rx_sink = seg.make_sink<float>("rx_sink",
@@ -300,9 +297,9 @@ TEST_F(TestPipeline, Architect)
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
-    auto seg_1 = pipeline->make_segment("seg_1", EgressPorts<float>({"float_port"}), [](segment::Builder& seg) {
+    auto seg_1 = pipeline->make_segment("seg_1", EgressPorts<float>({"float_port"}), [](segment::IBuilder& seg) {
         auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
             s.on_next(1.0f);
             s.on_next(2.0f);
@@ -315,7 +312,7 @@ TEST_F(TestPipeline, Architect)
         seg.make_edge(rx_source, my_float_egress);
     });
 
-    auto seg_2 = pipeline->make_segment("seg_2", IngressPorts<float>({"float_port"}), [&](segment::Builder& seg) {
+    auto seg_2 = pipeline->make_segment("seg_2", IngressPorts<float>({"float_port"}), [&](segment::IBuilder& seg) {
         auto my_float_ingress = seg.get_ingress<float>("float_port");
 
         auto rx_sink = seg.make_sink<float>("rx_sink",

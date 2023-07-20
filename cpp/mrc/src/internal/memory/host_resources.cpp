@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 #include "internal/memory/host_resources.hpp"
 
 #include "internal/memory/callback_adaptor.hpp"
-#include "internal/runnable/resources.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
@@ -37,7 +37,6 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <map>
 #include <memory>
@@ -48,9 +47,9 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
-HostResources::HostResources(runnable::Resources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
+HostResources::HostResources(runnable::RunnableResources& runnable, ucx::RegistrationCallbackBuilder&& callbacks) :
   system::HostPartitionProvider(runnable)
 {
     runnable.main()
@@ -122,4 +121,4 @@ std::shared_ptr<mrc::memory::memory_resource> HostResources::arena_memory_resour
 {
     return m_arena;
 }
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

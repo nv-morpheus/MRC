@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,7 +23,7 @@
 
 #include <utility>
 
-namespace mrc::internal::remote_descriptor {
+namespace mrc::remote_descriptor {
 
 Storage::Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage) : m_storage(std::move(storage))
 {
@@ -50,4 +50,4 @@ std::size_t Storage::decrement_tokens(std::size_t decrement_count)
     return m_tokens;
 }
 
-}  // namespace mrc::internal::remote_descriptor
+}  // namespace mrc::remote_descriptor

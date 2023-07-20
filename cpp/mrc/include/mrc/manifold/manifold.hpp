@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -26,21 +26,22 @@ namespace mrc::edge {
 class IWritableAcceptorBase;
 class IWritableProviderBase;
 }  // namespace mrc::edge
-namespace mrc::pipeline {
-struct Resources;
-}  // namespace mrc::pipeline
+namespace mrc::runnable {
+struct IRunnableResources;
+}  // namespace mrc::runnable
 
 namespace mrc::manifold {
 
 class Manifold : public Interface
 {
   public:
-    Manifold(PortName port_name, pipeline::Resources& resources);
+    Manifold(PortName port_name, runnable::IRunnableResources& resources);
+    ~Manifold() override;
 
     const PortName& port_name() const final;
 
   protected:
-    pipeline::Resources& resources();
+    runnable::IRunnableResources& resources();
 
     const std::string& info() const;
 
@@ -52,7 +53,7 @@ class Manifold : public Interface
     virtual void do_add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
 
     PortName m_port_name;
-    pipeline::Resources& m_resources;
+    runnable::IRunnableResources& m_resources;
     std::string m_info;
 };
 

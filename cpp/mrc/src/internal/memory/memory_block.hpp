@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-namespace mrc::internal::memory {
+namespace mrc::memory {
 
 struct MemoryBlock
 {
@@ -132,4 +132,4 @@ struct MemoryBlockCompareAddr
     }
 };
 
-}  // namespace mrc::internal::memory
+}  // namespace mrc::memory

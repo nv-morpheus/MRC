@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,11 +17,10 @@
 
 #include "internal/runnable/engine_factory.hpp"
 
-#include "internal/runnable/engine.hpp"
 #include "internal/runnable/fiber_engines.hpp"
 #include "internal/runnable/thread_engines.hpp"
 #include "internal/system/fiber_pool.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/constants.hpp"
 #include "mrc/core/bitmap.hpp"
@@ -39,7 +38,8 @@
 #include <utility>
 #include <vector>
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
+class IEngines;
 
 class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 {
@@ -52,7 +52,7 @@ class FiberEngineFactory : public ::mrc::runnable::EngineFactory
      *
      * @return std::shared_ptr<Engines>
      */
-    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::IEngines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         return std::make_shared<FiberEngines>(launch_options,
@@ -76,7 +76,7 @@ class FiberEngineFactory : public ::mrc::runnable::EngineFactory
 class ReusableFiberEngineFactory final : public FiberEngineFactory
 {
   public:
-    ReusableFiberEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+    ReusableFiberEngineFactory(const system::ThreadingResources& system_resources, const CpuSet& cpu_set) :
       m_pool(system_resources.make_fiber_pool(cpu_set))
     {}
     ~ReusableFiberEngineFactory() final = default;
@@ -115,7 +115,7 @@ class ReusableFiberEngineFactory final : public FiberEngineFactory
 class SingleUseFiberEngineFactory final : public FiberEngineFactory
 {
   public:
-    SingleUseFiberEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+    SingleUseFiberEngineFactory(const system::ThreadingResources& system_resources, const CpuSet& cpu_set) :
       m_pool(system_resources.make_fiber_pool(cpu_set))
     {}
     ~SingleUseFiberEngineFactory() final = default;
@@ -147,14 +147,14 @@ class SingleUseFiberEngineFactory final : public FiberEngineFactory
 class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
 {
   public:
-    ThreadEngineFactory(const system::Resources& system_resources, CpuSet cpu_set) :
+    ThreadEngineFactory(const system::ThreadingResources& system_resources, CpuSet cpu_set) :
       m_system_resources(system_resources),
       m_cpu_set(std::move(cpu_set))
     {
         CHECK(!m_cpu_set.empty());
     }
 
-    std::shared_ptr<::mrc::runnable::Engines> build_engines(const LaunchOptions& launch_options) final
+    std::shared_ptr<::mrc::runnable::IEngines> build_engines(const LaunchOptions& launch_options) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         auto cpu_set = get_next_n_cpus(launch_options.pe_count);
@@ -176,7 +176,7 @@ class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
     virtual CpuSet get_next_n_cpus(std::size_t count) = 0;
 
     CpuSet m_cpu_set;
-    const system::Resources& m_system_resources;
+    const system::ThreadingResources& m_system_resources;
     std::mutex m_mutex;
 };
 
@@ -186,7 +186,7 @@ class ThreadEngineFactory : public ::mrc::runnable::EngineFactory
 class ReusableThreadEngineFactory final : public ThreadEngineFactory
 {
   public:
-    ReusableThreadEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+    ReusableThreadEngineFactory(const system::ThreadingResources& system_resources, const CpuSet& cpu_set) :
       ThreadEngineFactory(system_resources, cpu_set)
     {}
 
@@ -213,7 +213,7 @@ class ReusableThreadEngineFactory final : public ThreadEngineFactory
 class SingleUseThreadEngineFactory final : public ThreadEngineFactory
 {
   public:
-    SingleUseThreadEngineFactory(const system::Resources& system_resources, const CpuSet& cpu_set) :
+    SingleUseThreadEngineFactory(const system::ThreadingResources& system_resources, const CpuSet& cpu_set) :
       ThreadEngineFactory(system_resources, cpu_set)
     {}
 
@@ -238,7 +238,7 @@ class SingleUseThreadEngineFactory final : public ThreadEngineFactory
     int m_prev_cpu_idx = -1;
 };
 
-std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::Resources& system_resources,
+std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system::ThreadingResources& system_resources,
                                                                     EngineType engine_type,
                                                                     const CpuSet& cpu_set,
                                                                     bool reusable)
@@ -264,4 +264,4 @@ std::shared_ptr<::mrc::runnable::EngineFactory> make_engine_factory(const system
     LOG(FATAL) << "unsupported engine type";
 }
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,7 +20,7 @@
 namespace mrc::segment {
 
 class Definition;
-class Builder;
+class IBuilder;
 
 class ObjectProperties;
 

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,9 +19,9 @@
 
 #include <memory>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-class System;
+class SystemDefinition;
 
 /**
  * @brief SystemProvider is a base class designed provide access to the System object.
@@ -36,13 +36,13 @@ class System;
 class SystemProvider
 {
   public:
-    SystemProvider(std::shared_ptr<const System> system);
+    SystemProvider(std::shared_ptr<const SystemDefinition> system);
     virtual ~SystemProvider() = default;
 
-    const System& system() const;
+    const SystemDefinition& system() const;
 
   private:
-    std::shared_ptr<const System> m_system;
+    std::shared_ptr<const SystemDefinition> m_system;
 };
 
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

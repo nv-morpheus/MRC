@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,6 @@
 #include <glog/logging.h>
 #include <mrc/mrc.hpp>
 #include <mrc/node/rx_sink.hpp>
-#include <mrc/pipeline/pipeline.hpp>
 
 using namespace mrc;
 
@@ -31,13 +30,13 @@ int main(int argc, char* argv[])
     Executor executor(std::move(options));
 
     // create pipeline object
-    auto pipeline = pipeline::make_pipeline();
+    auto pipeline = mrc::make_pipeline();
 
     // counter external to the segment object that will be incremented by the sink
     std::atomic<long> counter = 0;
 
     // create a segment - a pipeline can consist of multiple segments; however in this example we will use only one
-    auto seg = segment::Definition::create("quickstart", [&counter](segment::Builder& s) {
+    auto seg = Segment::create("quickstart", [&counter](segment::IBuilder& s) {
         // Source
         // This first "node" is a source node which has no upstream dependencies. It is responsible for producing data
         // to be consume by downstream nodes
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
     });
 
     // register segments with the pipeline
-    pipeline->register_segment(seg);
+    pipeline->register_segment(std::move(seg));
 
     // register the pipeline with the executor
     executor.register_pipeline(std::move(pipeline));

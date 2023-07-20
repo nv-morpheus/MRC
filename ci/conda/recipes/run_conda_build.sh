@@ -40,13 +40,6 @@ export CONDA_COMMAND=${CONDA_COMMAND:-"mambabuild"}
 # Get the path to the morpheus git folder
 export MRC_ROOT=${MRC_ROOT:-$(git rev-parse --show-toplevel)}
 
-export CUDA="$(conda list | grep cudatoolkit | egrep -o "[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+")"
-export PYTHON_VER="$(python -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")"
-export CUDA=11.4.1
-echo "CUDA       : ${CUDA}"
-echo "PYTHON_VER : ${PYTHON_VER}"
-echo ""
-
 export PARALLEL_LEVEL=${PARALLEL_LEVEL:-$(nproc)}
 
 # Export variables for the cache
@@ -59,6 +52,9 @@ export CMAKE_GENERATOR="Ninja"
 export CMAKE_C_COMPILER_LAUNCHER="ccache"
 export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 export CMAKE_CUDA_COMPILER_LAUNCHER="ccache"
+
+# Avoid confirmation messages during the conda build
+export CONDA_ALWAYS_YES=true
 
 # Holds the arguments in an array to allow for complex json objects
 CONDA_ARGS_ARRAY=()
@@ -99,13 +95,11 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8, rapids_version: 22.10}")
-else
-   CONDA_ARGS_ARRAY+=("--variants" "{python: 3.8}")
+   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 23.06}")
 fi
 
 # And default channels
-CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
+CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia/label/cuda-11.8.0" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
 
 # Set GIT_VERSION to set the project version inside of meta.yaml
 export GIT_VERSION="$(get_version)"

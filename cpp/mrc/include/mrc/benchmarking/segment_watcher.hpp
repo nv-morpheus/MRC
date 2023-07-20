@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/benchmarking/tracer.hpp"
-#include "mrc/core/executor.hpp"
+#include "mrc/pipeline/executor.hpp"
 
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/condition_variable.hpp>
@@ -48,8 +48,8 @@ class SegmentWatcher
     using time_pt_t = std::chrono::time_point<std::chrono::steady_clock>;
 
     ~SegmentWatcher() = default;
-    SegmentWatcher(std::shared_ptr<Executor> executor);
-    SegmentWatcher(std::shared_ptr<Executor> executor, std::function<void(TracerTypeT&)> payload_init);
+    SegmentWatcher(std::shared_ptr<pipeline::IExecutor> executor);
+    SegmentWatcher(std::shared_ptr<pipeline::IExecutor> executor, std::function<void(TracerTypeT&)> payload_init);
 
     [[nodiscard]] bool tracing() const;
 
@@ -142,7 +142,7 @@ class SegmentWatcher
     std::atomic<bool> m_segment_started{false};
     std::atomic<bool> m_latency_cycle_ready{true};
 
-    std::shared_ptr<Executor> m_executor;
+    std::shared_ptr<pipeline::IExecutor> m_executor;
 
     std::mutex m_mutex;
     boost::fibers::condition_variable_any m_cond_wake;
@@ -290,11 +290,12 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source(const std::s
 }
 
 template <typename TracerTypeT>
-SegmentWatcher<TracerTypeT>::SegmentWatcher(std::shared_ptr<Executor> executor) : m_executor(std::move(executor))
+SegmentWatcher<TracerTypeT>::SegmentWatcher(std::shared_ptr<pipeline::IExecutor> executor) :
+  m_executor(std::move(executor))
 {}
 
 template <typename TracerTypeT>
-SegmentWatcher<TracerTypeT>::SegmentWatcher(std::shared_ptr<Executor> executor,
+SegmentWatcher<TracerTypeT>::SegmentWatcher(std::shared_ptr<pipeline::IExecutor> executor,
                                             std::function<void(TracerTypeT&)> payload_init) :
   m_executor(std::move(executor)),
   m_payload_init(payload_init)

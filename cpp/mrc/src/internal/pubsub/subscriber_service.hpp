@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -33,14 +33,14 @@
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-namespace mrc::internal::memory {
+namespace mrc::memory {
 class TransientBuffer;
-}  // namespace mrc::internal::memory
-namespace mrc::internal::runtime {
+}  // namespace mrc::memory
+namespace mrc::runtime {
 class Partition;
-}  // namespace mrc::internal::runtime
+}  // namespace mrc::runtime
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 /**
  * @brief The internal type-erased SubscriberService
@@ -63,19 +63,19 @@ class SubscriberService final : public Base, public mrc::pubsub::ISubscriberServ
     const std::set<std::string>& subscribe_to_roles() const final;
 
   private:
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // setup up the runnables needed to driver the publisher
     void do_subscription_service_setup() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // teardown up the runnables needed to driver the publisher
     void do_subscription_service_teardown() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // await on the completion of all internal runnables
     void do_subscription_service_join() final;
 
-    // [internal::control_plane::client::SubscriptionService]
+    // [control_plane::client::SubscriptionService]
     // called by the update engine when updates for a given subscribed_to role is received
     void update_tagged_instances(const std::string& role,
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
@@ -90,4 +90,4 @@ class SubscriberService final : public Base, public mrc::pubsub::ISubscriberServ
     friend runtime::Partition;
 };
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

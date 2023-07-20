@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@
 #include <string>
 
 namespace mrc::segment {
-class Builder;
+class IBuilder;
 }
 
 namespace mrc::pymrc {
@@ -34,7 +34,7 @@ class PySegmentModule : public mrc::modules::SegmentModule
 {
     using mrc::modules::SegmentModule::SegmentModule;
 
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
 
     std::string module_type_name() const override;
 };

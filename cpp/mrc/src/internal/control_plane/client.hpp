@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -51,21 +51,21 @@ namespace grpc {
 class Channel;
 class CompletionQueue;
 }  // namespace grpc
-namespace mrc::internal::control_plane::client {
+namespace mrc::control_plane::client {
 class ConnectionsManager;
 class SubscriptionService;
-}  // namespace mrc::internal::control_plane::client
-namespace mrc::internal::network {
-class Resources;
-}  // namespace mrc::internal::network
-namespace mrc::internal::ucx {
-class Resources;
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::control_plane::client
+namespace mrc::network {
+class NetworkResources;
+}  // namespace mrc::network
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::control_plane {
+namespace mrc::control_plane {
 
 template <typename ResponseT>
 class AsyncStatus;
@@ -119,7 +119,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // const std::vector<InstanceID>& instance_ids() const;
 
     std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
-        std::vector<std::optional<ucx::Resources>>& ucx_resources);
+        std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
@@ -201,7 +201,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     std::mutex m_mutex;
 
-    friend network::Resources;
+    friend network::NetworkResources;
 };
 
 // todo: create this object from the client which will own the stop_source
@@ -267,4 +267,4 @@ void Client::issue_event(const protos::EventType& event_type, MessageT&& message
     m_writer->await_write(std::move(event));
 }
 
-}  // namespace mrc::internal::control_plane
+}  // namespace mrc::control_plane

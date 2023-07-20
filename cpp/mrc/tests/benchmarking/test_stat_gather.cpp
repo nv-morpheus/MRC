@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -21,9 +21,8 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/core/executor.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/options/options.hpp"
+#include "mrc/pipeline/executor.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -41,6 +40,11 @@ void stat_check_helper(nlohmann::json metrics,
     EXPECT_EQ(metrics["component_emissions_total"].get<std::size_t>(), emit);
 }
 
+std::string build_global_name(const std::string& segment_name, const std::string& component_name)
+{
+    return "/" + segment_name + "/" + component_name;
+}
+
 namespace mrc {
 
 TEST_F(StatGatherTest, TestStatisticsOperatorGather)
@@ -53,19 +57,21 @@ TEST_F(StatGatherTest, TestStatisticsOperatorGather)
     executor.start();
     executor.join();
 
+    std::string seg_name                      = "segment_stats_test";
     std::set<std::string> required_components = {"src", "internal_1", "internal_2", "sink"};
 
     auto framework_stats_info = TraceStatistics::aggregate();
-    auto& component_metrics   = framework_stats_info["aggregations"]["components"]["metrics"];
+    auto& metrics             = framework_stats_info["aggregations"]["components"]["metrics"];
     for (const auto& component : required_components)
     {
-        EXPECT_EQ(component_metrics.contains(component), true) << component << " not found";
+        EXPECT_EQ(metrics.contains(build_global_name(seg_name, component)), true)
+            << build_global_name(seg_name, component) << " not found";
     }
 
-    stat_check_helper(component_metrics["src"], 0, 0, 0, m_iterations);
-    stat_check_helper(component_metrics["internal_1"], 0, m_iterations, 0, m_iterations);
-    stat_check_helper(component_metrics["internal_2"], 0, m_iterations, 0, m_iterations);
-    stat_check_helper(component_metrics["sink"], 0, m_iterations, 0, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "src")], 0, 0, 0, m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_1")], 0, m_iterations, 0, m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_2")], 0, m_iterations, 0, m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "sink")], 0, m_iterations, 0, 0);
 
     TraceStatistics::reset();
 }
@@ -80,19 +86,21 @@ TEST_F(StatGatherTest, TestStatisticsChannelGather)
     executor.start();
     executor.join();
 
+    std::string seg_name                      = "segment_stats_test";
     std::set<std::string> required_components = {"src", "internal_1", "internal_2", "sink"};
 
     auto framework_stats_info = TraceStatistics::aggregate();
-    auto& component_metrics   = framework_stats_info["aggregations"]["components"]["metrics"];
+    auto& metrics             = framework_stats_info["aggregations"]["components"]["metrics"];
     for (const auto& component : required_components)
     {
-        EXPECT_EQ(component_metrics.contains(component), true);
+        EXPECT_EQ(metrics.contains(build_global_name(seg_name, component)), true)
+            << build_global_name(seg_name, component) << " not found";
     }
 
-    stat_check_helper(component_metrics["src"], 0, 0, m_iterations, 0);
-    stat_check_helper(component_metrics["internal_1"], m_iterations, 0, m_iterations, 0);
-    stat_check_helper(component_metrics["internal_2"], m_iterations, 0, m_iterations, 0);
-    stat_check_helper(component_metrics["sink"], m_iterations, 0, 0, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "src")], 0, 0, m_iterations, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_1")], m_iterations, 0, m_iterations, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_2")], m_iterations, 0, m_iterations, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "sink")], m_iterations, 0, 0, 0);
 
     TraceStatistics::reset();
 }
@@ -108,17 +116,28 @@ TEST_F(StatGatherTest, TestStatisticsFullGather)
     executor.start();
     executor.join();
 
+    std::string seg_name = "segment_stats_test";
+
     auto framework_stats_info = TraceStatistics::aggregate();
-    auto& component_metrics   = framework_stats_info["aggregations"]["components"]["metrics"];
+    auto& metrics             = framework_stats_info["aggregations"]["components"]["metrics"];
     for (const auto& component : m_components)
     {
-        EXPECT_EQ(component_metrics.contains(component), true);
+        EXPECT_EQ(metrics.contains(build_global_name(seg_name, component)), true)
+            << build_global_name(seg_name, component) << " not found";
     }
 
-    stat_check_helper(component_metrics["src"], 0, 0, m_iterations, m_iterations);
-    stat_check_helper(component_metrics["internal_1"], m_iterations, m_iterations, m_iterations, m_iterations);
-    stat_check_helper(component_metrics["internal_2"], m_iterations, m_iterations, m_iterations, m_iterations);
-    stat_check_helper(component_metrics["sink"], m_iterations, m_iterations, 0, 0);
+    stat_check_helper(metrics[build_global_name(seg_name, "src")], 0, 0, m_iterations, m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_1")],
+                      m_iterations,
+                      m_iterations,
+                      m_iterations,
+                      m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "internal_2")],
+                      m_iterations,
+                      m_iterations,
+                      m_iterations,
+                      m_iterations);
+    stat_check_helper(metrics[build_global_name(seg_name, "sink")], m_iterations, m_iterations, 0, 0);
 
     TraceStatistics::reset();
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,6 +38,42 @@ Options::Options() :
   m_services(std::make_unique<ServiceOptions>()),
   m_topology(std::make_unique<TopologyOptions>())
 {}
+
+Options::Options(const Options& other) :
+  m_engine_groups(std::make_unique<EngineGroups>(*other.m_engine_groups)),
+  m_fiber_pool(std::make_unique<FiberPoolOptions>(*other.m_fiber_pool)),
+  m_placement(std::make_unique<PlacementOptions>(*other.m_placement)),
+  m_resources(std::make_unique<ResourceOptions>(*other.m_resources)),
+  m_services(std::make_unique<ServiceOptions>(*other.m_services)),
+  m_topology(std::make_unique<TopologyOptions>(*other.m_topology)),
+  m_architect_url(other.m_architect_url),
+  m_enable_server(other.m_enable_server),
+  m_server_port(other.m_server_port),
+  m_config_request(other.m_config_request)
+{}
+
+Options& Options::operator=(const Options& other)
+{
+    // protect against invalid self-assignment
+    if (this != &other)
+    {
+        // Child objects
+        *m_engine_groups = *other.m_engine_groups;
+        *m_fiber_pool    = *other.m_fiber_pool;
+        *m_placement     = *other.m_placement;
+        *m_resources     = *other.m_resources;
+        *m_services      = *other.m_services;
+        *m_topology      = *other.m_topology;
+
+        // Values
+        m_architect_url  = other.m_architect_url;
+        m_enable_server  = other.m_enable_server;
+        m_server_port    = other.m_server_port;
+        m_config_request = other.m_config_request;
+    }
+
+    return *this;
+}
 
 TopologyOptions& Options::topology()
 {

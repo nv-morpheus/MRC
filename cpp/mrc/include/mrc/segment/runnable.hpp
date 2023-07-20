@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -38,18 +38,12 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
 {
   public:
     template <typename... ArgsT>
-    Runnable(std::string name, ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
-    {
-        // Set the name in the Object class
-        this->set_name(std::move(name));
-    }
+    Runnable(ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
+    {}
 
-    Runnable(std::string name, std::unique_ptr<NodeT> node) : m_node(std::move(node))
+    Runnable(std::unique_ptr<NodeT> node) : m_node(std::move(node))
     {
         CHECK(m_node);
-
-        // Set the name in the Object class
-        this->set_name(std::move(name));
     }
 
   private:

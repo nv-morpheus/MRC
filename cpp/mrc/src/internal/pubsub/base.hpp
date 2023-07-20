@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,13 +18,13 @@
 #pragma once
 
 #include "internal/control_plane/client/subscription_service.hpp"
-#include "internal/network/resources.hpp"
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runtime/runtime.hpp"
 
 #include <string>
 
-namespace mrc::internal::pubsub {
+namespace mrc::pubsub {
 
 /**
  * @brief PubSub is a specialization of the generic SubscriptionService
@@ -73,4 +73,4 @@ class Base : public control_plane::client::SubscriptionService
     runtime::Partition& m_runtime;
 };
 
-}  // namespace mrc::internal::pubsub
+}  // namespace mrc::pubsub

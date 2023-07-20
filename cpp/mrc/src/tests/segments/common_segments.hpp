@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mrc/segment/definition.hpp"
+#include "mrc/pipeline/segment.hpp"
 
 namespace test::segments {
 
-std::shared_ptr<mrc::segment::Definition> single_finite_no_ports(std::string name);
-std::shared_ptr<mrc::segment::Definition> single_finite_no_ports_will_throw(std::string name);
+std::shared_ptr<const mrc::pipeline::ISegment> single_finite_no_ports(std::string name);
+std::shared_ptr<const mrc::pipeline::ISegment> single_finite_no_ports_will_throw(std::string name);
 
 }  // namespace test::segments

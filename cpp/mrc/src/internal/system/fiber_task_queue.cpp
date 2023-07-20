@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 #include "internal/system/fiber_task_queue.hpp"
 
 #include "internal/system/fiber_priority_scheduler.hpp"
-#include "internal/system/resources.hpp"
+#include "internal/system/threading_resources.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/core/fiber_meta_data.hpp"
@@ -37,9 +37,9 @@
 #include <thread>
 #include <utility>
 
-namespace mrc::internal::system {
+namespace mrc::system {
 
-FiberTaskQueue::FiberTaskQueue(const Resources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
+FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
   m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] {
@@ -133,4 +133,4 @@ bool FiberTaskQueue::caller_on_same_thread() const
 {
     return std::this_thread::get_id() == m_thread.thread().get_id();
 }
-}  // namespace mrc::internal::system
+}  // namespace mrc::system

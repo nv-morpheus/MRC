@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -220,7 +220,7 @@ class PyIteratorWrapper
     std::function<py::iterator()> m_iter_factory;
 };
 
-std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuilder& self,
                                                              const std::string& name,
                                                              PyIteratorWrapper iter_wrapper)
 {
@@ -257,7 +257,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::Build
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::IBuilder& self,
                                                                        const std::string& name,
                                                                        PyIteratorWrapper iter_wrapper)
 {
@@ -287,49 +287,49 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segm
     return self.construct_object<PythonSourceComponent<PyHolder>>(name, std::move(get_next));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::IBuilder& self,
                                                                           const std::string& name,
                                                                           py::iterator source_iterator)
 {
     return build_source(self, name, PyIteratorWrapper(std::move(source_iterator)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::IBuilder& self,
                                                                           const std::string& name,
                                                                           py::iterable source_iterable)
 {
     return build_source(self, name, PyIteratorWrapper(std::move(source_iterable)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::IBuilder& self,
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
     return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
                                                                                     const std::string& name,
                                                                                     pybind11::iterator source_iterator)
 {
     return build_source_component(self, name, PyIteratorWrapper(std::move(source_iterator)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
                                                                                     const std::string& name,
                                                                                     py::iterable source_iterable)
 {
     return build_source_component(self, name, PyIteratorWrapper(std::move(source_iterable)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
                                                                                     const std::string& name,
                                                                                     pybind11::function gen_factory)
 {
     return build_source_component(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink(mrc::segment::IBuilder& self,
                                                                         const std::string& name,
                                                                         OnNextFunction on_next,
                                                                         OnErrorFunction on_error,
@@ -338,7 +338,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink(mrc::seg
     return self.make_sink<PyHolder, PythonSink>(name, on_next, on_error, on_completed);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_component(mrc::segment::IBuilder& self,
                                                                                   const std::string& name,
                                                                                   OnNextFunction on_next,
                                                                                   OnErrorFunction on_error,
@@ -347,7 +347,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_sink_componen
     return self.make_sink_component<PyHolder, PythonSinkComponent>(name, on_next, on_error, on_completed);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_ingress(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_ingress(mrc::segment::IBuilder& self,
                                                                           const std::string& name)
 {
     auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
@@ -360,7 +360,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_ingress(mrc::s
     return self.get_ingress<PyHolder>(name);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_egress(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_egress(mrc::segment::IBuilder& self,
                                                                          const std::string& name)
 {
     auto it_caster = node::PortRegistry::s_port_to_type_index.find(name);
@@ -374,7 +374,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::get_egress(mrc::se
     return self.get_egress<PyHolder>(name);
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::IBuilder& self,
                                                                         const std::string& name,
                                                                         OnDataFunction on_data)
 {
@@ -386,7 +386,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::seg
     return BuilderProxy::make_node(self, name, py::args(py::make_tuple(py::cast(OperatorsProxy::map(on_data)))));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::segment::IBuilder& self,
                                                                         const std::string& name,
                                                                         pybind11::args operators)
 {
@@ -404,7 +404,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::seg
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
-    mrc::segment::Builder& self,
+    mrc::segment::IBuilder& self,
     const std::string& name,
     std::function<void(const pymrc::PyObjectObservable& obs, pymrc::PyObjectSubscriber& sub)> sub_fn)
 {
@@ -442,7 +442,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
     return node;
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_component(mrc::segment::Builder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_component(mrc::segment::IBuilder& self,
                                                                                   const std::string& name,
                                                                                   pybind11::args operators)
 {
@@ -458,7 +458,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_componen
 }
 
 std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_registry(
-    mrc::segment::Builder& self,
+    mrc::segment::IBuilder& self,
     const std::string& module_id,
     const std::string& registry_namespace,
     std::string module_name,
@@ -469,33 +469,33 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
     return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }
 
-void BuilderProxy::init_module(mrc::segment::Builder& self, std::shared_ptr<mrc::modules::SegmentModule> smodule)
+void BuilderProxy::init_module(mrc::segment::IBuilder& self, std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
     self.init_module(smodule);
 }
 
-void BuilderProxy::register_module_input(mrc::segment::Builder& self,
+void BuilderProxy::register_module_input(mrc::segment::IBuilder& self,
                                          std::string input_name,
                                          std::shared_ptr<segment::ObjectProperties> object)
 {
     self.register_module_input(std::move(input_name), object);
 }
 
-void BuilderProxy::register_module_output(mrc::segment::Builder& self,
+void BuilderProxy::register_module_output(mrc::segment::IBuilder& self,
                                           std::string output_name,
                                           std::shared_ptr<segment::ObjectProperties> object)
 {
     self.register_module_output(std::move(output_name), object);
 }
 
-py::dict BuilderProxy::get_current_module_config(mrc::segment::Builder& self)
+py::dict BuilderProxy::get_current_module_config(mrc::segment::IBuilder& self)
 {
     auto json_config = self.get_current_module_config();
 
     return cast_from_json(json_config);
 }
 
-void BuilderProxy::make_edge(mrc::segment::Builder& self,
+void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
                              std::shared_ptr<mrc::segment::ObjectProperties> source,
                              std::shared_ptr<mrc::segment::ObjectProperties> sink)
 {

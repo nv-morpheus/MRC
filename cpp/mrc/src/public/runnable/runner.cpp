@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -86,7 +86,7 @@ Runner::~Runner()
     }
 }
 
-void Runner::enqueue(std::shared_ptr<Engines> launcher, std::vector<std::shared_ptr<Context>>&& contexts)
+void Runner::enqueue(std::shared_ptr<IEngines> launcher, std::vector<std::shared_ptr<Context>>&& contexts)
 {
     DCHECK(launcher);
     DCHECK_EQ(launcher->size(), contexts.size());

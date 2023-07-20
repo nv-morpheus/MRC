@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -40,11 +40,11 @@
 
 namespace mrc::segment {
 
-class Instance;
+class SegmentInstance;
 
 class EgressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
 {
-    friend Instance;
+    friend SegmentInstance;
 };
 
 template <typename T>
@@ -62,9 +62,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_sink(std::make_unique<node::RxNode<T>>())
-    {
-        this->set_name(m_port_name);
-    }
+    {}
 
   private:
     node::RxSinkBase<T>* get_object() const final
@@ -81,7 +79,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
         return launch_control.prepare_launcher(std::move(m_sink));
     }
 
-    std::shared_ptr<manifold::Interface> make_manifold(pipeline::Resources& resources) final
+    std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources& resources) final
     {
         return manifold::Factory<T>::make_manifold(m_port_name, resources);
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,7 +24,7 @@
 #include <cstddef>
 #include <string>
 
-namespace mrc::internal::ucx {
+namespace mrc::ucx {
 
 /**
  * @brief Extends memory::MemoryBlock to add UCX memory registration information
@@ -68,4 +68,4 @@ struct MemoryBlock : public memory::MemoryBlock
     std::size_t m_remote_handle_size{0};
 };
 
-}  // namespace mrc::internal::ucx
+}  // namespace mrc::ucx

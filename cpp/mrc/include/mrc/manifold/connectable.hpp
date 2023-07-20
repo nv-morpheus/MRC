@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/manifold/interface.hpp"
-#include "mrc/pipeline/resources.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 
 namespace mrc::manifold {
 
@@ -30,7 +30,7 @@ struct Connectable
      * @brief Create a Manifold in the typed environment of the Connectable object, e.g. IngressPort, EgressPort
      * @return std::shared_ptr<manifold::Interface>
      */
-    virtual std::shared_ptr<manifold::Interface> make_manifold(pipeline::Resources&) = 0;
+    virtual std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources&) = 0;
 
     /**
      * @brief Connect a Connectable to a Manifold

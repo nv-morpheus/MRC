@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -41,7 +41,7 @@ class DynamicSourceModule : public SegmentModule
     DynamicSourceModule(std::string module_name, nlohmann::json config);
 
   protected:
-    void initialize(segment::Builder& builder) override;
+    void initialize(segment::IBuilder& builder) override;
     std::string module_type_name() const override;
 };
 
@@ -50,7 +50,7 @@ DynamicSourceModule::DynamicSourceModule(std::string module_name, nlohmann::json
   SegmentModule(std::move(module_name), std::move(config))
 {}
 
-void DynamicSourceModule::initialize(segment::Builder& builder)
+void DynamicSourceModule::initialize(segment::IBuilder& builder)
 {
     unsigned int count{1};
 

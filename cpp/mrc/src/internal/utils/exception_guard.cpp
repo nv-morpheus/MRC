@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -19,7 +19,7 @@
 
 #include <exception>
 
-namespace mrc::internal::utils {
+namespace mrc::utils {
 
 ExceptionGuard::ExceptionGuard(std::function<void()> lambda)
 {
@@ -41,4 +41,4 @@ ExceptionGuard::~ExceptionGuard()
     }
 }
 
-}  // namespace mrc::internal::utils
+}  // namespace mrc::utils

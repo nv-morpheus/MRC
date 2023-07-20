@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,9 +17,7 @@
 
 #include "test_modules.hpp"
 
-#include "mrc/core/executor.hpp"
 #include "mrc/cuda/device_guard.hpp"
-#include "mrc/engine/pipeline/ipipeline.hpp"
 #include "mrc/experimental/modules/mirror_tap/mirror_tap.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/node/operators/broadcast.hpp"
@@ -28,6 +26,7 @@
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/egress_ports.hpp"
@@ -81,7 +80,7 @@ TEST_F(TestMirrorTapModule, InitailizationTest)
     auto config = nlohmann::json();
 
     auto mirror_tap        = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
-    auto init_wrapper_main = [&mirror_tap, &test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&mirror_tap, &test_name](segment::IBuilder& builder) {
         builder.init_module(mirror_tap);
 
         auto source = builder.make_source<std::string>(test_name + "_main_source",
@@ -95,7 +94,7 @@ TEST_F(TestMirrorTapModule, InitailizationTest)
         builder.make_edge(mirror_tap->output_port("output"), sink);
     };
 
-    auto init_wrapper_mirrored = [&mirror_tap, &test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored = [&mirror_tap, &test_name](segment::IBuilder& builder) {
         auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->tap_egress_port_name());
         auto mirror_sink    = builder.make_sink<std::string>(test_name + "_mirror_sink", [](std::string input) {});
 
@@ -135,7 +134,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest)
     auto config = nlohmann::json();
 
     auto mirror_tap        = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap", config);
-    auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, &mirror_tap, &test_name](segment::IBuilder& builder) {
         builder.init_module(mirror_tap);
 
         auto source = builder.make_source<std::string>(test_name + "_main_source",
@@ -161,7 +160,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMirrorTapTest)
         builder.make_edge(mirror_tap->output_port("output"), sink);
     };
 
-    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored = [&packets_mirrored, &mirror_tap, &test_name](segment::IBuilder& builder) {
         auto mirror_ingress = builder.get_ingress<std::string>(mirror_tap->tap_egress_port_name());
         auto mirror_sink    = builder.make_sink<std::string>(test_name + "_mirror_sink",
                                                           [&packets_mirrored](std::string input) {
@@ -213,7 +212,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest)
     auto mirror_tap_one = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_one", config);
     auto mirror_tap_two = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_two", config);
 
-    auto init_wrapper_main = [&packets_main, &mirror_tap_one, &mirror_tap_two, &test_name](segment::Builder& builder) {
+    auto init_wrapper_main = [&packets_main, &mirror_tap_one, &mirror_tap_two, &test_name](segment::IBuilder& builder) {
         builder.init_module(mirror_tap_one);
         builder.init_module(mirror_tap_two);
 
@@ -250,7 +249,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest)
 
     auto multi_sink_mirror_one     = std::make_shared<mrc::MultiSinkModule<std::string, 1>>(test_name +
                                                                                         "_multi_sink_mirror_1");
-    auto init_wrapper_mirrored_one = [&mirror_tap_one, &multi_sink_mirror_one, test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored_one = [&mirror_tap_one, &multi_sink_mirror_one, test_name](segment::IBuilder& builder) {
         auto mirror_ingress_one = builder.get_ingress<std::string>(mirror_tap_one->tap_egress_port_name());
 
         builder.init_module(multi_sink_mirror_one);
@@ -259,7 +258,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiInlineMirrorTapTest)
 
     auto multi_sink_mirror_two     = std::make_shared<mrc::MultiSinkModule<std::string, 1>>(test_name +
                                                                                         "_multi_sink_mirror_2");
-    auto init_wrapper_mirrored_two = [&mirror_tap_two, &multi_sink_mirror_two, test_name](segment::Builder& builder) {
+    auto init_wrapper_mirrored_two = [&mirror_tap_two, &multi_sink_mirror_two, test_name](segment::IBuilder& builder) {
         auto mirror_ingress_two = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
 
         builder.init_module(multi_sink_mirror_two);
@@ -318,7 +317,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiMirrorTapTest)
     auto mirror_tap_three  = std::make_shared<MirrorTapModule<std::string>>(test_name + "_mirror_tap_three", config);
     auto multi_sink_main   = std::make_shared<MultiSinkModule<std::string, 3>>(test_name + "_multi_sink_main");
     auto init_wrapper_main = [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three, &multi_sink_main, &test_name](
-                                 segment::Builder& builder) {
+                                 segment::IBuilder& builder) {
         builder.init_module(mirror_tap_one);
         builder.init_module(mirror_tap_two);
         builder.init_module(mirror_tap_three);
@@ -340,7 +339,7 @@ TEST_F(TestMirrorTapModule, SinglePipelineMultiMirrorTapTest)
 
     auto multi_sink_mirror = std::make_shared<mrc::MultiSinkModule<std::string, 3>>(test_name + "_multi_sink_mirror");
     auto init_wrapper_mirrored =
-        [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three, &multi_sink_mirror](segment::Builder& builder) {
+        [&mirror_tap_one, &mirror_tap_two, &mirror_tap_three, &multi_sink_mirror](segment::IBuilder& builder) {
             auto mirror_ingress_one   = builder.get_ingress<std::string>(mirror_tap_one->tap_egress_port_name());
             auto mirror_ingress_two   = builder.get_ingress<std::string>(mirror_tap_two->tap_egress_port_name());
             auto mirror_ingress_three = builder.get_ingress<std::string>(mirror_tap_three->tap_egress_port_name());

@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -27,11 +27,11 @@ namespace mrc::runnable {
 enum class EngineType;
 }  // namespace mrc::runnable
 
-namespace mrc::internal::runnable {
+namespace mrc::runnable {
 
 using ::mrc::runnable::EngineType;
 
-class Engine : public ::mrc::runnable::Engine
+class Engine : public IEngine
 {
     Future<void> launch_task(std::function<void()> task) final;
 
@@ -41,4 +41,4 @@ class Engine : public ::mrc::runnable::Engine
     std::mutex m_mutex;
 };
 
-}  // namespace mrc::internal::runnable
+}  // namespace mrc::runnable

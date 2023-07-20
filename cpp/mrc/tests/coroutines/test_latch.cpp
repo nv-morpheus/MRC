@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -44,6 +44,7 @@
 
 #include <coroutine>
 #include <cstdint>
+#include <string>
 
 using namespace mrc;
 

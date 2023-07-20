@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -65,7 +65,8 @@ void init_segment_module_registry(py::module_& smodule)
 
     SegmentModuleRegistry.def_static(
         "register_module",
-        static_cast<void (*)(std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::Builder&)>)>(
+        static_cast<
+            void (*)(std::string, const std::vector<unsigned int>&, std::function<void(mrc::segment::IBuilder&)>)>(
             &ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("release_version"),
@@ -76,7 +77,7 @@ void init_segment_module_registry(py::module_& smodule)
         static_cast<void (*)(std::string,
                              std::string,
                              const std::vector<unsigned int>&,
-                             std::function<void(mrc::segment::Builder&)>)>(&ModuleRegistryProxy::register_module),
+                             std::function<void(mrc::segment::IBuilder&)>)>(&ModuleRegistryProxy::register_module),
         py::arg("name"),
         py::arg("registry_namespace"),
         py::arg("release_version"),

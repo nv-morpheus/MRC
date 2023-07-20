@@ -1,4 +1,4 @@
-/**
+/*
  * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,15 +17,15 @@
 
 #include "internal/pipeline/port_graph.hpp"
 
-#include "internal/pipeline/pipeline.hpp"
-#include "internal/segment/definition.hpp"
+#include "internal/pipeline/pipeline_definition.hpp"
+#include "internal/segment/segment_definition.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace mrc::internal::pipeline {
+namespace mrc::pipeline {
 
-PortGraph::PortGraph(const Pipeline& pipeline)
+PortGraph::PortGraph(const PipelineDefinition& pipeline)
 {
     for (const auto& [seg_id, seg_definition] : pipeline.segments())
     {
@@ -72,4 +72,4 @@ const std::set<std::string>& PortGraph::segments_with_only_egress_ports() const
 {
     return m_sinks;
 }
-}  // namespace mrc::internal::pipeline
+}  // namespace mrc::pipeline
