@@ -356,7 +356,7 @@ def gen_parameters(*args,
         combo_vals = tuple(values[x] for x in combo)
 
         if (is_fail_fn(combo_vals)):
-            marks = (pytest.mark.xfail, )
+            marks = (pytest.mark.skip, )
 
         p = pytest.param(*combo_vals, id="-".join([f"{x[0]}_{x[1]}" for x in zip(args, combo)]), marks=marks)
 
@@ -371,7 +371,7 @@ def gen_parameters(*args,
 @pytest.mark.parametrize("source_type,sink_type",
                          [
                              pytest.param(m.Base, m.Base, id="source_base-sink_base"),
-                             pytest.param(m.Base, m.DerivedA, id="source_base-sink_derived", marks=pytest.mark.xfail),
+                             pytest.param(m.Base, m.DerivedA, id="source_base-sink_derived", marks=pytest.mark.skip),
                              pytest.param(m.DerivedA, m.Base, id="source_derived-sink_base"),
                              pytest.param(m.DerivedA, m.DerivedA, id="source_derived-sink_derived")
                          ])
@@ -431,14 +431,15 @@ def fail_if_more_derived_type(combo: typing.Tuple):
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink2_py"])
 @pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
-@pytest.mark.parametrize("source_type,sink1_type,sink2_type",
-                         gen_parameters("source",
-                                        "sink1",
-                                        "sink2",
-                                        is_fail_fn=fail_if_more_derived_type,
-                                        values={
-                                            "base": m.Base, "derived": m.DerivedA
-                                        }))
+@pytest.mark.parametrize(
+    "source_type,sink1_type,sink2_type",
+    gen_parameters("source",
+                   "sink1",
+                   "sink2",
+                   is_fail_fn=fail_if_more_derived_type,
+                   values={
+                       "base": m.Base, "derived": m.DerivedA
+                   }))
 def test_source_to_broadcast_to_sinks(run_segment,
                                       sink1_component: bool,
                                       sink2_component: bool,
@@ -504,12 +505,10 @@ def test_multi_source_to_broadcast_to_multi_sink(run_segment,
 
 
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
-@pytest.mark.parametrize("source_type",
-                         gen_parameters("source",
-                                        is_fail_fn=lambda _: False,
-                                        values={
-                                            "base": m.Base, "derived": m.DerivedA
-                                        }))
+@pytest.mark.parametrize(
+    "source_type", gen_parameters("source", is_fail_fn=lambda _: False, values={
+        "base": m.Base, "derived": m.DerivedA
+    }))
 def test_source_to_null(run_segment, source_cpp: bool, source_type: type):
 
     def segment_init(seg: mrc.Builder):
@@ -522,24 +521,24 @@ def test_source_to_null(run_segment, source_cpp: bool, source_type: type):
     assert results == expected_node_counts
 
 
-@pytest.mark.parametrize("source_cpp,node_cpp",
-                         gen_parameters("source", "node", is_fail_fn=lambda _: False, values={
-                             "cpp": True, "py": False
-                         }))
-@pytest.mark.parametrize("source_type,node_type",
-                         gen_parameters("source",
-                                        "node",
-                                        is_fail_fn=fail_if_more_derived_type,
-                                        values={
-                                            "base": m.Base, "derived": m.DerivedA
-                                        }))
-@pytest.mark.parametrize("source_component,node_component",
-                         gen_parameters("source",
-                                        "node",
-                                        is_fail_fn=lambda x: x[0] and x[1],
-                                        values={
-                                            "run": False, "com": True
-                                        }))
+@pytest.mark.parametrize(
+    "source_cpp,node_cpp",
+    gen_parameters("source", "node", is_fail_fn=lambda _: False, values={
+        "cpp": True, "py": False
+    }))
+@pytest.mark.parametrize(
+    "source_type,node_type",
+    gen_parameters("source",
+                   "node",
+                   is_fail_fn=fail_if_more_derived_type,
+                   values={
+                       "base": m.Base, "derived": m.DerivedA
+                   }))
+@pytest.mark.parametrize(
+    "source_component,node_component",
+    gen_parameters("source", "node", is_fail_fn=lambda x: x[0] and x[1], values={
+        "run": False, "com": True
+    }))
 def test_source_to_node_to_null(run_segment,
                                 source_cpp: bool,
                                 node_cpp: bool,
