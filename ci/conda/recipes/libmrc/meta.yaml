@@ -66,6 +66,7 @@ requirements:
     - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
+    - pybind11=2.10.4
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen 0.10.5
     - python {{ python }}
