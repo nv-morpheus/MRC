@@ -106,16 +106,18 @@ function update_conda_env() {
 print_env_vars
 
 function fetch_base_branch() {
-    rapids-logger "Retrieving base branch from GitHub API"
-    [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
-    RESP=$(
-    curl -s \
-        -H "Accept: application/vnd.github.v3+json" \
-        "${CURL_HEADERS[@]}" \
-        "${GITHUB_API_URL}/repos/${ORG_NAME}/${REPO_NAME}/pulls/${PR_NUM}"
-    )
+    if [[ "${BASE_BRANCH}" == "" ]]; then
+        rapids-logger "Retrieving base branch from GitHub API"
+        [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
+        RESP=$(
+        curl -s \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${CURL_HEADERS[@]}" \
+            "${GITHUB_API_URL}/repos/${ORG_NAME}/${REPO_NAME}/pulls/${PR_NUM}"
+        )
 
-    BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
+        BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
+    fi
 
     # Change target is the branch name we are merging into but due to the weird way jenkins does
     # the checkout it isn't recognized by git without the origin/ prefix
