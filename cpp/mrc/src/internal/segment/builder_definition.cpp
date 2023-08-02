@@ -284,6 +284,10 @@ void BuilderDefinition::initialize()
                    << ", Segment Rank: " << m_rank << ". Exception message:\n"
                    << e.what();
 
+        m_objects.clear();
+        m_ingress_ports.clear();
+        m_egress_ports.clear();
+
         // Rethrow after logging
         std::rethrow_exception(std::current_exception());
     }
