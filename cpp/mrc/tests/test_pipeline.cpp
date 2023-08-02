@@ -161,7 +161,7 @@ TEST_F(TestPipeline, TwoSegment)
     LOG(INFO) << "Done" << std::endl;
 }
 
-TEST_F(TestPipeline, InconsistentPipeline)
+TEST_F(TestPipeline, SegmentInitErrorHandling)
 {
     // Test to reproduce issue #360
     auto pipeline = mrc::make_pipeline();
