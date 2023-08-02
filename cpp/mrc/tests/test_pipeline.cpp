@@ -169,14 +169,7 @@ TEST_F(TestPipeline, InconsistentPipeline)
     auto seg_1 =
         pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::IBuilder& seg) {
             auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
-                LOG(INFO) << "emit 1";
-                s.on_next(1.0F);
-                LOG(INFO) << "emit 2";
-                s.on_next(2.0F);
-                LOG(INFO) << "emit 3";
-                s.on_next(3.0F);
-                LOG(INFO) << "issuing complete";
-                s.on_completed();
+                FAIL() << "This should not be called";
             });
 
             auto my_float_egress = seg.get_egress<float>("float_port");
@@ -184,22 +177,25 @@ TEST_F(TestPipeline, InconsistentPipeline)
             seg.make_edge(rx_source, my_float_egress);
         });
 
-    auto seg_2 =
-        pipeline->make_segment("seg_2", segment::IngressPorts<float>({"float_port"}), [&](segment::IBuilder& seg) {
-            auto my_float_ingress = seg.get_ingress<float>("float_port");
+    auto seg_2 = pipeline->make_segment("seg_2",
+                                        segment::IngressPorts<float>({"float_port"}),
+                                        [&](segment::IBuilder& seg) {
+                                            auto my_float_ingress = seg.get_ingress<float>("float_port");
 
-            auto rx_sink = seg.make_sink<float>("rx_sink",
-                                                rxcpp::make_observer_dynamic<float>(
-                                                    [&](float x) {
-                                                        DVLOG(1) << x << std::endl;
-                                                    },
-                                                    [&]() {
-                                                        DVLOG(1) << "Completed" << std::endl;
-                                                    }));
+                                            auto rx_sink = seg.make_sink<float>("rx_sink",
+                                                                                rxcpp::make_observer_dynamic<float>(
+                                                                                    [&](float x) {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    },
+                                                                                    [&]() {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    }));
 
-            seg.make_edge(my_float_ingress, rx_sink);
-            throw std::runtime_error("Error in initializer");
-        });
+                                            seg.make_edge(my_float_ingress, rx_sink);
+                                            throw std::runtime_error("Error in initializer");
+                                        });
 
     Executor exec(std::move(m_options));
 
