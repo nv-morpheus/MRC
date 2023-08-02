@@ -19,6 +19,7 @@ name: mrc
 channels:
     - conda-forge
 dependencies:
+    # CI failing with clang 15.0.7 ha770c72_3 from conda-forge Temporarily locking off on 15.0.6
     - clang=15.0.6
     - clang-tools=15.0.6
     - clangdev=15.0.6
