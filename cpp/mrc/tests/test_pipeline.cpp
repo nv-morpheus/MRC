@@ -105,8 +105,6 @@ TEST_F(TestPipeline, DuplicateSegments)
 
 TEST_F(TestPipeline, TwoSegment)
 {
-    GTEST_SKIP() << "#185";
-
     std::atomic<int> next_count     = 0;
     std::atomic<int> complete_count = 0;
 
