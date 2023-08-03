@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the License);
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an AS IS BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -19,12 +19,11 @@ name: mrc
 channels:
     - conda-forge
 dependencies:
-    # CI failing with clang 15.0.7 ha770c72_3 from conda-forge
-    - clang=15.0.6|>15.0.7
-    - clang-tools=15.0.6|>15.0.7
-    - clangdev=15.0.6|>15.0.7
-    - clangxx=15.0.6|>15.0.7
-    - libclang=15.0.6|>15.0.7
-    - libclang-cpp=15.0.6|>15.0.7
-    - llvmdev=15.0.6|>15.0.7
+    - clang=15
+    - clang-tools=15
+    - clangdev=15
+    - clangxx=15
+    - libclang=15
+    - libclang-cpp=15
+    - llvmdev=15
     - include-what-you-use=0.19
