@@ -114,20 +114,22 @@ std::function<void()> create_gil_initializer()
 std::function<void()> create_gil_finalizer()
 {
     bool python_finalizing = _Py_IsFinalizing() != 0;
+    LOG(INFO) << "create_gil_finalizer - finalizing: " << std::boolalpha << python_finalizing;
 
     if (python_finalizing)
     {
-        // If python if finalizing, dont worry about thread state
+        // If python is finalizing, dont worry about thread state
         return nullptr;
     }
 
     // Ensure we dont have the GIL here otherwise this deadlocks.
     return [] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
+        LOG(INFO) << "gil_finalizer - finalizing: " << std::boolalpha << python_finalizing;
 
         if (python_finalizing)
         {
-            // If python if finalizing, dont worry about thread state
+            // If python is finalizing, dont worry about thread state
             return;
         }
 
