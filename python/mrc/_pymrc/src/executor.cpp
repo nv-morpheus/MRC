@@ -114,7 +114,6 @@ std::function<void()> create_gil_initializer()
 std::function<void()> create_gil_finalizer()
 {
     bool python_finalizing = _Py_IsFinalizing() != 0;
-    LOG(INFO) << "create_gil_finalizer - finalizing: " << std::boolalpha << python_finalizing;
 
     if (python_finalizing)
     {
@@ -125,7 +124,6 @@ std::function<void()> create_gil_finalizer()
     // Ensure we dont have the GIL here otherwise this deadlocks.
     return [] {
         bool python_finalizing = _Py_IsFinalizing() != 0;
-        LOG(INFO) << "gil_finalizer - finalizing: " << std::boolalpha << python_finalizing;
 
         if (python_finalizing)
         {
@@ -134,6 +132,10 @@ std::function<void()> create_gil_finalizer()
         }
 
         pybind11::gil_scoped_acquire gil;
+        // Work-around for #362, call gc.collect() prior to finalizing the thread state. This ensures that any
+        // collectable objects are done prior to the thread state being destroyed.
+        pybind11::object gc_mod = pybind11::module_::import("gc");
+        gc_mod.attr("collect")();
 
         // Decrement the ref to destroy the GIL states
         gil.dec_ref();
