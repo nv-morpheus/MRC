@@ -26,7 +26,6 @@ class ThreadTest(threading.Thread):
     def _create_obs(self):
         TLS.h = Holder(ObjUsingGil())
         TLS.ocg = ObjCallingGC()
-        # TLS.ocg = self.ocg
         weakref.finalize(TLS.ocg, TLS.ocg.finalize)
 
     def run(self):
