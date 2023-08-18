@@ -23,6 +23,7 @@
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 #include <memory>
 #include <sstream>
@@ -32,18 +33,7 @@ namespace mrc::pytests {
 
 namespace py = pybind11;
 
-// Simple test class which acquires the GIL in it's destructor
-struct ObjUsingGil
-{
-    ObjUsingGil() = default;
-    ~ObjUsingGil()
-    {
-        LOG(INFO) << "ObjUsingGil::~ObjUsingGil()";
-        py::gil_scoped_acquire gil;
-        LOG(INFO) << "ObjUsingGil::~ObjUsingGil()+gil";
-    }
-};
-
+// Simple test class which invokes Python's GC. Needed to repro #
 struct ObjCallingGC
 {
     ObjCallingGC() = default;
@@ -75,8 +65,6 @@ PYBIND11_MODULE(utils, py_mod)
             throw std::runtime_error(msg);
         },
         py::arg("msg") = "");
-
-    py::class_<ObjUsingGil>(py_mod, "ObjUsingGil").def(py::init<>());
 
     py::class_<ObjCallingGC>(py_mod, "ObjCallingGC").def(py::init<>()).def_static("finalize", &ObjCallingGC::finalize);
 
