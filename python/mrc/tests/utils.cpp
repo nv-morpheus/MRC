@@ -20,10 +20,10 @@
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
+#include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -38,9 +38,9 @@ struct ObjUsingGil
     ObjUsingGil() = default;
     ~ObjUsingGil()
     {
-        std::cerr << "ObjUsingGil::~ObjUsingGil()" << std::endl << std::flush;
+        LOG(INFO) << "ObjUsingGil::~ObjUsingGil()";
         py::gil_scoped_acquire gil;
-        std::cerr << "ObjUsingGil::~ObjUsingGil()+gil" << std::endl << std::flush;
+        LOG(INFO) << "ObjUsingGil::~ObjUsingGil()+gil";
     }
 };
 
@@ -50,10 +50,10 @@ struct ObjCallingGC
 
     static void finalize()
     {
-        std::cerr << "ObjCallingGC::finalize()" << std::endl << std::flush;
+        LOG(INFO) << "ObjCallingGC::finalize()";
         py::gil_scoped_acquire gil;
         py::object gc = py::module::import("gc");
-        std::cerr << "ObjCallingGC::finalize() - calling collect" << std::endl << std::flush;
+        LOG(INFO) << "ObjCallingGC::finalize() - calling collect";
         gc.attr("collect")();
     }
 };
