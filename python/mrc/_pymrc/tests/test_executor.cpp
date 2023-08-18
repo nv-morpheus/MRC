@@ -30,6 +30,7 @@
 
 #include <gtest/gtest.h>
 #include <pybind11/embed.h>
+#include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>

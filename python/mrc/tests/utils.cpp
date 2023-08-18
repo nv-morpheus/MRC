@@ -23,12 +23,40 @@
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 
+#include <iostream>  // DO NOT MERGE
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
 namespace mrc::pytests {
 
 namespace py = pybind11;
+
+// Simple test class which acquires the GIL in it's destructor
+struct ObjUsingGil
+{
+    ObjUsingGil() = default;
+    ~ObjUsingGil()
+    {
+        std::cerr << "ObjUsingGil::~ObjUsingGil()" << std::endl << std::flush;
+        py::gil_scoped_acquire gil;
+        std::cerr << "ObjUsingGil::~ObjUsingGil()+gil" << std::endl << std::flush;
+    }
+};
+
+struct ObjCallingGC
+{
+    ObjCallingGC() = default;
+
+    static void finalize()
+    {
+        std::cerr << "ObjCallingGC::finalize()" << std::endl << std::flush;
+        py::gil_scoped_acquire gil;
+        py::object gc = py::module::import("gc");
+        std::cerr << "ObjCallingGC::finalize() - calling collect" << std::endl << std::flush;
+        gc.attr("collect")();
+    }
+};
 
 PYBIND11_MODULE(utils, py_mod)
 {
@@ -47,6 +75,10 @@ PYBIND11_MODULE(utils, py_mod)
             throw std::runtime_error(msg);
         },
         py::arg("msg") = "");
+
+    py::class_<ObjUsingGil>(py_mod, "ObjUsingGil").def(py::init<>());
+
+    py::class_<ObjCallingGC>(py_mod, "ObjCallingGC").def(py::init<>()).def_static("finalize", &ObjCallingGC::finalize);
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
