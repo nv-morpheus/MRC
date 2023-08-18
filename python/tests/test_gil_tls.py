@@ -2,8 +2,11 @@ import gc
 import threading
 import weakref
 
+import mrc
 from mrc.tests.utils import ObjCallingGC
 from mrc.tests.utils import ObjUsingGil
+
+TLS = threading.local()
 
 
 class Holder:
@@ -14,36 +17,37 @@ class Holder:
         self.cycle = self
 
     def __del__(self):
-        print("Holder.__del__", flush=True)
+        mrc.logging.log("Holder.__del__")
         self.obj = None
 
 
 class ThreadTest(threading.Thread):
 
     def _create_obs(self):
-        self.h = Holder(ObjUsingGil())
-        self.ocg = ObjCallingGC()
-        weakref.finalize(self.ocg, self.ocg.finalize)
+        TLS.h = Holder(ObjUsingGil())
+        TLS.ocg = ObjCallingGC()
+        # TLS.ocg = self.ocg
+        weakref.finalize(TLS.ocg, TLS.ocg.finalize)
 
     def run(self):
-        print("Running thread", flush=True)
+        mrc.logging.log("Running thread")
         self._create_obs()
-        print("Thread complete", flush=True)
+        mrc.logging.log("Thread complete")
 
 
 def test_gil_tls():
     t = ThreadTest()
     t.start()
     t.join()
-    print("Thread joined, dereferencing thread", flush=True)
-    t = None
+    mrc.logging.log("Thread joined")
 
 
 def main():
+    mrc.logging.init_logging(__name__)
     gc.disable()
     gc.set_debug(gc.DEBUG_STATS)
     test_gil_tls()
-    print("Exiting main", flush=True)
+    mrc.logging.log("Exiting main")
 
 
 if __name__ == "__main__":
