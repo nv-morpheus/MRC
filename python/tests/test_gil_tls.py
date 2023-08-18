@@ -8,6 +8,10 @@ TLS = threading.local()
 
 
 def test_gc_called_in_thread_finalizer():
+    """
+    Test to reproduce issue #362
+    No asserts needed if it doesn't segfault, then we're good
+    """
     mrc.logging.log("Building pipeline")
 
     def source_gen():
