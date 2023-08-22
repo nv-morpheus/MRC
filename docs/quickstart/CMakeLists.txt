@@ -28,7 +28,7 @@ list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../external/utili
 include(morpheus_utils/load)
 
 project(mrc-quickstart
-  VERSION 23.07.00
+  VERSION 23.11.00
   LANGUAGES C CXX
 )
 
@@ -39,7 +39,8 @@ rapids_cpm_init()
 
 # Set the option prefix to match the outer project before including. Must be before find_package(mrc)
 set(OPTION_PREFIX "MRC")
-morpheus_utils_python_ensure_loaded()
+
+morpheus_utils_python_configure()
 
 rapids_find_package(mrc REQUIRED)
 rapids_find_package(CUDAToolkit REQUIRED)

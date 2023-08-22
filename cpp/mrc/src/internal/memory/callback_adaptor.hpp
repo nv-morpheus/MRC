@@ -20,6 +20,7 @@
 #include "mrc/memory/adaptors.hpp"
 
 #include <atomic>
+#include <functional>
 
 namespace mrc::memory {
 

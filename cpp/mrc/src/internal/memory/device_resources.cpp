@@ -37,7 +37,6 @@
 
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include <map>
 #include <set>

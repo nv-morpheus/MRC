@@ -46,7 +46,6 @@
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/security/credentials.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
@@ -55,9 +54,13 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+
+// Avoid forward declaring template specialization base classes
+// IWYU pragma: no_forward_declare grpc::ServerAsyncReaderWriter
 
 using namespace mrc;
 using namespace mrc::codable;

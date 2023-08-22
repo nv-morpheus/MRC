@@ -19,3 +19,4 @@ channels:
     - conda-forge
 dependencies:
     - codecov=2.1
+    - conda-merge>=0.2

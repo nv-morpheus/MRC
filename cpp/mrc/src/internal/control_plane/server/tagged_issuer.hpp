@@ -70,9 +70,9 @@ class Tagged
  * This is the primary base class for a control plane server-side stateful service which can be updated by the client
  * and state updates driven independently via the issue_update() method.
  *
- * TaggedManager is not thread-safe or protected in anyway. The global state mutex should protect all TaggedManagers.
+ * TaggedIssuer is not thread-safe or protected in anyway. The global state mutex should protect all TaggedIssuers.
  *
- * In most scenarios, the service side will have a batched updated which will periodically visit each TaggedManager and
+ * In most scenarios, the service side will have a batched updated which will periodically visit each TaggedIssuer and
  * call issue_update(); however, depending on the service request/update message, the call may also require an immediate
  * update.
  */

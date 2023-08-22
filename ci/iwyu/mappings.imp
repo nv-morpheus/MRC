@@ -27,7 +27,10 @@
 
 # gprc
 { "include": ["@<grpcpp/impl/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
+{ "include": ["@<grpcpp/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
 { "include": ["@<grpc/impl/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
+{ "include": ["@<grpc/.*>", "private", "<grpcpp/grpcpp.h>", "public"] },
+{ "symbol": ["@grpc::.*", "private", "<grpcpp/grpcpp.h>", "public"] },
 
 # nlohmann json
 { "include": ["<nlohmann/detail/iterators/iter_impl.hpp>", "private", "<nlohmann/json.hpp>", "public"] },
