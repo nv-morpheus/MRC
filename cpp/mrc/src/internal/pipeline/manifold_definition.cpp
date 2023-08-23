@@ -17,7 +17,7 @@
 
 #include "internal/pipeline/manifold_definition.hpp"
 
-namespace mrc::runnable {
+namespace mrc::pipeline {
 
 ManifoldDefinition::ManifoldDefinition(std::string name,
                                        std::type_index type_index,
@@ -44,4 +44,4 @@ std::shared_ptr<manifold::Interface> ManifoldDefinition::build(runnable::IRunnab
     return m_initializer_fn(m_name, resources);
 }
 
-}  // namespace mrc::runnable
+}  // namespace mrc::pipeline

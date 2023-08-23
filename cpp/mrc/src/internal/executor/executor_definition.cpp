@@ -101,7 +101,6 @@ std::shared_ptr<ExecutorDefinition> ExecutorDefinition::unwrap(std::shared_ptr<p
 void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
 {
     CHECK(pipeline) << "Must pass a non-null pipeline pointer to register_pipeline";
-    CHECK(m_pipeline_manager == nullptr);
 
     auto full_pipeline = pipeline::PipelineDefinition::unwrap(std::move(pipeline));
 

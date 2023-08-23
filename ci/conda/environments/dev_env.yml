@@ -28,10 +28,8 @@ dependencies:
   - boost-cpp=1.82
   - ccache
   - cmake=3.24
-  - cuda-nvml-dev=11.8
-  - cudatoolkit=11.8
-  - cxx-compiler # Does not need a version. Specified by compiler packages
-  - cython>=0.29,<0.30
+  - cuda-toolkit # Version comes from the channel above
+  - cxx-compiler # Sets up the distro versions of our compilers
   - doxygen=1.9.2
   - flake8
   - flatbuffers=2.0
@@ -54,7 +52,7 @@ dependencies:
   - libtool
   - ninja=1.10
   - nlohmann_json=3.9
-  - nodejs=18.12
+  - nodejs=18
   - numactl-libs-cos7-x86_64
   - numpy>=1.21
   - pip
