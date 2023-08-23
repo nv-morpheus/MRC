@@ -71,7 +71,7 @@ class Options
     std::unique_ptr<TopologyOptions> m_topology;
 
     std::string m_architect_url;
-    bool m_enable_server{true}; // Determines if networking is enabled or not on the resources
+    bool m_enable_server{true};  // Determines if networking is enabled or not on the resources
     std::uint16_t m_server_port{13337};
     std::string m_config_request{"*:1:*"};
 };
