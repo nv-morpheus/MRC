@@ -18,30 +18,27 @@
 #pragma once
 
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/remote_descriptor/manager.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
-#include "internal/runtime/runtime_provider.hpp"
 
-#include "mrc/core/async_service.hpp"
-#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
-#include <glog/logging.h>
+#include <rxcpp/rx.hpp>
 
-#include <cstddef>
+#include <cstdint>
+#include <exception>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 
+namespace mrc::runnable {
+class Launcher;
+}  // namespace mrc::runnable
 namespace mrc::runtime {
-class PartitionRuntime;
-}
+class IInternalPartitionRuntimeProvider;
+}  // namespace mrc::runtime
 
-namespace mrc::pipeline {
-class PipelineResources;
-}  // namespace mrc::pipeline
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold

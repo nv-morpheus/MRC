@@ -27,7 +27,6 @@
 #include "internal/runtime/partition_runtime.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_readable.hpp"

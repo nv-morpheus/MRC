@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/segment/builder.hpp"
@@ -25,19 +24,13 @@
 
 #include <nlohmann/json.hpp>
 
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <tuple>
-#include <typeindex>
 #include <vector>
-
-namespace mrc::pipeline {
-class PipelineResources;
-}  // namespace mrc::pipeline
 
 namespace mrc::modules {
 class SegmentModule;

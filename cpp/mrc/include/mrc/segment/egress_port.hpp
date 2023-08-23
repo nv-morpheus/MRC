@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "rxcpp/operators/rx-map.hpp"
-
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"

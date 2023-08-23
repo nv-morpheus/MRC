@@ -19,7 +19,6 @@
 
 #include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/forward.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
@@ -30,8 +29,6 @@
 #include <vector>
 
 namespace mrc::segment {
-struct EgressPortsBase;
-struct IngressPortsBase;
 
 class SegmentDefinition final : public pipeline::ISegment
 {

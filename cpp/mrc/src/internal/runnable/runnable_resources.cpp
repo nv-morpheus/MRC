@@ -22,6 +22,8 @@
 #include "internal/system/fiber_task_queue.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partitions.hpp"
+#include "internal/system/system.hpp"
+#include "internal/system/system_provider.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/runnable/launch_control_config.hpp"
@@ -35,6 +37,7 @@
 #include <ostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace mrc::runnable {
 

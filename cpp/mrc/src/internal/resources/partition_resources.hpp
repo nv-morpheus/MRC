@@ -17,21 +17,20 @@
 
 #pragma once
 
-#include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
-#include "internal/ucx/ucx_resources.hpp"
 
 #include <cstddef>
 #include <optional>
+
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
 
 namespace mrc::memory {
 class DeviceResources;
 class HostResources;
 }  // namespace mrc::memory
-namespace mrc::network {
-class NetworkResources;
-}  // namespace mrc::network
 namespace mrc::runnable {
 class RunnableResources;
 }  // namespace mrc::runnable

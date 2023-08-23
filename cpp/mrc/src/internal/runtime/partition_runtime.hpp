@@ -17,14 +17,18 @@
 
 #pragma once
 
+#include "internal/control_plane/client.hpp"
 #include "internal/remote_descriptor/manager.hpp"
+#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/runtime/api.hpp"
 #include "mrc/utils/macros.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <stop_token>
 #include <string>
 
 namespace mrc::codable {
@@ -38,10 +42,6 @@ class IPublisherService;
 class ISubscriberService;
 enum class PublisherPolicy;
 }  // namespace mrc::pubsub
-
-namespace mrc::control_plane {
-class Client;
-}
 namespace mrc::metrics {
 class Registry;
 }

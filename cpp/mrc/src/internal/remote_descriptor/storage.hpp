@@ -25,7 +25,6 @@
 
 namespace mrc::codable {
 class IDecodableStorage;
-class EncodedStorage;
 }  // namespace mrc::codable
 
 namespace mrc::runtime {

@@ -22,10 +22,10 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/ranges.hpp"
 
 #include <glog/logging.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <ostream>
 #include <set>

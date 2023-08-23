@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/system/host_partition.hpp"
 #include "internal/system/host_partition_provider.hpp"
 #include "internal/system/threading_resources.hpp"
 
@@ -30,6 +29,7 @@
 
 namespace mrc::system {
 class FiberTaskQueue;
+class HostPartition;
 }  // namespace mrc::system
 
 namespace mrc::runnable {

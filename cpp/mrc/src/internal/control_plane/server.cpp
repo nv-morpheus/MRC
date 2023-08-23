@@ -19,43 +19,21 @@
 
 #include "internal/control_plane/proto_helpers.hpp"
 #include "internal/control_plane/server/node_service.hpp"
-#include "internal/control_plane/server/subscription_manager.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/core/async_service.hpp"
-#include "mrc/edge/edge_builder.hpp"
-#include "mrc/node/queue.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_source.hpp"
-#include "mrc/node/writable_entrypoint.hpp"
-#include "mrc/protos/architect.grpc.pb.h"
+#include "mrc/core/error.hpp"
 #include "mrc/protos/architect.pb.h"
-#include "mrc/runnable/launch_control.hpp"
-#include "mrc/runnable/launcher.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/utils/library_utils.hpp"
 
-#include <boost/fiber/condition_variable.hpp>
 #include <glog/logging.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/support/status.h>
-#include <node/node.h>
-#include <rxcpp/rx.hpp>
-#include <uv.h>
-#include <v8-initialization.h>
 
-#include <algorithm>
-#include <exception>
+#include <cstdlib>
 #include <filesystem>
-#include <future>
 #include <memory>
-#include <mutex>
-#include <set>
 #include <sstream>
-#include <thread>
+#include <string>
 #include <utility>
 #include <vector>
 

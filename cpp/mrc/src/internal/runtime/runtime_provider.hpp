@@ -21,10 +21,6 @@
 
 #include <cstddef>
 
-namespace mrc::runnable {
-class RunnableResources;
-}
-
 namespace mrc::control_plane {
 class Client;
 }
@@ -91,7 +87,7 @@ class InternalRuntimeProvider : public virtual IInternalRuntimeProvider
 
 struct IInternalPartitionRuntime : public IInternalRuntime
 {
-    virtual ~IInternalPartitionRuntime() = default;
+    ~IInternalPartitionRuntime() override = default;
 
     virtual size_t partition_id() const = 0;
 

@@ -17,27 +17,20 @@
 
 #pragma once
 
-#include "internal/control_plane/server/connection_manager.hpp"
-
 #include "mrc/core/async_service.hpp"
-#include "mrc/core/error.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/runnable.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
+#include "mrc/types.hpp"
 
-#include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/mutex.hpp>
-#include <rxcpp/rx.hpp>
+#include <node.h>
 
-#include <chrono>
-#include <cstddef>
-#include <map>
 #include <memory>
+#include <stop_token>
 #include <string>
-
-namespace node {
-class Environment;
-class CommonEnvironmentSetup;
-class InitializationResult;
-class MultiIsolatePlatform;
-}  // namespace node
+#include <thread>
+#include <vector>
 
 namespace mrc::control_plane {
 

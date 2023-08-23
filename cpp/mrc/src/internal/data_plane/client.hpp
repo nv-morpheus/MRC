@@ -22,7 +22,6 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/types.hpp"
 
@@ -33,6 +32,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace mrc::node {
 template <typename T>

@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "internal/pipeline/pipeline_definition.hpp"
-#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 #include "internal/system/system_provider.hpp"
 
@@ -28,6 +26,11 @@
 #include "mrc/types.hpp"
 
 #include <memory>
+#include <vector>
+
+namespace mrc::runtime {
+class Runtime;
+}  // namespace mrc::runtime
 
 namespace mrc::system {
 class SystemDefinition;
@@ -36,10 +39,8 @@ class SystemDefinition;
 namespace mrc::pipeline {
 class IPipeline;
 class PipelineManager;
+class PipelineDefinition;
 }  // namespace mrc::pipeline
-namespace mrc::resources {
-class SystemResources;
-}  // namespace mrc::resources
 
 namespace mrc::executor {
 

@@ -17,33 +17,29 @@
 
 #pragma once
 
-#include "internal/control_plane/client.hpp"
-#include "internal/control_plane/state/root_state.hpp"
-#include "internal/remote_descriptor/manager.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/runtime/runtime_provider.hpp"
-#include "internal/segment/segment_instance.hpp"
-#include "internal/ucx/ucx_resources.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
-#include <optional>
+#include <map>
+#include <memory>
+#include <stop_token>
 
-namespace mrc::memory {
-class DeviceResources;
-class HostResources;
-}  // namespace mrc::memory
-namespace mrc::network {
-class NetworkResources;
-}  // namespace mrc::network
-namespace mrc::runnable {
-class RunnableResources;
-}  // namespace mrc::runnable
+namespace mrc::control_plane::state {
+struct SegmentInstance;
+struct Worker;
+}  // namespace mrc::control_plane::state
+namespace mrc::segment {
+class SegmentInstance;
+}  // namespace mrc::segment
+#include "internal/runtime/runtime_provider.hpp"
+
+#include "mrc/core/async_service.hpp"
+#include "mrc/types.hpp"
+
+#include <cstddef>
 
 namespace mrc::runtime {
 

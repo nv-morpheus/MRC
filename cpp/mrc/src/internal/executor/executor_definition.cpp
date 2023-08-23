@@ -20,17 +20,16 @@
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/pipeline/port_graph.hpp"
-#include "internal/pipeline/types.hpp"
+#include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 
-#include "mrc/core/addresses.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 
 #include <glog/logging.h>
 
-#include <map>
 #include <memory>
+#include <mutex>
 #include <ostream>
 #include <set>
 #include <string>

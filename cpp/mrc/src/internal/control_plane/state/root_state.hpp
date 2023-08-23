@@ -1,4 +1,7 @@
+#include "mrc/protos/architect_state.pb.h"
+
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -9,20 +12,6 @@
 namespace google::protobuf {
 class Message;
 }
-
-namespace mrc::protos {
-class ControlPlaneState;
-class ResourceState;
-class Connection;
-class Worker;
-class PipelineConfiguration;
-class PipelineDefinition;
-class PipelineDefinition_SegmentDefinition;
-class PipelineDefinition_ManifoldDefinition;
-class PipelineInstance;
-class SegmentInstance;
-class ManifoldInstance;
-}  // namespace mrc::protos
 
 namespace mrc::control_plane::state {
 
@@ -94,10 +83,8 @@ enum class SegmentStates : int
     Completed   = 3,
 };
 
-struct ControlPlaneState;
 struct Connection;
 struct Worker;
-struct PipelineConfiguration;
 struct PipelineDefinition;
 struct PipelineInstance;
 struct ManifoldInstance;

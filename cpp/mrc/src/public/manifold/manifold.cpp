@@ -17,16 +17,17 @@
 
 #include "mrc/manifold/manifold.hpp"
 
-#include "mrc/edge/edge_builder.hpp"
-#include "mrc/runnable/launch_control.hpp"
-#include "mrc/segment/utils.hpp"
+#include "mrc/core/utils.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/ranges.hpp"
 
-#include <glog/logging.h>
-
-#include <ostream>
+#include <map>
+#include <mutex>
+#include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace mrc::manifold {
 

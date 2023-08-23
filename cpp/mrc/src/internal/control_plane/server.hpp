@@ -17,57 +17,30 @@
 
 #pragma once
 
-#include "internal/control_plane/server/connection_manager.hpp"
-#include "internal/control_plane/server/node_service.hpp"
-#include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/async_service.hpp"
-#include "mrc/core/error.hpp"
-#include "mrc/node/writable_entrypoint.hpp"
-#include "mrc/protos/architect.grpc.pb.h"
-#include "mrc/runnable/context.hpp"
-#include "mrc/runnable/forward.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 
-#include <boost/fiber/condition_variable.hpp>
-#include <boost/fiber/mutex.hpp>
-#include <rxcpp/rx.hpp>
-
-#include <chrono>
 #include <cstddef>
-#include <map>
 #include <memory>
-#include <string>
+#include <stop_token>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
-namespace mrc::node {
-template <typename T>
-class Queue;
-}  // namespace mrc::node
-
 namespace mrc::control_plane::server {
 class ClientInstance;
-class SubscriptionService;
 }  // namespace mrc::control_plane::server
 namespace mrc::rpc {
 template <typename T>
 struct StreamWriter;
 }  // namespace mrc::rpc
-namespace mrc::runnable {
-class RunnableResources;
-}  // namespace mrc::runnable
 namespace mrc::protos {
-class Ack;
 class Event;
-class RegisterSubscriptionServiceResponse;
 }  // namespace mrc::protos
-namespace mrc::runnable {
-class Runner;
-}  // namespace mrc::runnable
 
 namespace mrc::control_plane {
+class NodeService;
 
 /**
  * @brief Control Plane Server

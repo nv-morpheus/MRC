@@ -2,7 +2,6 @@
 
 #include "mrc/protos/architect_state.pb.h"
 
-#include <glog/logging.h>
 #include <google/protobuf/util/json_util.h>
 #include <google/protobuf/util/message_differencer.h>
 

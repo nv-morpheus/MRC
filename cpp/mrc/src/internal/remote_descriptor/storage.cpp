@@ -17,11 +17,12 @@
 
 #include "internal/remote_descriptor/storage.hpp"
 
-#include "mrc/codable/encoded_object.hpp"
+#include "mrc/codable/api.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 
 #include <glog/logging.h>
 
+#include <ostream>
 #include <utility>
 
 namespace mrc::remote_descriptor {

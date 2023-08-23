@@ -18,18 +18,10 @@
 #pragma once
 
 #include "mrc/segment/initializers.hpp"
-#include "mrc/types.hpp"
 
-#include <map>
 #include <memory>
 #include <string>
 #include <typeindex>
-
-namespace mrc::segment {
-class SegmentDefinition;
-struct EgressPortsBase;
-struct IngressPortsBase;
-}  // namespace mrc::segment
 
 namespace mrc::manifold {
 class Interface;

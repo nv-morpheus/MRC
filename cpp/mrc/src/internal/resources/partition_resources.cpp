@@ -19,6 +19,10 @@
 
 #include <optional>
 
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
+
 namespace mrc::resources {
 
 PartitionResources::PartitionResources(runnable::RunnableResources& runnable_resources,

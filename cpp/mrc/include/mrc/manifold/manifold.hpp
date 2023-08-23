@@ -17,39 +17,15 @@
 
 #pragma once
 
-#include "mrc/channel/buffered_channel.hpp"
-#include "mrc/core/utils.hpp"
-#include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/node/operators/router.hpp"
-#include "mrc/node/queue.hpp"
-#include "mrc/node/sink_channel_owner.hpp"
-#include "mrc/runnable/runnable.hpp"
 #include "mrc/runnable/runnable_resources.hpp"
-#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
-#include "mrc/utils/ranges.hpp"
-#include "mrc/utils/string_utils.hpp"
 
 #include <atomic>
 #include <memory>
 #include <shared_mutex>
 #include <string>
-#include <utility>
-
-namespace mrc::edge {
-class IWritableAcceptorBase;
-class IWritableProviderBase;
-}  // namespace mrc::edge
-namespace mrc::runnable {
-struct IRunnableResources;
-}  // namespace mrc::runnable
-
-namespace mrc::runtime {
-class Descriptor;
-}
 
 namespace mrc::manifold {
 

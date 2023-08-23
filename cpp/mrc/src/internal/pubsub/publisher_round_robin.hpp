@@ -19,6 +19,8 @@
 
 #include "internal/pubsub/publisher_service.hpp"
 
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+
 #include <rxcpp/rx.hpp>
 
 #include <cstdint>
@@ -34,9 +36,6 @@ class PartitionRuntime;
 namespace mrc::ucx {
 class Endpoint;
 }  // namespace mrc::ucx
-namespace mrc::runtime {
-class RemoteDescriptor;
-}  // namespace mrc::runtime
 
 namespace mrc::pubsub {
 

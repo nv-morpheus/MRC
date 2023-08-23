@@ -22,6 +22,7 @@
 
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
 
@@ -34,7 +35,6 @@
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::codable {
-class EncodedStorage;
 class IDecodableStorage;
 struct ICodableStorage;
 }  // namespace mrc::codable
@@ -50,9 +50,6 @@ class PartitionRuntime;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-namespace mrc::runtime {
-struct IRemoteDescriptorHandle;
-}  // namespace mrc::runtime
 
 namespace mrc::remote_descriptor {
 struct RemoteDescriptorDecrementMessage;

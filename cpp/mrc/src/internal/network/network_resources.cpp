@@ -17,8 +17,6 @@
 
 #include "internal/network/network_resources.hpp"
 
-#include "internal/control_plane/client.hpp"
-#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
@@ -31,7 +29,6 @@
 #include <glog/logging.h>
 
 #include <utility>
-#include <vector>
 
 namespace mrc::network {
 

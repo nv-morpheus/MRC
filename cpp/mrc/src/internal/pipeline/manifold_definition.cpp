@@ -17,6 +17,8 @@
 
 #include "internal/pipeline/manifold_definition.hpp"
 
+#include <utility>
+
 namespace mrc::pipeline {
 
 ManifoldDefinition::ManifoldDefinition(std::string name,

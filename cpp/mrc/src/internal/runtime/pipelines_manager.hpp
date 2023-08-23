@@ -17,19 +17,25 @@
 
 #pragma once
 
-#include "internal/control_plane/client.hpp"
-#include "internal/control_plane/state/root_state.hpp"
-#include "internal/pipeline/pipeline_definition.hpp"
-#include "internal/pipeline/pipeline_instance.hpp"
-#include "internal/resources/partition_resources.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
-#include <cstddef>
+#include <cstdint>
+#include <map>
 #include <memory>
-#include <optional>
-#include <utility>
+#include <stop_token>
+#include <vector>
+
+namespace mrc::control_plane::state {
+struct Connection;
+struct PipelineInstance;
+}  // namespace mrc::control_plane::state
+namespace mrc::pipeline {
+class PipelineDefinition;
+class PipelineInstance;
+}  // namespace mrc::pipeline
 
 namespace mrc::runtime {
 

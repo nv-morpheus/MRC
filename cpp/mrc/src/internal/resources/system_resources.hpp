@@ -22,7 +22,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system_provider.hpp"
 
-#include "mrc/types.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 
 #include <cstddef>
 #include <memory>

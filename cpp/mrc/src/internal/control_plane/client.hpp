@@ -20,18 +20,15 @@
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/conditional.hpp"
-#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -40,17 +37,18 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
+#include <stddef.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
+#include <ostream>
 #include <set>
+#include <stop_token>
 #include <string>
 #include <utility>
-#include <vector>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
@@ -59,21 +57,14 @@ class Channel;
 class CompletionQueue;
 }  // namespace grpc
 namespace mrc::control_plane::client {
-class ConnectionsManager;
 class SubscriptionService;
 }  // namespace mrc::control_plane::client
 namespace mrc::network {
 class NetworkResources;
 }  // namespace mrc::network
-namespace mrc::ucx {
-class UcxResources;
-}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-namespace mrc::resources {
-class IResourcesProvider;
-}  // namespace mrc::resources
 
 namespace mrc::control_plane {
 

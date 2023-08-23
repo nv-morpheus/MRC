@@ -23,7 +23,6 @@
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"

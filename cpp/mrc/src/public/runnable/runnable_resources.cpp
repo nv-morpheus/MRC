@@ -17,24 +17,6 @@
 
 #include "mrc/runnable/runnable_resources.hpp"
 
-#include "internal/runnable/engine_factory.hpp"
-#include "internal/system/engine_factory_cpu_sets.hpp"
-#include "internal/system/fiber_task_queue.hpp"
-#include "internal/system/host_partition.hpp"
-
-#include "mrc/core/bitmap.hpp"
-#include "mrc/runnable/launch_control_config.hpp"
-#include "mrc/runnable/types.hpp"
-#include "mrc/types.hpp"
-
-#include <boost/fiber/future/future.hpp>
-#include <glog/logging.h>
-
-#include <map>
-#include <ostream>
-#include <string>
-#include <utility>
-
 namespace mrc::runnable {
 
 const mrc::core::FiberTaskQueue& IRunnableResources::main() const

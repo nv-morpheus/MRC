@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <memory>
+#include <sstream>
 
 namespace mrc::system {
 

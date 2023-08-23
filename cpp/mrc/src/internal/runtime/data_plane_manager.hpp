@@ -17,41 +17,41 @@
 
 #pragma once
 
-#include "internal/control_plane/client.hpp"
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/remote_descriptor/manager.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/resource_manager_base.hpp"
 #include "internal/runtime/runtime_provider.hpp"
-#include "internal/segment/segment_instance.hpp"
-#include "internal/ucx/ucx_resources.hpp"
 
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/async_service.hpp"
-#include "mrc/edge/forward.hpp"
-#include "mrc/node/forward.hpp"
-#include "mrc/node/queue.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/types.hpp"
+
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <stop_token>
+
+namespace mrc::codable {
+class EncodedStorage;
+}  // namespace mrc::codable
+namespace mrc::edge {
+template <typename T>
+class IWritableAcceptor;
+template <typename T>
+class IWritableProvider;
+}  // namespace mrc::edge
+namespace mrc::node {
+template <typename T>
+class Queue;
+}  // namespace mrc::node
+#include "internal/control_plane/state/root_state.hpp"
+#include "internal/runtime/runtime_provider.hpp"
+
+#include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <optional>
-
-namespace mrc::memory {
-class DeviceResources;
-class HostResources;
-}  // namespace mrc::memory
-namespace mrc::network {
-class NetworkResources;
-}  // namespace mrc::network
-namespace mrc::runnable {
-class RunnableResources;
-}  // namespace mrc::runnable
 
 namespace mrc::runtime {
+class Descriptor;
 
 class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvider
 {

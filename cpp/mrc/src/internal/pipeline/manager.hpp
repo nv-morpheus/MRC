@@ -18,7 +18,6 @@
 #pragma once
 
 #include "internal/pipeline/types.hpp"
-#include "internal/runtime/runtime.hpp"
 #include "internal/service.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
@@ -28,11 +27,11 @@
 #include <cstdint>
 #include <memory>
 
-// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
+namespace mrc::runtime {
+class Runtime;
+}  // namespace mrc::runtime
 
-namespace mrc::resources {
-class SystemResources;
-}  // namespace mrc::resources
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable

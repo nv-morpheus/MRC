@@ -17,7 +17,6 @@
 
 #include "internal/segment/builder_definition.hpp"
 
-#include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 
@@ -28,11 +27,11 @@
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/node/port_registry.hpp"
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>

@@ -19,9 +19,7 @@
 
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/decode.hpp"
-#include "mrc/codable/encoded_object.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/runtime/remote_descriptor_handle.hpp"
+#include "mrc/codable/encode.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -30,6 +28,8 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <ostream>
+#include <utility>
 
 namespace mrc::remote_descriptor {
 class Manager;
@@ -40,9 +40,6 @@ class PartitionResources;
 }  // namespace mrc::resources
 
 namespace mrc::runtime {
-
-// class IRemoteDescriptorHandle;
-class IRemoteDescriptorManager;
 
 class Descriptor
 {

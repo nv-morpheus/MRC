@@ -26,6 +26,7 @@
 #include <glog/logging.h>
 #include <hwloc.h>
 
+#include <cstdlib>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -38,7 +39,7 @@ std::unique_ptr<const Options> prepare_options(const Options& options)
     auto final_options = std::make_unique<Options>(options);
 
     // Check for any environmental overrides to options
-    auto env_architect_url = std::getenv("MRC_ARCHITECT_URL");
+    auto* env_architect_url = std::getenv("MRC_ARCHITECT_URL");
 
     if (env_architect_url != nullptr)
     {

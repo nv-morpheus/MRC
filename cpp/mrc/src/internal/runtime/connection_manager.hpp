@@ -17,38 +17,24 @@
 
 #pragma once
 
-#include "internal/control_plane/client.hpp"
 #include "internal/control_plane/state/root_state.hpp"
-#include "internal/remote_descriptor/manager.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
-#include "internal/segment/segment_instance.hpp"
-#include "internal/ucx/ucx_resources.hpp"
 
-#include "mrc/core/async_service.hpp"
 #include "mrc/types.hpp"
 
-#include <cstddef>
-#include <cstdint>
-#include <optional>
+#include <rxcpp/rx.hpp>
 
-namespace mrc::memory {
-class DeviceResources;
-class HostResources;
-}  // namespace mrc::memory
-namespace mrc::network {
-class NetworkResources;
-}  // namespace mrc::network
-namespace mrc::runnable {
-class RunnableResources;
-}  // namespace mrc::runnable
+#include <cstdint>
+#include <exception>
+#include <map>
+#include <memory>
 
 namespace mrc::runtime {
 
-class SegmentsManager;
 class DataPlaneManager;
+class PipelinesManager;
+class Runtime;
+class WorkerManager;
 
 /**
  * @brief Partition Resources define the set of Resources available to a given Partition

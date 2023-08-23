@@ -34,7 +34,6 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/api.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/writable_entrypoint.hpp"

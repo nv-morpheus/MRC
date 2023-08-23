@@ -25,6 +25,7 @@
 #include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -35,7 +36,6 @@
 #include <string>
 #include <typeindex>
 #include <utility>
-#include <vector>
 
 namespace mrc::pipeline {
 

@@ -17,16 +17,14 @@
 
 #include "internal/pipeline/manager.hpp"
 
-#include "internal/control_plane/client.hpp"
 #include "internal/pipeline/controller.hpp"
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/pipeline/types.hpp"
 #include "internal/resources/partition_resources.hpp"
-#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/utils/contains.hpp"
+#include "internal/runtime/partition_runtime.hpp"
+#include "internal/runtime/runtime.hpp"
 
-#include "mrc/core/addresses.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runnable/launch_control.hpp"

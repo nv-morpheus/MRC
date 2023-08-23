@@ -17,9 +17,7 @@
 
 #include "internal/resources/system_resources.hpp"
 
-#include "internal/control_plane/client.hpp"
-#include "internal/control_plane/client/connections_manager.hpp"
-#include "internal/control_plane/client/instance.hpp"
+#include "internal/control_plane/client/instance.hpp"    // IWYU pragma: keep
 #include "internal/data_plane/data_plane_resources.hpp"  // IWYU pragma: keep
 #include "internal/memory/device_resources.hpp"
 #include "internal/network/network_resources.hpp"
@@ -33,16 +31,12 @@
 #include "internal/system/threading_resources.hpp"
 #include "internal/ucx/registation_callback_builder.hpp"
 #include "internal/ucx/ucx_resources.hpp"
-#include "internal/ucx/worker.hpp"
-#include "internal/utils/contains.hpp"
 
 #include "mrc/core/bitmap.hpp"
-#include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <map>

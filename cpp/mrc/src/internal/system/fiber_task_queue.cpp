@@ -24,10 +24,8 @@
 #include "mrc/core/fiber_meta_data.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/types.hpp"
-#include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/channel_op_status.hpp>
-#include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>

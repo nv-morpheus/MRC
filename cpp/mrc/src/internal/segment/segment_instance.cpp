@@ -19,38 +19,34 @@
 
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/pipeline/manifold_instance.hpp"
-#include "internal/resources/partition_resources.hpp"
-#include "internal/resources/system_resources.hpp"
-#include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/partition_runtime.hpp"
+#include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/runtime/pipelines_manager.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/builder_definition.hpp"
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
-#include "mrc/core/async_service.hpp"
-#include "mrc/core/task_queue.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
-#include "mrc/protos/architect_state.pb.h"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/runnable/launcher.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/runnable/runner.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <exception>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <ostream>
+#include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 

@@ -18,11 +18,11 @@
 #pragma once
 
 #include "internal/control_plane/client/state_manager.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/types.hpp"
 
 #include <map>

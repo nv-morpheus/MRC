@@ -18,25 +18,25 @@
 #include "internal/control_plane/server/node_service.hpp"
 
 #include "mrc/core/async_service.hpp"
-#include "mrc/protos/architect.grpc.pb.h"
-#include "mrc/protos/architect.pb.h"
+#include "mrc/core/error.hpp"
 #include "mrc/utils/library_utils.hpp"
-#include "mrc/utils/string_utils.hpp"
 
-#include <grpcpp/client_context.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/support/status.h>
+#include <boost/fiber/future/packaged_task.hpp>
+#include <glog/logging.h>
 #include <node/node.h>
 #include <uv.h>
+#include <v8-context.h>
 #include <v8-initialization.h>
+#include <v8-isolate.h>
+#include <v8-local-handle.h>
+#include <v8-locker.h>
+#include <v8-maybe.h>
 
 #include <algorithm>
-#include <exception>
 #include <filesystem>
 #include <future>
+#include <iterator>
 #include <memory>
-#include <mutex>
-#include <set>
 #include <sstream>
 #include <stop_token>
 #include <thread>

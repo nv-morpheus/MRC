@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <string>
 #include <thread>
 
 namespace mrc::system {
