@@ -20,7 +20,7 @@
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
-#include "mrc/type_traits.hpp"
+#include "mrc/type_traits.hpp"  // IWYU pragma: keep
 #include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>

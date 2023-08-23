@@ -74,6 +74,8 @@
 { "include": [ "@\"rxcpp/operators/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "@<rxcpp/sources/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
 { "include": [ "@\"rxcpp/sources/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@<rxcpp/subjects/.*>", private, "<rxcpp/rx.hpp>", "public" ] },
+{ "include": [ "@\"rxcpp/subjects/.*\"", private, "<rxcpp/rx.hpp>", "public" ] },
 
 # ucp
 { "include": [ "<ucp/api/ucp_def.h>", "public", "<ucp/api/ucp.h>", "public" ] },

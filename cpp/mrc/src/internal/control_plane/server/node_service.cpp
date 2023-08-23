@@ -43,6 +43,10 @@
 #include <utility>
 #include <vector>
 
+namespace node {
+class Environment;
+}  // namespace node
+
 namespace mrc::control_plane {
 
 std::vector<char*> vec_string_to_char_ptr(std::vector<std::string>& vec_strings)

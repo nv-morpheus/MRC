@@ -52,7 +52,7 @@ add_executable(test_mrc_private
   test_grpc.cpp
   test_main.cpp
   test_memory.cpp
-  # test_network.cpp
+  test_network.cpp
   test_next.cpp
   # test_partition_manager.cpp
   # test_partitions.cpp
