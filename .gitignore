@@ -200,3 +200,6 @@ include/mrc/version.hpp
 
 # Ignore user-defined clangd settings
 .clangd
+
+# Ignore vcpkg.json files to allow it to be used without accidentally committing
+/vcpkg.json
