@@ -23,7 +23,6 @@
 #include "internal/data_plane/request.hpp"
 #include "internal/data_plane/tags.hpp"
 #include "internal/memory/transient_pool.hpp"
-#include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
@@ -67,7 +66,7 @@ Client::Client(resources::PartitionResourceBase& base,
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),
-  m_rd_channel(std::make_unique<node::NodeComponent<RemoteDescriptorMessage>>())
+  m_rd_channel(std::make_unique<node::NodeComponent<LocalDescriptorMessage>>())
 {}
 
 Client::~Client() = default;
@@ -245,26 +244,22 @@ void Client::async_am_send(std::uint32_t id,
     CHECK(!UCS_PTR_IS_ERR(request.m_request));
 }
 
-void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
+void Client::issue_remote_descriptor(LocalDescriptorMessage msg)
 {
-    DCHECK(msg.rd);
     DCHECK(msg.endpoint);
     DCHECK_GT(msg.tag, 0);
     DCHECK_LE(msg.tag, TAG_USER_MASK);
 
-    // detach handle from remote descriptor to ensure that the tokens are not decremented
-    auto handle = remote_descriptor::Manager::unwrap_handle(std::move(msg.rd));
-
     // gain access to the protobuf backing the handle
-    const auto& proto = handle->proto();
+    auto proto = msg.handle.release();
 
-    auto msg_length = proto.ByteSizeLong();
+    auto msg_length = proto->ByteSizeLong();
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_remote_descriptor_eager_size
     if (msg_length <= 1_MiB)
     {
         auto buffer = m_transient_pool.await_buffer(msg_length);
-        CHECK(proto.SerializeToArray(buffer.data(), buffer.bytes()));
+        CHECK(proto->SerializeToArray(buffer.data(), buffer.bytes()));
 
         // the message fits into the size of the preposted recvs issued by the data plane
         msg.tag |= TAG_EGR_MSG;
@@ -281,7 +276,7 @@ void Client::issue_remote_descriptor(RemoteDescriptorMessage&& msg)
     }
 }
 
-node::WritableProvider<RemoteDescriptorMessage>& Client::remote_descriptor_channel()
+node::WritableProvider<LocalDescriptorMessage>& Client::remote_descriptor_channel()
 {
     CHECK(m_rd_channel);
     return *m_rd_channel;
@@ -291,12 +286,12 @@ void Client::do_service_start()
 {
     CHECK(m_rd_channel);
 
-    auto rd_writer = std::make_unique<node::RxSink<RemoteDescriptorMessage>>([this](RemoteDescriptorMessage msg) {
-        issue_remote_descriptor(std::move(msg));
+    auto rd_writer = std::make_unique<node::RxSink<LocalDescriptorMessage>>([this](LocalDescriptorMessage msg) {
+        this->issue_remote_descriptor(std::move(msg));
     });
 
     // todo(ryan) - parameterize mrc::data_plane::client::max_queued_remote_descriptor_sends
-    rd_writer->set_channel(std::make_unique<channel::BufferedChannel<RemoteDescriptorMessage>>(128));
+    rd_writer->set_channel(std::make_unique<channel::BufferedChannel<LocalDescriptorMessage>>(128));
 
     // form edge
     mrc::make_edge(*m_rd_channel, *rd_writer);

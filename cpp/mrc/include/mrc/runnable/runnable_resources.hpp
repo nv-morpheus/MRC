@@ -17,20 +17,55 @@
 
 #pragma once
 
-#include "mrc/core/fiber_meta_data.hpp"
-#include "mrc/core/task_queue.hpp"
-#include "mrc/metrics/registry.hpp"
-#include "mrc/runnable/launch_control.hpp"
+namespace mrc::core {
+class FiberTaskQueue;
+}
 
 namespace mrc::runnable {
+class LaunchControl;
 
 struct IRunnableResources
 {
     virtual ~IRunnableResources() = default;
 
-    virtual core::FiberTaskQueue& main()              = 0;
+    virtual core::FiberTaskQueue& main() = 0;
+    const core::FiberTaskQueue& main() const;
+
+    virtual core::FiberTaskQueue& network() = 0;
+    const core::FiberTaskQueue& network() const;
+
     virtual runnable::LaunchControl& launch_control() = 0;
+
     // virtual std::shared_ptr<metrics::Registry> metrics_registry() = 0;
+};
+
+class IRunnableResourcesProvider
+{
+  protected:
+    virtual IRunnableResources& runnable() = 0;
+
+    const IRunnableResources& runnable() const;
+
+  private:
+    friend class RunnableResourcesProvider;
+};
+
+// Concrete implementation of IRunnableResourcesProvider. Use this if RunnableResources is available during
+// construction. Inherits virtually to ensure only one IRunnableResourcesProvider
+class RunnableResourcesProvider : public virtual IRunnableResourcesProvider
+{
+  public:
+    static RunnableResourcesProvider create(IRunnableResources& runnable);
+
+  protected:
+    RunnableResourcesProvider(const RunnableResourcesProvider& other);
+    RunnableResourcesProvider(IRunnableResourcesProvider& other);
+    RunnableResourcesProvider(IRunnableResources& runnable);
+
+    IRunnableResources& runnable() override;
+
+  private:
+    IRunnableResources& m_runnable;
 };
 
 }  // namespace mrc::runnable

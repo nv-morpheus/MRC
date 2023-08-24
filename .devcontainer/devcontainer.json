@@ -28,6 +28,7 @@
                 "eamodio.gitlens",
                 "formulahendry.terminal",
                 "hbenl.vscode-test-explorer",
+                "jingkaizhao.vscode-redux-devtools",
                 "josetr.cmake-language-support-vscode",
                 "llvm-vs-code-extensions.vscode-clangd",
                 "matepek.vscode-catch2-test-adapter",
@@ -37,7 +38,8 @@
                 "ms-vscode.cpptools-themes",
                 "ms-vscode.cpptools",
                 "ms-vscode.test-adapter-converter",
-                "xaver.clang-format"
+                "orta.vscode-jest",
+                "xaver.clang-format",
             ],
             "settings": {
                 "cmake.cmakePath": "cmake", // Ensure we use the default from the conda environment

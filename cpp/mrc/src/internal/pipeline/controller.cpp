@@ -127,19 +127,19 @@ void Controller::update(SegmentAddresses&& new_segments_map)
         auto partition_id = new_segments_map.at(address);
         DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
                   << " on resource partition: " << partition_id;
-        m_pipeline->create_segment(address, partition_id);
+        // m_pipeline->create_segment(address, partition_id);
     }
 
     // detach from manifold or stop old segments
     for (const auto& address : remove_segments)
     {
         DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
-        m_pipeline->stop_segment(address);
+        // m_pipeline->stop_segment(address);
     }
 
     // m_pipeline->manifold_update_inputs();
 
-    m_pipeline->update();
+    // m_pipeline->update();
 
     // when ready issue update
     // this should start all segments

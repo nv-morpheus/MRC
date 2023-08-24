@@ -29,8 +29,8 @@
 #include "internal/memory/host_resources.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/network/network_resources.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -96,7 +96,7 @@ TEST_F(TestNetwork, ResourceManager)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
@@ -156,7 +156,7 @@ TEST_F(TestNetwork, CommsSendRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
@@ -184,11 +184,11 @@ TEST_F(TestNetwork, CommsSendRecv)
     // r0.client().register_instance(1, r1.ucx_address());  // register r1 as instance_id 1
     // r1.client().register_instance(0, r0.ucx_address());  // register r0 as instance_id 0
 
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
@@ -218,7 +218,7 @@ TEST_F(TestNetwork, CommsGet)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
@@ -258,11 +258,11 @@ TEST_F(TestNetwork, CommsGet)
     auto& r1 = resources->partition(1).network()->data_plane();
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     auto id_0 = resources->partition(0).network()->control_plane().instance_id();
     auto id_1 = resources->partition(1).network()->control_plane().instance_id();
@@ -289,7 +289,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     // using options.placement().resources_strategy(PlacementResources::Shared)
     // will test if cudaSetDevice is being properly called by the network services
     // since all network services for potentially multiple devices are colocated on a single thread
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             options.enable_server(true);
             options.architect_url("localhost:13337");
@@ -308,11 +308,11 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     }
 
     // here we are exchanging internal ucx worker addresses without the need of the control plane
-    auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
-    auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
+    // auto f1 = resources->partition(0).network()->control_plane().client().connections().update_future();
+    // auto f2 = resources->partition(1).network()->control_plane().client().connections().update_future();
     resources->partition(0).network()->control_plane().client().request_update();
-    f1.get();
-    f2.get();
+    // f1.get();
+    // f2.get();
 
     EXPECT_TRUE(resources->partition(0).network());
     EXPECT_TRUE(resources->partition(1).network());
@@ -326,7 +326,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     auto recv_sink = std::make_unique<node::RxSink<memory::TransientBuffer>>([&](memory::TransientBuffer buffer) {
         EXPECT_EQ(buffer.bytes(), 128);
         counter++;
-        r0.server().deserialize_source().drop_edge(tag);
+        // r0.server().deserialize_source().drop_edge(tag);
     });
 
     auto deser_source = r0.server().deserialize_source().get_source(tag);

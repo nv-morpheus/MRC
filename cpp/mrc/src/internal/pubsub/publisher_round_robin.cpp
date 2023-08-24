@@ -22,7 +22,6 @@
 #include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/task_queue.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <glog/logging.h>
 
@@ -37,8 +36,8 @@ void PublisherRoundRobin::on_update()
     m_next = this->tagged_endpoints().cbegin();
 }
 
-void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
-                                       mrc::runtime::RemoteDescriptor&& rd)
+void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::LocalDescriptorMessage>& sub,
+                                       runtime::LocalDescriptorHandle descriptor_handle)
 {
     DCHECK(this->resources().runnable().main().caller_on_same_thread());
 
@@ -57,7 +56,7 @@ void PublisherRoundRobin::apply_policy(rxcpp::subscriber<data_plane::RemoteDescr
         LOG_EVERY_N(WARNING, 1000) << "publisher dropping object because no subscribers are active";  // NOLINT
     }
 
-    sub.on_next(data_plane::RemoteDescriptorMessage{std::move(rd), m_next->second, m_next->first});
+    sub.on_next(data_plane::LocalDescriptorMessage(std::move(descriptor_handle), m_next->second, m_next->first));
 
     if (++m_next == this->tagged_endpoints().cend())
     {

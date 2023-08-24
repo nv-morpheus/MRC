@@ -18,7 +18,7 @@
 #pragma once
 
 #include "mrc/manifold/interface.hpp"
-#include "mrc/manifold/load_balancer.hpp"
+#include "mrc/manifold/typed_manifold.hpp"
 
 #include <memory>
 
@@ -29,7 +29,7 @@ struct Factory final
 {
     static std::shared_ptr<Interface> make_manifold(PortName port_name, runnable::IRunnableResources& resources)
     {
-        return std::make_shared<LoadBalancer<T>>(std::move(port_name), resources);
+        return std::make_shared<TypedManifold<T>>(resources, std::move(port_name));
     }
 };
 

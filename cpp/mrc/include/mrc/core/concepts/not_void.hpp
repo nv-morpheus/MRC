@@ -17,11 +17,22 @@
 
 #pragma once
 
+#include "mrc/type_traits.hpp"
+
 #include <concepts>
 
 namespace mrc::core::concepts {
 
 template <typename T>
 concept not_void = requires { requires not std::same_as<T, void>; };
+
+template <typename T>
+concept is_shared_ptr = mrc::is_shared_ptr_v<T>;
+
+template <typename T>
+concept is_unique_ptr = mrc::is_unique_ptr_v<T>;
+
+template <typename T>
+concept is_smart_ptr = mrc::is_shared_ptr_v<T> || mrc::is_unique_ptr_v<T>;
 
 }  // namespace mrc::core::concepts

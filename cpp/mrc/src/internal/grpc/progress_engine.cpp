@@ -36,7 +36,7 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
     ProgressEvent event;
     std::uint64_t backoff = 128;
 
-    DVLOG(10) << "starting progress engine";
+    // DVLOG(10) << "starting progress engine";
 
     while (s.is_subscribed())
     {
@@ -44,7 +44,8 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
         {
         case grpc::CompletionQueue::NextStatus::GOT_EVENT: {
             backoff = 1;
-            DVLOG(20) << "progress engine got event";
+            // DVLOG(20) << "progress engine got event. Tag: " << reinterpret_cast<std::uint64_t>(event.tag)
+            //           << ", Ok: " << event.ok;
             s.on_next(event);
         }
         break;

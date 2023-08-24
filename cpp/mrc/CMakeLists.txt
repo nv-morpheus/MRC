@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "mrc")
+
 # ##################################################################################################
 # - libmrc -----------------------------------------------------------------------------------------
 
@@ -26,11 +28,12 @@ add_library(libmrc
   src/internal/control_plane/client/instance.cpp
   src/internal/control_plane/client/state_manager.cpp
   src/internal/control_plane/client/subscription_service.cpp
-  src/internal/control_plane/control_plane_resources.cpp
   src/internal/control_plane/server.cpp
   src/internal/control_plane/server/connection_manager.cpp
+  src/internal/control_plane/server/node_service.cpp
   src/internal/control_plane/server/subscription_manager.cpp
   src/internal/control_plane/server/tagged_issuer.cpp
+  src/internal/control_plane/state/root_state.cpp
   src/internal/data_plane/callbacks.cpp
   src/internal/data_plane/client.cpp
   src/internal/data_plane/data_plane_resources.cpp
@@ -45,6 +48,8 @@ add_library(libmrc
   src/internal/network/network_resources.cpp
   src/internal/pipeline/controller.cpp
   src/internal/pipeline/manager.cpp
+  src/internal/pipeline/manifold_definition.cpp
+  src/internal/pipeline/manifold_instance.cpp
   src/internal/pipeline/pipeline_definition.cpp
   src/internal/pipeline/pipeline_instance.cpp
   src/internal/pipeline/pipeline_resources.cpp
@@ -56,9 +61,9 @@ add_library(libmrc
   src/internal/remote_descriptor/manager.cpp
   src/internal/remote_descriptor/remote_descriptor.cpp
   src/internal/remote_descriptor/storage.cpp
-  src/internal/resources/manager.cpp
   src/internal/resources/partition_resources_base.cpp
   src/internal/resources/partition_resources.cpp
+  src/internal/resources/system_resources.cpp
   src/internal/runnable/engine_factory.cpp
   src/internal/runnable/engine.cpp
   src/internal/runnable/engines.cpp
@@ -67,8 +72,14 @@ add_library(libmrc
   src/internal/runnable/runnable_resources.cpp
   src/internal/runnable/thread_engine.cpp
   src/internal/runnable/thread_engines.cpp
-  src/internal/runtime/partition.cpp
+  src/internal/runtime/connection_manager.cpp
+  src/internal/runtime/data_plane_manager.cpp
+  src/internal/runtime/partition_runtime.cpp
+  src/internal/runtime/pipelines_manager.cpp
+  src/internal/runtime/runtime_provider.cpp
   src/internal/runtime/runtime.cpp
+  src/internal/runtime/segments_manager.cpp
+  src/internal/runtime/worker_manager.cpp
   src/internal/segment/builder_definition.cpp
   src/internal/segment/segment_definition.cpp
   src/internal/segment/segment_instance.cpp
@@ -109,6 +120,7 @@ add_library(libmrc
   src/public/codable/encoded_object.cpp
   src/public/codable/memory.cpp
   src/public/core/addresses.cpp
+  src/public/core/async_service.cpp
   src/public/core/bitmap.cpp
   src/public/core/fiber_pool.cpp
   src/public/core/logging.cpp
@@ -144,11 +156,13 @@ add_library(libmrc
   src/public/pipeline/system.cpp
   src/public/runnable/context.cpp
   src/public/runnable/launcher.cpp
+  src/public/runnable/runnable_resources.cpp
   src/public/runnable/runnable.cpp
   src/public/runnable/runner.cpp
   src/public/runnable/types.cpp
   src/public/runtime/remote_descriptor.cpp
   src/public/utils/bytes_to_string.cpp
+  src/public/utils/library_utils.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
 )
@@ -175,6 +189,9 @@ target_link_libraries(libmrc
     prometheus-cpp::core # private in MR !199
     ucx::ucp
     ucx::ucs
+    ucx::ucp
+    NodeJs::Node
+    UV::uv
 )
 
 target_include_directories(libmrc
@@ -194,6 +211,9 @@ target_compile_definitions(libmrc
 if (MRC_ENABLE_CODECOV)
   target_compile_definitions(libmrc INTERFACE "MRC_CODECOV_ENABLED")
 endif()
+
+# In debug mode, dont allow missing symbols
+target_link_options(libmrc PUBLIC "$<$<CONFIG:Debug>:-Wl,--no-allow-shlib-undefined>")
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
@@ -266,3 +286,5 @@ rapids_export(BUILD ${PROJECT_NAME}
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string
 )
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

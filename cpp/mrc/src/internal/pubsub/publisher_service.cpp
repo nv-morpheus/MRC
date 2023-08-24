@@ -24,10 +24,9 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_readable.hpp"
@@ -35,6 +34,7 @@
 #include "mrc/runnable/launch_control.hpp"
 #include "mrc/runnable/launcher.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/utils/ranges.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -46,7 +46,7 @@
 
 namespace mrc::pubsub {
 
-PublisherService::PublisherService(std::string service_name, runtime::Partition& runtime) :
+PublisherService::PublisherService(std::string service_name, runtime::PartitionRuntime& runtime) :
   Base(std::move(service_name), runtime),
   m_runtime(runtime)
 {}
@@ -73,7 +73,7 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
     auto cur_tags         = extract_keys(m_tagged_instances);
     auto new_tags         = extract_keys(tagged_instances);
-    auto [added, removed] = set_compare(cur_tags, new_tags);
+    auto [added, removed] = compare_difference(cur_tags, new_tags);
 
     for (const auto& tag : removed)
     {
@@ -94,18 +94,18 @@ void PublisherService::update_tagged_instances(const std::string& role,
 
 void PublisherService::do_subscription_service_setup()
 {
-    auto policy_engine = std::make_unique<mrc::node::RxSource<data_plane::RemoteDescriptorMessage>>(
-        rxcpp::observable<>::create<data_plane::RemoteDescriptorMessage>(
-            [this](rxcpp::subscriber<data_plane::RemoteDescriptorMessage> sub) {
-                std::unique_ptr<mrc::codable::EncodedStorage> storage;
+    auto policy_engine = std::make_unique<mrc::node::RxSource<data_plane::LocalDescriptorMessage>>(
+        rxcpp::observable<>::create<data_plane::LocalDescriptorMessage>(
+            [this](rxcpp::subscriber<data_plane::LocalDescriptorMessage> sub) {
+                std::unique_ptr<mrc::runtime::LocalDescriptor> descriptor;
 
                 while (sub.is_subscribed() &&
-                       (this->get_readable_edge()->await_read(storage) == channel::Status::success))
+                       (this->get_readable_edge()->await_read(descriptor) == channel::Status::success))
                 {
-                    mrc::runtime::RemoteDescriptor rd = m_runtime.remote_descriptor_manager().register_encoded_object(
-                        std::move(storage));
+                    auto descriptor_handle = m_runtime.remote_descriptor_manager().register_local_descriptor(
+                        std::move(descriptor));
 
-                    this->apply_policy(sub, std::move(rd));
+                    this->apply_policy(sub, std::move(descriptor_handle));
                 }
 
                 sub.on_completed();

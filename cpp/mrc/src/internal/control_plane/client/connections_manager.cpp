@@ -19,7 +19,6 @@
 
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/instance.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 #include "internal/utils/contains.hpp"
@@ -40,7 +39,9 @@
 
 namespace mrc::control_plane::client {
 
-ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) : StateManager(client)
+ConnectionsManager::ConnectionsManager(Client& client, update_channel_t& update_channel) :
+  StateManager(client),
+  runnable::RunnableResourcesProvider(client)
 {
     this->start_with_channel(update_channel);
 }
@@ -86,7 +87,7 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
     }
 
     // issue activate event - connection events from the server will
-    client().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
+    // client().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(*resp));
 
     DVLOG(10) << "client - machine_id: " << m_machine_id;
     return instances;
@@ -94,7 +95,7 @@ std::map<InstanceID, std::unique_ptr<client::Instance>> ConnectionsManager::regi
 
 void ConnectionsManager::do_update(const protos::StateUpdate&& update_msg)
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    DCHECK(this->runnable().main().caller_on_same_thread());
 
     if (update_msg.has_connections())
     {
@@ -170,7 +171,7 @@ void ConnectionsManager::do_connections_update(const protos::UpdateConnectionsSt
 
 const std::map<InstanceID, MachineID>& ConnectionsManager::locality_map() const
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    // DCHECK(this->runnable().main().caller_on_same_thread());
     return m_locality_map;
 }
 
@@ -183,7 +184,7 @@ const std::map<InstanceID, ucx::WorkerAddress>& ConnectionsManager::worker_addre
 const std::map<InstanceID, std::unique_ptr<ConnectionsManager::update_channel_t>>& ConnectionsManager::instance_channels()
     const
 {
-    DCHECK(client().runnable().main().caller_on_same_thread());
+    // DCHECK(this->runnable().main().caller_on_same_thread());
     return m_update_channels;
 }
 

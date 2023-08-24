@@ -23,10 +23,10 @@
 #include "internal/network/network_resources.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/remote_descriptor/storage.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -56,15 +56,12 @@ class TestRD : public ::testing::Test
   protected:
     void SetUp() override
     {
-        auto resources = std::make_unique<resources::Manager>(
-            system::SystemProvider(tests::make_system([](Options& options) {
-                // todo(#114) - propose: remove this option entirely
-                options.enable_server(true);
-                options.architect_url("localhost:13337");
-                options.placement().resources_strategy(PlacementResources::Dedicated);
-            })));
-
-        m_runtime = std::make_unique<runtime::Runtime>(std::move(resources));
+        m_runtime = std::make_unique<runtime::Runtime>(system::SystemProvider(tests::make_system([](Options& options) {
+            // todo(#114) - propose: remove this option entirely
+            options.enable_server(true);
+            options.architect_url("localhost:13337");
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+        })));
     }
 
     void TearDown() override
@@ -113,7 +110,7 @@ TEST_F(TestRD, RemoteRelease)
         GTEST_SKIP() << "this test only works with 2 or more partitions";
     }
 
-    auto f1 = m_runtime->partition(0).resources().network()->control_plane().client().connections().update_future();
+    // auto f1 = m_runtime->partition(0).resources().network()->control_plane().client().connections().update_future();
     m_runtime->partition(0).resources().network()->control_plane().client().request_update();
 
     m_runtime->partition(0)

@@ -77,6 +77,8 @@ morpheus_utils_initialize_package_manager(
 # NOTE: This MUST occur before any 'project' calls because of rapids_cmake requirements.
 morpheus_utils_initialize_cuda_arch(mrc)
 
+message(STATUS "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+
 project(mrc
   VERSION 23.11.00
   LANGUAGES C CXX
@@ -168,6 +170,8 @@ include(environment/init_iwyu)
 # - subdirectories ---------------------------------------------------------------------------------
 
 add_subdirectory(cpp)
+
+add_subdirectory(ts)
 
 if(MRC_BUILD_PYTHON)
   add_subdirectory(python)

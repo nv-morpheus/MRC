@@ -17,7 +17,7 @@
 
 #include "internal/segment/builder_definition.hpp"
 
-#include "internal/pipeline/pipeline_resources.hpp"
+#include "internal/runtime/runtime_provider.hpp"
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/core/addresses.hpp"
@@ -27,11 +27,11 @@
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
-#include "mrc/node/port_registry.hpp"
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/initializers.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
 
 #include <glog/logging.h>
@@ -75,14 +75,12 @@ void validate_name(const std::string& name)
 
 namespace mrc::segment {
 
-BuilderDefinition::BuilderDefinition(std::shared_ptr<const SegmentDefinition> definition,
-                                     SegmentRank rank,
-                                     pipeline::PipelineResources& resources,
-                                     std::size_t default_partition_id) :
+BuilderDefinition::BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
+                                     std::shared_ptr<const SegmentDefinition> definition,
+                                     SegmentAddress address) :
+  runtime::InternalRuntimeProvider(runtime),
   m_definition(std::move(definition)),
-  m_rank(rank),
-  m_resources(resources),
-  m_default_partition_id(default_partition_id)
+  m_address(address)
 {}
 
 std::shared_ptr<BuilderDefinition> BuilderDefinition::unwrap(std::shared_ptr<IBuilder> object)
@@ -125,25 +123,25 @@ std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std
     return std::make_tuple(global_name, local_name);
 }
 
-std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress(std::string name, std::type_index type_index)
+std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress_typeless(std::string name)
 {
     auto base = this->get_ingress_base(name);
     if (!base)
     {
-        throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port name not found: " + name);
     }
 
-    auto port_util = node::PortRegistry::find_port_util(type_index);
-    auto port      = port_util->try_cast_ingress_base_to_object(base);
+    auto port = std::dynamic_pointer_cast<ObjectProperties>(base);
+
     if (port == nullptr)
     {
-        throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
+        throw exceptions::MrcRuntimeError("Ingress port type mismatch: " + name);
     }
 
     return port;
 }
 
-std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name, std::type_index type_index)
+std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress_typeless(std::string name)
 {
     auto base = this->get_egress_base(name);
     if (!base)
@@ -151,9 +149,8 @@ std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name
         throw exceptions::MrcRuntimeError("Egress port name not found: " + name);
     }
 
-    auto port_util = node::PortRegistry::find_port_util(type_index);
+    auto port = std::dynamic_pointer_cast<ObjectProperties>(base);
 
-    auto port = port_util->try_cast_egress_base_to_object(base);
     if (port == nullptr)
     {
         throw exceptions::MrcRuntimeError("Egress port type mismatch: " + name);
@@ -168,16 +165,16 @@ void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule>
     VLOG(2) << "Initializing module: " << m_namespace_prefix;
     smodule->m_module_instance_registered_namespace = m_namespace_prefix;
     smodule->initialize(*this);
+    this->ns_pop();
 
     // TODO(Devin): Maybe a better way to do this with compile time type ledger.
     if (auto persist = std::dynamic_pointer_cast<modules::PersistentModule>(smodule))
     {
-        VLOG(2) << "Registering persistent module -> '" << m_namespace_prefix << "'";
+        VLOG(2) << "Registering persistent module -> '" << smodule->component_prefix() << "'";
 
         // Just save to a vector to keep it alive
         m_modules.push_back(persist);
     }
-    this->ns_pop();
 }
 
 void BuilderDefinition::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
@@ -256,21 +253,21 @@ const SegmentDefinition& BuilderDefinition::definition() const
 
 void BuilderDefinition::initialize()
 {
-    auto address = segment_address_encode(this->definition().id(), m_rank);
+    auto rank = std::get<1>(segment_address_decode(m_address));
 
     // construct ingress ports
-    for (const auto& [name, initializer] : this->definition().ingress_initializers())
+    for (const auto& [name, info] : this->definition().ingress_port_infos())
     {
         DVLOG(10) << "constructing ingress_port: " << name;
-        auto port = initializer(address);
+        auto port = info->port_builder_fn(m_address, name);
         this->add_object(name, port);
     }
 
     // construct egress ports
-    for (const auto& [name, initializer] : this->definition().egress_initializers())
+    for (const auto& [name, info] : this->definition().egress_port_infos())
     {
         DVLOG(10) << "constructing egress_port: " << name;
-        auto port = initializer(address);
+        auto port = info->port_builder_fn(m_address, name);
         this->add_object(name, port);
     }
 
@@ -281,7 +278,7 @@ void BuilderDefinition::initialize()
     } catch (const std::exception& e)
     {
         LOG(ERROR) << "Exception during segment initializer. Segment name: " << m_definition->name()
-                   << ", Segment Rank: " << m_rank << ". Exception message:\n"
+                   << ", Segment Rank: " << rank << ". Exception message:\n"
                    << e.what();
 
         // Rethrow after logging
@@ -396,7 +393,7 @@ std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(con
 {
     auto [global_name, local_name] = this->normalize_name(name);
 
-    auto counter = m_resources.metrics_registry().make_throughput_counter(global_name);
+    auto counter = this->runtime().metrics_registry().make_throughput_counter(global_name);
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };

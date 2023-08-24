@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mrc/utils/container_type_traits.hpp"
+
 #include <iterator>
 
 namespace mrc {
@@ -24,8 +26,20 @@ namespace mrc {
 template <typename ContainerT, typename KeyT>
 bool contains(const ContainerT& container, const KeyT& key)
 {
-    auto search = container.find(key);
-    return (static_cast<bool>(search != container.end()));
+    if constexpr (is_associative_container<ContainerT>::value)
+    {
+        auto search = container.find(key);
+        return (static_cast<bool>(search != container.end()));
+    }
+    else
+    {
+        return std::find(std::begin(container), std::end(container), key) != std::end(container);
+    }
+    // else
+    // {
+    //     static_assert(!sizeof(ContainerT),
+    //                   "contains() only supports sequence and associative containers from the standard library");
+    // }
 }
 
 template <typename C>

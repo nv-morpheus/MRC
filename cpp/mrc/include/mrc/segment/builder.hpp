@@ -137,9 +137,9 @@ class IBuilder
     virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
                                                                 bool ignore_namespace = false) const = 0;
 
-    virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
+    virtual std::shared_ptr<ObjectProperties> get_ingress_typeless(std::string name) = 0;
 
-    virtual std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) = 0;
+    virtual std::shared_ptr<ObjectProperties> get_egress_typeless(std::string name) = 0;
 
     /**
      * Initialize a SegmentModule that was instantiated outside of the builder.

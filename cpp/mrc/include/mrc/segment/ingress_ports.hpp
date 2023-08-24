@@ -17,33 +17,56 @@
 
 #pragma once
 
+#include "mrc/node/port_builders.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/segment/ports.hpp"
+
+#include <array>
+#include <cstddef>
+#include <typeinfo>
+#include <utility>
 
 namespace mrc::segment {
 
 struct IngressPortsBase : public Ports<IngressPortBase>
 {
+    using Ports<IngressPortBase>::port_info_t;
     using Ports<IngressPortBase>::Ports;
+};
+
+// Derive from AutoRegEgressPort so we register the initializers for this type on creation
+template <typename T>
+struct IngressPortInfo : public IngressPortsBase::port_info_t, public node::AutoRegIngressPort<T>
+{
+    using IngressPortsBase::port_info_t::PortInfo;
 };
 
 template <typename... TypesT>
 struct IngressPorts : public IngressPortsBase
 {
-    using port_builder_fn_t = typename IngressPortsBase::port_builder_fn_t;
+    using IngressPortsBase::port_info_t;
 
-    IngressPorts(std::vector<std::string> names) : IngressPortsBase(std::move(names), get_builders()) {}
+    static constexpr size_t Count = sizeof...(TypesT);
+
+    IngressPorts(std::array<std::string, Count> names) :
+      IngressPortsBase(get_infos(names, std::index_sequence_for<TypesT...>{}))
+    {}
 
   private:
-    static std::vector<port_builder_fn_t> get_builders()
+    template <std::size_t... Is>
+    static std::vector<std::shared_ptr<port_info_t>> get_infos(const std::array<std::string, Count>& names,
+                                                               std::index_sequence<Is...> _)
     {
-        std::vector<port_builder_fn_t> builders;
-        (builders.push_back([](const SegmentAddress& address, const PortName& name) {
-            return std::make_shared<IngressPort<TypesT>>(address, name);
-        }),
+        std::vector<std::shared_ptr<port_info_t>> infos;
+        (infos.push_back(
+             std::make_shared<IngressPortInfo<TypesT>>(names[Is],
+                                                       std::type_index(typeid(TypesT)),
+                                                       [](const SegmentAddress& address, const PortName& name) {
+                                                           return std::make_shared<IngressPort<TypesT>>(address, name);
+                                                       })),
          ...);
 
-        return builders;
+        return infos;
     }
 };
 

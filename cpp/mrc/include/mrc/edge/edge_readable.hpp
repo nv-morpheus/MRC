@@ -20,6 +20,7 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
@@ -61,7 +62,20 @@ class IEdgeReadable : public virtual Edge<T>, public IEdgeReadableBase
         return EdgeTypeInfo::create<T>();
     }
 
-    virtual channel::Status await_read(T& t) = 0;
+    // virtual channel::Status await_read(T& t) = 0;
+    virtual channel::Status await_read_until(T& t, const channel::time_point_t& timeout) = 0;
+
+    channel::Status await_read_for(T& t, const channel::duration_t& timeout)
+    {
+        // Add the duration to now
+        return this->await_read_until(t, channel::clock_t::now() + timeout);
+    }
+
+    channel::Status await_read(T& t)
+    {
+        // Use await_read_until with infinite duration
+        return this->await_read_until(t, channel::time_point_t::max());
+    }
 };
 
 template <typename InputT, typename OutputT = InputT>
@@ -100,10 +114,10 @@ class ConvertingEdgeReadable<InputT, OutputT, std::enable_if_t<std::is_convertib
 
     using base_t::base_t;
 
-    channel::Status await_read(OutputT& data) override
+    channel::Status await_read_until(OutputT& data, const channel::time_point_t& timeout) override
     {
         InputT source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
         // Convert to the sink type
         data = std::move(source_data);
@@ -126,13 +140,16 @@ class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<InputT, O
       m_lambda_fn(std::move(lambda_fn))
     {}
 
-    channel::Status await_read(output_t& data) override
+    channel::Status await_read_until(output_t& data, const channel::time_point_t& timeout) override
     {
         input_t source_data;
-        auto ret_val = this->upstream().await_read(source_data);
+        auto ret_val = this->upstream().await_read_until(source_data, timeout);
 
-        // Convert to the sink type
-        data = m_lambda_fn(std::move(source_data));
+        if (ret_val == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = m_lambda_fn(std::move(source_data));
+        }
 
         return ret_val;
     }
@@ -192,8 +209,16 @@ class IReadableAcceptorBase
     virtual EdgeTypeInfo readable_acceptor_type() const = 0;
 };
 
+template <typename KeyT>
+class IMultiReadableAcceptorBase
+{
+  public:
+    virtual size_t writable_edge_count() const                                                  = 0;
+    virtual void set_readable_edge_handle(KeyT key, std::shared_ptr<ReadableEdgeHandle> egress) = 0;
+};
+
 template <typename T>
-class IReadableProvider : public IReadableProviderBase
+class IReadableProvider : public virtual IReadableProviderBase
 {
   public:
     EdgeTypeInfo readable_provider_type() const override
@@ -203,7 +228,7 @@ class IReadableProvider : public IReadableProviderBase
 };
 
 template <typename T>
-class IReadableAcceptor : public IReadableAcceptorBase
+class IReadableAcceptor : public virtual IReadableAcceptorBase
 {
   public:
     EdgeTypeInfo readable_acceptor_type() const override
@@ -211,5 +236,9 @@ class IReadableAcceptor : public IReadableAcceptorBase
         return EdgeTypeInfo::create<T>();
     }
 };
+
+template <typename KeyT, typename T>
+class IMultiReadableAcceptor : public virtual IMultiReadableAcceptorBase<KeyT>
+{};
 
 }  // namespace mrc::edge

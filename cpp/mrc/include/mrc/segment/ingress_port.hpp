@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_readable.hpp"
 #include "mrc/manifold/connectable.hpp"
 #include "mrc/manifold/factory.hpp"
 #include "mrc/manifold/interface.hpp"
@@ -27,6 +28,7 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/source_channel_owner.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/launchable.hpp"
 #include "mrc/segment/object.hpp"
 
@@ -34,13 +36,20 @@
 #include <memory>
 #include <string>
 
+namespace mrc::pipeline {
+class ManifoldInstance;
+}
+
 namespace mrc::segment {
 
 class SegmentInstance;
 
-struct IngressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
+class IngressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
 {
-    friend SegmentInstance;
+  private:
+    virtual edge::IReadableAcceptorBase& get_upstream_sink() const = 0;
+
+    friend class mrc::pipeline::ManifoldInstance;
 };
 
 template <typename T>
@@ -55,21 +64,21 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     IngressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_source(std::make_unique<node::RxNode<T>>())
+      m_node(std::make_unique<node::RxNode<T>>())
     {}
 
   private:
     node::RxSourceBase<T>* get_object() const final
     {
-        CHECK(m_source);
-        return m_source.get();
+        CHECK(m_node);
+        return m_node.get();
     }
 
     std::unique_ptr<runnable::Launcher> prepare_launcher(runnable::LaunchControl& launch_control) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        CHECK(m_source);
-        return launch_control.prepare_launcher(std::move(m_source));
+        CHECK(m_node);
+        return launch_control.prepare_launcher(std::move(m_node));
     }
 
     std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources& resources) final
@@ -81,13 +90,19 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     {
         // ingress ports connect to manifold outputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        CHECK(m_source);
-        manifold->add_output(m_segment_address, m_source.get());
+        CHECK(m_node);
+        manifold->add_local_output(m_segment_address, m_node.get());
+    }
+
+    edge::IReadableAcceptorBase& get_upstream_sink() const override
+    {
+        CHECK(m_node);
+        return *m_node;
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::unique_ptr<node::RxNode<T>> m_source;
+    std::unique_ptr<node::RxNode<T>> m_node;
     std::mutex m_mutex;
 
     friend SegmentInstance;

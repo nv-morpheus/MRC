@@ -21,6 +21,7 @@
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 
+#include <memory>
 #include <vector>
 
 namespace mrc {
@@ -40,6 +41,9 @@ class Partitions
     Partitions(const Topology& topology, const Options& options);
     Partitions(const SystemDefinition& system);
 
+    // The host partition which spans the entire system
+    const HostPartition& sys_host_partition() const;
+
     // The host and device partitions are hierarchical where there is a possibility, depending on options provided,
     // where more than one cuda device shares the same host partition, so those host resources are shared.
     //
@@ -51,7 +55,6 @@ class Partitions
     // attached.
     //
     // The flattened partitions provide the view of what's available to a given GPU.
-
     const std::vector<HostPartition>& host_partitions() const;
     const std::vector<DevicePartition>& device_partitions() const;
     const std::vector<Partition>& flattened() const;
@@ -60,6 +63,7 @@ class Partitions
     const PlacementResources& device_to_host_strategy() const;
 
   private:
+    std::unique_ptr<HostPartition> m_sys_host_partition;
     std::vector<Partition> m_partitions;
     std::vector<HostPartition> m_host_partitions;
     std::vector<DevicePartition> m_device_partitions;

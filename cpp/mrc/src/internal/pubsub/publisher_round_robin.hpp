@@ -19,6 +19,8 @@
 
 #include "internal/pubsub/publisher_service.hpp"
 
+#include "mrc/runtime/remote_descriptor_handle.hpp"
+
 #include <rxcpp/rx.hpp>
 
 #include <cstdint>
@@ -26,17 +28,14 @@
 #include <unordered_map>
 
 namespace mrc::data_plane {
-struct RemoteDescriptorMessage;
+struct LocalDescriptorMessage;
 }  // namespace mrc::data_plane
 namespace mrc::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::runtime
 namespace mrc::ucx {
 class Endpoint;
 }  // namespace mrc::ucx
-namespace mrc::runtime {
-class RemoteDescriptor;
-}  // namespace mrc::runtime
 
 namespace mrc::pubsub {
 
@@ -52,12 +51,12 @@ class PublisherRoundRobin final : public PublisherService
     void on_update() final;
 
     // apply the round robin policy
-    void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
-                      mrc::runtime::RemoteDescriptor&& rd) final;
+    void apply_policy(rxcpp::subscriber<data_plane::LocalDescriptorMessage>& sub,
+                      runtime::LocalDescriptorHandle descriptor_handle) final;
 
     std::unordered_map<std::uint64_t, std::shared_ptr<ucx::Endpoint>>::const_iterator m_next;
 
-    friend runtime::Partition;
+    friend runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::pubsub

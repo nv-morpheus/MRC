@@ -17,29 +17,51 @@
 
 #pragma once
 
-#include "internal/runtime/partition.hpp"
+#include "internal/control_plane/client.hpp"
+#include "internal/runtime/partition_runtime.hpp"
+#include "internal/runtime/runtime_provider.hpp"
+#include "internal/system/system_provider.hpp"
 
+#include "mrc/core/async_service.hpp"
+#include "mrc/metrics/registry.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/runtime/api.hpp"
 
 #include <cstddef>
 #include <memory>
+#include <stop_token>
 #include <vector>
 
+namespace mrc::control_plane {
+class Server;
+}  // namespace mrc::control_plane
+
 namespace mrc::resources {
-class Manager;
+class SystemResources;
 }  // namespace mrc::resources
 
 namespace mrc::runtime {
+
+class ConnectionManager;
+class DataPlaneSystemManager;
+class PipelinesManager;
+class SegmentsManager;
 
 /**
  * @brief Implements the public Runtime interface and owns any high-level runtime resources, e.g. the remote descriptor
  * manager which are built on partition resources. The Runtime object is responsible for bringing up and tearing down
  * core resources manager.
  */
-class Runtime final : public mrc::runtime::IRuntime
+class Runtime final : public mrc::runtime::ISystemRuntime,
+                      public AsyncService,
+                      public system::SystemProvider,
+                      public IInternalRuntime,
+                      public IInternalRuntimeProvider
 {
   public:
-    Runtime(std::unique_ptr<resources::Manager> resources);
+    Runtime(const system::SystemProvider& system);
+
+    Runtime(std::unique_ptr<resources::SystemResources> resources);
     ~Runtime() override;
 
     // IRuntime - total number of partitions
@@ -49,14 +71,51 @@ class Runtime final : public mrc::runtime::IRuntime
     std::size_t gpu_count() const final;
 
     // access the partition specific resources for a given partition_id
-    Partition& partition(std::size_t partition_id) final;
+    PartitionRuntime& partition(std::size_t partition_id) final;
 
     // access the full set of internal resources
-    resources::Manager& resources() const;
+    resources::SystemResources& resources() const;
 
+    runnable::IRunnableResources& runnable() override;
+
+    control_plane::Client& control_plane() const override;
+
+    DataPlaneSystemManager& data_plane() const override;
+
+    PipelinesManager& pipelines_manager() const override;
+
+    metrics::Registry& metrics_registry() const override;
+
+    IInternalRuntime& runtime() override;
+
+  protected:
   private:
-    std::unique_ptr<resources::Manager> m_resources;
-    std::vector<std::unique_ptr<Partition>> m_partitions;
+    void do_service_start(std::stop_token stop_token) final;
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
+
+    std::unique_ptr<resources::SystemResources> m_sys_resources;
+
+    // std::unique_ptr<system::ThreadingResources> m_sys_threading_resources;
+    // std::unique_ptr<runnable::RunnableResources> m_sys_runnable_resources;
+
+    std::vector<std::shared_ptr<PartitionRuntime>> m_partitions;
+
+    std::shared_ptr<control_plane::Server> m_control_plane_server;
+    std::shared_ptr<control_plane::Client> m_control_plane_client;
+
+    std::shared_ptr<DataPlaneSystemManager> m_data_plane_manager;
+
+    std::vector<std::shared_ptr<SegmentsManager>> m_partition_managers;
+
+    std::shared_ptr<ConnectionManager> m_connection_manager;
+    std::shared_ptr<PipelinesManager> m_pipelines_manager;
+    std::unique_ptr<metrics::Registry> m_metrics_registry;
+
+    // std::map<int, std::shared_ptr<pipeline::Pipeline>> m_registered_pipeline_defs;
 };
 
 }  // namespace mrc::runtime

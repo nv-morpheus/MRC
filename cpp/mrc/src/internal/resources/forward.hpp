@@ -20,11 +20,11 @@
 namespace mrc {
 
 namespace runtime {
-class Partition;
+class PartitionRuntime;
 }
 
 namespace resources {
-class Manager;
+class SystemResources;
 class PartitionResourceBase;
 class PartitionResources;
 }  // namespace resources
@@ -46,13 +46,6 @@ class NetworkResources;
 namespace ucx {
 class UcxResources;
 }  // namespace ucx
-
-namespace control_plane {
-class ControlPlaneResources;
-namespace client {
-class Instance;
-}
-}  // namespace control_plane
 
 namespace data_plane {
 class DataPlaneResources;

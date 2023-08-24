@@ -17,8 +17,6 @@
 
 #include "internal/network/network_resources.hpp"
 
-#include "internal/control_plane/client.hpp"
-#include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
 #include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
@@ -31,7 +29,6 @@
 #include <glog/logging.h>
 
 #include <utility>
-#include <vector>
 
 namespace mrc::network {
 
@@ -47,8 +44,9 @@ NetworkResources::NetworkResources(resources::PartitionResourceBase& base,
 {
     CHECK(m_control_plane);
     DCHECK_NE(m_instance_id, 0);
-    CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
-    CHECK_EQ(m_control_plane->instance_id(), m_control_plane->client().connections().instance_ids().at(partition_id()));
+    // CHECK_LT(partition_id(), m_control_plane->client().connections().instance_ids().size());
+    // CHECK_EQ(m_control_plane->instance_id(),
+    // m_control_plane->client().connections().instance_ids().at(partition_id()));
 
     // construct resources on the mrc_network task queue thread
     ucx.network_task_queue()

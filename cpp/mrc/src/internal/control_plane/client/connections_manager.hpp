@@ -22,6 +22,7 @@
 
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.pb.h"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/types.hpp"
 
 #include <map>
@@ -39,7 +40,7 @@ class UcxResources;
 namespace mrc::control_plane::client {
 class Instance;
 
-class ConnectionsManager : public StateManager
+class ConnectionsManager : public StateManager, public virtual runnable::RunnableResourcesProvider
 {
   public:
     using update_channel_t = mrc::node::WritableEntrypoint<const protos::StateUpdate>;

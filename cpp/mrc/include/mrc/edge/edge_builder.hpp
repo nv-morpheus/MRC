@@ -363,6 +363,31 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
     }
 
   protected:
+    bool has_writable_edge(const std::size_t& key) const override
+    {
+        return MultiEdgeHolder<std::size_t, T>::has_edge_connection(key);
+    }
+
+    void release_writable_edge(const std::size_t& key) override
+    {
+        return MultiEdgeHolder<std::size_t, T>::release_edge_connection(key);
+    }
+
+    void release_writable_edges() override
+    {
+        return MultiEdgeHolder<std::size_t, T>::release_edge_connections();
+    }
+
+    size_t writable_edge_count() const override
+    {
+        return MultiEdgeHolder<std::size_t, T>::edge_connection_count();
+    }
+
+    std::vector<std::size_t> writable_edge_keys() const override
+    {
+        return MultiEdgeHolder<std::size_t, T>::edge_connection_keys();
+    }
+
     std::shared_ptr<IEdgeWritable<T>> get_writable_edge(std::size_t edge_idx) const
     {
         return std::dynamic_pointer_cast<IEdgeWritable<T>>(this->get_connected_edge(edge_idx));

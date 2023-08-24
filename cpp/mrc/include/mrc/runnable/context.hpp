@@ -70,6 +70,7 @@ class Context
 
   protected:
     void init(const Runner& runner);
+    virtual void do_init();
     bool status() const;
     void finish();
     virtual void init_info(std::stringstream& ss);

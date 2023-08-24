@@ -17,17 +17,22 @@
 
 #include "internal/remote_descriptor/storage.hpp"
 
-#include "mrc/codable/encoded_object.hpp"
+#include "mrc/codable/api.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 
 #include <glog/logging.h>
 
+#include <ostream>
 #include <utility>
 
 namespace mrc::remote_descriptor {
 
-Storage::Storage(std::unique_ptr<mrc::codable::EncodedStorage> storage) : m_storage(std::move(storage))
+Storage::Storage(std::unique_ptr<mrc::runtime::LocalDescriptor> descriptor) : m_descriptor(std::move(descriptor))
 {
-    CHECK(m_storage);
+    CHECK(m_descriptor) << "Cannot make a storage with a null descriptor";
+
+    // Release the storage object which this object will now maintain
+    m_storage = m_descriptor->release_storage();
 }
 
 Storage::~Storage() = default;
@@ -35,7 +40,7 @@ Storage::~Storage() = default;
 const mrc::codable::IDecodableStorage& Storage::encoding() const
 {
     CHECK(m_storage);
-    return m_storage->encoding();
+    return *m_storage;
 }
 
 std::size_t Storage::tokens_count() const

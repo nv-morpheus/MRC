@@ -26,7 +26,7 @@ import sys
 import gitutils  # noqa: E402
 
 FilesToCheck = [
-    re.compile(r"[.](cmake|cpp|cc|cu|cuh|h|hpp|sh|pxd|py|pyx)$"),
+    re.compile(r"[.](cmake|cpp|cc|cu|cuh|h|hpp|sh|pxd|py|pyx|ts)$"),
     re.compile(r"CMakeLists[.]txt$"),
     re.compile(r"CMakeLists_standalone[.]txt$"),
     re.compile(r"setup[.]cfg$"),
@@ -408,6 +408,7 @@ EXT_LIC_MAPPING = {
     'py': A2_LIC_HASH,
     'pyx': A2_LIC_HASH,
     'sh': A2_LIC_HASH,
+    'ts': A2_LIC_C,
     'txt': A2_LIC_HASH
 }
 

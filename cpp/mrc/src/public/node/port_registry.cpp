@@ -32,14 +32,14 @@ std::map<std::type_index, std::shared_ptr<PortUtil>> PortRegistry::s_registered_
 std::map<std::string, std::type_index> PortRegistry::s_port_to_type_index{};
 std::recursive_mutex PortRegistry::s_mutex{};
 
-PortUtil::PortUtil(std::type_index type_index) : m_port_data_type(type_index) {}
+PortUtil::PortUtil(std::type_index type_index) : port_data_type(type_index) {}
 
 std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_ingress_base_to_object(
     std::shared_ptr<segment::IngressPortBase> base)
 {
-    if (std::get<0>(m_ingress_casters) != nullptr)
+    if (std::get<0>(ingress_casters) != nullptr)
     {
-        auto obj = std::get<0>(m_ingress_casters)(base);
+        auto obj = std::get<0>(ingress_casters)(base);
 
         if (obj != nullptr)
         {
@@ -47,9 +47,9 @@ std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_ingress_base_to_ob
         }
     }
 
-    if (std::get<1>(m_ingress_casters) != nullptr)
+    if (std::get<1>(ingress_casters) != nullptr)
     {
-        return std::get<1>(m_ingress_casters)(base);
+        return std::get<1>(ingress_casters)(base);
     }
 
     return nullptr;
@@ -58,9 +58,9 @@ std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_ingress_base_to_ob
 std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_egress_base_to_object(
     std::shared_ptr<segment::EgressPortBase> base)
 {
-    if (std::get<0>(m_egress_casters) != nullptr)
+    if (std::get<0>(egress_casters) != nullptr)
     {
-        auto obj = std::get<0>(m_egress_casters)(base);
+        auto obj = std::get<0>(egress_casters)(base);
 
         if (obj != nullptr)
         {
@@ -68,9 +68,9 @@ std::shared_ptr<segment::ObjectProperties> PortUtil::try_cast_egress_base_to_obj
         }
     }
 
-    if (std::get<1>(m_egress_casters) != nullptr)
+    if (std::get<1>(egress_casters) != nullptr)
     {
-        return std::get<1>(m_egress_casters)(base);
+        return std::get<1>(egress_casters)(base);
     }
 
     return nullptr;
@@ -80,12 +80,12 @@ void PortRegistry::register_port_util(std::shared_ptr<PortUtil> util)
 {
     std::lock_guard<decltype(s_mutex)> lock(s_mutex);
 
-    auto iter_util = PortRegistry::s_registered_port_utils.find(util->m_port_data_type);
+    auto iter_util = PortRegistry::s_registered_port_utils.find(util->port_data_type);
     if (iter_util != PortRegistry::s_registered_port_utils.end())
     {
         throw std::runtime_error("Duplicate port utility is already already registered");
     }
-    PortRegistry::s_registered_port_utils[util->m_port_data_type] = util;
+    PortRegistry::s_registered_port_utils[util->port_data_type] = util;
 }
 
 void PortRegistry::register_name_type_index_pair(std::string name, std::type_index type_index)

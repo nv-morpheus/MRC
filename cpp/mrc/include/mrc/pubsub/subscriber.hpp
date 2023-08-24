@@ -60,7 +60,7 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
                          private node::WritableProvider<mrc::runtime::RemoteDescriptor>
 {
   public:
-    static std::unique_ptr<Subscriber> create(std::string name, runtime::IPartition& partition)
+    static std::unique_ptr<Subscriber> create(std::string name, runtime::IPartitionRuntime& partition)
     {
         return std::unique_ptr<Subscriber>{new Subscriber(partition.make_subscriber_service(name))};
     }
@@ -156,7 +156,7 @@ class Subscriber final : public control_plane::SubscriptionServiceForwarder,
     // this holds the operator open;
     std::shared_ptr<mrc::node::ReadableEndpoint<T>> m_persistent_channel;
 
-    friend runtime::IPartition;
+    friend runtime::IPartitionRuntime;
 };
 
 /**
@@ -211,7 +211,7 @@ class Subscriber<mrc::runtime::RemoteDescriptor> final : public node::Queue<runt
 
     std::shared_ptr<ISubscriberService> m_service;
 
-    friend runtime::IPartition;
+    friend runtime::IPartitionRuntime;
 };
 
 }  // namespace mrc::pubsub

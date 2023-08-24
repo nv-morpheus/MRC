@@ -17,8 +17,8 @@
 
 #include "tests/common.hpp"
 
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -48,21 +48,21 @@ TEST_F(TestResources, Lifetime)
 
 TEST_F(TestResources, GetRuntime)
 {
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             // todo(#114) - propose: this is the default and only option
             options.placement().resources_strategy(PlacementResources::Dedicated);
         })));
 
-    EXPECT_ANY_THROW(resources::Manager::get_resources());
-    EXPECT_ANY_THROW(resources::Manager::get_partition());
+    EXPECT_ANY_THROW(resources::SystemResources::get_resources());
+    EXPECT_ANY_THROW(resources::SystemResources::get_partition());
 
     resources->partition(0)
         .runnable()
         .main()
         .enqueue([] {
-            auto& resources = resources::Manager::get_resources();
-            auto& partition = resources::Manager::get_partition();
+            auto& resources = resources::SystemResources::get_resources();
+            auto& partition = resources::SystemResources::get_partition();
             EXPECT_EQ(partition.partition_id(), 0);
         })
         .get();
@@ -70,21 +70,21 @@ TEST_F(TestResources, GetRuntime)
 
 TEST_F(TestResources, GetRuntimeShared)
 {
-    auto resources = std::make_unique<resources::Manager>(
+    auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([](Options& options) {
             // todo(#114) - propose: remove this option entirely
             options.placement().resources_strategy(PlacementResources::Shared);
         })));
 
-    EXPECT_ANY_THROW(resources::Manager::get_resources());
-    EXPECT_ANY_THROW(resources::Manager::get_partition());
+    EXPECT_ANY_THROW(resources::SystemResources::get_resources());
+    EXPECT_ANY_THROW(resources::SystemResources::get_partition());
 
     resources->partition(0)
         .runnable()
         .main()
         .enqueue([] {
-            auto& resources = resources::Manager::get_resources();
-            EXPECT_ANY_THROW(resources::Manager::get_partition());
+            auto& resources = resources::SystemResources::get_resources();
+            EXPECT_ANY_THROW(resources::SystemResources::get_partition());
         })
         .get();
 }

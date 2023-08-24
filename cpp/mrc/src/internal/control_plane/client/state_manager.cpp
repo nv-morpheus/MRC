@@ -18,7 +18,6 @@
 #include "internal/control_plane/client/state_manager.hpp"
 
 #include "internal/control_plane/client.hpp"
-#include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/core/error.hpp"
 #include "mrc/edge/edge_builder.hpp"
@@ -37,7 +36,7 @@
 
 namespace mrc::control_plane::client {
 
-StateManager::StateManager(Client& client) : m_client(client) {}
+StateManager::StateManager(Client& client) : runnable::RunnableResourcesProvider(client), m_client(client) {}
 
 StateManager::~StateManager()
 {
@@ -92,7 +91,7 @@ void StateManager::start_with_channel(edge::IWritableAcceptor<const protos::Stat
     // sink->update_channel(std::make_unique<channel::RecentChannel<protos::StateUpdate>>(1));
     mrc::make_edge(update_channel, *sink);
     m_runner =
-        client().runnable().launch_control().prepare_launcher(client().launch_options(), std::move(sink))->ignition();
+        this->runnable().launch_control().prepare_launcher(client().launch_options(), std::move(sink))->ignition();
 }
 
 void StateManager::await_join()

@@ -125,6 +125,8 @@ class FiberPriorityScheduler : public boost::fibers::algo::algorithm_with_proper
 
     void suspend_until(std::chrono::steady_clock::time_point const& time_point) noexcept final
     {
+        auto max_val = std::chrono::steady_clock::time_point::max();
+
         if ((std::chrono::steady_clock::time_point::max)() == time_point)
         {
             std::unique_lock<std::mutex> lk(m_mtx);

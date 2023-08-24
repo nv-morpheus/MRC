@@ -21,6 +21,7 @@
 
 #include "mrc/pubsub/api.hpp"
 #include "mrc/runnable/runner.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -33,7 +34,7 @@
 #include <unordered_map>
 
 namespace mrc::data_plane {
-struct RemoteDescriptorMessage;
+struct LocalDescriptorMessage;
 }  // namespace mrc::data_plane
 namespace mrc::runtime {
 class RemoteDescriptor;
@@ -42,7 +43,7 @@ namespace mrc::codable {
 struct ICodableStorage;
 }  // namespace mrc::codable
 namespace mrc::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::runtime
 namespace mrc::ucx {
 class Endpoint;
@@ -53,7 +54,7 @@ namespace mrc::pubsub {
 class PublisherService : public Base, public mrc::pubsub::IPublisherService
 {
   protected:
-    PublisherService(std::string service_name, runtime::Partition& runtime);
+    PublisherService(std::string service_name, runtime::PartitionRuntime& runtime);
 
   public:
     ~PublisherService() override = default;
@@ -108,14 +109,14 @@ class PublisherService : public Base, public mrc::pubsub::IPublisherService
                                  const std::unordered_map<std::uint64_t, InstanceID>& tagged_instances) final;
 
     // apply policy
-    virtual void apply_policy(rxcpp::subscriber<data_plane::RemoteDescriptorMessage>& sub,
-                              mrc::runtime::RemoteDescriptor&& rd) = 0;
+    virtual void apply_policy(rxcpp::subscriber<data_plane::LocalDescriptorMessage>& sub,
+                              runtime::LocalDescriptorHandle descriptor_handle) = 0;
 
     // called immediate on completion of update_tagged_instances
     virtual void on_update() = 0;
 
     // resources - needs to be a PartitionRuntime
-    runtime::Partition& m_runtime;
+    runtime::PartitionRuntime& m_runtime;
 
     // policy engine runner
     std::unique_ptr<mrc::runnable::Runner> m_policy_engine;

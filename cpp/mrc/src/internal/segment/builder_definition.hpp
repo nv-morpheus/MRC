@@ -17,24 +17,20 @@
 
 #pragma once
 
+#include "internal/runtime/runtime_provider.hpp"
+
 #include "mrc/segment/builder.hpp"
 #include "mrc/types.hpp"
 
 #include <nlohmann/json.hpp>
 
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <tuple>
-#include <typeindex>
 #include <vector>
-
-namespace mrc::pipeline {
-class PipelineResources;
-}  // namespace mrc::pipeline
 
 namespace mrc::modules {
 class SegmentModule;
@@ -54,13 +50,12 @@ struct ObjectProperties;
 namespace mrc::segment {
 class SegmentDefinition;
 
-class BuilderDefinition : public IBuilder
+class BuilderDefinition : public IBuilder, public runtime::InternalRuntimeProvider
 {
   public:
-    BuilderDefinition(std::shared_ptr<const SegmentDefinition> definition,
-                      SegmentRank rank,
-                      pipeline::PipelineResources& resources,
-                      std::size_t default_partition_id);
+    BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
+                      std::shared_ptr<const SegmentDefinition> definition,
+                      SegmentAddress address);
 
     static std::shared_ptr<BuilderDefinition> unwrap(std::shared_ptr<IBuilder> object);
 
@@ -69,9 +64,9 @@ class BuilderDefinition : public IBuilder
     std::tuple<std::string, std::string> normalize_name(const std::string& name,
                                                         bool ignore_namespace = false) const override;
 
-    std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
+    std::shared_ptr<ObjectProperties> get_ingress_typeless(std::string name) override;
 
-    std::shared_ptr<ObjectProperties> get_egress(std::string name, std::type_index type_index) override;
+    std::shared_ptr<ObjectProperties> get_egress_typeless(std::string name) override;
 
     /**
      * Initialize a SegmentModule that was instantiated outside of the builder.
@@ -140,11 +135,7 @@ class BuilderDefinition : public IBuilder
 
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;
-    SegmentRank m_rank;
-
-    // Resource info
-    pipeline::PipelineResources& m_resources;
-    const std::size_t m_default_partition_id;
+    SegmentAddress m_address;
 
     // Module info
     std::string m_namespace_prefix;

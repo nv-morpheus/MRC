@@ -80,8 +80,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
     auto engine_groups_map = options.engine_factories().map();
 
     const bool specialized_main    = options.engine_factories().dedicated_main_thread();
-    const bool specialized_network = !options.architect_url().empty() &&
-                                     options.engine_factories().dedicated_network_thread();
+    const bool specialized_network = options.engine_factories().dedicated_network_thread();
 
     if (specialized_main)
     {
@@ -185,7 +184,7 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
     config.reusable["main"]                        = true;
 
     // if we are not using a dedicated network thread, use the same fiber queue as main for mrc_network
-    if (!options.architect_url().empty() && !specialized_network)
+    if (!specialized_network)
     {
         config.fiber_cpu_sets["mrc_network"] = config.fiber_cpu_sets.at("main");
         config.reusable["mrc_network"]       = true;

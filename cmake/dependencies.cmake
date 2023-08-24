@@ -98,6 +98,23 @@ morpheus_utils_configure_prometheus_cpp()
 # =========
 morpheus_utils_configure_libcudacxx()
 
+# libuv
+# ======
+rapids_find_package(UV REQUIRED
+  GLOBAL_TARGETS UV::uv
+  BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
+  INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
+)
+
+# NodeJs
+# ======
+rapids_find_package(NodeJs REQUIRED
+  GLOBAL_TARGETS NodeJs::Node
+  BUILD_EXPORT_SET ${PROJECT_NAME}-core-exports
+  INSTALL_EXPORT_SET ${PROJECT_NAME}-core-exports
+)
+
+
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================

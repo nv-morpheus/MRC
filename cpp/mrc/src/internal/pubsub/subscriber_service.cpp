@@ -24,7 +24,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/runtime/partition.hpp"
+#include "internal/runtime/partition_runtime.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/operators/router.hpp"
@@ -45,7 +45,7 @@
 
 namespace mrc::pubsub {
 
-SubscriberService::SubscriberService(std::string service_name, runtime::Partition& runtime) :
+SubscriberService::SubscriberService(std::string service_name, runtime::PartitionRuntime& runtime) :
   Base(std::move(service_name), runtime)
 {}
 
@@ -74,7 +74,7 @@ void SubscriberService::do_subscription_service_teardown()
 {
     // disconnect from the deserialize source router
     // this will create a cascading shutdown
-    resources().network()->data_plane().server().deserialize_source().drop_edge(tag());
+    resources().network()->data_plane().server().deserialize_source().drop_source(tag());
 }
 
 void SubscriberService::do_subscription_service_join()

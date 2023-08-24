@@ -22,6 +22,7 @@
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/ranges.hpp"
 
 #include <glog/logging.h>
 
@@ -38,8 +39,8 @@ SegmentDefinition::SegmentDefinition(std::string name,
                                      segment_initializer_fn_t initializer) :
   m_id(segment_name_hash(name)),
   m_name(std::move(name)),
-  m_ingress_initializers(ingress_ports.get_initializers()),
-  m_egress_initializers(egress_ports.get_initializers()),
+  m_ingress_port_infos(ingress_ports.get_info()),
+  m_egress_port_infos(egress_ports.get_info()),
   m_initializer_fn(std::move(initializer))
 {
     validate_ports();
@@ -68,7 +69,7 @@ const std::string& SegmentDefinition::name() const
 std::vector<std::string> SegmentDefinition::ingress_port_names() const
 {
     std::vector<std::string> names;
-    for (const auto& [name, init] : m_ingress_initializers)
+    for (const auto& [name, info] : m_ingress_port_infos)
     {
         names.push_back(name);
     }
@@ -77,7 +78,7 @@ std::vector<std::string> SegmentDefinition::ingress_port_names() const
 std::vector<std::string> SegmentDefinition::egress_port_names() const
 {
     std::vector<std::string> names;
-    for (const auto& [name, init] : m_egress_initializers)
+    for (const auto& [name, info] : m_egress_port_infos)
     {
         names.push_back(name);
     }
@@ -89,32 +90,33 @@ const segment_initializer_fn_t& SegmentDefinition::initializer_fn() const
     return m_initializer_fn;
 }
 
-const std::map<std::string, ::mrc::segment::egress_initializer_t>& SegmentDefinition::egress_initializers() const
+// const std::map<std::string, ::mrc::segment::egress_initializer_t>& SegmentDefinition::egress_initializers() const
+// {
+//     return m_egress_initializers;
+// }
+
+// const std::map<std::string, ::mrc::segment::ingress_initializer_t>& SegmentDefinition::ingress_initializers() const
+// {
+//     return m_ingress_initializers;
+// }
+
+const std::map<std::string, std::shared_ptr<const EgressPortsBase::port_info_t>>& SegmentDefinition::egress_port_infos()
+    const
 {
-    return m_egress_initializers;
+    return m_egress_port_infos;
 }
 
-const std::map<std::string, ::mrc::segment::ingress_initializer_t>& SegmentDefinition::ingress_initializers() const
+const std::map<std::string, std::shared_ptr<const IngressPortsBase::port_info_t>>& SegmentDefinition::ingress_port_infos()
+    const
 {
-    return m_ingress_initializers;
+    return m_ingress_port_infos;
 }
 
 void SegmentDefinition::validate_ports() const
 {
-    std::vector<std::string> names;
+    auto [dup_names, unique_names] = compare_intersecton(this->ingress_port_names(), this->egress_port_names());
 
-    for (const auto& [name, initializer] : m_ingress_initializers)
-    {
-        names.push_back(name);
-    }
-    for (const auto& [name, initializer] : m_egress_initializers)
-    {
-        names.push_back(name);
-    }
-
-    // check for uniqueness in port names
-    std::set<std::string> port_names(names.begin(), names.end());
-    if (port_names.size() != names.size())
+    if (!dup_names.empty())
     {
         // LOG(ERROR) << info() << "ingress and egress port names must be unique";
         throw exceptions::MrcRuntimeError("ingress and egress port names must be unique");
@@ -122,11 +124,12 @@ void SegmentDefinition::validate_ports() const
 
     // check for hash collision over all port names
     std::set<std::uint16_t> port_hashes;
-    for (const auto& name : names)
+    for (const auto& name : unique_names)
     {
         port_hashes.insert(port_name_hash(name));
     }
-    if (port_hashes.size() != names.size())
+
+    if (port_hashes.size() != unique_names.size())
     {
         // todo(ryan) - improve logging - print out each name and hash
         // LOG(ERROR) << info() << " hash collision detected on port names";

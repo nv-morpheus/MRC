@@ -207,11 +207,17 @@ template <typename KeyT>
 class IMultiWritableAcceptorBase
 {
   public:
+    virtual bool has_writable_edge(const KeyT& key) const = 0;
+    virtual void release_writable_edge(const KeyT& key)   = 0;
+    virtual void release_writable_edges()                 = 0;
+    virtual size_t writable_edge_count() const            = 0;
+    virtual std::vector<KeyT> writable_edge_keys() const  = 0;
+
     virtual void set_writable_edge_handle(KeyT key, std::shared_ptr<WritableEdgeHandle> ingress) = 0;
 };
 
 template <typename T>
-class IWritableProvider : public IWritableProviderBase
+class IWritableProvider : public virtual IWritableProviderBase
 {
   public:
     EdgeTypeInfo writable_provider_type() const override
@@ -221,7 +227,7 @@ class IWritableProvider : public IWritableProviderBase
 };
 
 template <typename T>
-class IWritableAcceptor : public IWritableAcceptorBase
+class IWritableAcceptor : public virtual IWritableAcceptorBase
 {
   public:
     EdgeTypeInfo writable_acceptor_type() const override
@@ -230,8 +236,8 @@ class IWritableAcceptor : public IWritableAcceptorBase
     }
 };
 
-template <typename T, typename KeyT>
-class IMultiWritableAcceptor : public IMultiWritableAcceptorBase<KeyT>
+template <typename KeyT, typename T>
+class IMultiWritableAcceptor : public virtual IMultiWritableAcceptorBase<KeyT>
 {};
 
 }  // namespace mrc::edge

@@ -17,20 +17,28 @@
 
 #pragma once
 
-#include "internal/service.hpp"
+#include "internal/control_plane/state/root_state.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
 
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
-#include <cstddef>
+#include <rxcpp/rx.hpp>
+
+#include <cstdint>
+#include <exception>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 
-namespace mrc::pipeline {
-class PipelineResources;
-}  // namespace mrc::pipeline
+namespace mrc::runnable {
+class Launcher;
+}  // namespace mrc::runnable
+namespace mrc::runtime {
+class IInternalPartitionRuntimeProvider;
+}  // namespace mrc::runtime
+
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
@@ -40,19 +48,18 @@ class SegmentDefinition;
 class BuilderDefinition;
 
 // todo(ryan) - inherit from service
-class SegmentInstance final : public Service
+class SegmentInstance final : public runtime::PartitionResourceManager<control_plane::state::SegmentInstance>
 {
   public:
-    SegmentInstance(std::shared_ptr<const SegmentDefinition> definition,
-                    SegmentRank rank,
-                    pipeline::PipelineResources& resources,
-                    std::size_t partition_id);
+    SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
+                    std::shared_ptr<const SegmentDefinition> definition,
+                    SegmentAddress instance_id,
+                    uint64_t pipeline_instance_id);
     ~SegmentInstance() override;
 
     const std::string& name() const;
-    const SegmentID& id() const;
-    const SegmentRank& rank() const;
-    const SegmentAddress& address() const;
+    SegmentRank rank() const;
+    SegmentAddress address() const;
 
     std::shared_ptr<manifold::Interface> create_manifold(const PortName& name);
     void attach_manifold(std::shared_ptr<manifold::Interface> manifold);
@@ -61,27 +68,39 @@ class SegmentInstance final : public Service
     const std::string& info() const;
 
   private:
-    void do_service_start() final;
-    void do_service_await_live() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_join() final;
+    control_plane::state::SegmentInstance filter_resource(
+        const control_plane::state::ControlPlaneState& state) const override;
+
+    bool on_created_requested(control_plane::state::SegmentInstance& instance, bool needs_local_update) override;
+
+    void on_completed_requested(control_plane::state::SegmentInstance& instance) override;
+
+    void service_start_impl();
+    // void do_service_await_live() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_join() final;
 
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
-    std::string m_name;
-    SegmentID m_id;
+    // bool set_local_status(control_plane::state::ResourceActualStatus status);
+
+    std::shared_ptr<const SegmentDefinition> m_definition;
+    uint64_t m_pipeline_instance_id;
+
     SegmentRank m_rank;
     SegmentAddress m_address;
     std::string m_info;
 
     std::unique_ptr<BuilderDefinition> m_builder;
-    pipeline::PipelineResources& m_resources;
-    const std::size_t m_default_partition_id;
 
+    control_plane::state::ResourceActualStatus m_local_status{control_plane::state::ResourceActualStatus::Unknown};
+
+    std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> m_launchers;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
-    std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
+    int64_t m_running_count{0};
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
+    // std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
 
     mutable std::mutex m_mutex;
 };

@@ -21,8 +21,8 @@
 #include "internal/grpc/server.hpp"
 #include "internal/grpc/server_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/resources/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
+#include "internal/resources/system_resources.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -70,7 +70,7 @@ class TestRPC : public ::testing::Test
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<resources::Manager>(
+        m_resources = std::make_unique<resources::SystemResources>(
             system::SystemProvider(tests::make_system([](Options& options) {
                 // todo(#114) - propose: remove this option entirely
                 // options.architect_url("localhost:13337");
@@ -93,7 +93,7 @@ class TestRPC : public ::testing::Test
         m_resources.reset();
     }
 
-    std::unique_ptr<resources::Manager> m_resources;
+    std::unique_ptr<resources::SystemResources> m_resources;
     std::shared_ptr<grpc::Channel> m_channel;
     std::shared_ptr<mrc::testing::TestService::Stub> m_stub;
     std::unique_ptr<rpc::Server> m_server;

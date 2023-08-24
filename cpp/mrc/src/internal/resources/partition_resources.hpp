@@ -17,18 +17,20 @@
 
 #pragma once
 
+#include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 
 #include <cstddef>
 #include <optional>
 
+namespace mrc::ucx {
+class UcxResources;
+}  // namespace mrc::ucx
+
 namespace mrc::memory {
 class DeviceResources;
 class HostResources;
 }  // namespace mrc::memory
-namespace mrc::network {
-class NetworkResources;
-}  // namespace mrc::network
 namespace mrc::runnable {
 class RunnableResources;
 }  // namespace mrc::runnable
@@ -48,16 +50,19 @@ class PartitionResources final : public PartitionResourceBase
                        std::size_t partition_id,
                        memory::HostResources& host,
                        std::optional<memory::DeviceResources>& device,
-                       std::optional<network::NetworkResources>& network);
+                       std::optional<ucx::UcxResources>& ucx);
 
     memory::HostResources& host();
     std::optional<memory::DeviceResources>& device();
     std::optional<network::NetworkResources>& network();
+    std::optional<ucx::UcxResources>& ucx() const;
+    // data_plane::DataPlaneResources& data_plane() const;
 
   private:
     memory::HostResources& m_host;
     std::optional<memory::DeviceResources>& m_device;
-    std::optional<network::NetworkResources>& m_network;
+    std::optional<ucx::UcxResources>& m_ucx;
+    std::optional<network::NetworkResources> m_network;
 };
 
 }  // namespace mrc::resources

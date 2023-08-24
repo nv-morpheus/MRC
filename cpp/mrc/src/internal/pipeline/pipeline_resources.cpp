@@ -23,14 +23,14 @@
 
 namespace mrc::pipeline {
 
-PipelineResources::PipelineResources(resources::Manager& resources) :
+PipelineResources::PipelineResources(resources::SystemResources& resources) :
   m_resources(resources),
   m_metrics_registry(std::make_unique<metrics::Registry>())
 {}
 
 PipelineResources::~PipelineResources() = default;
 
-resources::Manager& PipelineResources::resources() const
+resources::SystemResources& PipelineResources::resources() const
 {
     return m_resources;
 }

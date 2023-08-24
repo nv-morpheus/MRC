@@ -22,6 +22,7 @@
 
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/runtime/remote_descriptor_manager.hpp"
 #include "mrc/types.hpp"
 
@@ -34,7 +35,6 @@
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::codable {
-class EncodedStorage;
 class IDecodableStorage;
 struct ICodableStorage;
 }  // namespace mrc::codable
@@ -45,14 +45,11 @@ namespace mrc::resources {
 class PartitionResources;
 }  // namespace mrc::resources
 namespace mrc::runtime {
-class Partition;
+class PartitionRuntime;
 }  // namespace mrc::runtime
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
-namespace mrc::runtime {
-struct IRemoteDescriptorHandle;
-}  // namespace mrc::runtime
 
 namespace mrc::remote_descriptor {
 struct RemoteDescriptorDecrementMessage;
@@ -97,9 +94,13 @@ class Manager final : private Service,
 
     void release_handle(std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle) final;
 
-    mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object) final;
+    // mrc::runtime::RemoteDescriptor register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object)
+    // final;
 
-    static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd);
+    mrc::runtime::LocalDescriptorHandle register_local_descriptor(
+        std::unique_ptr<mrc::runtime::LocalDescriptor> object) override;
+
+    // static std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> unwrap_handle(mrc::runtime::RemoteDescriptor&& rd);
 
   private:
     static std::uint32_t active_message_id();
@@ -124,7 +125,7 @@ class Manager final : private Service,
 
     mutable std::mutex m_mutex;
 
-    friend runtime::Partition;
+    friend class runtime::PartitionRuntime;
 };
 
 }  // namespace mrc::remote_descriptor

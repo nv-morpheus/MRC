@@ -54,7 +54,7 @@ pybind11::object Deserializer::deserialize(pybind11::bytes py_bytes)
     {
         auto pkl = PythonPickleInterface();
         return pkl.unpickle(py_bytes);
-    } catch (pybind11::error_already_set err)
+    } catch (const pybind11::error_already_set& err)
     {
         LOG(ERROR) << "Failed to deserialize bytes into python object: " << err.what();
         throw;

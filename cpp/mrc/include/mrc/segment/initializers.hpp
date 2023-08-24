@@ -23,8 +23,16 @@
 #include <functional>
 #include <memory>
 
+namespace mrc::runnable {
+class IRunnableResources;
+}
+
 namespace mrc::segment {
 class IBuilder;
+}
+
+namespace mrc::manifold {
+class Interface;
 }
 
 namespace mrc::segment {
@@ -32,5 +40,7 @@ namespace mrc::segment {
 using segment_initializer_fn_t = std::function<void(IBuilder&)>;
 using egress_initializer_t     = std::function<std::shared_ptr<EgressPortBase>(const SegmentAddress&)>;
 using ingress_initializer_t    = std::function<std::shared_ptr<IngressPortBase>(const SegmentAddress&)>;
+using manifold_initializer_fn_t =
+    std::function<std::shared_ptr<manifold::Interface>(std::string, runnable::IRunnableResources&)>;
 
 }  // namespace mrc::segment

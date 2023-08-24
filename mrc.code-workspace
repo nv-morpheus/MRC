@@ -53,6 +53,10 @@
                     // }
                 ],
                 "stopAtEntry": false,
+                "symbolLoadInfo": {
+                    "exceptionList": "libmrc*.so",
+                    "loadAll": false
+                },
                 "type": "cppdbg"
             },
             {
@@ -197,12 +201,27 @@
             "editor.formatOnSave": true,
             "editor.tabSize": 4
         },
+        "[javascript]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+            "editor.formatOnSave": true,
+            "editor.wordWrapColumn": 120
+        },
+        "[typescript]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+            "editor.formatOnSave": true,
+            "editor.wordWrapColumn": 120
+        },
         "cmake.configureArgs": [
             "-DCMAKE_MESSAGE_CONTEXT_SHOW:BOOL=ON", // Show message context by default
             "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
         ],
         "cmake.format.allowOptionalArgumentIndentation": true,
-        "editor.rulers": [120],
+        "editor.rulers": [
+            120
+        ],
+        "eslint.workingDirectories": [
+            "./ts/control-plane"
+        ],
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,
         "files.watcherExclude": {
@@ -288,6 +307,9 @@
             }
         },
         "testMate.cpp.log.logpanel": true,
-        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x"
+        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x",
+        "typescript.format.semicolons": "insert",
+        "typescript.preferences.quoteStyle": "double",
+        "typescript.referencesCodeLens.enabled": true
     }
 }

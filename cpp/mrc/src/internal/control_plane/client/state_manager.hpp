@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
@@ -49,7 +50,7 @@ namespace client {
  * clients have connected and exchanged information
  */
 
-class StateManager
+class StateManager : public virtual runnable::RunnableResourcesProvider
 {
   public:
     StateManager(Client& client);

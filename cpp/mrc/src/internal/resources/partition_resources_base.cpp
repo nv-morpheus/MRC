@@ -37,6 +37,6 @@ runnable::RunnableResources& PartitionResourceBase::runnable()
 
 const runnable::RunnableResources& PartitionResourceBase::runnable() const
 {
-    return m_runnable;
+    return const_cast<PartitionResourceBase*>(this)->runnable();
 }
 }  // namespace mrc::resources

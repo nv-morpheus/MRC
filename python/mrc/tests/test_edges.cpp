@@ -17,13 +17,13 @@
 
 #include "pymrc/forward.hpp"
 #include "pymrc/node.hpp"
-#include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_connector.hpp"
+#include "mrc/node/port_builders.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source_base.hpp"
 #include "mrc/segment/builder.hpp"
@@ -335,17 +335,17 @@ PYBIND11_MODULE(test_edges_cpp, py_mod)
     py::class_<Base, std::shared_ptr<Base>>(py_mod, "Base").def(py::init<>([]() {
         return std::make_shared<Base>();
     }));
-    mrc::pymrc::PortBuilderUtil::register_port_util<Base>();
+    node::PortBuilderUtil::register_port_util<Base>();
 
     py::class_<DerivedA, Base, std::shared_ptr<DerivedA>>(py_mod, "DerivedA").def(py::init<>([]() {
         return std::make_shared<DerivedA>();
     }));
-    mrc::pymrc::PortBuilderUtil::register_port_util<DerivedA>();
+    node::PortBuilderUtil::register_port_util<DerivedA>();
 
     py::class_<DerivedB, Base, std::shared_ptr<DerivedB>>(py_mod, "DerivedB").def(py::init<>([]() {
         return std::make_shared<DerivedB>();
     }));
-    mrc::pymrc::PortBuilderUtil::register_port_util<DerivedB>();
+    node::PortBuilderUtil::register_port_util<DerivedB>();
 
     mrc::edge::EdgeConnector<py::object, pymrc::PyObjectHolder>::register_converter();
     mrc::edge::EdgeConnector<pymrc::PyObjectHolder, py::object>::register_converter();

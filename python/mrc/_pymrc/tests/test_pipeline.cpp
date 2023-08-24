@@ -19,9 +19,9 @@
 
 #include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
-#include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
+#include "mrc/node/port_builders.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_sink_base.hpp"
@@ -139,7 +139,7 @@ TEST_F(TestPipeline, Execute)
 
 TEST_F(TestPipeline, DynamicPortConstructionGood)
 {
-    pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
+    node::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
 
     std::string name                                  = "xyz";
     std::function<void(mrc::segment::IBuilder&)> init = [](mrc::segment::IBuilder& builder) {
@@ -185,7 +185,7 @@ TEST_F(TestPipeline, DynamicPortConstructionGood)
 
 TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 {
-    pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
+    node::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
 
     std::string name                                  = "xyz";
     std::function<void(mrc::segment::IBuilder&)> init = [](mrc::segment::IBuilder& builder) {
@@ -227,7 +227,7 @@ TEST_F(TestPipeline, DynamicPortConstructionBadDuplicatePorts)
 
 TEST_F(TestPipeline, DynamicPortsIngressEgressMultiSegmentSingleExecutor)
 {
-    pymrc::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
+    mrc::node::PortBuilderUtil::register_port_util<pymrc::PyHolder>();
     const std::size_t object_count{10};
     const std::size_t source_count{4};
     std::atomic<std::size_t> sink_count{0};

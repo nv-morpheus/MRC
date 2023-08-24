@@ -22,13 +22,16 @@
 
 #include "mrc/node/writable_entrypoint.hpp"
 
+#include <rxcpp/rx.hpp>
+
+#include <cstdint>
 #include <memory>
 
-// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
+namespace mrc::runtime {
+class Runtime;
+}  // namespace mrc::runtime
 
-namespace mrc::resources {
-class Manager;
-}  // namespace mrc::resources
+// IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -43,18 +46,15 @@ class PipelineDefinition;
  * options, the Manager object is responsible for constructing PartitionControllers for each partition in the set of
  * resources and optionally wiring up the control plane and data plane for multi-machine pipelines.
  */
-class Manager : public Service
+class PipelineManager : public Service
 {
   public:
-    Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources);
-    ~Manager() override;
+    PipelineManager(runtime::Runtime& runtime, std::shared_ptr<PipelineDefinition> pipeline, uint64_t instance_id);
+    ~PipelineManager() override;
 
     const PipelineDefinition& pipeline() const;
 
     void push_updates(SegmentAddresses&& segment_addresses);
-
-  protected:
-    resources::Manager& resources();
 
   private:
     void do_service_start() final;
@@ -63,10 +63,13 @@ class Manager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    resources::Manager& m_resources;
+    runtime::Runtime& m_runtime;
+
     std::shared_ptr<PipelineDefinition> m_pipeline;
+    uint64_t m_instance_id;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
     std::unique_ptr<mrc::runnable::Runner> m_controller;
+    rxcpp::composite_subscription m_state_subscription;
 };
 
 }  // namespace mrc::pipeline

@@ -19,10 +19,12 @@
 #include "pipelines/common_pipelines.hpp"
 #include "tests/common.hpp"
 
+#include "internal/control_plane/server.hpp"
 #include "internal/pipeline/manager.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"  // IWYU pragma: keep
 #include "internal/pipeline/types.hpp"
-#include "internal/resources/manager.hpp"
+#include "internal/resources/system_resources.hpp"
+#include "internal/runtime/runtime.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
@@ -80,28 +82,35 @@ using namespace mrc;
 class TestPipeline : public ::testing::Test
 {};
 
-static std::shared_ptr<pipeline::PipelineDefinition> unwrap(std::unique_ptr<pipeline::IPipeline> pipeline)
+static auto make_resources(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
-    std::shared_ptr<pipeline::IPipeline> shared_pipeline = std::move(pipeline);
+    auto resources = std::make_unique<resources::SystemResources>(
+        system::SystemProvider(tests::make_system([&](Options& options) {
+            options.topology().user_cpuset("0-3");
+            options.topology().restrict_gpus(true);
+            options.placement().resources_strategy(PlacementResources::Dedicated);
+            options.placement().cpu_strategy(PlacementStrategy::PerMachine);
+            options_lambda(options);
+        })));
 
-    // Convert it to the full implementation
-    auto full_pipeline = std::dynamic_pointer_cast<pipeline::PipelineDefinition>(shared_pipeline);
-
-    CHECK(full_pipeline) << "Must pass a non-null pipeline pointer to register_pipeline";
-
-    return std::move(full_pipeline);
+    return resources;
 }
 
 static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
                                pipeline::SegmentAddresses&& update,
                                bool delayed_stop = false)
 {
-    auto resources = resources::Manager(system::SystemProvider(tests::make_system([](Options& options) {
+    auto resources = resources::SystemResources(system::SystemProvider(tests::make_system([](Options& options) {
         options.topology().user_cpuset("0-1");
         options.topology().restrict_gpus(true);
     })));
 
-    auto manager = std::make_unique<pipeline::Manager>(unwrap(std::move(pipeline)), resources);
+    auto runtime = runtime::Runtime(resources);
+
+    auto manager = std::make_unique<pipeline::PipelineManager>(
+        runtime,
+        pipeline::PipelineDefinition::unwrap(std::move(pipeline)),
+        0);
 
     auto f = std::async([&] {
         if (delayed_stop)
@@ -120,13 +129,18 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
 
 static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool delayed_stop = false)
 {
-    auto resources = resources::Manager(system::SystemProvider(tests::make_system([](Options& options) {
+    auto resources = resources::SystemResources(system::SystemProvider(tests::make_system([](Options& options) {
         options.topology().user_cpuset("0");
         options.topology().restrict_gpus(true);
         mrc::channel::set_default_channel_size(64);
     })));
 
-    auto manager = std::make_unique<pipeline::Manager>(unwrap(std::move(pipeline)), resources);
+    auto runtime = runtime::Runtime(resources);
+
+    auto manager = std::make_unique<pipeline::PipelineManager>(
+        runtime,
+        pipeline::PipelineDefinition::unwrap(std::move(pipeline)),
+        0);
 
     pipeline::SegmentAddresses update;
     update[segment_address_encode(segment_name_hash("seg_1"), 0)] = 0;
@@ -200,7 +214,7 @@ TEST_F(TestPipeline, Queue)
 
     auto segment = pipeline->make_segment("seg_1", [](segment::IBuilder& s) {
         auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
-        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto queue  = s.make_object("queue", std::make_unique<mrc::node::Queue<int>>());
         auto sink   = s.make_object("sink", test::nodes::int_sink());
         s.make_edge(source, queue);
         s.make_edge(queue, sink);
@@ -234,9 +248,21 @@ TEST_F(TestPipeline, DuplicateNameInSegment)
 
 TEST_F(TestPipeline, ExecutorLifeCycle)
 {
+    // auto sr     = make_runtime([](Options& options) {
+    //     // Diable the server because we will set it manually
+    //     options.enable_server(false);
+    // });
+    // auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
+
+    // server->service_start();
+    // server->service_await_live();
+
     auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-1");
+    // options->architect_url("localhost:13337");
+    options->topology().user_cpuset("0-3");
     options->topology().restrict_gpus(true);
+    options->placement().resources_strategy(PlacementResources::Dedicated);
+    options->placement().cpu_strategy(PlacementStrategy::PerMachine);
 
     Executor executor(options);
     executor.register_pipeline(test::pipelines::finite_single_segment());
@@ -474,7 +500,7 @@ TEST_F(TestPipeline, Nodes1k)
             }
             s.on_completed();
         });
-        auto queue     = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto queue     = s.make_object("queue", std::make_unique<mrc::node::Queue<int>>());
         s.make_edge(rx_source, queue);
         auto node = s.make_node<int>("node_0", rxcpp::operators::map([](int data) {
                                          return (data + 1);

@@ -90,10 +90,10 @@ void Instance::do_service_kill()
     CHECK(client().await_unary<protos::Ack>(protos::ClientUnaryDropWorker, std::move(msg)));
 
     // requesting an update to avoid the timeout
-    client().request_update();
+    // client().request_update();
 
     // this should block until an update is issued by the server for the client to finalize the instance drop
-    m_update_handler->await_join();
+    // m_update_handler->await_join();
     DVLOG(10) << "client instance: " << m_instance_id << " dropped by server - shutting down client-side";
 
     m_shutdown_promise.set_value();

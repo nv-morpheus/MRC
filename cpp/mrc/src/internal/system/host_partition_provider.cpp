@@ -27,6 +27,7 @@
 namespace mrc::system {
 class HostPartition;
 
+// TODO(MDD): Do we need the host partition ID here?
 HostPartitionProvider::HostPartitionProvider(const SystemProvider& _system, std::size_t _host_partition_id) :
   SystemProvider(_system),
   m_host_partition_id(_host_partition_id)

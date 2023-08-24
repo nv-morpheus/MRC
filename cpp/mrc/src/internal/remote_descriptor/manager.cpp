@@ -34,7 +34,6 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
 #include "mrc/codable/api.hpp"
-#include "mrc/codable/encoded_object.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
@@ -103,24 +102,52 @@ mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(mrc::codable::pro
 {
     // attach the resources for the partition in which this manager is operating to the rd's protobuf
     auto handle = std::make_unique<DecodableStorage>(std::move(proto), m_resources);
-    return {shared_from_this(), std::move(handle)};
+    return {std::move(handle)};
 }
 
-mrc::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object)
+// mrc::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<mrc::codable::EncodedStorage> object)
+// {
+//     CHECK(object);
+
+//     auto object_id = reinterpret_cast<std::size_t>(object.get());
+
+//     Storage storage(std::move(object));
+//     mrc::codable::protos::RemoteDescriptor rd;
+
+//     DVLOG(10) << "storing object_id: " << object_id << " with " << storage.tokens_count() << " tokens";
+
+//     rd.set_instance_id(m_instance_id);
+//     rd.set_object_id(object_id);
+//     rd.set_tokens(storage.tokens_count());
+//     *(rd.mutable_encoded_object()) = storage.encoding().proto();  // copy the proto::EncodedObject
+
+//     {
+//         // lock when modifying the map
+//         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+//         auto search = m_stored_objects.find(object_id);
+//         CHECK(search == m_stored_objects.end());
+//         m_stored_objects.emplace(object_id, std::move(storage));
+//     }
+
+//     return make_remote_descriptor(std::move(rd));
+// }
+
+mrc::runtime::LocalDescriptorHandle Manager::register_local_descriptor(
+    std::unique_ptr<mrc::runtime::LocalDescriptor> object)
 {
     CHECK(object);
 
     auto object_id = reinterpret_cast<std::size_t>(object.get());
 
     Storage storage(std::move(object));
-    mrc::codable::protos::RemoteDescriptor rd;
+    auto rd = std::make_unique<mrc::codable::protos::RemoteDescriptor>();
 
     DVLOG(10) << "storing object_id: " << object_id << " with " << storage.tokens_count() << " tokens";
 
-    rd.set_instance_id(m_instance_id);
-    rd.set_object_id(object_id);
-    rd.set_tokens(storage.tokens_count());
-    *(rd.mutable_encoded_object()) = storage.encoding().proto();  // copy the proto::EncodedObject
+    rd->set_instance_id(m_instance_id);
+    rd->set_object_id(object_id);
+    rd->set_tokens(storage.tokens_count());
+    *(rd->mutable_encoded_object()) = storage.encoding().proto();  // copy the proto::EncodedObject
 
     {
         // lock when modifying the map
@@ -129,8 +156,8 @@ mrc::runtime::RemoteDescriptor Manager::register_encoded_object(std::unique_ptr<
         CHECK(search == m_stored_objects.end());
         m_stored_objects.emplace(object_id, std::move(storage));
     }
-
-    return make_remote_descriptor(std::move(rd));
+    mrc::runtime::LocalDescriptorHandle handle(std::move(rd));
+    return std::move(handle);
 }
 
 std::unique_ptr<mrc::codable::ICodableStorage> Manager::create_storage()
@@ -254,10 +281,10 @@ void Manager::do_service_await_join()
     m_decrement_handler->await_join();
 }
 
-std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> Manager::unwrap_handle(mrc::runtime::RemoteDescriptor&& rd)
-{
-    return rd.release_handle();
-}
+// std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> Manager::unwrap_handle(mrc::runtime::RemoteDescriptor&& rd)
+// {
+//     return rd.release_handle();
+// }
 
 std::uint32_t Manager::active_message_id()
 {
@@ -277,10 +304,10 @@ InstanceID Manager::instance_id() const
     return m_instance_id;
 }
 
-mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
-    std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle)
-{
-    return {shared_from_this(), std::move(handle)};
-}
+// mrc::runtime::RemoteDescriptor Manager::make_remote_descriptor(
+//     std::unique_ptr<mrc::runtime::IRemoteDescriptorHandle> handle)
+// {
+//     return {shared_from_this(), std::move(handle)};
+// }
 
 }  // namespace mrc::remote_descriptor

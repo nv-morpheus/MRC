@@ -17,20 +17,25 @@
 
 #include "internal/pipeline/pipeline_definition.hpp"
 
+#include "internal/pipeline/manifold_definition.hpp"
 #include "internal/segment/segment_definition.hpp"
 
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/node/port_registry.hpp"
 #include "mrc/pipeline/segment.hpp"
 #include "mrc/segment/egress_ports.hpp"
 #include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 
+#include <memory>
 #include <ostream>
 #include <string>
+#include <typeindex>
 #include <utility>
-#include <vector>
 
 namespace mrc::pipeline {
 
@@ -61,17 +66,50 @@ std::shared_ptr<const ISegment> PipelineDefinition::register_segment(std::shared
     auto full_segment = segment::SegmentDefinition::unwrap(std::move(segment));
 
     // check for name collisions
-    for (auto& name : full_segment->ingress_port_names())
+    for (const auto& [name, port_info] : full_segment->ingress_port_infos())
     {
         auto pid = m_port_hasher.register_name(name);
         DVLOG(10) << "segment: " << full_segment->name() << " [" << id << "] - ingress port " << name << " [" << pid
                   << "]";
+
+        std::type_index type_index = port_info->type_index;
+
+        if (!m_manifolds.contains(name))
+        {
+            // From the port utils, lookup the default builder function for this manifold
+            auto port_util = node::PortRegistry::find_port_util(type_index);
+
+            // Create a manifold definition from the default builder
+            m_manifolds[name] = std::make_shared<ManifoldDefinition>(name, type_index, port_util->manifold_builder_fn);
+        }
+
+        // Now check that the type IDs are equal
+        CHECK(m_manifolds[name]->type_index() == type_index)
+            << "Mismatched types on manifold with name '" << name << "'. Existing Type: " << mrc::type_name(type_index)
+            << ". Registering Type: " << mrc::type_name(type_index);
     }
-    for (auto& name : full_segment->egress_port_names())
+
+    for (const auto& [name, port_info] : full_segment->egress_port_infos())
     {
         auto pid = m_port_hasher.register_name(name);
         DVLOG(10) << "segment: " << full_segment->name() << " [" << id << "] - egress port " << name << " [" << pid
                   << "]";
+
+        std::type_index type_index = port_info->type_index;
+
+        if (!m_manifolds.contains(name))
+        {
+            // From the port utils, lookup the default builder function for this manifold
+            auto port_util = node::PortRegistry::find_port_util(type_index);
+
+            // Create a manifold definition from the default builder
+            m_manifolds[name] = std::make_shared<ManifoldDefinition>(name, type_index, port_util->manifold_builder_fn);
+        }
+
+        // Now check that the type IDs are equal
+        CHECK(m_manifolds[name]->type_index() == type_index)
+            << "Mismatched types on manifold with name '" << name << "'. Existing Type: " << mrc::type_name(type_index)
+            << ". Registering Type: " << mrc::type_name(type_index);
     }
 
     const auto& [inserted_iterator, was_inserted] = m_segments.emplace(id, std::move(full_segment));
@@ -109,6 +147,13 @@ std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::stri
 {
     auto segdef = Segment::create(segment_name, egress_ports, segment_initializer);
     return this->register_segment(std::move(segdef));
+}
+
+std::shared_ptr<const ManifoldDefinition> PipelineDefinition::find_manifold(const std::string& manifold_name) const
+{
+    auto search = m_manifolds.find(manifold_name);
+    CHECK(search != m_manifolds.end()) << "Manifold with name '" << manifold_name << "' not found.";
+    return search->second;
 }
 
 std::shared_ptr<const segment::SegmentDefinition> PipelineDefinition::find_segment(SegmentID segment_id) const

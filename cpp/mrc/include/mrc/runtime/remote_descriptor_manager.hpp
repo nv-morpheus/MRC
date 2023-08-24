@@ -54,7 +54,7 @@ class IRemoteDescriptorManager
     template <typename T>
     RemoteDescriptor register_object(T&& object)
     {
-        return register_encoded_object(codable::EncodedObject<T>::create(std::move(object), create_storage()));
+        return this->register_local_descriptor(std::make_unique<CodedDescriptor<T>>(std::move(object)));
     }
 
     /**
@@ -66,7 +66,7 @@ class IRemoteDescriptorManager
      * @param object
      * @return RemoteDescriptor
      */
-    virtual RemoteDescriptor register_encoded_object(std::unique_ptr<codable::EncodedStorage> object) = 0;
+    virtual LocalDescriptorHandle register_local_descriptor(std::unique_ptr<LocalDescriptor> object) = 0;
 
   protected:
     // Provides a ICodableStorage backed by the partition resources

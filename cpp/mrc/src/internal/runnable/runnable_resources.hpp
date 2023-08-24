@@ -29,6 +29,7 @@
 
 namespace mrc::system {
 class FiberTaskQueue;
+class HostPartition;
 }  // namespace mrc::system
 
 namespace mrc::runnable {
@@ -37,15 +38,21 @@ class RunnableResources final : public system::HostPartitionProvider, public IRu
 {
   public:
     RunnableResources(const system::ThreadingResources& system_resources, std::size_t _host_partition_id);
+    RunnableResources(const system::ThreadingResources& system_resources, const system::HostPartition& host_partition);
     RunnableResources(RunnableResources&& other);
     ~RunnableResources() override;
 
     mrc::core::FiberTaskQueue& main() final;
     const mrc::core::FiberTaskQueue& main() const;
+
+    mrc::core::FiberTaskQueue& network() final;
+    const mrc::core::FiberTaskQueue& network() const;
+
     mrc::runnable::LaunchControl& launch_control() final;
 
   private:
     system::FiberTaskQueue& m_main;
+    system::FiberTaskQueue& m_network;
     std::unique_ptr<mrc::runnable::LaunchControl> m_launch_control;
 };
 

@@ -1,0 +1,514 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2022,NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+syntax = "proto3";
+
+package mrc.protos;
+
+enum ResourceStatus
+{
+   // Control Plane indicates a resource should be created on the client
+   Registered = 0;
+   // Client has created resource but it is not ready
+   Activated = 1;
+   // Client and Control Plane can use the resource
+   Ready = 2;
+   // Control Plane has indicated the resource should be destroyed on the client. All users of the resource should stop
+   // using it and decrement the ref count. Object is still running
+   Deactivating = 3;
+   // All ref counts have been decremented. Owner of the object on the client can begin destroying object
+   Deactivated = 4;
+   // Client owner of resource has begun destroying the object
+   Unregistered = 5;
+   // Object has been destroyed on the client (and may be removed from the server)
+   Destroyed = 6;
+}
+
+enum ResourceRequestedStatus
+{
+   // Should never be used. Must start with 0
+   Requested_Unknown = 0;
+   // Requested that a placeholder be reserved for this resource
+   Requested_Initialized = 1;
+   // Requested that the resource be created but not started
+   Requested_Created = 3;
+   // Requested that the resource run to completion
+   Requested_Completed = 5;
+   // Requested that the resource be stopped
+   Requested_Stopped = 7;
+   // Requested that the resource be destroyed (and removed from the control plane)
+   Requested_Destroyed = 9;
+}
+
+enum ResourceActualStatus
+{
+   // Resource has not informed its status
+   Actual_Unknown = 0;
+   // Owner of resource has acknowledged it should be created
+   Actual_Initialized = 1;
+   // Resource has acknowledged it should be created and has begun the process
+   Actual_Creating = 2;
+   // Resource is created and can be moved to ready when requested
+   Actual_Created = 3;
+   // Resource is running and will be moved to completed when finished
+   Actual_Running = 4;
+   // Resource is done running and ready to be torn down
+   Actual_Completed = 5;
+   // Resource has acknowledged it should be stopped and has begun the process
+   Actual_Stopping = 6;
+   // Resource has completed the stopped process
+   Actual_Stopped = 7;
+   // Owner of resource has begun destroying the object
+   Actual_Destroying = 8;
+   // Owner of resource has destroyed the object. Can be removed from control plane
+   Actual_Destroyed = 9;
+}
+
+message ResourceState {
+   // // Current status of the resource
+   // ResourceStatus status = 1;
+
+   // What the control plane would like the resource to be
+   ResourceRequestedStatus requested_status = 2;
+
+   // What the local resource has reported its state as
+   ResourceActualStatus actual_status = 3;
+
+   // Number of users besides the owner of this resource
+   int32 ref_count = 4;
+}
+
+message Connection {
+   uint64 id = 1;
+
+   // Info about the client (IP/Port)
+   string peer_info = 2;
+
+   // Workers that belong to this machine
+   repeated uint64 worker_ids = 3;
+
+   // The pipeline instances that are assigned to this machine
+   repeated uint64 assigned_pipeline_ids = 4;
+
+   // The pipeline definitions that are assigned to this machine
+   repeated uint64 mapped_pipeline_definitions = 5;
+
+   // Current state
+   ResourceState state = 6;
+}
+
+message Worker {
+
+   uint64 id = 1;
+
+   // Serialized worker address
+   bytes worker_address = 2;
+
+   // Parent machine this worker belongs to
+   uint64 machine_id = 3;
+
+   // Current state of the worker
+   ResourceState state = 4;
+
+   // The segment instances that are assigned to this worker
+   repeated uint64 assigned_segment_ids = 5;
+}
+
+message PipelineConfiguration{
+   message SegmentConfiguration{
+      // Name of the segment
+      string name = 1;
+
+      // Ingress ports for this segment
+      repeated string ingress_ports = 2;
+
+      // Egress ports for this segment
+      repeated string egress_ports = 3;
+
+      // Segment options
+      SegmentOptions options = 4;
+   }
+
+   message ManifoldConfiguration{
+      // Name of the manifold
+      string name = 1;
+
+      // TypeID for this manifold
+      uint32 type_id = 2;
+
+      // Friendly type string
+      string type_string = 3;
+
+      // All options for this config
+      ManifoldOptions options = 4;
+   }
+
+   map<string, SegmentConfiguration> segments = 1;
+   map<string, ManifoldConfiguration> manifolds = 2;
+}
+
+enum SegmentMappingPolicies
+{
+   OnePerWorker = 0;
+}
+
+message PipelineMapping {
+
+   message SegmentMapping {
+
+      message ByPolicy {
+         // Specify a general policy
+         SegmentMappingPolicies value = 1;
+      }
+
+      message ByWorker {
+         // The workers to assign this segment to
+         repeated uint64 worker_ids = 1;
+      }
+
+      // The segment definition ID
+      string segment_name = 1;
+
+      oneof mapping_type {
+         // General policy
+         ByPolicy by_policy = 2;
+
+         // Manually specified
+         ByWorker by_worker = 3;
+      }
+  }
+
+   uint64 machine_id = 1;
+
+   map<string, SegmentMapping> segments = 2;
+}
+
+message PipelineDefinition {
+
+   message SegmentDefinition{
+
+      // Generated ID of the definition
+      uint64 id = 1;
+
+      // ID of the parent for back referencing
+      uint64 parent_id = 2;
+
+      // Name of the segment
+      string name = 3;
+
+      // Manifold definition IDs for attached ingress ports. Manifold Name/ID pair for cross referencing
+      map<string, uint64> ingress_manifold_ids = 4;
+
+      // Manifold definition IDs for attached egress ports. Manifold Name/ID pair for cross referencing
+      map<string, uint64> egress_manifold_ids = 5;
+
+      // Segment options
+      SegmentOptions options = 6;
+
+      // Running Segment Instance IDs
+      repeated uint64 instance_ids = 7;
+   }
+
+   message ManifoldDefinition {
+
+      // Generated ID of the definition
+      uint64 id = 1;
+
+      // ID of the parent for back referencing
+      uint64 parent_id = 2;
+
+      // Port name for matching ingress/egress nodes
+      string port_name = 3;
+
+      // Segment definition IDs for attached input segments. Segment Name/ID pair for cross referencing
+      map<string, uint64> input_segment_ids = 4;
+
+      // Segment definition IDs for attached egress segments. Segment Name/ID pair for cross referencing
+      map<string, uint64> output_segment_ids = 5;
+
+      // All options for this config
+      ManifoldOptions options = 6;
+
+      // Running ManifoldInstance IDs
+      repeated uint64 instance_ids = 7;
+   }
+
+   // Generated ID of the definition (int64 because the hash algorithms can give negative values)
+   int64 id = 1;
+
+   // Object that holds all of the configurable properties
+   PipelineConfiguration config = 2;
+
+   // Machine IDs to mappings for all connections
+   map<uint64, PipelineMapping> mappings = 3;
+
+   // Running Pipeline Instance IDs
+   repeated uint64 instance_ids = 4;
+
+   // Segment Info
+   map<string, SegmentDefinition> segments = 5;
+
+   // Manifold Info
+   map<string, ManifoldDefinition> manifolds = 6;
+}
+
+message PipelineInstance {
+   uint64 id = 1;
+
+   // Deinition this belongs to
+   int64 definition_id = 2;
+
+   // The machine this instance is running on
+   uint64 machine_id = 3;
+
+   // The current state of this resource
+   ResourceState state = 4;
+
+   // Running Segment Instance IDs
+   repeated uint64 segment_ids = 5;
+
+   // Running Manifold Instance IDs
+   repeated uint64 manifold_ids = 6;
+}
+
+message SegmentDefinition {
+   // message Properties{
+   //    // Name of the segment
+   //    string name = 1;
+
+   //    // Parent Pipeline ID
+   //    uint64 pipeline_id = 2;
+
+   //    // Ingress ports for this segment
+   //    repeated IngressPort ingress_ports = 3;
+
+   //    // Egress ports for this segment
+   //    repeated EgressPort egress_ports = 4;
+
+   //    // Segment options
+   //    SegmentOptions options = 5;
+   // }
+
+   // Generated ID of the definition
+   uint64 id = 1;
+
+   // // Object that holds all of the configurable properties
+   // Properties properties = 2;
+
+   // Running Segment Instance IDs
+   repeated uint64 instance_ids = 3;
+}
+
+message SegmentInstance {
+   uint64 id = 1;
+
+   // Pipeline Deinition this belongs to
+   int64 pipeline_definition_id = 2;
+
+   // Segment name (Lookup segment config from pipeline def ID and name)
+   string name = 3;
+
+   // The encoded address of this instance
+   uint32 address = 4;
+
+   // The worker/partition that this belongs to
+   uint64 worker_id = 5;
+
+   // The running pipeline instance id
+   uint64 pipeline_instance_id = 6;
+
+   // The current state of this resource
+   ResourceState state = 7;
+
+   // Local running manifold instance IDs for egress ports
+   repeated uint64 egress_manifold_instance_ids = 8;
+
+   // Local running manifold instance IDs for ingress ports
+   repeated uint64 ingress_manifold_instance_ids = 9;
+}
+
+message ManifoldInstance {
+   uint64 id = 1;
+
+   // Pipeline Deinition this belongs to
+   int64 pipeline_definition_id = 2;
+
+   // Port name (Lookup manifold config from pipeline def ID and name)
+   string port_name = 3;
+
+   // The machine this instance is running on
+   uint64 machine_id = 4;
+
+   // The running pipeline instance id
+   uint64 pipeline_instance_id = 5;
+
+   // The current state of this resource
+   ResourceState state = 6;
+
+   // The requested input connections. True = Local, False = Remote
+   map<uint32, bool> requested_input_segments = 7;
+
+   // The requested output connections. True = Local, False = Remote
+   map<uint32, bool> requested_output_segments = 8;
+
+   // The actual input connections. True = Local, False = Remote
+   map<uint32, bool> actual_input_segments = 9;
+
+   // The actual output connections. True = Local, False = Remote
+   map<uint32, bool> actual_output_segments = 10;
+}
+
+message ControlPlaneState {
+   message ConnectionsState {
+      repeated uint64 ids = 1;
+      map<uint64, Connection> entities = 2;
+   }
+
+   message WorkerssState {
+      repeated uint64 ids = 1;
+      map<uint64, Worker> entities = 2;
+   }
+
+   message PipelineDefinitionsState {
+      repeated uint64 ids = 1;
+      map<uint64, PipelineDefinition> entities = 2;
+   }
+
+   message PipelineInstancesState {
+      repeated uint64 ids = 1;
+      map<uint64, PipelineInstance> entities = 2;
+   }
+
+   message SegmentDefinitionsState {
+      repeated uint64 ids = 1;
+      map<uint64, SegmentDefinition> entities = 2;
+   }
+
+   message SegmentInstancesState {
+      repeated uint64 ids = 1;
+      map<uint64, SegmentInstance> entities = 2;
+   }
+
+   message ManifoldInstancesState {
+      repeated uint64 ids = 1;
+      map<uint64, ManifoldInstance> entities = 2;
+   }
+
+   uint64 nonce = 1;
+   ConnectionsState connections = 2;
+   WorkerssState workers = 3;
+   PipelineDefinitionsState pipeline_definitions = 4;
+   PipelineInstancesState pipeline_instances = 5;
+   SegmentDefinitionsState segment_definitions = 6;
+   SegmentInstancesState segment_instances = 7;
+   ManifoldInstancesState manifold_instances = 8;
+}
+
+
+// Below are non top level objects
+
+message SegmentOptions
+{
+   enum PlacementStrategy
+   {
+      ResourceGroup = 0;
+      PhysicalMachine = 1;
+      Global = 2;
+   }
+
+   PlacementStrategy placement_strategy = 1;
+   ScalingOptions scaling_options = 2;
+}
+
+message ScalingOptions
+{
+   enum ScalingStrategy
+   {
+      Static = 0;
+   }
+
+   ScalingStrategy strategy = 1;
+   uint32 initial_count = 2;
+}
+
+message ManifoldOptions
+{
+   enum Policy
+   {
+       LoadBalance = 0;
+       Broadcast = 1;
+   }
+
+   Policy policy = 1;
+}
+
+// for ingress and egress ports
+// network_enabled informs the object if data is expected to
+// flow in/out of the ports over the network.
+// if the value is FALSE, these ports will not be hooked up to
+// their respective deserializer/serializer nodes
+// AND no architect events will be triggered when on_complete is
+// called.
+// if the value is TRUE, the ports will be hooked up to the network
+// objects AND on_complete will always trigger a blocking architect
+// event
+
+message PortInfo
+{
+   string port_name = 1;
+   uint32 type_id = 2;
+   string type_string = 3;
+}
+
+message IngressPort
+{
+   string name = 1;
+   uint32 id = 2;
+}
+
+message EgressPort
+{
+   string name = 1;
+   uint32 id = 2;
+
+   enum PolicyType
+   {
+      PolicyDefined = 0;
+      UserDefined = 1;
+   }
+
+   PolicyType policy_type = 3;
+}
+
+message IngressPolicy
+{
+   bool network_enabled = 1;
+}
+
+message EgressPolicy
+{
+   enum Policy
+   {
+      LoadBalance = 0;
+      Broadcast = 1;
+   }
+   Policy policy = 3;
+
+   // list of allowed pol
+   repeated uint32 segment_addresses = 4; // segment_address, not port_address
+}

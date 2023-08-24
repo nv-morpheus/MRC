@@ -17,33 +17,38 @@
 
 #pragma once
 
-#include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
+#include "internal/control_plane/state/root_state.hpp"
 #include "internal/grpc/client_streaming.hpp"
 #include "internal/grpc/stream_writer.hpp"
-#include "internal/resources/partition_resources_base.hpp"
-#include "internal/service.hpp"
 
+#include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 #include "mrc/node/forward.hpp"
-#include "mrc/node/writable_entrypoint.hpp"
+#include "mrc/node/operators/conditional.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/runnable_resources.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
+#include <rxcpp/rx.hpp>
+#include <stddef.h>
 
+#include <algorithm>
+#include <chrono>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <mutex>
-#include <optional>
+#include <ostream>
 #include <set>
+#include <stop_token>
 #include <string>
 #include <utility>
-#include <vector>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
@@ -52,15 +57,11 @@ class Channel;
 class CompletionQueue;
 }  // namespace grpc
 namespace mrc::control_plane::client {
-class ConnectionsManager;
 class SubscriptionService;
 }  // namespace mrc::control_plane::client
 namespace mrc::network {
 class NetworkResources;
 }  // namespace mrc::network
-namespace mrc::ucx {
-class UcxResources;
-}  // namespace mrc::ucx
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
@@ -86,7 +87,7 @@ class AsyncStatus;
 
 // todo: client should be a holder of the stream (private) and the connection manager (public)
 
-class Client final : public resources::PartitionResourceBase, public Service
+class Client final : public AsyncService, public virtual runnable::RunnableResourcesProvider
 {
   public:
     enum class State
@@ -103,23 +104,26 @@ class Client final : public resources::PartitionResourceBase, public Service
     using event_t          = stream_t::element_type::IncomingData;
     using update_channel_t = mrc::node::WritableEntrypoint<protos::StateUpdate>;
 
-    Client(resources::PartitionResourceBase& base);
+    Client(runnable::IRunnableResourcesProvider& resources);
+
+    // Client(resources::PartitionResourceBase& base);
 
     // if we already have an grpc progress engine running, we don't need run another, just use that cq
-    Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq);
+    // Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq);
 
     ~Client() final;
 
-    const State& state() const
-    {
-        return m_state;
-    }
+    const State& state() const;
 
-    // MachineID machine_id() const;
+    MachineID machine_id() const;
     // const std::vector<InstanceID>& instance_ids() const;
 
-    std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
-        std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
+    // InstanceID register_ucx_address(const std::string& worker_address);
+
+    // std::vector<InstanceID> register_ucx_addresses(const std::vector<std::string>& worker_addresses);
+
+    // std::map<InstanceID, std::unique_ptr<client::Instance>> register_ucx_addresses(
+    //     std::vector<std::optional<ucx::UcxResources>>& ucx_resources);
 
     // void register_port_publisher(InstanceID instance_id, const std::string& port_name);
     // void register_port_subscriber(InstanceID instance_id, const std::string& port_name);
@@ -140,33 +144,42 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     const mrc::runnable::LaunchOptions& launch_options() const;
 
-    client::ConnectionsManager& connections() const
-    {
-        CHECK(m_connections_manager);
-        return *m_connections_manager;
-    }
+    // client::ConnectionsManager& connections() const
+    // {
+    //     CHECK(m_connections_manager);
+    //     return *m_connections_manager;
+    // }
 
     // request that the server start an update
     void request_update();
 
+    // edge::IWritableAcceptor<const protos::ControlPlaneState>& state_update_stream() const;
+
+    rxcpp::observable<state::ControlPlaneState> state_update_obs() const;
+
   private:
+    void do_service_start(std::stop_token stop_token) final;
+    void do_service_kill() final;
+
     void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
 
-    void do_service_start() final;
-    void do_service_stop() final;
-    void do_service_kill() final;
-    void do_service_await_live() final;
-    void do_service_await_join() final;
-    void do_handle_event(event_t&& event);
+    // void do_service_start() final;
+    // void do_service_stop() final;
+    // void do_service_kill() final;
+    // void do_service_await_live() final;
+    // void do_service_await_join() final;
+    void do_handle_event(event_t& event);
 
     void forward_state(State state);
 
     State m_state{State::Disconnected};
 
-    // MachineID m_machine_id;
+    MachineID m_machine_id;
     // std::vector<InstanceID> m_instance_ids;
     // std::map<InstanceID, std::unique_ptr<update_channel_t>> m_update_channels;
     // std::map<InstanceID, std::shared_ptr<client::Instance>> m_instances;
+
+    SharedPromise<void> m_connected_promise;
 
     std::shared_ptr<grpc::CompletionQueue> m_cq;
     std::shared_ptr<grpc::Channel> m_channel;
@@ -176,18 +189,34 @@ class Client final : public resources::PartitionResourceBase, public Service
     // if false, then the following runners must be null
     const bool m_owns_progress_engine;
     std::unique_ptr<mrc::runnable::Runner> m_progress_handler;
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_progress_handler_wrapper;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_progress_engine_wrapper;
+
+    std::unique_ptr<node::Conditional<bool, event_t>> m_response_conditional;
+    std::unique_ptr<mrc::runnable::Runner> m_response_handler;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
+
+    std::unique_ptr<AsyncServiceRunnerWrapper> m_event_handler_wrapper;
 
     // std::map<std::string, std::unique_ptr<node::SourceChannelWriteable<protos::StateUpdate>>> m_update_channels;
     // std::unique_ptr<client::ConnectionsManager> m_connections_manager;
     // std::map<std::string, std::unique_ptr<client::SubscriptionService>> m_subscription_services;
 
     // connection manager - connected to the update channel
-    std::unique_ptr<client::ConnectionsManager> m_connections_manager;
+    // std::unique_ptr<client::ConnectionsManager> m_connections_manager;
 
     // update channel
-    std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
+    size_t m_state_update_count{0};
+    // rxcpp::subjects::behavior<state::ControlPlaneState> m_state_update_sub{
+    //     state::ControlPlaneState{std::make_unique<protos::ControlPlaneState>()}};
+    // rxcpp::subjects::replay<state::ControlPlaneState, rxcpp::identity_one_worker> m_state_update_sub{
+    //     1,
+    //     rxcpp::identity_current_thread()};
+    rxcpp::subjects::subject<state::ControlPlaneState> m_state_update_sub;
+    // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_connections_update_channel;
+    // std::unique_ptr<mrc::node::WritableEntrypoint<const protos::ControlPlaneState>> m_state_update_entrypoint;
+    // std::unique_ptr<mrc::node::Broadcast<const protos::ControlPlaneState>> m_state_update_stream;
     // std::map<InstanceID, mrc::node::WritableEntrypoint<const protos::StateUpdate>> m_instance_update_channels;
 
     // Stream Context
@@ -218,8 +247,15 @@ class AsyncStatus
 
     Expected<ResponseT> await_response()
     {
+        auto future = m_promise.get_future();
+
         // todo(ryan): expand this into a wait_until with a deadline and a stop token
-        auto event = m_promise.get_future().get();
+        while (future.wait_for(std::chrono::milliseconds(10)) != boost::fibers::future_status::ready)
+        {
+            boost::this_fiber::yield();
+        }
+
+        auto event = future.get();
 
         if (event.has_error())
         {
@@ -245,6 +281,7 @@ Expected<ResponseT> Client::await_unary(const protos::EventType& event_type, Req
 {
     AsyncStatus<ResponseT> status;
     async_unary(event_type, std::move(request), status);
+    DVLOG(20) << "Awaiting on tag: " << reinterpret_cast<std::uint64_t>(&status.m_promise);
     return status.await_response();
 }
 

@@ -20,12 +20,15 @@
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/channel/types.hpp"
 #include "mrc/constants.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/core/watcher.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/runnable/context.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
@@ -40,11 +43,16 @@
 namespace mrc::node {
 
 template <typename T>
-class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, public SinkChannelOwner<T>, private Watchable
+class RxSinkBase : public ReadableWritableSink<T>, public SinkChannelOwner<T>, private Watchable
 {
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
     void sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
+
+    void set_timeout(const channel::duration_t& timeout)
+    {
+        m_timeout = timeout;
+    }
 
   protected:
     RxSinkBase();
@@ -58,6 +66,9 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
 
     // observable
     rxcpp::observable<T> m_observable;
+
+    // Start with -max() to indicate an infinite timeout
+    channel::duration_t m_timeout{-channel::duration_t::max()};
 };
 
 template <typename T>
@@ -79,15 +90,48 @@ const rxcpp::observable<T>& RxSinkBase<T>::observable() const
 template <typename T>
 void RxSinkBase<T>::progress_engine(rxcpp::subscriber<T>& s)
 {
+    // Load the context just to help with debugging
+    auto& context = mrc::runnable::Context::get_runtime_context();
+
     T data;
+
     this->watcher_prologue(WatchableEvent::channel_read, &data);
-    while (s.is_subscribed() && (this->get_readable_edge()->await_read(data) == channel::Status::success))
+
+    channel::Status status;
+
+    while (s.is_subscribed())
     {
+        if (m_timeout < channel::duration_t::zero())
+        {
+            status = this->get_readable_edge()->await_read(data);
+        }
+        else
+        {
+            status = this->get_readable_edge()->await_read_for(data, m_timeout);
+        }
+
+        if (status == channel::Status::timeout)
+        {
+            VLOG(10) << context.info() << " await_read_for timed out. Retrying...";
+            continue;
+        }
+
+        if (status != channel::Status::success)
+        {
+            break;
+        }
+
         this->watcher_epilogue(WatchableEvent::channel_read, true, &data);
         this->watcher_prologue(WatchableEvent::sink_on_data, &data);
+
         s.on_next(std::move(data));
+
         this->watcher_prologue(WatchableEvent::channel_read, &data);
     }
+
+    // Release the edge connection before going out of scope
+    this->release_edge_connection();
+
     s.on_completed();
 }
 

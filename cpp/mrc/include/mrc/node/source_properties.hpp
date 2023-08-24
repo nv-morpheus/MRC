@@ -19,6 +19,7 @@
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"  // IWYU pragma: export
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"
@@ -190,17 +191,49 @@ class WritableAcceptor : public virtual SourceProperties<T>, public edge::IWrita
     }
 };
 
-template <typename T, typename KeyT>
-class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, public edge::IMultiWritableAcceptor<T, KeyT>
+// Source that can work in push or pull modes
+template <typename T>
+class ReadableWritableSource : public ReadableProvider<T>, public WritableAcceptor<T>
+{};
+
+template <typename KeyT, typename T>
+class MultiWritableAcceptor : public virtual MultiSourceProperties<KeyT, T>,
+                              public edge::IMultiWritableAcceptor<KeyT, T>
 {
   public:
+  protected:
+    bool has_writable_edge(const KeyT& key) const override
+    {
+        return MultiSourceProperties<KeyT, T>::has_edge_connection(key);
+    }
+
+    void release_writable_edge(const KeyT& key) override
+    {
+        return MultiSourceProperties<KeyT, T>::release_edge_connection(key);
+    }
+
+    void release_writable_edges() override
+    {
+        return MultiSourceProperties<KeyT, T>::release_edge_connections();
+    }
+
+    size_t writable_edge_count() const override
+    {
+        return MultiSourceProperties<KeyT, T>::edge_connection_count();
+    }
+
+    std::vector<KeyT> writable_edge_keys() const override
+    {
+        return MultiSourceProperties<KeyT, T>::edge_connection_keys();
+    }
+
   private:
     void set_writable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> ingress) override
     {
         // Do any conversion to the correct type here
         auto adapted_ingress = edge::EdgeBuilder::adapt_writable_edge<T>(ingress);
 
-        MultiSourceProperties<T, KeyT>::make_edge_connection(key, adapted_ingress);
+        MultiSourceProperties<KeyT, T>::make_edge_connection(key, adapted_ingress);
     }
 };
 
@@ -215,8 +248,11 @@ class ForwardingEgressProvider : public ReadableProvider<T>
 
         ~ForwardingEdge() = default;
 
-        channel::Status await_read(T& t) override
+        channel::Status await_read_until(T& t, const channel::time_point_t& timeout) override
         {
+            CHECK(timeout == channel::time_point_t::max()) << "ForwardingEgressProvider only supports infinite "
+                                                              "await_read_until";
+
             return m_parent.get_next(t);
         }
 

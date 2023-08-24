@@ -44,6 +44,7 @@ protobuf_generate_grpc_cpp(mrc_architect_protos
   GEN_GRPC
   HDRS mrc_architect_protos-headers
   PROTOS
+  mrc/protos/architect_state.proto
   mrc/protos/architect.proto
 )
 

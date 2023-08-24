@@ -17,7 +17,6 @@
 
 #include "internal/data_plane/data_plane_resources.hpp"
 
-#include "internal/control_plane/client.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
@@ -43,8 +42,8 @@ DataPlaneResources::DataPlaneResources(resources::PartitionResourceBase& base,
   m_control_plane_client(control_plane_client),
   m_instance_id(instance_id),
   m_transient_pool(32_MiB, 4, m_host.registered_memory_resource()),
-  m_server(std::make_unique<Server>(base, ucx, host, m_transient_pool, m_instance_id)),
-  m_client(std::make_unique<Client>(base, ucx, m_control_plane_client.connections(), m_transient_pool))
+  m_server(std::make_unique<Server>(base, ucx, host, m_transient_pool, m_instance_id))
+//   m_client(std::make_unique<Client>(base, ucx, m_control_plane_client.connections(), m_transient_pool))
 {
     // ensure the data plane progress engine is up and running
     service_start();

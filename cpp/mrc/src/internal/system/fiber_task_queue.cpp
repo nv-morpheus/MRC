@@ -26,7 +26,6 @@
 #include "mrc/types.hpp"
 
 #include <boost/fiber/channel_op_status.hpp>
-#include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
@@ -39,10 +38,13 @@
 
 namespace mrc::system {
 
-FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources, CpuSet cpu_affinity, std::size_t channel_size) :
+FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources,
+                               CpuSet cpu_affinity,
+                               std::string thread_name,
+                               std::size_t channel_size) :
   m_queue(channel_size),
   m_cpu_affinity(std::move(cpu_affinity)),
-  m_thread(resources.make_thread("fiberq", m_cpu_affinity, [this] {
+  m_thread(resources.make_thread(std::move(thread_name), m_cpu_affinity, [this] {
       main();
   }))
 {
@@ -106,7 +108,7 @@ void FiberTaskQueue::launch(task_pkg_t&& pkg) const
     boost::fibers::fiber fiber(std::move(pkg.first));
     auto& props(fiber.properties<FiberPriorityProps>());
     props.set_priority(pkg.second.priority);
-    DVLOG(10) << *this << ": created fiber " << fiber.get_id() << " with priority " << pkg.second.priority;
+    // DVLOG(10) << *this << ": created fiber " << fiber.get_id() << " with priority " << pkg.second.priority;
     fiber.detach();
 }
 

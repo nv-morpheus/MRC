@@ -20,9 +20,17 @@
 #include "internal/service.hpp"
 #include "internal/system/system_provider.hpp"
 
+#include "mrc/node/generic_sink.hpp"
 #include "mrc/pipeline/executor.hpp"
+#include "mrc/protos/architect_state.pb.h"
+#include "mrc/types.hpp"
 
 #include <memory>
+#include <vector>
+
+namespace mrc::runtime {
+class Runtime;
+}  // namespace mrc::runtime
 
 namespace mrc::system {
 class SystemDefinition;
@@ -30,11 +38,9 @@ class SystemDefinition;
 
 namespace mrc::pipeline {
 class IPipeline;
-class Manager;
+class PipelineManager;
+class PipelineDefinition;
 }  // namespace mrc::pipeline
-namespace mrc::resources {
-class Manager;
-}  // namespace mrc::resources
 
 namespace mrc::executor {
 
@@ -63,8 +69,16 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    std::unique_ptr<resources::Manager> m_resources_manager;
-    std::unique_ptr<pipeline::Manager> m_pipeline_manager;
+    std::unique_ptr<runtime::Runtime> m_runtime;
+    // std::unique_ptr<resources::Manager> m_resources_manager;
+    std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
+
+    std::vector<std::shared_ptr<pipeline::PipelineDefinition>> m_registered_pipeline_defs;
+
+    std::unique_ptr<node::LambdaSinkComponent<const protos::ControlPlaneState>> m_update_sink;
+
+    Mutex m_pipelines_mutex;
+    CondV m_pipelines_cv;
 };
 
 }  // namespace mrc::executor

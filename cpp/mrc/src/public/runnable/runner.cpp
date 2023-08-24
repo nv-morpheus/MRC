@@ -144,7 +144,15 @@ void Runner::enqueue(std::shared_ptr<IEngines> launcher, std::vector<std::shared
             {
                 if (m_completion_callback)
                 {
-                    m_completion_callback(m_status);
+                    try
+                    {
+                        m_completion_callback(m_status);
+                    } catch (std::exception& ex)
+                    {
+                        LOG(ERROR) << "Error occurred in completion callback. Error message: " << ex.what();
+                        // Rethrow so it gets bubbled up to the join future
+                        throw;
+                    }
                 }
             }
             context->finish();

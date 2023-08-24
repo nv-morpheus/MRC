@@ -35,21 +35,35 @@ if (conda_env_path is not None):
         result = subprocess.run([gcc_path, '-dumpversion'], stdout=subprocess.PIPE)
         gcc_version = result.stdout.decode("utf-8").strip()
 
-        # Build the gcc python path
-        gcc_python_path = os.path.join(conda_env_path, "share", "gcc-{}".format(gcc_version), "python")
+        # Build the relative gcc python path to check from multiple roots
+        gcc_rel_python_path = os.path.join("share", "gcc-{}".format(gcc_version), "python")
 
-        if (os.path.exists(gcc_python_path)):
+        roots_to_check = [os.path.dirname(__file__), conda_env_path]
+        checked_paths = []
+        found = False
 
-            # Add to the path for the pretty printer
-            sys.path.insert(0, gcc_python_path)
+        for r in roots_to_check:
 
-            # Now register the pretty printers
-            from libstdcxx.v6 import register_libstdcxx_printers
-            register_libstdcxx_printers(gdb.current_objfile())
+            gcc_python_path = os.path.join(r, gcc_rel_python_path)
+            checked_paths.append(gcc_python_path)
 
-            print("Loaded stdlibc++ pretty printers")
-        else:
-            print("Could not find gcc python files at: {}".format(gcc_python_path))
+            print("Looking in {}".format(gcc_python_path))
+
+            if (os.path.exists(gcc_python_path)):
+
+                # Add to the path for the pretty printer
+                sys.path.insert(0, gcc_python_path)
+
+                # Now register the pretty printers
+                from libstdcxx.v6 import register_libstdcxx_printers
+                register_libstdcxx_printers(gdb.current_objfile())
+
+                print("Loaded stdlibc++ pretty printers from {}".format(gcc_python_path))
+                found = True
+                break
+
+        if (not found):
+            print("Could not find gcc python files at: {}".format(checked_paths))
             print(
                 "Ensure gxx_linux-64, gcc_linux-64, sysroot_linux-64, and gdb have been installed into the current conda environment"
             )

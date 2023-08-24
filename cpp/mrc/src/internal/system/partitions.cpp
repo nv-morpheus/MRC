@@ -18,6 +18,7 @@
 #include "internal/system/partitions.hpp"
 
 #include "internal/system/gpu_info.hpp"
+#include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/topology.hpp"
@@ -62,10 +63,17 @@ Partitions::Partitions(const SystemDefinition& system) : Partitions(system.topol
 
 Partitions::Partitions(const Topology& topology, const Options& options)
 {
+    // First create the global system host partition
+    m_sys_host_partition = std::make_unique<HostPartition>(
+        topology.cpu_set(),
+        topology.numaset_for_cpuset(topology.cpu_set()),
+        topology.object_at_depth(topology.depth_for_object(HWLOC_OBJ_MACHINE), 0)->total_memory);
+
+    m_sys_host_partition->set_engine_factory_cpu_sets(topology, options);
+
     VLOG(10) << "forming memory and device partitions";
 
     // the number of host partitions is determined by the placement options
-
     std::vector<std::shared_ptr<HostPartition>> host_partitions;
     std::vector<std::shared_ptr<DevicePartition>> device_partitions;
 
@@ -313,6 +321,11 @@ Partitions::Partitions(const Topology& topology, const Options& options)
     {
         m_device_partitions.emplace_back(*device);
     }
+}
+
+const HostPartition& Partitions::sys_host_partition() const
+{
+    return *m_sys_host_partition;
 }
 
 const PlacementStrategy& Partitions::cpu_strategy() const

@@ -25,7 +25,7 @@
 
 namespace mrc::runtime {
 
-class IPartition;
+class IPartitionRuntime;
 class IRemoteDescriptorManager;
 
 /**
@@ -40,10 +40,10 @@ class IRemoteDescriptorManager;
  * Most resources are specific to a partition. Each Runnable's Context will have a runtime discoverable default
  * partition id which is the suggestion set of resources to be used with that runnable.
  */
-class IRuntime
+class ISystemRuntime
 {
   public:
-    virtual ~IRuntime() = default;
+    virtual ~ISystemRuntime() = default;
 
     /**
      * @brief Number of partitions constructed by the runtime.
@@ -63,7 +63,7 @@ class IRuntime
      * @param partition_id
      * @return IPartition&
      */
-    virtual IPartition& partition(std::size_t partition_id) = 0;
+    virtual IPartitionRuntime& partition(std::size_t partition_id) = 0;
 };
 
 /**
@@ -77,10 +77,10 @@ class IRuntime
  * Publisher<T>/Subscriber<T> directly from IPartition which would propagate the dependencies of those objects thru the
  * interface API.
  */
-class IPartition
+class IPartitionRuntime
 {
   public:
-    virtual ~IPartition() = default;
+    virtual ~IPartitionRuntime() = default;
 
     /**
      * @brief Access the remote descriptor manager resource thru its interface

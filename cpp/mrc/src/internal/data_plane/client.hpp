@@ -22,7 +22,7 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/node/operators/node_component.hpp"
-#include "mrc/runtime/remote_descriptor.hpp"
+#include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -32,6 +32,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace mrc::node {
 template <typename T>
@@ -55,9 +56,18 @@ namespace mrc::data_plane {
 class Request;
 class DataPlaneResources;
 
-struct RemoteDescriptorMessage
+struct LocalDescriptorMessage
 {
-    mrc::runtime::RemoteDescriptor rd;
+    LocalDescriptorMessage() = default;
+    LocalDescriptorMessage(runtime::LocalDescriptorHandle handle,
+                           std::shared_ptr<ucx::Endpoint> endpoint,
+                           std::uint64_t tag) :
+      handle(std::move(handle)),
+      endpoint(std::move(endpoint)),
+      tag(tag)
+    {}
+
+    runtime::LocalDescriptorHandle handle;
     std::shared_ptr<ucx::Endpoint> endpoint;
     std::uint64_t tag;
 };
@@ -86,7 +96,7 @@ class Client final : public resources::PartitionResourceBase, private Service
                         InstanceID instance_id,
                         Request& request) const;
 
-    node::WritableProvider<RemoteDescriptorMessage>& remote_descriptor_channel();
+    node::WritableProvider<LocalDescriptorMessage>& remote_descriptor_channel();
 
     // primitive rdma and send/recv call
 
@@ -125,7 +135,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     const ucx::Endpoint& endpoint(const InstanceID& instance_id) const;
 
   private:
-    void issue_remote_descriptor(RemoteDescriptorMessage&& msg);
+    void issue_remote_descriptor(LocalDescriptorMessage msg);
 
     void do_service_start() final;
     void do_service_await_live() final;
@@ -139,7 +149,7 @@ class Client final : public resources::PartitionResourceBase, private Service
     mutable std::map<InstanceID, std::shared_ptr<ucx::Endpoint>> m_endpoints;
 
     std::unique_ptr<mrc::runnable::Runner> m_rd_writer;
-    std::unique_ptr<node::NodeComponent<RemoteDescriptorMessage>> m_rd_channel;
+    std::unique_ptr<node::NodeComponent<LocalDescriptorMessage>> m_rd_channel;
 
     friend DataPlaneResources;
 };

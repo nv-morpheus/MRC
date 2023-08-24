@@ -38,13 +38,20 @@
 #include <string>
 #include <utility>
 
+namespace mrc::pipeline {
+class ManifoldInstance;
+}
+
 namespace mrc::segment {
 
 class SegmentInstance;
 
 class EgressPortBase : public runnable::Launchable, public manifold::Connectable, public virtual ObjectProperties
 {
-    friend SegmentInstance;
+  private:
+    virtual edge::IWritableAcceptorBase& get_downstream_source() const = 0;
+
+    friend class mrc::pipeline::ManifoldInstance;
 };
 
 template <typename T>
@@ -61,22 +68,24 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
     EgressPort(SegmentAddress address, PortName name) :
       m_segment_address(address),
       m_port_name(std::move(name)),
-      m_sink(std::make_unique<node::RxNode<T>>())
+      m_node(std::make_unique<node::RxNode<T>>(rxcpp::operators::map([this](T data) {
+          return data;
+      })))
     {}
 
   private:
     node::RxSinkBase<T>* get_object() const final
     {
-        CHECK(m_sink) << "failed to acquire backing runnable for egress port " << m_port_name;
-        return m_sink.get();
+        CHECK(m_node) << "failed to acquire backing runnable for egress port " << m_port_name;
+        return m_node.get();
     }
 
     std::unique_ptr<runnable::Launcher> prepare_launcher(runnable::LaunchControl& launch_control) final
     {
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        CHECK(m_sink);
-        CHECK(m_manifold_connected) << "manifold not set for egress port";
-        return launch_control.prepare_launcher(std::move(m_sink));
+        CHECK(m_node);
+        // CHECK(m_manifold_connected) << "manifold not set for egress port";
+        return launch_control.prepare_launcher(std::move(m_node));
     }
 
     std::shared_ptr<manifold::Interface> make_manifold(runnable::IRunnableResources& resources) final
@@ -89,15 +98,20 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
         // egress ports connect to manifold inputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         DCHECK_EQ(manifold->port_name(), m_port_name);
-        CHECK(m_sink);
+        CHECK(m_node);
         CHECK(!m_manifold_connected);
-        manifold->add_input(m_segment_address, m_sink.get());
+        manifold->add_local_input(m_segment_address, m_node.get());
         m_manifold_connected = true;
+    }
+
+    edge::IWritableAcceptorBase& get_downstream_source() const override
+    {
+        return *m_node;
     }
 
     SegmentAddress m_segment_address;
     PortName m_port_name;
-    std::unique_ptr<node::RxNode<T>> m_sink;
+    std::unique_ptr<node::RxNode<T>> m_node;
     bool m_manifold_connected{false};
     runnable::LaunchOptions m_launch_options;
     std::mutex m_mutex;

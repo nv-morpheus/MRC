@@ -219,7 +219,7 @@ bool PluginModule::try_load_plugin(bool throw_on_error)
     try
     {
         m_plugin_load();
-    } catch (std::exception& error)
+    } catch (const std::exception& error)
     {
         if (throw_on_error)
         {
@@ -254,7 +254,7 @@ bool PluginModule::try_unload_plugin(bool throw_on_error)
         clear_plugin_interface();
 
         m_loaded = false;
-    } catch (std::exception& error)
+    } catch (const std::exception& error)
     {
         if (throw_on_error)
         {
@@ -286,7 +286,7 @@ bool PluginModule::try_build_plugin_interface(bool throw_on_error)
         get_entrypoint(PluginEntrypointList, reinterpret_cast<void**>(&m_plugin_list));
         get_entrypoint(PluginEntrypointLoad, reinterpret_cast<void**>(&m_plugin_load));
         get_entrypoint(PluginEntrypointUnload, reinterpret_cast<void**>(&m_plugin_unload));
-    } catch (std::invalid_argument& error)
+    } catch (const std::invalid_argument& error)
     {
         clear_plugin_interface();
         if (throw_on_error)

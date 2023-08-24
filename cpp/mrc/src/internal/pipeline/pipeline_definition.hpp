@@ -35,6 +35,7 @@ struct IngressPortsBase;
 
 namespace mrc::pipeline {
 class ISegment;
+class ManifoldDefinition;
 
 class PipelineDefinition : public IPipeline
 {
@@ -65,12 +66,16 @@ class PipelineDefinition : public IPipeline
 
     const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& segments() const;
 
+    std::shared_ptr<const ManifoldDefinition> find_manifold(const std::string& manifold_name) const;
     std::shared_ptr<const segment::SegmentDefinition> find_segment(SegmentID segment_id) const;
 
   private:
+    // std::shared_ptr<ManifoldDefinition> get_or_create_manifold(const std::string& manifold_name);
+
     utils::CollisionDetector m_segment_hasher;
     utils::CollisionDetector m_port_hasher;
 
+    std::map<std::string, std::shared_ptr<ManifoldDefinition>> m_manifolds;
     std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>> m_segments;
 };
 
