@@ -912,6 +912,7 @@ describe("Manifold", () => {
          expect(pipe2seg2.name).toEqual("my_seg2");
          expect(pipe2seg2.state!.refCount).toEqual(2);
 
+         // Simulate a graceful shutdown of the second pipeline.
          for (const worker of pipelineManager2.workersManager.workers) {
             for (const seg of worker.segments) {
                await seg.requestSegmentStop();
