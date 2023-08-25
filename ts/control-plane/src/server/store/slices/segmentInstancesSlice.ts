@@ -475,21 +475,21 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
 
 export function segmentInstancesConfigureSlice() {
    createWatcher(
-      "SegmentInstances",
-      segmentInstancesAdd,
-      segmentInstancesSelectById,
-      async (instance, listenerApi) => {
+      "SegmentInstances",  // resourceTypeString
+      segmentInstancesAdd, //  actionCreator
+      segmentInstancesSelectById,  // getResourceInstance
+      async (instance, listenerApi) => { // onCreated
          // Create any missing manifolds
          const manifolds = syncManifolds(listenerApi, instance);
 
          // Increment the ref count on our manifolds
       },
-      async (instance) => {},
-      async (instance) => {},
-      async (instance, listenerApi) => {
+      async (instance) => {}, // onRunning
+      async (instance) => {}, // onCompleted
+      async (instance, listenerApi) => {  // onStopped
          const manifolds = syncManifolds(listenerApi, instance);
       },
-      async (instance, listenerApi) => {
+      async (instance, listenerApi) => { // onDestroyed
          listenerApi.dispatch(segmentInstancesRemove(instance));
       }
    );
