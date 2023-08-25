@@ -335,7 +335,7 @@ function ensureOneLocal(dispatch: AppDispatch, state: RootState, manifold: IMani
 
 export function manifoldInstancesSyncSegments(manifoldId: string) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
-      const state = getState();
+      let state = getState();
 
       const found = manifoldInstancesSelectById(state, manifoldId);
 
@@ -368,19 +368,19 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
          syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
       });
 
-      let done = false;
-      while (!done) {
-         // Ensure that we have at least one local input and one local output
-         let manifold = manifoldInstancesSelectById(state, manifoldId);
-         if (!manifold) {
-            throw new Error(`Manifold Instance with ID: ${manifoldId} not found`);
-         }
-
-         let numDetached = ensureOneLocal(dispatch, state, manifold, false);
-         numDetached += ensureOneLocal(dispatch, state, manifold, true);
-
-         done = (numDetached === 0);
+      // Update the stage, and determine if we should detach any remote segments if we don't have a corresponding local
+      // segment. Specifically if a manifold doesn't contain any local inputs, then all of the remote outputs should be
+      // detached and if a manifold doesn't have any local outputs then all remote inputs should be detached.
+      state = getState();
+      // Ensure that we have at least one local input and one local output
+      let manifold = manifoldInstancesSelectById(state, manifoldId);
+      if (!manifold) {
+         throw new Error(`Manifold Instance with ID: ${manifoldId} not found`);
       }
+
+      let numDetached = ensureOneLocal(dispatch, state, manifold, false);
+      numDetached += ensureOneLocal(dispatch, state, manifold, true);
+      console.log(`Detached ${numDetached} segments from manifold ${manifoldId}`);
    };
 }
 
