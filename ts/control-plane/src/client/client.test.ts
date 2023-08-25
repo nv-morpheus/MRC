@@ -21,6 +21,19 @@ import { pipelineInstancesSelectById } from "@mrc/server/store/slices/pipelineIn
 import { workersSelectById } from "@mrc/server/store/slices/workersSlice";
 import exp from "constants";
 
+/*
+// Uncomment this block to disable Jest's rather verbose logging
+const jestConsole = console;
+
+beforeEach(() => {
+  global.console = require('console');
+});
+
+afterEach(() => {
+  global.console = jestConsole;
+});
+*/
+
 // class AsyncFlag<T> {
 //    private _promise: Promise<T>;
 //    private _resolve: ((value: T) => void) | undefined;
@@ -912,6 +925,7 @@ describe("Manifold", () => {
          expect(pipe2seg2.name).toEqual("my_seg2");
          expect(pipe2seg2.state!.refCount).toEqual(2);
 
+         // Simulate a graceful shutdown of the second pipeline.
          for (const worker of pipelineManager2.workersManager.workers) {
             for (const seg of worker.segments) {
                await seg.requestSegmentStop();
@@ -935,6 +949,7 @@ describe("Manifold", () => {
 
          await manifold1.syncActualSegments();
          await manifold2.syncActualSegments();
+
          manifold1State = manifold1.getState();
          manifold2State = manifold2.getState();
          expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
@@ -961,7 +976,7 @@ describe("Manifold", () => {
             for (const seg of worker.segments) {
                await seg.sendSegmenStopped();
                let segmentState = seg.getState();
-               expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
+               expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Destroyed);
                expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
             }
          }
@@ -1069,6 +1084,8 @@ describe("Manifold", () => {
                if (parseInt(seg.segmentId) === pipe2seg1Id) {
                   foundPipe2Seg1 = true;
                   await seg.requestSegmentStop();
+                  let segmentState = seg.getState();
+                  expect(segmentState.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopping);
                }
             }
          }
@@ -1092,6 +1109,9 @@ describe("Manifold", () => {
          await manifold2.syncActualSegments();
          manifold1State = manifold1.getState();
          manifold2State = manifold2.getState();
+
+         expect(manifold1State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
+         expect(manifold2State.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
          expect(Object.keys(manifold1State.requestedInputSegments)).toHaveLength(1);
          expect(Object.keys(manifold1State.actualInputSegments)).toHaveLength(1);
          expect(Object.keys(manifold1State.requestedOutputSegments)).toHaveLength(2);
@@ -1102,36 +1122,56 @@ describe("Manifold", () => {
          expect(Object.keys(manifold2State.requestedOutputSegments)).toHaveLength(1);
          expect(Object.keys(manifold2State.actualOutputSegments)).toHaveLength(1);
 
-         // pipe2seg2 should have gotten a stop request
+         // pipe2seg2 should still be running just fine consuming input from pipe1seg1
          let foundPipe2Seg2: boolean = false;
          for (const worker of pipelineManager2.workersManager.workers) {
             for (const seg of worker.segments) {
                if (parseInt(seg.segmentId) === pipe2seg2Id) {
                   foundPipe2Seg2 = true;
                   let segmentState = seg.getState();
-                  expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Stopped);
-                  await seg.requestSegmentStop();
+                  expect(segmentState.state!.requestedStatus).toEqual(ResourceRequestedStatus.Requested_Completed);
                }
             }
          }
 
          expect(foundPipe2Seg2).toBe(true);
 
-         let pipe2seg2 = state.segmentInstances!.entities[pipe2seg2Id!];
-
 
          // veirfy the refcount went down
          state = pipelineManager2.connectionManager.getClientState();
          let pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
          expect(pipe1seg1.name).toEqual("my_seg1");
-         expect(pipe1seg1.state!.refCount).toEqual(1);
+         expect(pipe1seg1.state!.refCount).toEqual(2);
 
          let pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
          expect(pipe1seg2.name).toEqual("my_seg2");
          expect(pipe1seg2.state!.refCount).toEqual(1);
 
+
+         // now stop pipe2seg2
+         foundPipe2Seg2 = false;
+         for (const worker of pipelineManager2.workersManager.workers) {
+            for (const seg of worker.segments) {
+               if (parseInt(seg.segmentId) === pipe2seg2Id) {
+                  foundPipe2Seg2 = true;
+                  await seg.requestSegmentStop();
+               }
+            }
+         }
+
          await manifold1.syncActualSegments();
          await manifold2.syncActualSegments();
+
+         // veirfy the refcount went down
+         state = pipelineManager2.connectionManager.getClientState();
+         pipe1seg1 = state.segmentInstances!.entities[pipe1seg1Id!];
+         expect(pipe1seg1.name).toEqual("my_seg1");
+         expect(pipe1seg1.state!.refCount).toEqual(1);
+
+         pipe1seg2 = state.segmentInstances!.entities[pipe1seg2Id!];
+         expect(pipe1seg2.name).toEqual("my_seg2");
+         expect(pipe1seg2.state!.refCount).toEqual(1);
+
 
          // Manifold2 should have been asked to shut down, manifold1 should still be running
          manifold1State = manifold1.getState();
@@ -1152,7 +1192,7 @@ describe("Manifold", () => {
 
          await manifold2.updateActualStatus(ResourceActualStatus.Actual_Stopped);
          manifold2State = manifold2.getState();
-         expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Completed);
+         expect(manifold2State.state!.actualStatus).toEqual(ResourceActualStatus.Actual_Stopped);
       });
    });
 

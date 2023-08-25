@@ -21,7 +21,6 @@ import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { AppDispatch, RootState, AppGetState } from "@mrc/server/store/store";
 import { yield_immediate } from "@mrc/common/utils";
-import { hasIn } from "lodash";
 
 function filterMappingByLocality(mapping: { [key: number]: boolean }, isLocal: boolean) : [string, boolean][] {
    // Ugh Object.entries & Object.keys both cast to string
@@ -116,7 +115,7 @@ export const manifoldInstancesSlice = createSlice({
          if (!found) {
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
-         
+
          const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
 
          // Check to make sure this hasnt been added already
@@ -163,7 +162,7 @@ export const manifoldInstancesSlice = createSlice({
          if (!found) {
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
-         
+
          const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
          const actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
 
@@ -197,7 +196,7 @@ export const manifoldInstancesSlice = createSlice({
 
          delete actualMap[action.payload.segment.address];
 
-         
+
          const numRequestedInputs: number = Object.keys(found.requestedInputSegments).length;
          const numActualInputs: number = Object.keys(found.actualInputSegments).length;
          const hasInputs: boolean = numActualInputs !== 0 || numRequestedInputs !== 0;
@@ -221,7 +220,7 @@ export const manifoldInstancesSlice = createSlice({
                // then tell the manifold it is OK to shutdown
                found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
             }
-         } 
+         }
       },
    },
    extraReducers: (builder) => {
@@ -309,29 +308,34 @@ function syncSegmentNameForManifold(
 function ensureOneLocal(dispatch: AppDispatch, state: RootState, manifold: IManifoldInstance, isInput: boolean) {
    // If we have 0 local inputs, then all of the remote outputs can be detached
    // If we have 0 local outputs, then all of our remote inputs can be detached
+   let numDetached = 0;
    const requestedMap = isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments;
    if (getNumLocal(requestedMap) === 0) {
       const requestedInvMap = isInput ? manifold.requestedOutputSegments : manifold.requestedInputSegments;
       const requestedInvRemotes: [string, boolean][] = filterMappingByLocality(requestedInvMap, false);
-      
+
       requestedInvRemotes.forEach(([segId, _]) => {
          const seg = segmentInstancesSelectById(state, segId);
          if (!seg) {
             throw new Error(`Could not find segment with ID: ${segId}`);
          }
-   
+
          dispatch(manifoldInstancesSlice.actions.detachRequestedSegment({
             is_input: !isInput,
             manifold: manifold,
             segment: seg,
          }));
+
+         numDetached++;
       });
    }
+
+   return numDetached;
 }
 
 export function manifoldInstancesSyncSegments(manifoldId: string) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
-      const state = getState();
+      let state = getState();
 
       const found = manifoldInstancesSelectById(state, manifoldId);
 
@@ -364,9 +368,19 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
          syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
       });
 
+      // Update the stage, and determine if we should detach any remote segments if we don't have a corresponding local
+      // segment. Specifically if a manifold doesn't contain any local inputs, then all of the remote outputs should be
+      // detached and if a manifold doesn't have any local outputs then all remote inputs should be detached.
+      state = getState();
       // Ensure that we have at least one local input and one local output
-      ensureOneLocal(dispatch, state, found, false);
-      ensureOneLocal(dispatch, state, found, true);
+      let manifold = manifoldInstancesSelectById(state, manifoldId);
+      if (!manifold) {
+         throw new Error(`Manifold Instance with ID: ${manifoldId} not found`);
+      }
+
+      let numDetached = ensureOneLocal(dispatch, state, manifold, false);
+      numDetached += ensureOneLocal(dispatch, state, manifold, true);
+      console.log(`Detached ${numDetached} segments from manifold ${manifoldId}`);
    };
 }
 
@@ -393,7 +407,7 @@ function manifoldInstanceUpdateActualSegment(
       // Increment the ref count of the segment [{"type": "ManifoldInstance", "id": "id"}]
       dispatch(segmentInstanceIncRefCount({ segment: segment }));
    } else {
-      // One of two cases: 
+      // One of two cases:
       //   1) Server asked the client to remove the segment and they did in which, and now we need to remove it from the actual
       //   2) Client is sending us an invalid segmentId
       if (segment.address in actualMapping) {
