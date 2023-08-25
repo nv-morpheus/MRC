@@ -808,7 +808,7 @@ describe("Manifold", () => {
       });
 
       test("Ref Counting", async () => {
-                  let state = pipelineManager.connectionManager.getClientState();
+         let state = pipelineManager.connectionManager.getClientState();
          expect(state.manifoldInstances!.ids).toHaveLength(1);
          expect(pipelineManager.manifoldsManager.manifoldIds).toEqual(state.manifoldInstances!.ids);
 
