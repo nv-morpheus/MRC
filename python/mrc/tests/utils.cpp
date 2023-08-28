@@ -20,12 +20,12 @@
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
-#include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>  // for gil_scoped_acquire
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <array>  // std::array needed for py::print
 #include <sstream>
 #include <stdexcept>
 
@@ -33,18 +33,15 @@ namespace mrc::pytests {
 
 namespace py = pybind11;
 
-// Simple test class which invokes Python's GC. Needed to repro #
-struct ObjCallingGC
+// Simple test class which uses pybind11's `gil_scoped_acquire` class in the destructor. Needed to repro #362
+struct RequireGilInDestructor
 {
-    ObjCallingGC() = default;
-
-    static void finalize()
+    ~RequireGilInDestructor()
     {
-        LOG(INFO) << "ObjCallingGC::finalize()";
+        // Grab the GIL to print
         py::gil_scoped_acquire gil;
-        py::object gc = py::module::import("gc");
-        LOG(INFO) << "ObjCallingGC::finalize() - calling collect";
-        gc.attr("collect")();
+
+        py::print("RequireGilInDestructor::~RequireGilInDestructor() - calling destructor");
     }
 };
 
@@ -66,7 +63,7 @@ PYBIND11_MODULE(utils, py_mod)
         },
         py::arg("msg") = "");
 
-    py::class_<ObjCallingGC>(py_mod, "ObjCallingGC").def(py::init<>()).def_static("finalize", &ObjCallingGC::finalize);
+    py::class_<RequireGilInDestructor>(py_mod, "RequireGilInDestructor").def(py::init<>());
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

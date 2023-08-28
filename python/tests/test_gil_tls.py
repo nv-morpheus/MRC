@@ -14,10 +14,9 @@
 # limitations under the License.
 
 import threading
-import weakref
 
 import mrc
-from mrc.tests.utils import ObjCallingGC
+from mrc.tests.utils import RequireGilInDestructor
 
 TLS = threading.local()
 
@@ -31,8 +30,7 @@ def test_gc_called_in_thread_finalizer():
 
     def source_gen():
         mrc.logging.log("source_gen")
-        x = ObjCallingGC()
-        weakref.finalize(x, x.finalize)
+        x = RequireGilInDestructor()
         TLS.x = x
         yield x
 
