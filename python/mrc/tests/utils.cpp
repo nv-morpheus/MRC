@@ -23,7 +23,6 @@
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>  // for gil_scoped_acquire
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
 #include <array>  // std::array needed for py::print
 #include <sstream>
