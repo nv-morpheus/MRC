@@ -52,29 +52,21 @@ jobs:
       - name: Get PR Info
         id: get-pr-info
         uses: rapidsai/shared-action-workflows/get-pr-info@branch-23.08
-        if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     outputs:
+      pr_info: ${{ steps.get-pr-info.outputs.pr-info }}
       is_pr: ${{ startsWith(github.ref_name, 'pull-request/') }}
-      is_main_branch: ${{ github.ref_name == 'main' }}
-      is_dev_branch: ${{ startsWith(github.ref_name, 'branch-') }}
-      has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
-      pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
+      is_main_branch: ${{ startsWith(github.ref_name, 'branch-') }}
+      has_conda_build_label: ${{ contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') }}
   ci_pipe:
     name: CI Pipeline
     needs: [prepare]
     uses: ./.github/workflows/ci_pipe.yml
     with:
-      # Run checks for any PR branch
       run_check: ${{ fromJSON(needs.prepare.outputs.is_pr) }}
-      # Run conda-build for main/dev branches and PRs with the conda-build label
-      conda_run_build: ${{ !fromJSON(needs.prepare.outputs.is_pr) || fromJSON(needs.prepare.outputs.has_conda_build_label) }}
-      # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
-      conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
-      # Build container
+      run_package_conda: ${{ fromJSON(needs.prepare.outputs.is_main_branch) || fromJSON(needs.prepare.outputs.has_conda_build_label) }}
+      upload_conda_package: ${{ fromJSON(needs.prepare.outputs.is_main_branch) }}
       container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230711
-      # Test container
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230711
-      # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
