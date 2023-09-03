@@ -27,6 +27,7 @@ option(MRC_BUILD_DOCS "Enable building of API documentation" OFF)
 option(MRC_BUILD_LIBRARY "Whether the entire MRC library should be built.
   If set to OFF, only the pieces needed for a target will be built. Set to ON if installing the library" ON)
 option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
+option(MRC_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
