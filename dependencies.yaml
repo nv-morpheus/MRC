@@ -48,7 +48,7 @@ dependencies:
           - python=3.10
   cudatoolkit:
     specific:
-      - output_types: conda
+      - output_types: [conda]
         matrices:
           - matrix:
               cuda: "11.8"
