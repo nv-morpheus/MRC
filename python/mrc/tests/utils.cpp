@@ -24,7 +24,6 @@
 #include <pybind11/gil.h>  // for gil_scoped_acquire
 #include <pybind11/pybind11.h>
 
-#include <array>  // std::array needed for py::print
 #include <sstream>
 #include <stdexcept>
 
@@ -37,10 +36,8 @@ struct RequireGilInDestructor
 {
     ~RequireGilInDestructor()
     {
-        // Grab the GIL to print
+        // Grab the GIL
         py::gil_scoped_acquire gil;
-
-        py::print("RequireGilInDestructor::~RequireGilInDestructor() - calling destructor");
     }
 };
 

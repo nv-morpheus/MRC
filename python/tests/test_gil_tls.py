@@ -21,15 +21,13 @@ from mrc.tests.utils import RequireGilInDestructor
 TLS = threading.local()
 
 
-def test_gc_called_in_thread_finalizer():
+def test_gil_thread_local_storage():
     """
     Test to reproduce issue #362
     No asserts needed if it doesn't segfault, then we're good
     """
-    mrc.logging.log("Building pipeline")
 
     def source_gen():
-        mrc.logging.log("source_gen")
         x = RequireGilInDestructor()
         TLS.x = x
         yield x
