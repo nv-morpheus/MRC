@@ -15,7 +15,6 @@ The **Morpheus Runtime Core** (MRC) library is a **reactive, network-aware, flex
 <!-- omit in toc -->
 ### Anatomy of a MRC Pipeline
 
-
 ![MRC Pipeline](docs/imgs/mrc_pipeline.jpg)
 
 <!-- omit in toc -->
