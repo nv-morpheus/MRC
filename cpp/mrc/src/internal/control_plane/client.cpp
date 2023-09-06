@@ -164,7 +164,7 @@ void Client::do_handle_event(event_t&& event)
         auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
         if (promise != nullptr)
         {
-            promise->set_value(std::move(event.msg));
+            promise->set_value(event.msg);
         }
     }
     break;
