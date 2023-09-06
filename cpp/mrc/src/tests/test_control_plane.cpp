@@ -66,7 +66,8 @@ static auto make_runtime(std::function<void(Options& options)> options_lambda = 
 {
     auto resources = std::make_unique<resources::Manager>(
         system::SystemProvider(tests::make_system([&](Options& options) {
-            options.topology().user_cpuset("0-3");
+            // options.topology().user_cpuset("0-3");
+            options.topology().user_cpuset("0");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
