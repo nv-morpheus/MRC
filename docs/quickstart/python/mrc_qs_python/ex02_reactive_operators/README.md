@@ -27,36 +27,33 @@ Lets look at a more complex example:
 value_count = 0
 value_sum = 0
 
-def node_fn(src: mrc.Observable, dst: mrc.Subscriber):
-    def update_obj(x: MyCustomClass):
-        nonlocal value_count
-        nonlocal value_sum
+def update_obj(x: MyCustomClass):
+    nonlocal value_count
+    nonlocal value_sum
 
-        # Alter the value property of the class
-        x.value = x.value * 2
+    # Alter the value property of the class
+    x.value = x.value * 2
 
-        # Update the sum values
-        value_count += 1
-        value_sum += x.value
+    # Update the sum values
+    value_count += 1
+    value_sum += x.value
 
-        return x
+    return x
 
-    def on_completed():
+def on_completed():
 
-        # Prevent divide by 0. Just in case
-        if (value_count <= 0):
-            return
+    # Prevent divide by 0. Just in case
+    if (value_count <= 0):
+        return
 
-        return MyCustomClass(value_sum / value_count, "Mean")
-
-    src.pipe(
-       ops.filter(lambda x: x.value % 2 == 0),
-       ops.map(update_obj),
-       ops.on_completed(on_completed)
-    ).subscribe(dst)
+    return MyCustomClass(value_sum / value_count, "Mean")
 
 # Make an intermediate node
-node = seg.make_node_full("node", node_fn)
+node = seg.make_node("node",
+  ops.filter(lambda x: x.value % 2 == 0),
+  ops.map(update_obj),
+  ops.on_completed(on_completed)
+)
 ```
 
 In this example, we are using 3 different operators: `filter`, `map`, and `on_completed`:
@@ -66,7 +63,7 @@ In this example, we are using 3 different operators: `filter`, `map`, and `on_co
 - The `map` operator can transform the incoming value and return a new value
   - In our example, we are doubling the `value` property and recording the total count and total sum of this property
 - The `on_completed` function is only called once when there are no more messages to process. You can optionally return a value which will be passed on to the rest of the pipeline.
-  - In our example, we are calculating the average from the sum and count values and emitting a new obect with the value set to the mean
+  - In our example, we are calculating the average from the sum and count values and emitting a new object with the value set to the mean
 
 In combination, these operators perform a higher level functionality to modify the stream, record some information, and finally print an analysis of all emitted values. Let's see it in practice.
 
