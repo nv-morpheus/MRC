@@ -110,7 +110,7 @@ class AsyncEventStatus
         m_future = std::move(future);
     }
 
-    static std::atomic_uint64_t s_request_id_counter;
+    static std::atomic_size_t s_request_id_counter;
 
     size_t m_request_id;
     Future<protos::Event> m_future;
