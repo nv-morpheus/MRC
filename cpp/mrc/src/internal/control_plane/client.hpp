@@ -24,6 +24,7 @@
 #include "internal/service.hpp"
 
 #include "mrc/core/error.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/protos/architect.grpc.pb.h"
@@ -35,6 +36,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -67,8 +69,54 @@ class Runner;
 
 namespace mrc::control_plane {
 
-template <typename ResponseT>
-class AsyncStatus;
+class AsyncEventStatus
+{
+  public:
+    size_t request_id() const
+    {
+        return m_request_id;
+    }
+
+    template <typename ResponseT>
+    Expected<ResponseT> await_response()
+    {
+        if (!m_future.valid())
+        {
+            throw exceptions::MrcRuntimeError(
+                "This AsyncEventStatus is not expecting a response or the response has already been awaited");
+        }
+
+        auto event = m_future.get();
+
+        if (event.has_error())
+        {
+            return Error::create(event.error().message());
+        }
+
+        ResponseT response;
+        if (!event.message().UnpackTo(&response))
+        {
+            throw Error::create("fatal error: unable to unpack message; server sent the wrong message type");
+        }
+
+        return response;
+    }
+
+  private:
+    AsyncEventStatus() : m_request_id(++s_request_id_counter) {}
+
+    void set_future(Future<protos::Event> future)
+    {
+        m_future = std::move(future);
+    }
+
+    static std::atomic_uint64_t s_request_id_counter;
+
+    size_t m_request_id;
+    Future<protos::Event> m_future;
+
+    friend class Client;
+};
 
 /**
  * @brief Primary Control Plane Client
@@ -128,13 +176,13 @@ class Client final : public resources::PartitionResourceBase, public Service
     template <typename ResponseT, typename RequestT>
     Expected<ResponseT> await_unary(const protos::EventType& event_type, RequestT&& request);
 
-    template <typename ResponseT, typename RequestT>
-    void async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status);
+    template <typename RequestT>
+    AsyncEventStatus async_unary(const protos::EventType& event_type, RequestT&& request);
 
     template <typename MessageT>
-    void issue_event(const protos::EventType& event_type, MessageT&& message);
+    AsyncEventStatus issue_event(const protos::EventType& event_type, MessageT&& message);
 
-    void issue_event(const protos::EventType& event_type);
+    AsyncEventStatus issue_event(const protos::EventType& event_type);
 
     bool has_subscription_service(const std::string& name) const;
 
@@ -150,6 +198,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     void request_update();
 
   private:
+    AsyncEventStatus write_event(protos::Event event, bool await_response = false);
+
     void route_state_update(std::uint64_t tag, protos::StateUpdate&& update);
 
     void do_service_start() final;
@@ -201,70 +251,39 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     std::mutex m_mutex;
 
+    std::map<size_t, Promise<protos::Event>> m_pending_events;
+
     friend network::NetworkResources;
 };
 
 // todo: create this object from the client which will own the stop_source
 // create this object with a stop_token associated with the client's stop_source
 
-template <typename ResponseT>
-class AsyncStatus
-{
-  public:
-    AsyncStatus() = default;
-
-    DELETE_COPYABILITY(AsyncStatus);
-    DELETE_MOVEABILITY(AsyncStatus);
-
-    Expected<ResponseT> await_response()
-    {
-        // todo(ryan): expand this into a wait_until with a deadline and a stop token
-        auto event = m_promise.get_future().get();
-
-        if (event.has_error())
-        {
-            return Error::create(event.error().message());
-        }
-
-        ResponseT response;
-        if (!event.message().UnpackTo(&response))
-        {
-            throw Error::create("fatal error: unable to unpack message; server sent the wrong message type");
-        }
-
-        return response;
-    }
-
-  private:
-    Promise<protos::Event> m_promise;
-    friend Client;
-};
-
 template <typename ResponseT, typename RequestT>
 Expected<ResponseT> Client::await_unary(const protos::EventType& event_type, RequestT&& request)
 {
-    AsyncStatus<ResponseT> status;
-    async_unary(event_type, std::move(request), status);
-    return status.await_response();
+    auto status = this->async_unary(event_type, std::move(request));
+    return status.template await_response<ResponseT>();
 }
 
-template <typename ResponseT, typename RequestT>
-void Client::async_unary(const protos::EventType& event_type, RequestT&& request, AsyncStatus<ResponseT>& status)
+template <typename RequestT>
+AsyncEventStatus Client::async_unary(const protos::EventType& event_type, RequestT&& request)
 {
     protos::Event event;
     event.set_event(event_type);
-    event.set_tag(reinterpret_cast<std::uint64_t>(&status.m_promise));
     CHECK(event.mutable_message()->PackFrom(request));
-    m_writer->await_write(std::move(event));
+
+    return this->write_event(std::move(event), true);
 }
 
 template <typename MessageT>
-void Client::issue_event(const protos::EventType& event_type, MessageT&& message)
+AsyncEventStatus Client::issue_event(const protos::EventType& event_type, MessageT&& message)
 {
     protos::Event event;
     event.set_event(event_type);
     CHECK(event.mutable_message()->PackFrom(message));
-    m_writer->await_write(std::move(event));
+
+    return this->write_event(std::move(event), false);
 }
 
 }  // namespace mrc::control_plane
