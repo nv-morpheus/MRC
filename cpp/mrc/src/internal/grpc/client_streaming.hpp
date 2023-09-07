@@ -195,10 +195,11 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         while (s.is_subscribed())
         {
             CHECK(m_stream);
-            Promise<bool> read;
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
             IncomingData data;
-            m_stream->Read(&data.msg, &read);
-            auto ok = read.get_future().get();
+            m_stream->Read(&data.msg, promise);
+            auto ok = future.get();
             if (!ok)
             {
                 m_write_channel.reset();
@@ -216,9 +217,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> promise;
-            m_stream->Write(request, &promise);
-            auto ok = promise.get_future().get();
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
+            m_stream->Write(request, promise);
+            auto ok = future.get();
             if (!ok)
             {
                 m_can_write = false;
@@ -234,9 +236,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> writes_done;
-            m_stream->WritesDone(&writes_done);
-            writes_done.get_future().get();
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
+            m_stream->WritesDone(promise);
+            future.get();
             DVLOG(10) << "client issued writes done to server";
         };
     }
@@ -284,9 +287,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         m_stream = m_prepare_fn(&m_context);
 
         DVLOG(10) << "starting grpc bidi client stream";
-        Promise<bool> promise;
-        m_stream->StartCall(&promise);
-        auto ok = promise.get_future().get();
+        auto* promise = new Promise<bool>;
+        auto future   = promise->get_future();
+        m_stream->StartCall(promise);
+        auto ok = future.get();
 
         if (!ok)
         {
@@ -328,9 +332,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             m_writer->await_join();
             m_reader->await_join();
 
-            Promise<bool> finish;
-            m_stream->Finish(&m_status, &finish);
-            auto ok = finish.get_future().get();
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
+            m_stream->Finish(&m_status, promise);
+            auto ok = future.get();
         }
     }
 

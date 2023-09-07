@@ -223,10 +223,11 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         while (s.is_subscribed())
         {
             CHECK(m_stream);
-            Promise<bool> read;
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
             IncomingData data;
-            m_stream->Read(&data.msg, &read);
-            auto ok     = read.get_future().get();
+            m_stream->Read(&data.msg, promise);
+            auto ok     = future.get();
             data.ok     = ok;
             data.stream = writer();
             s.on_next(std::move(data));
@@ -247,9 +248,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> promise;
-            m_stream->Write(request, &promise);
-            auto ok = promise.get_future().get();
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
+            m_stream->Write(request, promise);
+            auto ok = future.get();
             if (!ok)
             {
                 DVLOG(10) << "server failed to write to client; disabling writes and beginning shutdown";
@@ -272,9 +274,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
             }
 
             DVLOG(10) << "server issuing finish";
-            Promise<bool> finish;
-            m_stream->Finish(*m_status, &finish);
-            auto ok = finish.get_future().get();
+            auto* promise = new Promise<bool>;
+            auto future   = promise->get_future();
+            m_stream->Finish(*m_status, promise);
+            auto ok = future.get();
             DVLOG(10) << "server done with finish";
         }
     }
@@ -317,9 +320,10 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
     void do_service_start() final
     {
-        Promise<bool> promise;
-        m_init_fn(&promise);
-        auto ok = promise.get_future().get();
+        auto* promise = new Promise<bool>;
+        auto future   = promise->get_future();
+        m_init_fn(promise);
+        auto ok = future.get();
 
         if (!ok)
         {
