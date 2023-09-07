@@ -60,7 +60,10 @@ function sed_runner() {
 
 # .gitmodules
 git submodule set-branch -b branch-${NEXT_SHORT_TAG} morpheus_utils
-git submodule update --remote
+if [[ "$(git diff --name-only | grep .gitmodules)" != "" ]]; then
+   # Only update the submodules if setting the branch changed .gitmodules
+   git submodule update --remote
+fi
 
 # Root CMakeLists.txt
 sed_runner 's/'"VERSION ${CURRENT_FULL_VERSION}.*"'/'"VERSION ${NEXT_FULL_VERSION}"'/g' CMakeLists.txt
