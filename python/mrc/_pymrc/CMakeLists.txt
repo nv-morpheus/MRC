@@ -49,8 +49,9 @@ target_link_libraries(pymrc
   PUBLIC
     ${PROJECT_NAME}::libmrc
     ${Python_LIBRARIES}
-    prometheus-cpp::core
     pybind11::pybind11
+  PRIVATE
+    prometheus-cpp::core
 )
 
 target_include_directories(pymrc
