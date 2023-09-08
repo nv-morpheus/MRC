@@ -49,12 +49,14 @@ std::atomic_uint64_t AsyncEventStatus::s_request_id_counter;
 
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
   resources::PartitionResourceBase(base),
+  Service("control_plane::Client"),
   m_cq(std::move(cq)),
   m_owns_progress_engine(false)
 {}
 
 Client::Client(resources::PartitionResourceBase& base) :
   resources::PartitionResourceBase(base),
+  Service("control_plane::Client"),
   m_cq(std::make_shared<grpc::CompletionQueue>()),
   m_owns_progress_engine(true)
 {}

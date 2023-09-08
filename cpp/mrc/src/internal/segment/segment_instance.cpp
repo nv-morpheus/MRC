@@ -54,6 +54,7 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
                                  SegmentRank rank,
                                  pipeline::PipelineResources& resources,
                                  std::size_t partition_id) :
+  Service("segment::SegmentInstance"),
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),

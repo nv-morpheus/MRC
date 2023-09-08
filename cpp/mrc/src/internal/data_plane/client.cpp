@@ -64,6 +64,7 @@ Client::Client(resources::PartitionResourceBase& base,
                control_plane::client::ConnectionsManager& connections_manager,
                memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
+  Service("data_plane::Client"),
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),

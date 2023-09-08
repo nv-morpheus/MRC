@@ -76,6 +76,7 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
 
 ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system) :
   SystemProvider(std::move(system)),
+  Service("ExecutorDefinition"),
   m_resources_manager(std::make_unique<resources::Manager>(*this))
 {}
 

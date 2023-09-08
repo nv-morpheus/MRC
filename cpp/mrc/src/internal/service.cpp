@@ -17,88 +17,36 @@
 
 #include "internal/service.hpp"
 
+#include "mrc/core/utils.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/utils/string_utils.hpp"
+
 #include <glog/logging.h>
 
+#include <future>
+#include <mutex>
 #include <ostream>
 #include <utility>
 
 namespace mrc {
 
+Service::Service(std::string service_name) : m_service_name(std::move(service_name)) {}
+
 Service::~Service()
 {
+    if (!m_call_in_destructor_called)
+    {
+        LOG(ERROR) << "Must call Service::call_in_destructor to ensure service is cleaned up before being "
+                      "destroyed";
+    }
+
     auto state = this->state();
     CHECK(state == ServiceState::Initialized || state == ServiceState::Completed);
 }
 
-void Service::service_start()
+const std::string& Service::service_name() const
 {
-    if (forward_state(ServiceState::Running))
-    {
-        do_service_start();
-    }
-}
-
-void Service::service_await_live()
-{
-    do_service_await_live();
-}
-
-void Service::service_stop()
-{
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Stopping)
-        {
-            execute = (m_state < ServiceState::Stopping);
-            m_state = ServiceState::Stopping;
-        }
-    }
-    if (execute)
-    {
-        do_service_stop();
-    }
-}
-
-void Service::service_kill()
-{
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Killing)
-        {
-            execute = (m_state < ServiceState::Killing);
-            m_state = ServiceState::Killing;
-        }
-    }
-    if (execute)
-    {
-        do_service_kill();
-    }
-}
-
-void Service::service_await_join()
-{
-    bool execute = false;
-    {
-        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-        if (m_state < ServiceState::Completed)
-        {
-            execute = (m_state < ServiceState::Completed);
-            m_state = ServiceState::Awaiting;
-        }
-    }
-    if (execute)
-    {
-        do_service_await_join();
-        forward_state(ServiceState::Completed);
-    }
-}
-
-const ServiceState& Service::state() const
-{
-    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    return m_state;
+    return m_service_name;
 }
 
 bool Service::is_service_startable() const
@@ -107,41 +55,247 @@ bool Service::is_service_startable() const
     return (m_state == ServiceState::Initialized);
 }
 
-bool Service::forward_state(ServiceState new_state)
+bool Service::is_running() const
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    CHECK(m_state <= new_state) << m_description
-                                << ": invalid ServiceState requested; ServiceState is only allowed to advance";
-    if (m_state < new_state)
+    return (m_state > ServiceState::Initialized && m_state < ServiceState::Completed);
+}
+
+const ServiceState& Service::state() const
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    return m_state;
+}
+
+void Service::service_start()
+{
+    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+    if (!this->is_service_startable())
     {
-        m_state = new_state;
-        return true;
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service has already been started"));
     }
-    return false;
+
+    if (forward_state(ServiceState::Starting))
+    {
+        // Unlock the mutex before calling start to avoid a deadlock
+        lock.unlock();
+
+        this->do_service_start();
+
+        this->forward_state(ServiceState::Running);
+    }
+}
+
+void Service::service_await_live()
+{
+    {
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+        if (this->is_service_startable())
+        {
+            throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service must be started before "
+                                                                                     "awaiting live"));
+        }
+
+        // Check if this is our first call to service_await_join
+        if (!m_service_await_live_called)
+        {
+            // Prevent reentry
+            m_service_await_live_called = true;
+
+            // We now create a promise and a future to track the completion of this function
+            Promise<void> live_promise;
+
+            m_live_future = live_promise.get_future();
+
+            // Unlock the mutex before calling await to avoid a deadlock
+            lock.unlock();
+
+            try
+            {
+                {
+                    // Now call the await join (this can throw!)
+                    this->do_service_await_live();
+                }
+
+                // Set the value only if there was not an exception
+                live_promise.set_value();
+
+            } catch (...)
+            {
+                // Join must have thrown, set the exception in the promise (it will be retrieved later)
+                live_promise.set_exception(std::current_exception());
+            }
+        }
+    }
+
+    // Wait for the future to be returned. This will rethrow and exception thrown in do_service_await_join
+    m_live_future.get();
+}
+
+void Service::service_stop()
+{
+    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+    if (this->is_service_startable())
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service must be started before "
+                                                                                 "stopping"));
+    }
+
+    // Ensure we are at least in the stopping state. If so, execute the stop call
+    if (this->ensure_state(ServiceState::Stopping))
+    {
+        lock.unlock();
+
+        this->do_service_stop();
+    }
+}
+
+void Service::service_kill()
+{
+    std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+    if (this->is_service_startable())
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service must be started before "
+                                                                                 "killing"));
+    }
+
+    // Ensure we are at least in the stopping state. If so, execute the stop call
+    if (this->ensure_state(ServiceState::Killing))
+    {
+        lock.unlock();
+
+        this->do_service_kill();
+    }
+}
+
+void Service::service_await_join()
+{
+    {
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+        if (this->is_service_startable())
+        {
+            throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service must be started before "
+                                                                                     "awaiting join"));
+        }
+
+        // Check if this is our first call to service_await_join
+        if (!m_service_await_join_called)
+        {
+            // Prevent reentry
+            m_service_await_join_called = true;
+
+            // We now create a promise and a future to track the completion of the service
+            Promise<void> completed_promise;
+
+            m_completed_future = completed_promise.get_future();
+
+            // Unlock the mutex before calling await join to avoid a deadlock
+            lock.unlock();
+
+            try
+            {
+                {
+                    Unwinder ensure_completed_set([this]() {
+                        // Always set the state to completed before releasing the future
+                        this->forward_state(ServiceState::Completed);
+                    });
+
+                    // Now call the await join (this can throw!)
+                    this->do_service_await_join();
+                }
+
+                // Set the value only if there was not an exception
+                completed_promise.set_value();
+
+            } catch (...)
+            {
+                // Join must have thrown, set the exception in the promise (it will be retrieved later)
+                completed_promise.set_exception(std::current_exception());
+            }
+        }
+    }
+
+    // Wait for the completed future to be returned. This will rethrow and exception thrown in do_service_await_join
+    m_completed_future.get();
+}
+
+std::string Service::debug_prefix() const
+{
+    return MRC_CONCAT_STR("Service[" << m_service_name << "]:");
 }
 
 void Service::call_in_destructor()
 {
+    // Guarantee that we set the flag that this was called
+    Unwinder ensure_flag([this]() {
+        m_call_in_destructor_called = true;
+    });
+
     auto state = this->state();
     if (state > ServiceState::Initialized)
     {
         if (state == ServiceState::Running)
         {
-            LOG(ERROR) << m_description << ": service was not stopped/killed before being destructed; issuing kill";
-            service_kill();
+            LOG(ERROR) << this->debug_prefix()
+                       << ": service was not stopped/killed before being destructed; issuing kill";
+            this->service_kill();
         }
 
         if (state != ServiceState::Completed)
         {
-            LOG(ERROR) << m_description << ": service was not joined before being destructed; issuing join";
-            service_await_join();
+            LOG(ERROR) << this->debug_prefix() << ": service was not joined before being destructed; issuing join";
+            this->service_await_join();
         }
     }
 }
 
 void Service::service_set_description(std::string description)
 {
-    m_description = std::move(description);
+    m_service_name = std::move(description);
+}
+
+bool Service::forward_state(ServiceState new_state, bool assert_forward)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    // State needs to always be moving foward or the same
+    CHECK_GE(new_state, m_state) << this->debug_prefix()
+                                 << " invalid ServiceState requested; ServiceState is only allowed to advance. "
+                                    "Current: "
+                                 << m_state << ", Requested: " << new_state;
+
+    if (m_state < new_state)
+    {
+        DVLOG(20) << this->debug_prefix() << " changing state. From: " << m_state << " to " << new_state;
+
+        m_state = new_state;
+
+        return true;
+    }
+
+    CHECK(!assert_forward) << this->debug_prefix()
+                           << " invalid ServiceState requested; ServiceState was required to move forward "
+                              "but the state was already set to "
+                           << m_state;
+
+    return false;
+}
+
+bool Service::ensure_state(ServiceState ensure_state)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    if (ensure_state > m_state)
+    {
+        return forward_state(ensure_state);
+    }
+
+    return false;
 }
 
 }  // namespace mrc

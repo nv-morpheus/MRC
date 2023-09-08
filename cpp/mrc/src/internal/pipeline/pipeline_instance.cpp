@@ -46,6 +46,7 @@ namespace mrc::pipeline {
 PipelineInstance::PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
                                    resources::Manager& resources) :
   PipelineResources(resources),
+  Service("pipeline::PipelineInstance"),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);
