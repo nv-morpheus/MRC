@@ -111,7 +111,6 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
         }
     });
 
-    manager->service_start();
     manager->push_updates(std::move(update));
     manager->service_await_join();
 

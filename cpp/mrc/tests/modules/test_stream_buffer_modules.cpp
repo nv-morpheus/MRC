@@ -70,7 +70,7 @@ TEST_F(TestStreamBufferModule, InitailizationTest)
 
     Executor executor(options);
     executor.register_pipeline(std::move(m_pipeline));
-    executor.stop();
+    executor.start();
     executor.join();
 }
 

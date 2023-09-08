@@ -24,6 +24,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
+#include "internal/service.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -53,7 +54,10 @@ PipelineInstance::PipelineInstance(std::shared_ptr<const PipelineDefinition> def
     m_joinable_future = m_joinable_promise.get_future().share();
 }
 
-PipelineInstance::~PipelineInstance() = default;
+PipelineInstance::~PipelineInstance()
+{
+    Service::call_in_destructor();
+}
 
 void PipelineInstance::update()
 {

@@ -129,7 +129,6 @@ void ExecutorDefinition::join()
 void ExecutorDefinition::do_service_start()
 {
     CHECK(m_pipeline_manager);
-    m_pipeline_manager->service_start();
 
     pipeline::SegmentAddresses initial_segments;
     for (const auto& [id, segment] : m_pipeline_manager->pipeline().segments())

@@ -25,6 +25,7 @@
 #include "internal/memory/transient_pool.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
@@ -71,7 +72,10 @@ Client::Client(resources::PartitionResourceBase& base,
   m_rd_channel(std::make_unique<node::NodeComponent<RemoteDescriptorMessage>>())
 {}
 
-Client::~Client() = default;
+Client::~Client()
+{
+    Service::call_in_destructor();
+}
 
 std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& id) const
 {

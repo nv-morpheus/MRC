@@ -81,9 +81,19 @@ void Service::service_start()
         // Unlock the mutex before calling start to avoid a deadlock
         lock.unlock();
 
-        this->do_service_start();
+        try
+        {
+            this->do_service_start();
 
-        this->forward_state(ServiceState::Running);
+            // Use ensure_state here in case the service itself called stop or kill
+            this->ensure_state(ServiceState::Running);
+        } catch (...)
+        {
+            // On error, set this to completed and rethrow the error to allow for cleanup
+            this->forward_state(ServiceState::Completed);
+
+            throw;
+        }
     }
 }
 

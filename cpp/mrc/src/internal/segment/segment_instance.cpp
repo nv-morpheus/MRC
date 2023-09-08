@@ -79,7 +79,10 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
                     .get();
 }
 
-SegmentInstance::~SegmentInstance() = default;
+SegmentInstance::~SegmentInstance()
+{
+    Service::call_in_destructor();
+}
 
 const std::string& SegmentInstance::name() const
 {

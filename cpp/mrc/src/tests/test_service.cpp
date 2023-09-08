@@ -335,6 +335,19 @@ TEST_F(TestService, MultipleJoinCalls)
     EXPECT_EQ(service.await_join_call_count(), 1);
 }
 
+TEST_F(TestService, StartWithException)
+{
+    SimpleService service;
+
+    service.set_start_callback([]() {
+        throw exceptions::MrcRuntimeError("Live Exception");
+    });
+
+    EXPECT_ANY_THROW(service.service_start());
+
+    EXPECT_EQ(service.state(), ServiceState::Completed);
+}
+
 TEST_F(TestService, LiveWithException)
 {
     SimpleService service;

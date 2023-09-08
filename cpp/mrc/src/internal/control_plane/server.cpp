@@ -92,7 +92,10 @@ Server::Server(runnable::RunnableResources& runnable) :
   m_server(m_runnable)
 {}
 
-Server::~Server() = default;
+Server::~Server()
+{
+    Service::call_in_destructor();
+}
 
 void Server::do_service_start()
 {
