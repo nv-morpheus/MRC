@@ -155,7 +155,7 @@ docker build -t mrc:latest .
 ```
 To run the container
 ```bash
-docker run --gpus all --rm -it mrc:latest /bin/bash
+docker run --gpus all --cap-add=sys_nice -v $PWD:/work --rm -it mrc:latest /bin/bash
 ```
 
 ## Quickstart Guide
