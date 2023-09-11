@@ -155,8 +155,12 @@ docker build -t mrc:latest .
 ```
 To run the container
 ```bash
-docker run --gpus all --rm -it mrc:latest /bin/bash
+docker run --gpus all --cap-add=sys_nice -v $PWD:/work --rm -it mrc:latest /bin/bash
 ```
+
+> **Note:**
+> Users wishing to debug MRC in a Docker container should add the following to the `docker run` command:
+> `--cap-add=SYS_PTRACE`
 
 ## Quickstart Guide
 
