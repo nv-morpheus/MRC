@@ -19,6 +19,7 @@
 
 #include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
 #include "internal/grpc/client_streaming.hpp"
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
@@ -225,7 +226,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     // if true, then the following runners should not be null
     // if false, then the following runners must be null
     const bool m_owns_progress_engine;
-    std::unique_ptr<mrc::runnable::Runner> m_progress_handler;
+    std::unique_ptr<mrc::rpc::PromiseHandler> m_progress_handler;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
     std::unique_ptr<mrc::runnable::Runner> m_event_handler;
 

@@ -19,7 +19,6 @@
 
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/grpc/progress_engine.hpp"
-#include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
 #include "internal/system/system.hpp"
@@ -78,13 +77,11 @@ void Client::do_service_start()
     if (m_owns_progress_engine)
     {
         CHECK(m_cq);
-        auto progress_engine  = std::make_unique<rpc::ProgressEngine>(m_cq);
-        auto progress_handler = std::make_unique<rpc::PromiseHandler>();
+        auto progress_engine = std::make_unique<rpc::ProgressEngine>(m_cq);
+        m_progress_handler   = std::make_unique<rpc::PromiseHandler>();
 
-        mrc::make_edge(*progress_engine, *progress_handler);
+        mrc::make_edge(*progress_engine, *m_progress_handler);
 
-        m_progress_handler =
-            runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_handler))->ignition();
         m_progress_engine =
             runnable().launch_control().prepare_launcher(launch_options(), std::move(progress_engine))->ignition();
     }
@@ -140,7 +137,6 @@ void Client::do_service_await_live()
     if (m_owns_progress_engine)
     {
         m_progress_engine->await_live();
-        m_progress_handler->await_live();
     }
     m_event_handler->await_live();
 }
@@ -155,7 +151,6 @@ void Client::do_service_await_join()
     {
         m_cq->Shutdown();
         m_progress_engine->await_join();
-        m_progress_handler->await_join();
     }
 }
 
