@@ -19,11 +19,11 @@ name: mrc
 channels:
     - conda-forge
 dependencies:
-    - clang=16
-    - clang-tools=16
-    - clangdev=16
-    - clangxx=16
-    - libclang=16
-    - libclang-cpp=16
-    - llvmdev=16
-    - include-what-you-use
+    - clang=15
+    - clang-tools=15
+    - clangdev=15
+    - clangxx=15
+    - libclang=15
+    - libclang-cpp=15
+    - llvmdev=15
+    - include-what-you-use=0.19
