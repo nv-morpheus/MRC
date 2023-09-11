@@ -158,6 +158,10 @@ To run the container
 docker run --gpus all --cap-add=sys_nice -v $PWD:/work --rm -it mrc:latest /bin/bash
 ```
 
+> **Note:**
+> Users wishing to debug MRC in a Docker container should add the following to the `docker run` command:
+> `--cap-add=SYS_PTRACE`
+
 ## Quickstart Guide
 
 To quickly learn about both the C++ and Python MRC APIs, including following along with various complexity examples, we recommend following the MRC Quickstart Repository located [here](/docs/quickstart/README.md). This tutorial walks new users through topics like
