@@ -29,15 +29,21 @@ namespace mrc::rpc {
 /**
  * @brief MRC Sink to handle ProgressEvents which correspond to Promise<bool> tags
  */
-class PromiseHandler final : public mrc::node::GenericSink<ProgressEvent>
+class PromiseHandler final : public mrc::node::GenericSinkComponent<ProgressEvent>
 {
-    void on_data(ProgressEvent&& event) final
+    mrc::channel::Status on_data(ProgressEvent&& event) final
     {
         DCHECK(event.tag != nullptr);
         auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
         promise->set_value(event.ok);
         delete promise;
-    }
+        return mrc::channel::Status::success;
+    };
+
+    void on_complete() override
+    {
+        SinkProperties<ProgressEvent>::release_edge_connection();
+    };
 };
 
 }  // namespace mrc::rpc

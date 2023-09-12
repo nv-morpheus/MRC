@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/service.hpp"
 
 #include <grpcpp/grpcpp.h>
@@ -61,7 +62,7 @@ class Server : public Service
     std::shared_ptr<grpc::ServerCompletionQueue> m_cq;
     std::unique_ptr<grpc::Server> m_server;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
-    std::unique_ptr<mrc::runnable::Runner> m_event_hander;
+    std::unique_ptr<mrc::rpc::PromiseHandler> m_event_hander;
 };
 
 }  // namespace mrc::rpc
