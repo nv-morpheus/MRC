@@ -18,6 +18,7 @@
 #include "internal/grpc/server.hpp"
 
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
@@ -46,10 +47,11 @@ void Server::do_service_start()
     m_server = m_builder.BuildAndStart();
 
     auto progress_engine = std::make_unique<ProgressEngine>(m_cq);
-    m_event_hander       = std::make_unique<PromiseHandler>();
-    mrc::make_edge(*progress_engine, *m_event_hander);
+    auto event_handler   = std::make_unique<PromiseHandler>();
+    mrc::make_edge(*progress_engine, *event_handler);
 
     m_progress_engine = m_runnable.launch_control().prepare_launcher(std::move(progress_engine))->ignition();
+    m_event_hander    = m_runnable.launch_control().prepare_launcher(std::move(event_handler))->ignition();
 }
 
 void Server::do_service_stop()
@@ -68,17 +70,19 @@ void Server::do_service_kill()
 
 void Server::do_service_await_live()
 {
-    if (m_progress_engine)
+    if (m_progress_engine && m_event_hander)
     {
         m_progress_engine->await_live();
+        m_event_hander->await_live();
     }
 }
 
 void Server::do_service_await_join()
 {
-    if (m_progress_engine)
+    if (m_progress_engine && m_event_hander)
     {
         m_progress_engine->await_join();
+        m_event_hander->await_join();
     }
 }
 
