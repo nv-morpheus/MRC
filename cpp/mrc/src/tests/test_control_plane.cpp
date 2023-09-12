@@ -66,7 +66,7 @@ static auto make_runtime(std::function<void(Options& options)> options_lambda = 
 {
     auto resources = std::make_unique<resources::Manager>(
         system::SystemProvider(tests::make_system([&](Options& options) {
-            options.topology().user_cpuset("0-3");
+            options.topology().user_cpuset("0");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
@@ -85,7 +85,10 @@ class TestControlPlane : public ::testing::Test
 
 TEST_F(TestControlPlane, LifeCycle)
 {
-    auto sr     = make_runtime();
+    auto sr     = make_runtime([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+    });
     auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();

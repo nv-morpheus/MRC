@@ -23,6 +23,7 @@
 
 #include <glog/logging.h>
 
+#include <exception>
 #include <future>
 #include <mutex>
 #include <ostream>
@@ -222,8 +223,9 @@ void Service::service_await_join()
                 // Set the value only if there was not an exception
                 completed_promise.set_value();
 
-            } catch (...)
+            } catch (const std::exception& ex)
             {
+                LOG(ERROR) << this->debug_prefix() << " caught exception in service_await_join: " << ex.what();
                 // Join must have thrown, set the exception in the promise (it will be retrieved later)
                 completed_promise.set_exception(std::current_exception());
             }
