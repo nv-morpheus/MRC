@@ -22,7 +22,6 @@
 #include "mrc/node/generic_sink.hpp"
 
 #include <boost/fiber/all.hpp>
-#include <glog/logging.h>
 
 namespace mrc::rpc {
 
@@ -33,10 +32,8 @@ class PromiseHandler final : public mrc::node::GenericSinkComponent<ProgressEven
 {
     mrc::channel::Status on_data(ProgressEvent&& event) final
     {
-        DCHECK(event.tag != nullptr);
         auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
         promise->set_value(event.ok);
-        delete promise;
         return mrc::channel::Status::success;
     };
 

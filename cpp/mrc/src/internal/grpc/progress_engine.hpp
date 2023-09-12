@@ -39,8 +39,8 @@ namespace mrc::rpc {
  */
 struct ProgressEvent
 {
-    void* tag = nullptr;
-    bool ok   = false;
+    void* tag;
+    bool ok;
 };
 
 /**
