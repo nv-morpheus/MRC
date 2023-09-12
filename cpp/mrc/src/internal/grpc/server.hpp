@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "internal/grpc/promise_handler.hpp"
 #include "internal/service.hpp"
 
 #include <grpcpp/grpcpp.h>
@@ -34,6 +33,10 @@ class RunnableResources;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
+
+namespace mrc::rpc {
+class PromiseHandler;
+}  // namespace mrc::rpc
 
 namespace mrc::rpc {
 

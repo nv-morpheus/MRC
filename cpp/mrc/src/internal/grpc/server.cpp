@@ -18,6 +18,7 @@
 #include "internal/grpc/server.hpp"
 
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"  // for PromiseHandler
 #include "internal/runnable/runnable_resources.hpp"
 
 #include "mrc/edge/edge_builder.hpp"

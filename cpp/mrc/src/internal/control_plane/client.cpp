@@ -19,6 +19,8 @@
 
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"  // for PromiseHandler
+#include "internal/grpc/stream_writer.hpp"    // for StreamWriter
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
 #include "internal/system/system.hpp"
@@ -35,6 +37,7 @@
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
+#include <boost/fiber/future/promise.hpp>  // for promise
 #include <google/protobuf/any.pb.h>
 #include <grpcpp/grpcpp.h>
 #include <rxcpp/rx.hpp>

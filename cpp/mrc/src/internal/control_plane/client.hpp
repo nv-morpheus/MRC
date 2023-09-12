@@ -19,8 +19,6 @@
 
 #include "internal/control_plane/client/instance.hpp"  // IWYU pragma: keep
 #include "internal/grpc/client_streaming.hpp"
-#include "internal/grpc/promise_handler.hpp"
-#include "internal/grpc/stream_writer.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 
@@ -32,12 +30,11 @@
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
-#include "mrc/utils/macros.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <atomic>
+#include <cstddef>  // for size_t
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -67,6 +64,12 @@ class UcxResources;
 namespace mrc::runnable {
 class Runner;
 }  // namespace mrc::runnable
+
+namespace mrc::rpc {
+class PromiseHandler;
+template <typename T>
+struct StreamWriter;
+}  // namespace mrc::rpc
 
 namespace mrc::control_plane {
 
