@@ -201,6 +201,8 @@ class Client final : public resources::PartitionResourceBase, public Service
     // request that the server start an update
     void request_update();
 
+    void do_writes_done();
+
   private:
     AsyncEventStatus write_event(protos::Event event, bool await_response = false);
 
