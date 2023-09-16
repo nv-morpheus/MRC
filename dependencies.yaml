@@ -8,6 +8,7 @@ files:
     includes:
       - empty
       - build_cpp
+      - dev_cpp
       - cudatoolkit
 
 channels:
@@ -46,6 +47,13 @@ dependencies:
           - scikit-build>=0.17
           - pybind11-stubgen=0.10
           - python=3.10
+
+  dev_cpp:
+    common:
+      - output_types: [conda]
+        packages:
+          - clangdev=14
+
   cudatoolkit:
     specific:
       - output_types: [conda]

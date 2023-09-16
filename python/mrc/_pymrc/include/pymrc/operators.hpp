@@ -60,6 +60,7 @@ class OperatorsProxy
     static PythonOperator build(PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn);
     static PythonOperator filter(PyFuncHolder<bool(pybind11::object x)> filter_fn);
     static PythonOperator flatten();
+    static PythonOperator flatmap(OnDataFunction flatmap_fn);
     static PythonOperator map(OnDataFunction map_fn);
     static PythonOperator on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn);
     static PythonOperator pairwise();
