@@ -170,7 +170,7 @@ PythonOperator OperatorsProxy::flatten()
             }};
 }
 
-PythonOperator OperatorsProxy::flatmap(OnDataFunction flatmap_fn)
+PythonOperator OperatorsProxy::flatmap(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
 {
     //  Build and return the map operator
     return {"flatten", [=](PyObjectObservable source) {
@@ -180,52 +180,51 @@ PythonOperator OperatorsProxy::flatmap(OnDataFunction flatmap_fn)
                         [sink, flatmap_fn](PyHolder value) {
                             try
                             {
+                                AcquireGIL gil;
+
+                                auto result = flatmap_fn(std::move(value));
+
+                                auto inspect = pybind11::module_::import("inspect");
+
+                                if (inspect.attr("iscoroutine")(result).cast<bool>())
                                 {
-                                    AcquireGIL gil;
+                                    gil.release();
+                                    throw std::runtime_error("flatmap does not yet support coroutines");
+                                }
 
-                                    auto result = flatmap_fn(std::move(value));
+                                if (inspect.attr("isasyncgen")(result).cast<bool>())
+                                {
+                                    gil.release();
+                                    throw std::runtime_error("flatmap does not yet support async generators");
+                                }
 
-                                    auto inspect = pybind11::module_::import("inspect");
+                                // assume we got a list back and flatten it
 
-                                    if (inspect.attr("iscoroutine")(result).cast<bool>())
+                                std::vector<PyHolder> obj_list;
+
+                                {
+                                    auto l = py::list(std::move(result));
+
+                                    for (const auto& item : l)
                                     {
-                                        gil.release();
-                                        throw std::runtime_error("flatmap does not yet support coroutines");
-                                    }
-
-                                    if (inspect.attr("isasyncgen")(result).cast<bool>())
-                                    {
-                                        gil.release();
-                                        throw std::runtime_error("flatmap does not yet support async generators");
-                                    }
-
-                                    // assume we got a list back and flatten it
-
-                                    std::vector<PyHolder> obj_list;
-
-                                    {
-                                        auto l = py::list(std::move(result));
-
-                                        for (const auto& item : l)
-                                        {
-                                            // This increases the ref count by one but thats fine since the list will go
-                                            // out of scope and deref all its elements
-                                            obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
-                                        }
-                                    }
-
-                                    if (sink.is_subscribed())
-                                    {
-                                        // Release the GIL before calling on_next
-                                        gil.release();
-
-                                        // Loop over the list
-                                        for (auto& i : obj_list)
-                                        {
-                                            sink.on_next(std::move(i));
-                                        }
+                                        // This increases the ref count by one but thats fine since the list will go
+                                        // out of scope and deref all its elements
+                                        obj_list.emplace_back(std::move(py::reinterpret_borrow<py::object>(item)));
                                     }
                                 }
+
+                                if (sink.is_subscribed())
+                                {
+                                    // Release the GIL before calling on_next
+                                    gil.release();
+
+                                    // Loop over the list
+                                    for (auto& i : obj_list)
+                                    {
+                                        sink.on_next(std::move(i));
+                                    }
+                                }
+
                             } catch (py::error_already_set& err)
                             {
                                 // Need the GIL here
