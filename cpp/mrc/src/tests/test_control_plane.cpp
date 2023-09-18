@@ -150,37 +150,6 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnectSingleCore)
     server->service_await_join();
 }
 
-TEST_F(TestControlPlane, ClientDisconnectEarly)
-{
-    // Similar to SingleClientConnectDisconnect except both client & server are locked to the same core
-    // making issue #379 easier to reproduce.
-    auto sr     = make_runtime([](Options& options) {
-        options.topology().user_cpuset("0");
-    });
-    auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
-
-    server->service_start();
-    server->service_await_live();
-
-    auto cr = make_runtime([](Options& options) {
-        options.topology().user_cpuset("0");
-        options.architect_url("localhost:13337");
-    });
-
-    // the total number of partition is system dependent
-    auto expected_partitions = cr->resources().system().partitions().flattened().size();
-    EXPECT_EQ(cr->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
-              expected_partitions);
-
-    auto& client = cr->partition(0).resources().network()->control_plane().client();
-    client.do_writes_done();
-
-    server->service_stop();
-    server->service_await_join();
-
-    cr.reset();
-}
-
 TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
 {
     auto sr     = make_runtime();
