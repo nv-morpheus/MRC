@@ -31,7 +31,7 @@
 
 namespace mrc::rpc {
 
-Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable)
+Server::Server(runnable::RunnableResources& runnable) : Service("rpc::Server"), m_runnable(runnable)
 {
     m_cq = m_builder.AddCompletionQueue();
     m_builder.AddListeningPort("0.0.0.0:13337", grpc::InsecureServerCredentials());

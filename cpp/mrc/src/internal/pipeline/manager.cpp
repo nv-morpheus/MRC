@@ -44,6 +44,7 @@
 namespace mrc::pipeline {
 
 Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources) :
+  Service("pipeline::Manager"),
   m_pipeline(std::move(pipeline)),
   m_resources(resources)
 {

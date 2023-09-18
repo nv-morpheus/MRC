@@ -24,6 +24,7 @@
 
 #include "mrc/types.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -57,6 +58,8 @@ class Manager final : public system::SystemProvider
     // Manager(std::unique_ptr<system::ThreadingResources> resources);
     ~Manager() override;
 
+    std::size_t runtime_id() const;
+
     static Manager& get_resources();
     static PartitionResources& get_partition();
 
@@ -67,6 +70,8 @@ class Manager final : public system::SystemProvider
 
   private:
     Future<void> shutdown();
+
+    const size_t m_runtime_id;  // unique id for this runtime
 
     const std::unique_ptr<system::ThreadingResources> m_threading;
     std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
@@ -82,6 +87,7 @@ class Manager final : public system::SystemProvider
     // which must be destroyed before all other
     std::vector<std::optional<network::NetworkResources>> m_network;  // one per flattened partition
 
+    static std::atomic_size_t s_id_counter;
     static thread_local PartitionResources* m_thread_partition;
     static thread_local Manager* m_thread_resources;
 

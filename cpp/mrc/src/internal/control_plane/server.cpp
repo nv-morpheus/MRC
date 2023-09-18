@@ -86,9 +86,16 @@ static Expected<> unary_response(Server::event_t& event, Expected<MessageT>&& me
     return {};
 }
 
-Server::Server(runnable::RunnableResources& runnable) : m_runnable(runnable), m_server(m_runnable) {}
+Server::Server(runnable::RunnableResources& runnable) :
+  Service("control_plane::Server"),
+  m_runnable(runnable),
+  m_server(m_runnable)
+{}
 
-Server::~Server() = default;
+Server::~Server()
+{
+    Service::call_in_destructor();
+}
 
 void Server::do_service_start()
 {

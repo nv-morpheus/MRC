@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
@@ -152,6 +153,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
     ClientStream(prepare_fn_t prepare_fn, runnable::RunnableResources& runnable) :
+      Service("rpc::ClientStream"),
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),
       m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
@@ -195,10 +197,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         while (s.is_subscribed())
         {
             CHECK(m_stream);
-            Promise<bool> read;
+            PromiseWrapper wrapper("Client::Read");
             IncomingData data;
-            m_stream->Read(&data.msg, &read);
-            auto ok = read.get_future().get();
+            m_stream->Read(&data.msg, &wrapper);
+            auto ok = wrapper.get_future();
             if (!ok)
             {
                 m_write_channel.reset();
@@ -216,9 +218,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> promise;
-            m_stream->Write(request, &promise);
-            auto ok = promise.get_future().get();
+            PromiseWrapper wrapper("Client::Write");
+            m_stream->Write(request, &wrapper);
+            auto ok = wrapper.get_future();
             if (!ok)
             {
                 m_can_write = false;
@@ -234,10 +236,20 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> writes_done;
-            m_stream->WritesDone(&writes_done);
-            writes_done.get_future().get();
-            DVLOG(10) << "client issued writes done to server";
+            {
+                PromiseWrapper wrapper("Client::WritesDone");
+                m_stream->WritesDone(&wrapper);
+                wrapper.get_future();
+            }
+
+            {
+                // Now issue finish since this is OK at the client level
+                PromiseWrapper wrapper("Client::Finish");
+                m_stream->Finish(&m_status, &wrapper);
+                wrapper.get_future();
+            }
+
+            // DVLOG(10) << "client issued writes done to server";
         };
     }
 
@@ -284,9 +296,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         m_stream = m_prepare_fn(&m_context);
 
         DVLOG(10) << "starting grpc bidi client stream";
-        Promise<bool> promise;
-        m_stream->StartCall(&promise);
-        auto ok = promise.get_future().get();
+        PromiseWrapper wrapper("Client::StartCall", false);
+        m_stream->StartCall(&wrapper);
+        auto ok = wrapper.get_future();
 
         if (!ok)
         {
@@ -327,10 +339,6 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
             m_writer->await_join();
             m_reader->await_join();
-
-            Promise<bool> finish;
-            m_stream->Finish(&m_status, &finish);
-            auto ok = finish.get_future().get();
         }
     }
 

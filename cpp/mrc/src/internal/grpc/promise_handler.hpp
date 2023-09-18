@@ -20,10 +20,37 @@
 #include "internal/grpc/progress_engine.hpp"
 
 #include "mrc/node/generic_sink.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/all.hpp>
+#include <boost/fiber/mutex.hpp>
+
+#include <string>
 
 namespace mrc::rpc {
+
+struct PromiseWrapper
+{
+    PromiseWrapper(const std::string& method, bool in_runtime = true);
+
+    ~PromiseWrapper();
+
+    size_t id;
+    std::string method;
+    std::string prefix;
+    boost::fibers::promise<bool> promise;
+
+    void set_value(bool val);
+
+    bool get_future();
+
+    std::string to_string() const;
+
+  private:
+    boost::fibers::mutex m_mutex;
+
+    static std::atomic_size_t s_id_counter;
+};
 
 /**
  * @brief MRC Sink to handle ProgressEvents which correspond to Promise<bool> tags
@@ -32,7 +59,8 @@ class PromiseHandler final : public mrc::node::GenericSinkComponent<ProgressEven
 {
     mrc::channel::Status on_data(ProgressEvent&& event) final
     {
-        auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
+        auto* promise = static_cast<PromiseWrapper*>(event.tag);
+
         promise->set_value(event.ok);
         return mrc::channel::Status::success;
     };

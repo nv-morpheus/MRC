@@ -34,6 +34,7 @@
 namespace mrc::control_plane::client {
 
 SubscriptionService::SubscriptionService(const std::string& service_name, Instance& instance) :
+  Service("control_plane::client::SubscriptionService"),
   m_service_name(std::move(service_name)),
   m_instance(instance)
 {

@@ -49,6 +49,7 @@ Instance::Instance(Client& client,
                    resources::PartitionResourceBase& base,
                    mrc::edge::IWritableAcceptor<const protos::StateUpdate>& update_channel) :
   resources::PartitionResourceBase(base),
+  Service("control_plane::client::Instance"),
   m_client(client),
   m_instance_id(instance_id)
 {
