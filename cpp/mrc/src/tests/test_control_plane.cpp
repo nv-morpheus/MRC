@@ -27,6 +27,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -43,7 +44,6 @@
 #include "mrc/pubsub/subscriber.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
