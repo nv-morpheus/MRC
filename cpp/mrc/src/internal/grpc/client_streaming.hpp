@@ -47,7 +47,6 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <tuple>
 
 namespace mrc::rpc {
@@ -180,25 +179,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         return m_status;
     }
 
-    // logic performed on the Writer's on_completed
-    void do_writes_done()
-    {
-        CHECK(m_stream);
-        if (m_can_write)
-        {
-            Promise<bool> writes_done;
-            m_stream->WritesDone(&writes_done);
-            writes_done.get_future().get();
-            DVLOG(10) << "client issued writes done to server";
-            Promise<bool> finish;
-            m_stream->Finish(&m_status, &finish);
-            auto ok = finish.get_future().get();
-            if (!ok)
-            {
-                throw std::runtime_error("Failed to issue WritesDone " + m_status.error_message());
-            }
-        };
-    }
+    // todo(ryan) - add a method to trigger a writes done
 
     template <typename NodeT>
     void attach_to(NodeT& sink)
@@ -245,6 +226,19 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
                 m_stream_writer.reset();
             }
         }
+    }
+
+    // logic performed on the Writer's on_completed
+    void do_writes_done()
+    {
+        CHECK(m_stream);
+        if (m_can_write)
+        {
+            Promise<bool> writes_done;
+            m_stream->WritesDone(&writes_done);
+            writes_done.get_future().get();
+            DVLOG(10) << "client issued writes done to server";
+        };
     }
 
     // initialization performed after the grpc client stream was successfully initialized
