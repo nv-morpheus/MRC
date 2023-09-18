@@ -29,21 +29,24 @@
 #include <memory>
 #include <optional>
 #include <vector>
+// IWYU pragma: no_include "internal/memory/device_resources.hpp"
+// IWYU pragma: no_include "internal/network/network_resources.hpp"
+// IWYU pragma: no_include "internal/ucx/ucx_resources.hpp"
 
 namespace mrc::network {
-class NetworkResources;
+class NetworkResources;  // IWYU pragma: keep
 }  // namespace mrc::network
 namespace mrc::control_plane {
 class ControlPlaneResources;
 }  // namespace mrc::control_plane
 namespace mrc::memory {
-class DeviceResources;
+class DeviceResources;  // IWYU pragma: keep
 }  // namespace mrc::memory
 namespace mrc::system {
 class ThreadingResources;
 }  // namespace mrc::system
 namespace mrc::ucx {
-class UcxResources;
+class UcxResources;  // IWYU pragma: keep
 }  // namespace mrc::ucx
 namespace mrc::runtime {
 class Runtime;

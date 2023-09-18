@@ -20,11 +20,13 @@
 #include "internal/grpc/progress_engine.hpp"
 
 #include "mrc/node/generic_sink.hpp"
-#include "mrc/utils/string_utils.hpp"
+#include "mrc/node/sink_properties.hpp"  // for SinkProperties, Status
 
-#include <boost/fiber/all.hpp>
+#include <boost/fiber/future/promise.hpp>  // for promise
 #include <boost/fiber/mutex.hpp>
 
+#include <atomic>   // for atomic_size_t
+#include <cstddef>  // for size_t
 #include <string>
 
 namespace mrc::rpc {
@@ -33,7 +35,7 @@ struct PromiseWrapper
 {
     PromiseWrapper(const std::string& method, bool in_runtime = true);
 
-    ~PromiseWrapper();
+    ~PromiseWrapper() = default;
 
     size_t id;
     std::string method;

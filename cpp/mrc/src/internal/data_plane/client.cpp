@@ -26,7 +26,6 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
-#include "internal/ucx/common.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
@@ -54,7 +53,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::data_plane {
 

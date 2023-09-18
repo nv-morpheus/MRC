@@ -36,7 +36,6 @@
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <exception>

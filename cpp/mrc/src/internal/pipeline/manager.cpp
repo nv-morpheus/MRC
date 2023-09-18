@@ -34,12 +34,9 @@
 #include <glog/logging.h>
 
 #include <exception>
-#include <map>
 #include <memory>
 #include <ostream>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::pipeline {
 

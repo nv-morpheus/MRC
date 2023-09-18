@@ -39,13 +39,11 @@
 
 #include <chrono>
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <random>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 using namespace mrc::modules::stream_buffers;

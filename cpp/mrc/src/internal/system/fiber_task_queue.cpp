@@ -28,7 +28,6 @@
 #include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 

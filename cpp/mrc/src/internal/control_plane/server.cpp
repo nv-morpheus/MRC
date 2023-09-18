@@ -41,7 +41,6 @@
 
 #include <algorithm>
 #include <exception>
-#include <future>
 #include <memory>
 #include <mutex>
 #include <set>

@@ -17,12 +17,13 @@
 
 #include "internal/grpc/promise_handler.hpp"
 
-#include "internal/resources/manager.hpp"
+#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR
 
-#include "mrc/exceptions/runtime_error.hpp"
+#include <boost/fiber/future/future.hpp>  // for future
+#include <glog/logging.h>                 // for COMPACT_GOOGLE_LOG_INFO
 
 #include <atomic>
-#include <mutex>
+#include <sstream>  // for operator<<, basic_ostream
 
 namespace mrc::rpc {
 
@@ -42,11 +43,6 @@ PromiseWrapper::PromiseWrapper(const std::string& method, bool in_runtime) : id(
 
     this->prefix = MRC_CONCAT_STR("Promise[" << id << ", " << this << ", " << runtime_id << "](" << method << "): ");
     VLOG(5) << this->to_string() << "#1 creating promise";
-}
-
-PromiseWrapper::~PromiseWrapper()
-{
-    // VLOG(5) << this->to_string() << "#5 deleting promise";
 }
 
 void PromiseWrapper::set_value(bool val)

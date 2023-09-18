@@ -24,9 +24,9 @@
 #include <glog/logging.h>
 
 #include <exception>
-#include <future>
+#include <functional>  // for function
 #include <mutex>
-#include <ostream>
+#include <sstream>  // for operator<<, basic_ostream
 #include <utility>
 
 namespace mrc {

@@ -26,6 +26,7 @@
 #include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/system/device_partition.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"

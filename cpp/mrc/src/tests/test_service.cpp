@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-#include "tests/common.hpp"
+#include "tests/common.hpp"  // IWYU pragma: associated
 
 #include "internal/service.hpp"
 
 #include "mrc/exceptions/runtime_error.hpp"
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include <atomic>
+#include <cstddef>     // for size_t
+#include <functional>  // for function
+#include <utility>     // for move
 
 namespace mrc {
 

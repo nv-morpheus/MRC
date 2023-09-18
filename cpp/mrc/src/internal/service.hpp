@@ -19,7 +19,8 @@
 
 #include "mrc/types.hpp"
 
-#include <mutex>
+#include <iosfwd>     // for ostream
+#include <stdexcept>  // for logic_error
 #include <string>
 
 namespace mrc {
