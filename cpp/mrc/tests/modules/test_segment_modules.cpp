@@ -63,145 +63,54 @@ TEST_F(TestSegmentModules, ModuleConstructorTest)
     ASSERT_THROW(SimpleModule("bad/module/name"), std::invalid_argument);
 }
 
-TEST_F(TestSegmentModules, ModuleInitializationTest)
-{
-    using namespace modules;
-
-    auto init_wrapper = [](segment::IBuilder& builder) {
-        auto config_1            = nlohmann::json();
-        auto config_2            = nlohmann::json();
-        config_2["config_key_1"] = true;
-
-        auto simple_mod         = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
-        auto configurable_1_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
-        auto configurable_2_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
-        auto configurable_mod_3 = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
-
-        configurable_mod_3(builder);
-
-        EXPECT_EQ(simple_mod->input_ids().size(), 2);
-        EXPECT_EQ(simple_mod->output_ids().size(), 2);
-        EXPECT_EQ(simple_mod->input_ports().size(), 2);
-        EXPECT_EQ(simple_mod->output_ports().size(), 2);
-        EXPECT_EQ(simple_mod->input_ports().find("input1") != simple_mod->input_ports().end(), true);
-        EXPECT_EQ(simple_mod->input_ports().find("input2") != simple_mod->input_ports().end(), true);
-        EXPECT_EQ(simple_mod->input_port_type_id("input1"), typeid(bool));
-        EXPECT_EQ(simple_mod->input_port_type_id("input2"), typeid(bool));
-        EXPECT_EQ(simple_mod->input_port_type_ids().find("input1")->second, typeid(bool));
-        EXPECT_EQ(simple_mod->input_port_type_ids().find("input2")->second, typeid(bool));
-        EXPECT_EQ(simple_mod->output_ports().find("output1") != simple_mod->input_ports().end(), true);
-        EXPECT_EQ(simple_mod->output_ports().find("output2") != simple_mod->input_ports().end(), true);
-        EXPECT_EQ(simple_mod->output_port_type_id("output1"), typeid(std::string));
-        EXPECT_EQ(simple_mod->output_port_type_id("output2"), typeid(std::string));
-        EXPECT_EQ(simple_mod->output_port_type_ids().find("output1")->second, typeid(std::string));
-        EXPECT_EQ(simple_mod->output_port_type_ids().find("output2")->second, typeid(std::string));
-
-        EXPECT_THROW(simple_mod->input_port("DOES_NOT_EXIST"), std::invalid_argument);
-        EXPECT_THROW(simple_mod->output_port("DOES_NOT_EXIST"), std::invalid_argument);
-        EXPECT_THROW(simple_mod->input_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
-        EXPECT_THROW(simple_mod->output_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
-
-        EXPECT_EQ(configurable_1_mod->input_ports().size(), 1);
-        EXPECT_EQ(configurable_1_mod->output_ports().size(), 1);
-        EXPECT_EQ(configurable_1_mod->m_was_configured, false);
-
-        EXPECT_EQ(configurable_2_mod->input_ports().size(), 1);
-        EXPECT_EQ(configurable_2_mod->output_ports().size(), 1);
-        EXPECT_EQ(configurable_2_mod->m_was_configured, true);
-    };
-
-    m_pipeline->make_segment("Initialization_Segment", init_wrapper);
-
-    auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-1");
-    options->topology().restrict_gpus(true);
-
-    Executor executor(options);
-    executor.register_pipeline(std::move(m_pipeline));
-    executor.start();
-    executor.join();
-}
-
-// TEST_F(TestSegmentModules, ModuleEndToEndTest)
+// TEST_F(TestSegmentModules, ModuleInitializationTest)
 // {
 //     using namespace modules;
-//     unsigned int packets_1{0};
-//     unsigned int packets_2{0};
-//     unsigned int packets_3{0};
 
-//     auto init_wrapper = [&packets_1, &packets_2, &packets_3](segment::IBuilder& builder) {
-//         auto simple_mod       = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
-//         auto configurable_mod = builder.make_module<ConfigurableModule>("ModuleEndToEndTest_mod2");
+//     auto init_wrapper = [](segment::IBuilder& builder) {
+//         auto config_1            = nlohmann::json();
+//         auto config_2            = nlohmann::json();
+//         config_2["config_key_1"] = true;
 
-//         auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
-//             if (sub.is_subscribed())
-//             {
-//                 sub.on_next(true);
-//                 sub.on_next(false);
-//                 sub.on_next(true);
-//                 sub.on_next(true);
-//             }
+//         auto simple_mod         = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
+//         auto configurable_1_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
+//         auto configurable_2_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
+//         auto configurable_mod_3 = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
 
-//             sub.on_completed();
-//         });
+//         configurable_mod_3(builder);
 
-//         // Ex1. Partially dynamic edge construction
-//         builder.make_edge(source1, simple_mod->input_port("input1"));
+//         EXPECT_EQ(simple_mod->input_ids().size(), 2);
+//         EXPECT_EQ(simple_mod->output_ids().size(), 2);
+//         EXPECT_EQ(simple_mod->input_ports().size(), 2);
+//         EXPECT_EQ(simple_mod->output_ports().size(), 2);
+//         EXPECT_EQ(simple_mod->input_ports().find("input1") != simple_mod->input_ports().end(), true);
+//         EXPECT_EQ(simple_mod->input_ports().find("input2") != simple_mod->input_ports().end(), true);
+//         EXPECT_EQ(simple_mod->input_port_type_id("input1"), typeid(bool));
+//         EXPECT_EQ(simple_mod->input_port_type_id("input2"), typeid(bool));
+//         EXPECT_EQ(simple_mod->input_port_type_ids().find("input1")->second, typeid(bool));
+//         EXPECT_EQ(simple_mod->input_port_type_ids().find("input2")->second, typeid(bool));
+//         EXPECT_EQ(simple_mod->output_ports().find("output1") != simple_mod->input_ports().end(), true);
+//         EXPECT_EQ(simple_mod->output_ports().find("output2") != simple_mod->input_ports().end(), true);
+//         EXPECT_EQ(simple_mod->output_port_type_id("output1"), typeid(std::string));
+//         EXPECT_EQ(simple_mod->output_port_type_id("output2"), typeid(std::string));
+//         EXPECT_EQ(simple_mod->output_port_type_ids().find("output1")->second, typeid(std::string));
+//         EXPECT_EQ(simple_mod->output_port_type_ids().find("output2")->second, typeid(std::string));
 
-//         auto source2 = builder.make_source<bool>("src2", [](rxcpp::subscriber<bool>& sub) {
-//             if (sub.is_subscribed())
-//             {
-//                 sub.on_next(true);
-//                 sub.on_next(false);
-//                 sub.on_next(false);
-//                 sub.on_next(false);
-//                 sub.on_next(true);
-//                 sub.on_next(false);
-//             }
+//         EXPECT_THROW(simple_mod->input_port("DOES_NOT_EXIST"), std::invalid_argument);
+//         EXPECT_THROW(simple_mod->output_port("DOES_NOT_EXIST"), std::invalid_argument);
+//         EXPECT_THROW(simple_mod->input_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
+//         EXPECT_THROW(simple_mod->output_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
 
-//             sub.on_completed();
-//         });
+//         EXPECT_EQ(configurable_1_mod->input_ports().size(), 1);
+//         EXPECT_EQ(configurable_1_mod->output_ports().size(), 1);
+//         EXPECT_EQ(configurable_1_mod->m_was_configured, false);
 
-//         // Ex2. Dynamic edge construction -- requires type specification
-//         builder.make_edge(source2, simple_mod->input_port("input2"));
-
-//         auto sink1 = builder.make_sink<std::string>("sink1", [&packets_1](std::string input) {
-//             packets_1++;
-//             VLOG(10) << "Sinking " << input << std::endl;
-//         });
-
-//         builder.make_edge(simple_mod->output_port("output1"), sink1);
-
-//         auto sink2 = builder.make_sink<std::string>("sink2", [&packets_2](std::string input) {
-//             packets_2++;
-//             VLOG(10) << "Sinking " << input << std::endl;
-//         });
-
-//         builder.make_edge(simple_mod->output_port("output2"), sink2);
-
-//         auto source3 = builder.make_source<bool>("src3", [](rxcpp::subscriber<bool>& sub) {
-//             if (sub.is_subscribed())
-//             {
-//                 sub.on_next(true);
-//                 sub.on_next(false);
-//                 sub.on_next(true);
-//                 sub.on_next(true);
-//             }
-
-//             sub.on_completed();
-//         });
-
-//         builder.make_edge(source3, configurable_mod->input_port("configurable_input_a"));
-
-//         auto sink3 = builder.make_sink<std::string>("sink3", [&packets_3](std::string input) {
-//             packets_3++;
-//             VLOG(10) << "Sinking " << input << std::endl;
-//         });
-
-//         builder.make_edge(configurable_mod->output_port("configurable_output_x"), sink3);
+//         EXPECT_EQ(configurable_2_mod->input_ports().size(), 1);
+//         EXPECT_EQ(configurable_2_mod->output_ports().size(), 1);
+//         EXPECT_EQ(configurable_2_mod->m_was_configured, true);
 //     };
 
-//     m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
+//     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
 
 //     auto options = std::make_shared<Options>();
 //     options->topology().user_cpuset("0-1");
@@ -211,11 +120,102 @@ TEST_F(TestSegmentModules, ModuleInitializationTest)
 //     executor.register_pipeline(std::move(m_pipeline));
 //     executor.start();
 //     executor.join();
-
-//     EXPECT_EQ(packets_1, 4);
-//     EXPECT_EQ(packets_2, 6);
-//     EXPECT_EQ(packets_3, 4);
 // }
+
+TEST_F(TestSegmentModules, ModuleEndToEndTest)
+{
+    using namespace modules;
+    unsigned int packets_1{0};
+    unsigned int packets_2{0};
+    unsigned int packets_3{0};
+
+    auto init_wrapper = [&packets_1, &packets_2, &packets_3](segment::IBuilder& builder) {
+        auto simple_mod       = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
+        auto configurable_mod = builder.make_module<ConfigurableModule>("ModuleEndToEndTest_mod2");
+
+        auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                sub.on_next(true);
+                sub.on_next(false);
+                sub.on_next(true);
+                sub.on_next(true);
+            }
+
+            sub.on_completed();
+        });
+
+        // Ex1. Partially dynamic edge construction
+        builder.make_edge(source1, simple_mod->input_port("input1"));
+
+        auto source2 = builder.make_source<bool>("src2", [](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                sub.on_next(true);
+                sub.on_next(false);
+                sub.on_next(false);
+                sub.on_next(false);
+                sub.on_next(true);
+                sub.on_next(false);
+            }
+
+            sub.on_completed();
+        });
+
+        // Ex2. Dynamic edge construction -- requires type specification
+        builder.make_edge(source2, simple_mod->input_port("input2"));
+
+        auto sink1 = builder.make_sink<std::string>("sink1", [&packets_1](std::string input) {
+            packets_1++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(simple_mod->output_port("output1"), sink1);
+
+        auto sink2 = builder.make_sink<std::string>("sink2", [&packets_2](std::string input) {
+            packets_2++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(simple_mod->output_port("output2"), sink2);
+
+        auto source3 = builder.make_source<bool>("src3", [](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                sub.on_next(true);
+                sub.on_next(false);
+                sub.on_next(true);
+                sub.on_next(true);
+            }
+
+            sub.on_completed();
+        });
+
+        builder.make_edge(source3, configurable_mod->input_port("configurable_input_a"));
+
+        auto sink3 = builder.make_sink<std::string>("sink3", [&packets_3](std::string input) {
+            packets_3++;
+            VLOG(10) << "Sinking " << input << std::endl;
+        });
+
+        builder.make_edge(configurable_mod->output_port("configurable_output_x"), sink3);
+    };
+
+    m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+
+    EXPECT_EQ(packets_1, 4);
+    EXPECT_EQ(packets_2, 6);
+    EXPECT_EQ(packets_3, 4);
+}
 
 TEST_F(TestSegmentModules, ModuleAsSourceTest)
 {
