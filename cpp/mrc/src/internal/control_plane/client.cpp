@@ -123,11 +123,6 @@ void Client::do_service_start()
     forward_state(State::Connected);
 }
 
-void Client::do_writes_done()
-{
-    m_stream->do_writes_done();
-}
-
 void Client::do_service_stop()
 {
     m_writer->finish();
