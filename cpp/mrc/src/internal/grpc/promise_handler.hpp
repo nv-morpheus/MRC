@@ -65,6 +65,7 @@ class PromiseHandler final : public mrc::node::GenericSinkComponent<ProgressEven
 
         promise->set_value(event.ok);
         return mrc::channel::Status::success;
+        delete promise;
     };
 
     void on_complete() override

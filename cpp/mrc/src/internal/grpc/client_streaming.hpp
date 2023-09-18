@@ -197,10 +197,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         while (s.is_subscribed())
         {
             CHECK(m_stream);
-            PromiseWrapper wrapper("Client::Read");
+            auto* wrapper = new PromiseWrapper("Client::Read");
             IncomingData data;
-            m_stream->Read(&data.msg, &wrapper);
-            auto ok = wrapper.get_future();
+            m_stream->Read(&data.msg, wrapper);
+            auto ok = wrapper->get_future();
             if (!ok)
             {
                 m_write_channel.reset();
@@ -218,9 +218,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            PromiseWrapper wrapper("Client::Write");
-            m_stream->Write(request, &wrapper);
-            auto ok = wrapper.get_future();
+            auto* wrapper = new PromiseWrapper("Client::Write");
+            m_stream->Write(request, wrapper);
+            auto ok = wrapper->get_future();
             if (!ok)
             {
                 m_can_write = false;
@@ -237,16 +237,16 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         if (m_can_write)
         {
             {
-                PromiseWrapper wrapper("Client::WritesDone");
-                m_stream->WritesDone(&wrapper);
-                wrapper.get_future();
+                auto* wrapper = new PromiseWrapper("Client::WritesDone");
+                m_stream->WritesDone(wrapper);
+                wrapper->get_future();
             }
 
             {
                 // Now issue finish since this is OK at the client level
-                PromiseWrapper wrapper("Client::Finish");
-                m_stream->Finish(&m_status, &wrapper);
-                wrapper.get_future();
+                auto* wrapper = new PromiseWrapper("Client::Finish");
+                m_stream->Finish(&m_status, wrapper);
+                wrapper->get_future();
             }
 
             // DVLOG(10) << "client issued writes done to server";
@@ -296,9 +296,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         m_stream = m_prepare_fn(&m_context);
 
         DVLOG(10) << "starting grpc bidi client stream";
-        PromiseWrapper wrapper("Client::StartCall", false);
-        m_stream->StartCall(&wrapper);
-        auto ok = wrapper.get_future();
+        auto* wrapper = new PromiseWrapper("Client::StartCall", false);
+        m_stream->StartCall(wrapper);
+        auto ok = wrapper->get_future();
 
         if (!ok)
         {

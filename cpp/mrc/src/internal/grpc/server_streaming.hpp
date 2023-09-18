@@ -227,9 +227,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
             CHECK(m_stream);
 
             IncomingData data;
-            PromiseWrapper wrapper("Server::Read");
-            m_stream->Read(&data.msg, &wrapper);
-            auto ok     = wrapper.get_future();
+            auto* wrapper = new PromiseWrapper("Server::Read");
+            m_stream->Read(&data.msg, wrapper);
+            auto ok     = wrapper->get_future();
             data.ok     = ok;
             data.stream = writer();
             s.on_next(std::move(data));
@@ -250,9 +250,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         CHECK(m_stream);
         if (m_can_write)
         {
-            PromiseWrapper wrapper("Server::Write");
-            m_stream->Write(request, &wrapper);
-            auto ok = wrapper.get_future();
+            auto* wrapper = new PromiseWrapper("Server::Write");
+            m_stream->Write(request, wrapper);
+            auto ok = wrapper->get_future();
             if (!ok)
             {
                 DVLOG(10) << "server failed to write to client; disabling writes and beginning shutdown";
@@ -275,9 +275,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
             }
 
             DVLOG(10) << "server issuing finish";
-            PromiseWrapper wrapper("Server::Finish");
-            m_stream->Finish(*m_status, &wrapper);
-            auto ok = wrapper.get_future();
+            auto* wrapper = new PromiseWrapper("Server::Finish");
+            m_stream->Finish(*m_status, wrapper);
+            auto ok = wrapper->get_future();
             // DVLOG(10) << "server done with finish";
         }
     }
@@ -320,9 +320,9 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
     void do_service_start() final
     {
-        PromiseWrapper wrapper("Server::m_init_fn");
-        m_init_fn(&wrapper);
-        auto ok = wrapper.get_future();
+        auto* wrapper = new PromiseWrapper("Server::m_init_fn");
+        m_init_fn(wrapper);
+        auto ok = wrapper->get_future();
         if (!ok)
         {
             DVLOG(10) << "server stream could not be initialized";
