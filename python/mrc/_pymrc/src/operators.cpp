@@ -23,6 +23,7 @@
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
+#include <pybind11/eval.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
@@ -31,6 +32,7 @@
 
 #include <exception>
 #include <stdexcept>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -175,9 +177,46 @@ PythonOperator OperatorsProxy::flatmap(PyFuncHolder<PyObjectHolder(pybind11::obj
     //  Build and return the map operator
     return {"flatten", [=](PyObjectObservable source) {
                 return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    AcquireGIL gil;
+
+                    auto asyncio = pybind11::module_::import("asyncio");
+                    PyHolder loop;
+
+                    try
+                    {
+                        loop = asyncio.attr("get_event_loop")();
+                    } catch (std::runtime_error ex)
+                    {
+                        loop = asyncio.attr("new_event_loop")();
+                    }
+
+                    auto is_running = loop.attr("is_running")().cast<bool>();
+
+                    std::thread loop_thread;
+
+                    std::atomic<bool> cancellation_token = false;
+
+                    if (not is_running)
+                    {
+                        loop_thread = std::thread([&cancellation_token, loop = loop]() {
+                            while (not cancellation_token)
+                            {
+                                {
+                                    // run event loop once
+                                    pybind11::gil_scoped_acquire acquire;
+                                    loop.attr("stop")();
+                                    loop.attr("run_forever")();
+                                }
+                                std::this_thread::yield();
+                            }
+                        });
+                    }
+
+                    gil.release();
+
                     source.subscribe(
                         sink,
-                        [sink, flatmap_fn](PyHolder value) {
+                        [sink, flatmap_fn, loop](PyHolder value) {
                             try
                             {
                                 AcquireGIL gil;
@@ -194,11 +233,32 @@ PythonOperator OperatorsProxy::flatmap(PyFuncHolder<PyObjectHolder(pybind11::obj
 
                                 if (inspect.attr("isasyncgen")(result).cast<bool>())
                                 {
-                                    gil.release();
-                                    throw std::runtime_error("flatmap does not yet support async generators");
-                                }
+                                    auto asyncio = py::module_::import("asyncio");
 
-                                // assume we got a list back and flatten it
+                                    while (true)
+                                    {
+                                        auto task   = result.attr("__anext__")();
+                                        auto future = asyncio.attr("run_coroutine_threadsafe")(task, loop);
+
+                                        while (not future.attr("done")().cast<bool>()) {
+                                            using namespace std::chrono_literals;
+                                            pybind11::gil_scoped_release release;
+                                            std::this_thread::yield();
+                                            // std::this_thread::sleep_for(100ms);
+                                        }
+
+                                        try{
+                                            auto value = future.attr("result")();
+                                            pybind11::gil_scoped_release release;
+                                            sink.on_next(std::move(py::reinterpret_borrow<py::object>(value)));
+                                        } catch (std::exception ex){
+                                            // probably an end async iteration exception.
+                                            break;
+                                        }
+                                    }
+
+                                    return;
+                                }
 
                                 std::vector<PyHolder> obj_list;
 
@@ -245,8 +305,15 @@ PythonOperator OperatorsProxy::flatmap(PyFuncHolder<PyObjectHolder(pybind11::obj
                         },
                         [sink]() {
                             // Forward
+                            // should actually wait for all futures to be completed
                             sink.on_completed();
                         });
+
+                    if (loop_thread.joinable())
+                    {
+                        cancellation_token = true;
+                        loop_thread.join();
+                    }
                 });
             }};
 }
