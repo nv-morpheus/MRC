@@ -29,9 +29,9 @@ unset CMAKE_CUDA_COMPILER_LAUNCHER
 unset CMAKE_CXX_COMPILER_LAUNCHER
 unset CMAKE_C_COMPILER_LAUNCHER
 
-if [[ "${STAGE}" =~ "build" || ]]; then
+if [[ "${STAGE}" =~ "build" ]]; then
     SCRIPT_NAME="build.sh"
-elif [[ "${STAGE}" =~ "test" || ]]; then
+elif [[ "${STAGE}" =~ "test" ]]; then
     SCRIPT_NAME="test.sh"
 else
     SCRIPT_NAME="${STAGE}.sh"

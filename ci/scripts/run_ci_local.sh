@@ -77,7 +77,7 @@ mkdir -p ${LOCAL_CI_TMP}
 cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${LOCAL_CI_TMP}
 
 for STAGE in "${STAGES[@]}"; do
-    if [[ "${STAGE}" =~ "clang" || ]]; then
+    if [[ "${STAGE}" =~ "clang" ]]; then
         ENV_LIST="${ENV_LIST} --env BUILD_CC=clang"
     elif [[ "${STAGE}" =~ "gcc" ]]; then
         ENV_LIST="${ENV_LIST} --env BUILD_CC=gcc"
