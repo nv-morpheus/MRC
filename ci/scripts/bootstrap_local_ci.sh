@@ -32,12 +32,19 @@ unset CMAKE_CXX_COMPILER_LAUNCHER
 unset CMAKE_C_COMPILER_LAUNCHER
 
 if [[ "${STAGE}" != "bash" ]]; then
-    if [[ "${STAGE}" == "benchmark" ]]; then
-        CI_SCRIPT="${WORKSPACE_TMP}/benchmark_ci_script.sh"
+    # benchmark & codecov are composite stages, the rest are composed of a single shell script
+    if [[ "${STAGE}" == "benchmark" || "${STAGE}" == "codecov" ]]; then
+        CI_SCRIPT="${WORKSPACE_TMP}/ci_script.sh"
         echo "#!/bin/bash" > ${CI_SCRIPT}
-        echo "${GH_SCRIPT_DIR}/pre_benchmark.sh" >> ${CI_SCRIPT}
-        echo "${GH_SCRIPT_DIR}/benchmark.sh" >> ${CI_SCRIPT}
-        echo "${GH_SCRIPT_DIR}/post_benchmark.sh" >> ${CI_SCRIPT}
+        if [[ "${STAGE}" == "benchmark" ]]; then
+            echo "${GH_SCRIPT_DIR}/pre_benchmark.sh" >> ${CI_SCRIPT}
+            echo "${GH_SCRIPT_DIR}/benchmark.sh" >> ${CI_SCRIPT}
+            echo "${GH_SCRIPT_DIR}/post_benchmark.sh" >> ${CI_SCRIPT}
+        else
+            echo "${GH_SCRIPT_DIR}/build.sh" >> ${CI_SCRIPT}
+            echo "${GH_SCRIPT_DIR}/test_codecov.sh" >> ${CI_SCRIPT}
+        fi
+
         chmod +x ${CI_SCRIPT}
     else
         if [[ "${STAGE}" =~ "build" ]]; then

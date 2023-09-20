@@ -58,13 +58,16 @@ cd ${MRC_ROOT}/build
 # correctly and enabling relative only ignores system and conda files.
 find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} + 1> /dev/null
 
-rapids-logger "Uploading codecov for C++ tests"
 
-# Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
+if [[ "${LOCAL_CI}" == "" ]]; then
+  rapids-logger "Uploading codecov for C++ tests"
 
-# Upload the .gcov files directly to codecov. They do a good job at processing the partials
-/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
+  # Get the list of files that we are interested in (Keeps the upload small)
+  GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
+
+  # Upload the .gcov files directly to codecov. They do a good job at processing the partials
+  /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F cpp
+fi
 
 # Remove the gcov files and any gcda files to reset counters
 find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
@@ -85,13 +88,15 @@ cd ${MRC_ROOT}/build
 # correctly and enabling relative only ignores system and conda files.
 find . -type f -name '*.gcda' -exec x86_64-conda_cos6-linux-gnu-gcov -pbc --source-prefix ${MRC_ROOT} --relative-only {} + 1> /dev/null
 
-rapids-logger "Uploading codecov for Python tests"
+if [[ "${LOCAL_CI}" == "" ]]; then
+  rapids-logger "Uploading codecov for Python tests"
 
-# Get the list of files that we are interested in (Keeps the upload small)
-GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
+  # Get the list of files that we are interested in (Keeps the upload small)
+  GCOV_FILES=$(find . -type f \( -iname "cpp#mrc#include#*.gcov" -or -iname "python#*.gcov" -or -iname "cpp#mrc#src#*.gcov" \))
 
-# Upload the .gcov files directly to codecov. They do a good job at processing the partials
-/opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
+  # Upload the .gcov files directly to codecov. They do a good job at processing the partials
+  /opt/conda/envs/mrc/bin/codecov ${CODECOV_ARGS} -f ${GCOV_FILES} -F py
+fi
 
 # Remove the gcov files and any gcda files to reset counters
 find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
@@ -101,7 +106,7 @@ cd $(dirname ${REPORTS_DIR})
 tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
+upload_artifact ${WORKSPACE_TMP}/test_reports.tar.bz
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}

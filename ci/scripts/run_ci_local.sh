@@ -19,21 +19,21 @@ case "$1" in
         STAGES=("bash")
         ;;
     "all" )
-        STAGES=("checks" "build-clang" "build-codecov" "build-gcc" "test-clang" "test-codecov" "test-gcc" "docs" "benchmark" "conda")
+        STAGES=("checks" "build-clang" "build-gcc" "test-clang" "test-gcc" "codecov" "docs" "benchmark" "conda")
         ;;
     "build" )
-        STAGES=("build-clang" "build-codecov" "build-gcc")
+        STAGES=("build-clang" "build-gcc")
         ;;
     "test" )
-        STAGES=("test-clang" "test-codecov" "test-gcc")
+        STAGES=("test-clang" "test-gcc")
         ;;
-    "checks" | "build-clang" | "build-codecov" | "build-gcc" | "test" | "test-clang" | "test-codecov" | "test-gcc" | "docs" | "benchmark" | "conda" | "bash" )
+    "checks" | "build-clang" | "build-gcc" | "test" | "test-clang" | "test-gcc" | "codecov" | "docs" | "benchmark" | "conda" | "bash" )
         STAGES=("$1")
         ;;
     * )
         echo "Error: Invalid argument \"$1\" provided. Expected values: \"all\", \"checks\", \"build\", " \
-             "\"build-clang\", \"build-codecov\", \"build-gcc\", \"test\", \"test-clang\", \"test-codecov\", " \
-             "\"test-gcc\", \"docs\", \"benchmark\", \"conda\" or \"bash\""
+             "\"build-clang\", \"build-gcc\", \"test\", \"test-clang\", \"test-gcc\", \"codecov\"," \
+             "\"docs\", \"benchmark\", \"conda\" or \"bash\""
         exit 1
         ;;
 esac
@@ -81,7 +81,7 @@ for STAGE in "${STAGES[@]}"; do
     if [[ "${STAGE}" =~ benchmark|clang|codecov|gcc ]]; then
         if [[ "${STAGE}" =~ "clang" ]]; then
             BUILD_CC="clang"
-        elif [[ "${STAGE}" =~ "codecov" ]]; then
+        elif [[ "${STAGE}" == "codecov" ]]; then
             BUILD_CC="gcc-coverage"
         else
             BUILD_CC="gcc"
