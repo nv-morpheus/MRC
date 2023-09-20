@@ -61,8 +61,10 @@ cmake -B build -G Ninja ${CMAKE_FLAGS} .
 rapids-logger "Building MRC"
 cmake --build build --parallel ${PARALLEL_LEVEL}
 
-rapids-logger "sccache usage for MRC build:"
-sccache --show-stats
+if [[ "${LOCAL_CI}" == "" ]]; then
+    rapids-logger "sccache usage for MRC build:"
+    sccache --show-stats
+fi
 
 if [[ "${BUILD_CC}" != "gcc-coverage" || ${LOCAL_CI} == "1" ]]; then
     rapids-logger "Archiving results"

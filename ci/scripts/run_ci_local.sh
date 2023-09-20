@@ -74,9 +74,6 @@ BASE_ENV_LIST="${BASE_ENV_LIST} --env PARALLEL_LEVEL=$(nproc)"
 BASE_ENV_LIST="${BASE_ENV_LIST} --env CUDA_VER=${CUDA_VER}"
 BASE_ENV_LIST="${BASE_ENV_LIST} --env SKIP_CONDA_ENV_UPDATE=${SKIP_CONDA_ENV_UPDATE}"
 
-mkdir -p ${BASE_LOCAL_CI_TMP}
-cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${BASE_LOCAL_CI_TMP}
-
 for STAGE in "${STAGES[@]}"; do
     # Take a copy of the base env list, then make stage specific changes
     ENV_LIST="${BASE_ENV_LIST}"
@@ -96,6 +93,9 @@ for STAGE in "${STAGES[@]}"; do
     else
         LOCAL_CI_TMP="${BASE_LOCAL_CI_TMP}"
     fi
+
+    mkdir -p ${LOCAL_CI_TMP}
+    cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${LOCAL_CI_TMP}
 
 
     DOCKER_RUN_ARGS="--rm -ti --net=host -v "${LOCAL_CI_TMP}":/ci_tmp ${ENV_LIST} --env STAGE=${STAGE}"
