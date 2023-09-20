@@ -105,6 +105,9 @@ for STAGE in "${STAGES[@]}"; do
     else
         CONTAINER="${BUILD_CONTAINER}"
         DOCKER_RUN_ARGS="${DOCKER_RUN_ARGS} --runtime=runc"
+        if [[ "${STAGE}" == "benchmark" ]]; then
+            DOCKER_RUN_ARGS="${DOCKER_RUN_ARGS} --cap-add=sys_nice --cap-add=sys_ptrace"
+        fi
     fi
 
     if [[ "${STAGE}" == "bash" ]]; then
