@@ -94,10 +94,6 @@ for STAGE in "${STAGES[@]}"; do
         LOCAL_CI_TMP="${BASE_LOCAL_CI_TMP}"
     fi
 
-    if [[ ${STAGE} == "conda" ]]; then
-        ENV_LIST="${ENV_LIST} --env CONDA_ARGS=\"--output-folder=/ci_tmp\""
-    fi
-
     mkdir -p ${LOCAL_CI_TMP}
     cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${LOCAL_CI_TMP}
 
