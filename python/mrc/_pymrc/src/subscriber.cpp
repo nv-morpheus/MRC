@@ -144,13 +144,14 @@ PyObjectObservable ObservableProxy::pipe(const PyObjectObservable* self, py::arg
         operators.emplace_back(op.get_operate_fn());
     }
 
-    if (operators.empty()) {
+    if (operators.empty())
+    {
         throw std::runtime_error("pipe() must be given at least one argument");
     }
 
     auto result = *self | operators[0];
 
-    for (auto i = 1 ; i < operators.size(); i++)
+    for (auto i = 1; i < operators.size(); i++)
     {
         result = result | operators[i];
     }
