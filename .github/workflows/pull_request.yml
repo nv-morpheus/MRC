@@ -71,9 +71,9 @@ jobs:
       # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
       conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
       # Build container
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230711
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230920
       # Test container
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230711
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230920
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:
