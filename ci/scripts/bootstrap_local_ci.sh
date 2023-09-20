@@ -33,7 +33,12 @@ unset CMAKE_C_COMPILER_LAUNCHER
 
 if [[ "${STAGE}" != "bash" ]]; then
     if [[ "${STAGE}" == "benchmark" ]]; then
-        CI_SCRIPT="${GH_SCRIPT_DIR}/pre_benchmark.sh && ${GH_SCRIPT_DIR}/benchmark.sh && ${GH_SCRIPT_DIR}/post_benchmark.sh"
+        CI_SCRIPT="${WORKSPACE_TMP}/benchmark_ci_script.sh"
+        echo "#!/bin/bash" > ${CI_SCRIPT}
+        echo "${GH_SCRIPT_DIR}/pre_benchmark.sh" >> ${CI_SCRIPT}
+        echo "${GH_SCRIPT_DIR}/benchmark.sh" >> ${CI_SCRIPT}
+        echo "${GH_SCRIPT_DIR}/post_benchmark.sh" >> ${CI_SCRIPT}
+        chmod +x ${CI_SCRIPT}
     else
         if [[ "${STAGE}" =~ "build" ]]; then
             CI_SCRIPT="${GH_SCRIPT_DIR}/build.sh"
