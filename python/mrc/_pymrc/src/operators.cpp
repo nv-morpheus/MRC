@@ -23,7 +23,6 @@
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
-#include <pybind11/eval.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
