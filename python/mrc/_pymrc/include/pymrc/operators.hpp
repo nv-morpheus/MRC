@@ -54,6 +54,24 @@ class OperatorProxy
     static std::string get_name(PythonOperator& self);
 };
 
+class AsyncOperatorHandler
+{
+  public:
+    AsyncOperatorHandler(PyObjectSubscriber sink);
+    ~AsyncOperatorHandler();
+
+    void process_async_generator(PyObjectHolder asyncgen);
+    void join();
+
+  private:
+    PyObjectSubscriber m_sink;
+    pybind11::module_ m_asyncio;
+    PyHolder m_loop;
+    std::thread m_loop_thread;
+    std::atomic<bool> m_loop_ct = false;
+    std::atomic<int32_t> m_outstanding = 0;
+};
+
 class OperatorsProxy
 {
   public:
