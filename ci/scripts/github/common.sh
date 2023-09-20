@@ -78,9 +78,11 @@ function update_conda_env() {
     # Deactivate the environment first before updating
     conda deactivate
 
-    # Make sure we have the conda-merge package installed
-    if [[ -z "$(conda list | grep conda-merge)" ]]; then
-        rapids-mamba-retry install -q -n mrc -c conda-forge "conda-merge>=0.2"
+    if [[ "${SKIP_CONDA_ENV_UPDATE}" == "" ]]; then
+        # Make sure we have the conda-merge package installed
+        if [[ -z "$(conda list | grep conda-merge)" ]]; then
+            rapids-mamba-retry install -q -n mrc -c conda-forge "conda-merge>=0.2"
+        fi
     fi
 
     # Create a temp directory which we store the combined environment file in
@@ -90,8 +92,10 @@ function update_conda_env() {
     # will clobber the last env update
     conda run -n mrc --live-stream conda-merge ${CONDA_ENV_YML} ${CONDA_CLANG_ENV_YML} ${CONDA_CI_ENV_YML} > ${condatmpdir}/merged_env.yml
 
-    # Update the conda env with prune remove excess packages (in case one was removed from the env)
-    rapids-mamba-retry env update -n mrc --prune --file ${condatmpdir}/merged_env.yml
+    if [[ "${SKIP_CONDA_ENV_UPDATE}" == "" ]]; then
+        # Update the conda env with prune remove excess packages (in case one was removed from the env)
+        rapids-mamba-retry env update -n mrc --prune --file ${condatmpdir}/merged_env.yml
+    fi
 
     # Delete the temp directory
     rm -rf ${condatmpdir}
@@ -165,4 +169,16 @@ function show_conda_info() {
     conda info
     conda config --show-sources
     conda list --show-channel-urls
+}
+
+function upload_artifact() {
+    FILE_NAME=$1
+    BASE_NAME=$(basename "${FILE_NAME}")
+    rapids-logger "Uploading artifact: ${BASE_NAME}"
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        cp ${FILE_NAME} "${LOCAL_CI_TMP}/${BASE_NAME}"
+    else
+        aws s3 cp --only-show-errors "${FILE_NAME}" "${ARTIFACT_URL}/${BASE_NAME}"
+        echo "- ${DISPLAY_ARTIFACT_URL}/${BASE_NAME}" >> ${GITHUB_STEP_SUMMARY}
+    fi
 }

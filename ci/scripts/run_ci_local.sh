@@ -56,7 +56,7 @@ GIT_UPSTREAM_URL=$(git_ssh_to_https ${GIT_UPSTREAM_URL})
 GIT_BRANCH=$(git branch --show-current)
 GIT_COMMIT=$(git log -n 1 --pretty=format:%H)
 
-LOCAL_CI_TMP=${LOCAL_CI_TMP:-${MRC_ROOT}/.tmp/local_ci_tmp}
+BASE_LOCAL_CI_TMP=${BASE_LOCAL_CI_TMP:-${MRC_ROOT}/.tmp/local_ci_tmp}
 CONTAINER_VER=${CONTAINER_VER:-230711}
 CUDA_VER=${CUDA_VER:-11.8}
 DOCKER_EXTRA_ARGS=${DOCKER_EXTRA_ARGS:-""}
@@ -64,26 +64,39 @@ DOCKER_EXTRA_ARGS=${DOCKER_EXTRA_ARGS:-""}
 BUILD_CONTAINER="nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-${CONTAINER_VER}"
 TEST_CONTAINER="nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-${CONTAINER_VER}"
 
-ENV_LIST="--env LOCAL_CI_TMP=/ci_tmp"
-ENV_LIST="${ENV_LIST} --env GIT_URL=${GIT_URL}"
-ENV_LIST="${ENV_LIST} --env GIT_UPSTREAM_URL=${GIT_UPSTREAM_URL}"
-ENV_LIST="${ENV_LIST} --env GIT_BRANCH=${GIT_BRANCH}"
-ENV_LIST="${ENV_LIST} --env GIT_COMMIT=${GIT_COMMIT}"
-ENV_LIST="${ENV_LIST} --env PARALLEL_LEVEL=$(nproc)"
-ENV_LIST="${ENV_LIST} --env CUDA_VER=${CUDA_VER}"
-ENV_LIST="${ENV_LIST} --env SKIP_CONDA_ENV_UPDATE=${SKIP_CONDA_ENV_UPDATE}"
+# These variables are common to all stages
+BASE_ENV_LIST="--env LOCAL_CI_TMP=/ci_tmp"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env GIT_URL=${GIT_URL}"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env GIT_UPSTREAM_URL=${GIT_UPSTREAM_URL}"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env GIT_BRANCH=${GIT_BRANCH}"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env GIT_COMMIT=${GIT_COMMIT}"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env PARALLEL_LEVEL=$(nproc)"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env CUDA_VER=${CUDA_VER}"
+BASE_ENV_LIST="${BASE_ENV_LIST} --env SKIP_CONDA_ENV_UPDATE=${SKIP_CONDA_ENV_UPDATE}"
 
-mkdir -p ${LOCAL_CI_TMP}
-cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${LOCAL_CI_TMP}
+mkdir -p ${BASE_LOCAL_CI_TMP}
+cp ${MRC_ROOT}/ci/scripts/bootstrap_local_ci.sh ${BASE_LOCAL_CI_TMP}
 
 for STAGE in "${STAGES[@]}"; do
-    if [[ "${STAGE}" =~ "clang" ]]; then
-        ENV_LIST="${ENV_LIST} --env BUILD_CC=clang"
-    elif [[ "${STAGE}" =~ "gcc" ]]; then
-        ENV_LIST="${ENV_LIST} --env BUILD_CC=gcc"
-    elif [[ "${STAGE}" =~ "codecov" ]]; then
-        ENV_LIST="${ENV_LIST} --env BUILD_CC=cc-coverage"
+    # Take a copy of the base env list, then make stage specific changes
+    ENV_LIST="${BASE_ENV_LIST}"
+
+    if [[ "${STAGE}" =~ clang|gcc ]]; then
+        if [[ "${STAGE}" =~ "clang" ]]; then
+            BUILD_CC="clang"
+        elif [[ "${STAGE}" =~ "codecov" ]]; then
+            BUILD_CC="gcc-coverage"
+        elif [[ "${STAGE}" =~ "gcc" ]]; then
+            BUILD_CC="gcc"
+        fi
+
+        ENV_LIST="${ENV_LIST} --env BUILD_CC=${BUILD_CC}"
+        LOCAL_CI_TMP="${BASE_LOCAL_CI_TMP}/${BUILD_CC}"
+        mkdir -p ${LOCAL_CI_TMP}
+    else
+        LOCAL_CI_TMP="${BASE_LOCAL_CI_TMP}"
     fi
+
 
     DOCKER_RUN_ARGS="--rm -ti --net=host -v "${LOCAL_CI_TMP}":/ci_tmp ${ENV_LIST} --env STAGE=${STAGE}"
     if [[ "${STAGE}" =~ "test" || "${STAGE}" =~ "codecov" || "${USE_GPU}" == "1" ]]; then
