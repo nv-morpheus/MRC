@@ -54,7 +54,7 @@ fi
 
 show_conda_info
 
-rapids-logger "Configuring for build and test using ${BUILD_CC}"
+rapids-logger "Configuring for build and test"
 git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 

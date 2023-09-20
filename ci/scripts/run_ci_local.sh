@@ -27,13 +27,13 @@ case "$1" in
     "test" )
         STAGES=("test-clang" "test-codecov" "test-gcc")
         ;;
-    "checks" | "build-clang" | "build-codecov" | "build-gcc" | "codecov" | "test" | "test-clang" | "test-codecov" | "test-gcc" | "docs" | "benchmark" | "conda" | "bash" )
+    "checks" | "build-clang" | "build-codecov" | "build-gcc" | "test" | "test-clang" | "test-codecov" | "test-gcc" | "docs" | "benchmark" | "conda" | "bash" )
         STAGES=("$1")
         ;;
     * )
         echo "Error: Invalid argument \"$1\" provided. Expected values: \"all\", \"checks\", \"build\", " \
-             "\"build-clang\", \"build-codecov\", \"build-gcc\", \"codecov\", \"test\", \"test-clang\", " \
-             "\"test-codecov\", \"test-gcc\", \"docs\", \"benchmark\", \"conda\" or \"bash\""
+             "\"build-clang\", \"build-codecov\", \"build-gcc\", \"test\", \"test-clang\", \"test-codecov\", " \
+             "\"test-gcc\", \"docs\", \"benchmark\", \"conda\" or \"bash\""
         exit 1
         ;;
 esac
@@ -78,7 +78,7 @@ for STAGE in "${STAGES[@]}"; do
     # Take a copy of the base env list, then make stage specific changes
     ENV_LIST="${BASE_ENV_LIST}"
 
-    if [[ "${STAGE}" =~ clang|gcc ]]; then
+    if [[ "${STAGE}" =~ clang|codecov|gcc ]]; then
         if [[ "${STAGE}" =~ "clang" ]]; then
             BUILD_CC="clang"
         elif [[ "${STAGE}" =~ "codecov" ]]; then
