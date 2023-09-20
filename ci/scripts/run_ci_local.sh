@@ -27,7 +27,8 @@ case "$1" in
     "test" )
         STAGES=("test-clang" "test-gcc")
         ;;
-    "checks" | "build-clang" | "build-gcc" | "test" | "test-clang" | "test-gcc" | "codecov" | "docs" | "benchmark" | "conda" | "bash" )
+    "checks" | "build-clang" | "build-gcc" | "test" | "test-clang" | "test-gcc" | "codecov" | "docs" | "benchmark" | \
+    "conda" | "bash" )
         STAGES=("$1")
         ;;
     * )
