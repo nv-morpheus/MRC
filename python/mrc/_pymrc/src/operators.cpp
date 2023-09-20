@@ -219,38 +219,41 @@ AsyncOperatorHandler::~AsyncOperatorHandler()
 
 void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen)
 {
+    pybind11::gil_scoped_acquire acquire;
     auto task   = asyncgen.attr("__anext__")();
     auto future = m_asyncio.attr("run_coroutine_threadsafe")(task, m_loop);
 
     m_outstanding++;
 
     future.attr("add_done_callback")(py::cpp_function([this, asyncgen](py::object future) {
-        pybind11::gil_scoped_acquire acquire;
         try
         {
             if (m_sink.is_subscribed())
             {
-                auto value = future.attr("result")();
-                {
-                    pybind11::gil_scoped_release release;
-                    m_sink.on_next(std::move(py::reinterpret_borrow<py::object>(value)));
-                }
+                auto acquire = std::make_unique<pybind11::gil_scoped_acquire>();
+                auto value   = future.attr("result")();
+                acquire.reset();
+                m_sink.on_next(std::move(py::reinterpret_borrow<py::object>(value)));
             }
 
             // should we continue to process the generator even if we're not subscribed?
             this->process_async_generator(asyncgen);
-        } catch (py::error_already_set ex)
+        } catch (py::error_already_set& ex)
         {
             if (not ex.matches(PyExc_StopAsyncIteration))
             {
-                throw;  // does this get caught by the next catch?
+                {
+                    pybind11::gil_scoped_acquire acquire;
+                    py::print("got python exception!", ex.what());
+                }
+                if (m_sink.is_subscribed())
+                {
+                    m_sink.on_error(std::current_exception());
+                }
             }
-        } catch (std::exception ex)
-        {
-            pybind11::gil_scoped_release release;
-            if (m_sink.is_subscribed())
             {
-                m_sink.on_error(std::current_exception());
+                pybind11::gil_scoped_acquire acquire;
+                py::print("error_already_set post");
             }
         }
 
@@ -282,12 +285,10 @@ PythonOperator OperatorsProxy::flatmap_async(PyFuncHolder<PyObjectHolder(pybind1
                         [sink, flatmap_fn, &async_handler = *async_handler](PyHolder value) {
                             try
                             {
-                                pybind11::gil_scoped_acquire acquire;
-
-                                auto result = flatmap_fn(std::move(value));
-
+                                auto acquire = std::make_unique<pybind11::gil_scoped_acquire>();
+                                auto result  = flatmap_fn(std::move(value));
+                                acquire.reset();
                                 async_handler.process_async_generator(result);
-
                             } catch (py::error_already_set& err)
                             {
                                 {
