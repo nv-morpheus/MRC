@@ -56,7 +56,12 @@ export S3_URL="s3://rapids-downloads/ci/mrc"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/mrc"
 export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
-export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
+
+if [[ "${LOCAL_CI}" == "1" ]]; then
+    export DISPLAY_ARTIFACT_URL="${LOCAL_CI_TMP}"
+else
+    export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
+fi
 
 # Set sccache env vars
 export SCCACHE_S3_KEY_PREFIX=mrc-${NVARCH}-${BUILD_CC}
@@ -180,5 +185,15 @@ function upload_artifact() {
     else
         aws s3 cp --only-show-errors "${FILE_NAME}" "${ARTIFACT_URL}/${BASE_NAME}"
         echo "- ${DISPLAY_ARTIFACT_URL}/${BASE_NAME}" >> ${GITHUB_STEP_SUMMARY}
+    fi
+}
+
+function download_artifact() {
+    ARTIFACT=$1
+    rapids-logger "Downloading ${ARTIFACT} from ${DISPLAY_ARTIFACT_URL}"
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        cp "${LOCAL_CI_TMP}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
+    else
+        fetch_s3 "${ARTIFACT_URL}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
     fi
 }
