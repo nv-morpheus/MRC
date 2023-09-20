@@ -27,6 +27,7 @@
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pyerrors.h>
 #include <rxcpp/rx.hpp>
 
 #include <exception>
@@ -192,21 +193,19 @@ AsyncOperatorHandler::AsyncOperatorHandler(PyObjectSubscriber sink) : m_sink(std
         return;
     }
 
-    if (not is_running)
-    {
-        m_loop_thread = std::thread([&loop_ct = m_loop_ct, loop = m_loop]() {
-            while (not loop_ct)
+    m_loop_thread = std::thread([&loop_ct = m_loop_ct, loop = m_loop]() {
+        while (not loop_ct)
+        {
             {
-                {
-                    // run event loop once
-                    pybind11::gil_scoped_acquire acquire;
-                    loop.attr("stop")();
-                    loop.attr("run_forever")();
-                }
-                std::this_thread::yield();
+                // run event loop once
+                pybind11::gil_scoped_acquire acquire;
+                loop.attr("stop")();
+                loop.attr("run_forever")();
             }
-        });
-    }
+
+            std::this_thread::yield();
+        }
+    });
 }
 
 AsyncOperatorHandler::~AsyncOperatorHandler()
@@ -229,23 +228,42 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen)
         pybind11::gil_scoped_acquire acquire;
         try
         {
-            auto value = future.attr("result")();
+            if (m_sink.is_subscribed())
             {
-                pybind11::gil_scoped_release release;
-                m_sink.on_next(std::move(py::reinterpret_borrow<py::object>(value)));
+                auto value = future.attr("result")();
+                {
+                    pybind11::gil_scoped_release release;
+                    m_sink.on_next(std::move(py::reinterpret_borrow<py::object>(value)));
+                }
             }
+
+            // should we continue to process the generator even if we're not subscribed?
             this->process_async_generator(asyncgen);
-            m_outstanding--;
+        } catch (py::error_already_set ex)
+        {
+            if (not ex.matches(PyExc_StopAsyncIteration))
+            {
+                throw;  // does this get caught by the next catch?
+            }
         } catch (std::exception ex)
         {
-            m_outstanding--;
-            // probably an end async iteration exception.
-            return;
+            pybind11::gil_scoped_release release;
+            if (m_sink.is_subscribed())
+            {
+                m_sink.on_error(std::current_exception());
+            }
         }
+
+        m_outstanding--;
     }));
 }
 
-void AsyncOperatorHandler::join()
+void AsyncOperatorHandler::wait_cancel()
+{
+    // TOOD: determine if/how to cancel in-flight and future async generators
+}
+
+void AsyncOperatorHandler::wait_completed()
 {
     while (m_outstanding > 0)
     {
@@ -283,12 +301,12 @@ PythonOperator OperatorsProxy::flatmap_async(PyFuncHolder<PyObjectHolder(pybind1
                         },
                         [sink, &async_handler = *async_handler](std::exception_ptr ex) {
                             // Forward
-                            // async_handler.cancel();
-                            sink.on_error(std::move(ex));
+                            async_handler.wait_cancel();
+                            sink.on_error(std::current_exception());
                         },
                         [sink, &async_handler = *async_handler]() {
                             // Forward
-                            async_handler.join();
+                            async_handler.wait_completed();
                             sink.on_completed();
                         });
                 });

@@ -61,14 +61,15 @@ class AsyncOperatorHandler
     ~AsyncOperatorHandler();
 
     void process_async_generator(PyObjectHolder asyncgen);
-    void join();
+    void wait_completed();
+    void wait_cancel();
 
   private:
     PyObjectSubscriber m_sink;
     pybind11::module_ m_asyncio;
     PyHolder m_loop;
     std::thread m_loop_thread;
-    std::atomic<bool> m_loop_ct = false;
+    std::atomic<bool> m_loop_ct        = false;
     std::atomic<int32_t> m_outstanding = 0;
 };
 
