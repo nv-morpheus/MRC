@@ -16,7 +16,7 @@
 
 set -e
 
-CI_SCRIPT_ARGS = "$@"
+CI_SCRIPT_ARGS="$@"
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
 # Its important that we are in the base environment for the build
