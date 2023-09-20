@@ -78,12 +78,12 @@ for STAGE in "${STAGES[@]}"; do
     # Take a copy of the base env list, then make stage specific changes
     ENV_LIST="${BASE_ENV_LIST}"
 
-    if [[ "${STAGE}" =~ clang|codecov|gcc ]]; then
+    if [[ "${STAGE}" =~ benchmark|clang|codecov|gcc ]]; then
         if [[ "${STAGE}" =~ "clang" ]]; then
             BUILD_CC="clang"
         elif [[ "${STAGE}" =~ "codecov" ]]; then
             BUILD_CC="gcc-coverage"
-        elif [[ "${STAGE}" =~ "gcc" ]]; then
+        else
             BUILD_CC="gcc"
         fi
 

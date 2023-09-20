@@ -25,18 +25,24 @@ git checkout ${GIT_COMMIT}
 export MRC_ROOT=$(pwd)
 export WORKSPACE=${MRC_ROOT}
 export LOCAL_CI=1
+GH_SCRIPT_DIR="${MRC_ROOT}/ci/scripts/github"
+
 unset CMAKE_CUDA_COMPILER_LAUNCHER
 unset CMAKE_CXX_COMPILER_LAUNCHER
 unset CMAKE_C_COMPILER_LAUNCHER
 
-if [[ "${STAGE}" =~ "build" ]]; then
-    SCRIPT_NAME="build.sh"
-elif [[ "${STAGE}" =~ "test" ]]; then
-    SCRIPT_NAME="test.sh"
-else
-    SCRIPT_NAME="${STAGE}.sh"
-fi
-
 if [[ "${STAGE}" != "bash" ]]; then
-    ${MRC_ROOT}/ci/scripts/github/${SCRIPT_NAME}
+    if [[ "${STAGE}" == "benchmark" ]]; then
+        CI_SCRIPT="${GH_SCRIPT_DIR}/pre_benchmark.sh && ${GH_SCRIPT_DIR}/benchmark.sh && ${GH_SCRIPT_DIR}/post_benchmark.sh"
+    else
+        if [[ "${STAGE}" =~ "build" ]]; then
+            CI_SCRIPT="${GH_SCRIPT_DIR}/build.sh"
+        elif [[ "${STAGE}" =~ "test" ]]; then
+            CI_SCRIPT="${GH_SCRIPT_DIR}/test.sh"
+        else
+            CI_SCRIPT="${GH_SCRIPT_DIR}/${STAGE}.sh"
+        fi
+    fi
+
+    ${CI_SCRIPT}
 fi
