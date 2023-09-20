@@ -105,7 +105,12 @@ function update_conda_env() {
 
 print_env_vars
 
-function fetch_base_branch() {
+function fetch_base_branch_gh_api() {
+    # For PRs, $GIT_BRANCH is like: pull-request/989
+    REPO_NAME=$(basename "${GITHUB_REPOSITORY}")
+    ORG_NAME="${GITHUB_REPOSITORY_OWNER}"
+    PR_NUM="${GITHUB_REF_NAME##*/}"
+
     rapids-logger "Retrieving base branch from GitHub API"
     [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
     RESP=$(
@@ -115,11 +120,29 @@ function fetch_base_branch() {
         "${GITHUB_API_URL}/repos/${ORG_NAME}/${REPO_NAME}/pulls/${PR_NUM}"
     )
 
-    BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
+    export BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
 
     # Change target is the branch name we are merging into but due to the weird way jenkins does
     # the checkout it isn't recognized by git without the origin/ prefix
     export CHANGE_TARGET="origin/${BASE_BRANCH}"
+}
+
+function fetch_base_branch_local() {
+    rapids-logger "Retrieving base branch from git"
+    git remote add upstream ${GIT_UPSTREAM_URL}
+    git fetch upstream --tags
+    source ${MRC_ROOT}/ci/scripts/common.sh
+    export BASE_BRANCH=$(get_base_branch)
+    export CHANGE_TARGET="upstream/${BASE_BRANCH}"
+}
+
+function fetch_base_branch() {
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        fetch_base_branch_local
+    else
+        fetch_base_branch_gh_api
+    fi
+
     git submodule update --init --recursive
     rapids-logger "Base branch: ${BASE_BRANCH}"
 }
