@@ -76,10 +76,7 @@ namespace mrc::control_plane {
 class AsyncEventStatus
 {
   public:
-    size_t request_id() const
-    {
-        return m_request_id;
-    }
+    size_t request_id() const;
 
     template <typename ResponseT>
     Expected<ResponseT> await_response()
@@ -107,12 +104,9 @@ class AsyncEventStatus
     }
 
   private:
-    AsyncEventStatus() : m_request_id(++s_request_id_counter) {}
+    AsyncEventStatus();
 
-    void set_future(Future<protos::Event> future)
-    {
-        m_future = std::move(future);
-    }
+    void set_future(Future<protos::Event> future);
 
     static std::atomic_size_t s_request_id_counter;
 

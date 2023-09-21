@@ -49,6 +49,18 @@ namespace mrc::control_plane {
 
 std::atomic_uint64_t AsyncEventStatus::s_request_id_counter;
 
+AsyncEventStatus::AsyncEventStatus() : m_request_id(++s_request_id_counter) {}
+
+size_t AsyncEventStatus::request_id() const
+{
+    return m_request_id;
+}
+
+void AsyncEventStatus::set_future(Future<protos::Event> future)
+{
+    m_future = std::move(future);
+}
+
 Client::Client(resources::PartitionResourceBase& base, std::shared_ptr<grpc::CompletionQueue> cq) :
   resources::PartitionResourceBase(base),
   Service("control_plane::Client"),
