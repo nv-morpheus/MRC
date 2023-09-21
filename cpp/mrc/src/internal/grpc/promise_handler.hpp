@@ -49,8 +49,6 @@ struct PromiseWrapper
     std::string to_string() const;
 
   private:
-    boost::fibers::mutex m_mutex;
-
     static std::atomic_size_t s_id_counter;
 };
 

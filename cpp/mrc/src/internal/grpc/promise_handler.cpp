@@ -49,9 +49,6 @@ void PromiseWrapper::set_value(bool val)
 {
     auto tmp_prefix = this->to_string();
 
-    // Acquire the mutex to prevent leaving `get_future` before we exit
-    // std::unique_lock lock(m_mutex);
-
     VLOG(5) << tmp_prefix << "#2 setting promise to " << val;
     this->promise.set_value(val);
     VLOG(5) << tmp_prefix << "#3 setting promise to " << val << "... done";
@@ -64,9 +61,6 @@ bool PromiseWrapper::get_future()
     auto value = future.get();
 
     VLOG(5) << this->to_string() << "#4 got future with value " << value;
-
-    // Before exiting, we must acquire the mutex to prevent this object being cleaned up
-    // std::unique_lock lock(m_mutex);
 
     return value;
 }
