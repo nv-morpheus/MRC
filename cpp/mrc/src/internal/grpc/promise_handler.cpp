@@ -32,15 +32,6 @@ std::atomic_size_t PromiseWrapper::s_id_counter = 0;
 PromiseWrapper::PromiseWrapper(const std::string& method, bool in_runtime) : id(++s_id_counter), method(method)
 {
     size_t runtime_id = 0;
-
-    // try
-    // {
-    //     runtime_id = resources::Manager::get_resources().runtime_id();
-    // } catch (exceptions::MrcRuntimeError& e)
-    // {
-    //     // Do nothing for now
-    // }
-
     this->prefix = MRC_CONCAT_STR("Promise[" << id << ", " << this << ", " << runtime_id << "](" << method << "): ");
     VLOG(5) << this->to_string() << "#1 creating promise";
 }
@@ -68,7 +59,6 @@ bool PromiseWrapper::get_future()
 std::string PromiseWrapper::to_string() const
 {
     return this->prefix;
-    // return MRC_CONCAT_STR("Promise[" << id << "](" << method << "): ");
 }
 
 }  // namespace mrc::rpc
