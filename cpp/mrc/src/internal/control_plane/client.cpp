@@ -262,7 +262,6 @@ AsyncEventStatus Client::issue_event(const protos::EventType& event_type)
 {
     protos::Event event;
     event.set_event(event_type);
-    // m_writer->await_write(std::move(event));
     return this->write_event(std::move(event), false);
 }
 
