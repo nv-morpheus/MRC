@@ -19,7 +19,7 @@
 
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
-// #include "mrc/modules/segment_modules.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/options.hpp"
@@ -36,12 +36,12 @@
 
 #include <cassert>
 #include <iostream>
-// #include <map>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
-// #include <vector>
+#include <vector>
 
 namespace mrc {
 
@@ -63,64 +63,65 @@ TEST_F(TestSegmentModules, ModuleConstructorTest)
     ASSERT_THROW(SimpleModule("bad/module/name"), std::invalid_argument);
 }
 
-// TEST_F(TestSegmentModules, ModuleInitializationTest)
-// {
-//     using namespace modules;
+TEST_F(TestSegmentModules, ModuleInitializationTest)
+{
+    using namespace modules;
 
-//     auto init_wrapper = [](segment::IBuilder& builder) {
-//         auto config_1            = nlohmann::json();
-//         auto config_2            = nlohmann::json();
-//         config_2["config_key_1"] = true;
+    GTEST_SKIP() << "To be re-enabled by issue #390";
+    auto init_wrapper = [](segment::IBuilder& builder) {
+        auto config_1            = nlohmann::json();
+        auto config_2            = nlohmann::json();
+        config_2["config_key_1"] = true;
 
-//         auto simple_mod         = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
-//         auto configurable_1_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
-//         auto configurable_2_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
-//         auto configurable_mod_3 = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
+        auto simple_mod         = builder.make_module<SimpleModule>("ModuleInitializationTest_mod1");
+        auto configurable_1_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod2", config_1);
+        auto configurable_2_mod = builder.make_module<ConfigurableModule>("ModuleInitializationTest_mod3", config_2);
+        auto configurable_mod_3 = ConfigurableModule("ModuleInitializationTest_mod4", config_2);
 
-//         configurable_mod_3(builder);
+        configurable_mod_3(builder);
 
-//         EXPECT_EQ(simple_mod->input_ids().size(), 2);
-//         EXPECT_EQ(simple_mod->output_ids().size(), 2);
-//         EXPECT_EQ(simple_mod->input_ports().size(), 2);
-//         EXPECT_EQ(simple_mod->output_ports().size(), 2);
-//         EXPECT_EQ(simple_mod->input_ports().find("input1") != simple_mod->input_ports().end(), true);
-//         EXPECT_EQ(simple_mod->input_ports().find("input2") != simple_mod->input_ports().end(), true);
-//         EXPECT_EQ(simple_mod->input_port_type_id("input1"), typeid(bool));
-//         EXPECT_EQ(simple_mod->input_port_type_id("input2"), typeid(bool));
-//         EXPECT_EQ(simple_mod->input_port_type_ids().find("input1")->second, typeid(bool));
-//         EXPECT_EQ(simple_mod->input_port_type_ids().find("input2")->second, typeid(bool));
-//         EXPECT_EQ(simple_mod->output_ports().find("output1") != simple_mod->input_ports().end(), true);
-//         EXPECT_EQ(simple_mod->output_ports().find("output2") != simple_mod->input_ports().end(), true);
-//         EXPECT_EQ(simple_mod->output_port_type_id("output1"), typeid(std::string));
-//         EXPECT_EQ(simple_mod->output_port_type_id("output2"), typeid(std::string));
-//         EXPECT_EQ(simple_mod->output_port_type_ids().find("output1")->second, typeid(std::string));
-//         EXPECT_EQ(simple_mod->output_port_type_ids().find("output2")->second, typeid(std::string));
+        EXPECT_EQ(simple_mod->input_ids().size(), 2);
+        EXPECT_EQ(simple_mod->output_ids().size(), 2);
+        EXPECT_EQ(simple_mod->input_ports().size(), 2);
+        EXPECT_EQ(simple_mod->output_ports().size(), 2);
+        EXPECT_EQ(simple_mod->input_ports().find("input1") != simple_mod->input_ports().end(), true);
+        EXPECT_EQ(simple_mod->input_ports().find("input2") != simple_mod->input_ports().end(), true);
+        EXPECT_EQ(simple_mod->input_port_type_id("input1"), typeid(bool));
+        EXPECT_EQ(simple_mod->input_port_type_id("input2"), typeid(bool));
+        EXPECT_EQ(simple_mod->input_port_type_ids().find("input1")->second, typeid(bool));
+        EXPECT_EQ(simple_mod->input_port_type_ids().find("input2")->second, typeid(bool));
+        EXPECT_EQ(simple_mod->output_ports().find("output1") != simple_mod->input_ports().end(), true);
+        EXPECT_EQ(simple_mod->output_ports().find("output2") != simple_mod->input_ports().end(), true);
+        EXPECT_EQ(simple_mod->output_port_type_id("output1"), typeid(std::string));
+        EXPECT_EQ(simple_mod->output_port_type_id("output2"), typeid(std::string));
+        EXPECT_EQ(simple_mod->output_port_type_ids().find("output1")->second, typeid(std::string));
+        EXPECT_EQ(simple_mod->output_port_type_ids().find("output2")->second, typeid(std::string));
 
-//         EXPECT_THROW(simple_mod->input_port("DOES_NOT_EXIST"), std::invalid_argument);
-//         EXPECT_THROW(simple_mod->output_port("DOES_NOT_EXIST"), std::invalid_argument);
-//         EXPECT_THROW(simple_mod->input_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
-//         EXPECT_THROW(simple_mod->output_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod->input_port("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod->output_port("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod->input_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
+        EXPECT_THROW(simple_mod->output_port_type_id("DOES_NOT_EXIST"), std::invalid_argument);
 
-//         EXPECT_EQ(configurable_1_mod->input_ports().size(), 1);
-//         EXPECT_EQ(configurable_1_mod->output_ports().size(), 1);
-//         EXPECT_EQ(configurable_1_mod->m_was_configured, false);
+        EXPECT_EQ(configurable_1_mod->input_ports().size(), 1);
+        EXPECT_EQ(configurable_1_mod->output_ports().size(), 1);
+        EXPECT_EQ(configurable_1_mod->m_was_configured, false);
 
-//         EXPECT_EQ(configurable_2_mod->input_ports().size(), 1);
-//         EXPECT_EQ(configurable_2_mod->output_ports().size(), 1);
-//         EXPECT_EQ(configurable_2_mod->m_was_configured, true);
-//     };
+        EXPECT_EQ(configurable_2_mod->input_ports().size(), 1);
+        EXPECT_EQ(configurable_2_mod->output_ports().size(), 1);
+        EXPECT_EQ(configurable_2_mod->m_was_configured, true);
+    };
 
-//     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
+    m_pipeline->make_segment("Initialization_Segment", init_wrapper);
 
-//     auto options = std::make_shared<Options>();
-//     options->topology().user_cpuset("0-1");
-//     options->topology().restrict_gpus(true);
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
 
-//     Executor executor(options);
-//     executor.register_pipeline(std::move(m_pipeline));
-//     executor.start();
-//     executor.join();
-// }
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+}
 
 TEST_F(TestSegmentModules, ModuleEndToEndTest)
 {

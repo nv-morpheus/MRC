@@ -51,26 +51,27 @@ using namespace mrc::modules::stream_buffers;
 using StreamBufferModuleImmediate =                                        // NOLINT
     mrc::modules::StreamBufferModule<std::string, StreamBufferImmediate>;  // NOLINT
 
-// TEST_F(TestStreamBufferModule, InitailizationTest)
-// {
-//     using namespace modules;
+TEST_F(TestStreamBufferModule, InitailizationTest)
+{
+    using namespace modules;
 
-//     auto init_wrapper = [](segment::IBuilder& builder) {
-//         auto config1        = nlohmann::json();
-//         auto mirror_buffer1 = builder.make_module<StreamBufferModuleImmediate>("mirror_tap", config1);
-//     };
+    GTEST_SKIP() << "To be re-enabled by issue #390";
+    auto init_wrapper = [](segment::IBuilder& builder) {
+        auto config1        = nlohmann::json();
+        auto mirror_buffer1 = builder.make_module<StreamBufferModuleImmediate>("mirror_tap", config1);
+    };
 
-//     m_pipeline->make_segment("Initialization_Segment", init_wrapper);
+    m_pipeline->make_segment("Initialization_Segment", init_wrapper);
 
-//     auto options = std::make_shared<Options>();
-//     options->topology().user_cpuset("0-1");
-//     options->topology().restrict_gpus(true);
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
 
-//     Executor executor(options);
-//     executor.register_pipeline(std::move(m_pipeline));
-//     executor.start();
-//     executor.join();
-// }
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    executor.join();
+}
 
 TEST_F(TestStreamBufferModule, SinglePipelineImmediateStreamBufferRawThroughputTest)
 {
