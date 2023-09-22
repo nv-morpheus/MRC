@@ -230,7 +230,7 @@ void Service::service_await_join()
         }
     }
 
-    // Wait for the completed future to be returned. This will rethrow and exception thrown in do_service_await_join
+    // Wait for the completed future to be returned. This will rethrow any exception thrown in do_service_await_join
     m_completed_future.get();
 }
 
