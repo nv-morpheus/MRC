@@ -139,7 +139,7 @@ void Service::service_await_live()
         }
     }
 
-    // Wait for the future to be returned. This will rethrow and exception thrown in do_service_await_join
+    // Wait for the future to be returned. This will rethrow any exception thrown in do_service_await_join
     m_live_future.get();
 }
 
