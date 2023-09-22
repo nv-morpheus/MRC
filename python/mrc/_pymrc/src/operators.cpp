@@ -252,7 +252,7 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_genera
 PythonOperator OperatorsProxy::concat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
 {
     //  Build and return the map operator
-    return {"flatten", [=](PyObjectObservable source) {
+    return {"concat_map_async", [=](PyObjectObservable source) {
                 return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
                     auto async_handler = std::make_unique<AsyncOperatorHandler>();
                     source.subscribe(
