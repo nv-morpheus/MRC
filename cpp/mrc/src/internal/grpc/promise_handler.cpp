@@ -17,19 +17,21 @@
 
 #include "internal/grpc/promise_handler.hpp"
 
-#include "mrc/utils/string_utils.hpp"  // // IWYU pragma: keep for MRC_CONCAT_STR
+// MRC_CONCAT_STR is needed for debug builds, in CI IWYU is run with a release config
+#include "mrc/utils/string_utils.hpp"  // IWYU pragma: keep for MRC_CONCAT_STR
 
 #include <boost/fiber/future/future.hpp>  // for future
 #include <glog/logging.h>                 // for COMPACT_GOOGLE_LOG_INFO
 
 #include <atomic>
 #include <sstream>  // for operator<<, basic_ostream
+#include <utility>  // for move
 
 namespace mrc::rpc {
 
 std::atomic_size_t PromiseWrapper::s_id_counter = 0;
 
-PromiseWrapper::PromiseWrapper(const std::string& method, bool in_runtime) : id(++s_id_counter), method(method)
+PromiseWrapper::PromiseWrapper(std::string method, bool in_runtime) : id(++s_id_counter), method(std::move(method))
 {
 #if (!defined(NDEBUG))
     this->prefix = MRC_CONCAT_STR("Promise[" << id << ", " << this << "](" << method << "): ");

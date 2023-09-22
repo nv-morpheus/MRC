@@ -32,7 +32,7 @@ namespace mrc::rpc {
 
 struct PromiseWrapper
 {
-    PromiseWrapper(const std::string& method, bool in_runtime = true);
+    PromiseWrapper(std::string method, bool in_runtime = true);
 
     ~PromiseWrapper() = default;
 
