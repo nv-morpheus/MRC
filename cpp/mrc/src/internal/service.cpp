@@ -281,7 +281,7 @@ bool Service::advance_state(ServiceState new_state, bool assert_state_change)
 
     if (m_state < new_state)
     {
-        DVLOG(20) << this->debug_prefix() << " changing state. From: " << m_state << " to " << new_state;
+        DVLOG(20) << this->debug_prefix() << " advancing state. From: " << m_state << " to " << new_state;
 
         m_state = new_state;
 
