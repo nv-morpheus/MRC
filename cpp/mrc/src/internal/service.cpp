@@ -125,10 +125,8 @@ void Service::service_await_live()
 
             try
             {
-                {
-                    // Now call the await join (this can throw!)
-                    this->do_service_await_live();
-                }
+                // Now call the await join (this can throw!)
+                this->do_service_await_live();
 
                 // Set the value only if there was not an exception
                 live_promise.set_value();
