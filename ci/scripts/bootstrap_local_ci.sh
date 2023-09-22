@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export WORKSPACE_TMP="$(pwd)/ws_tmp"
+export WORKSPACE_TMP="$(pwd)/.tmp/local_ci_workspace"
 mkdir -p ${WORKSPACE_TMP}
 git clone ${GIT_URL} mrc
 cd mrc/
