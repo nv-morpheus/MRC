@@ -107,11 +107,11 @@ class Service
     // Advances the state. New state value must be greater than or equal to current state. Using a value less than the
     // current state will generate an error. Use assert_forward = false to require that the state advances. Normally,
     // same states are fine
-    bool forward_state(ServiceState new_state, bool assert_forward = false);
+    bool advance_state(ServiceState new_state, bool assert_state_change = false);
 
     // Ensures the state is at least the current value or higher. Does not change the state if the value is less than or
     // equal the current state
-    bool ensure_state(ServiceState ensure_state);
+    bool desired_state(ServiceState ensure_state);
 
     virtual void do_service_start()      = 0;
     virtual void do_service_await_live() = 0;

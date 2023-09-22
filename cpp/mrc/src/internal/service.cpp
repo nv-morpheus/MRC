@@ -77,7 +77,7 @@ void Service::service_start()
         throw exceptions::MrcRuntimeError(MRC_CONCAT_STR(this->debug_prefix() << " Service has already been started"));
     }
 
-    if (forward_state(ServiceState::Starting))
+    if (advance_state(ServiceState::Starting))
     {
         // Unlock the mutex before calling start to avoid a deadlock
         lock.unlock();
@@ -87,11 +87,11 @@ void Service::service_start()
             this->do_service_start();
 
             // Use ensure_state here in case the service itself called stop or kill
-            this->ensure_state(ServiceState::Running);
+            this->desired_state(ServiceState::Running);
         } catch (...)
         {
             // On error, set this to completed and rethrow the error to allow for cleanup
-            this->forward_state(ServiceState::Completed);
+            this->advance_state(ServiceState::Completed);
 
             throw;
         }
@@ -156,7 +156,7 @@ void Service::service_stop()
     }
 
     // Ensure we are at least in the stopping state. If so, execute the stop call
-    if (this->ensure_state(ServiceState::Stopping))
+    if (this->desired_state(ServiceState::Stopping))
     {
         lock.unlock();
 
@@ -175,7 +175,7 @@ void Service::service_kill()
     }
 
     // Ensure we are at least in the stopping state. If so, execute the stop call
-    if (this->ensure_state(ServiceState::Killing))
+    if (this->desired_state(ServiceState::Killing))
     {
         lock.unlock();
 
@@ -213,7 +213,7 @@ void Service::service_await_join()
                 {
                     Unwinder ensure_completed_set([this]() {
                         // Always set the state to completed before releasing the future
-                        this->forward_state(ServiceState::Completed);
+                        this->advance_state(ServiceState::Completed);
                     });
 
                     // Now call the await join (this can throw!)
@@ -271,7 +271,7 @@ void Service::service_set_description(std::string description)
     m_service_name = std::move(description);
 }
 
-bool Service::forward_state(ServiceState new_state, bool assert_forward)
+bool Service::advance_state(ServiceState new_state, bool assert_state_change)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
@@ -290,21 +290,21 @@ bool Service::forward_state(ServiceState new_state, bool assert_forward)
         return true;
     }
 
-    CHECK(!assert_forward) << this->debug_prefix()
-                           << " invalid ServiceState requested; ServiceState was required to move forward "
-                              "but the state was already set to "
-                           << m_state;
+    CHECK(!assert_state_change) << this->debug_prefix()
+                                << " invalid ServiceState requested; ServiceState was required to move forward "
+                                   "but the state was already set to "
+                                << m_state;
 
     return false;
 }
 
-bool Service::ensure_state(ServiceState ensure_state)
+bool Service::desired_state(ServiceState ensure_state)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
     if (ensure_state > m_state)
     {
-        return forward_state(ensure_state);
+        return advance_state(ensure_state);
     }
 
     return false;
