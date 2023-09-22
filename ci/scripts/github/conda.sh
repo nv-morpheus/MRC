@@ -42,7 +42,7 @@ rapids-logger "Building Conda Package"
 # Run the conda build and upload
 ${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh "${CI_SCRIPT_ARGS}"
 
-if [["${CI_SCRIPT_ARGS}" =~ "upload" ]]; then
+if [[ " ${CI_SCRIPT_ARGS} " =~ " upload " ]]; then
    rapids-logger "Building Conda Package... Done"
 else
    # if we didn't receive the upload argument, we can still upload the artifact to S3
