@@ -127,7 +127,7 @@ class Service
     SharedFuture<void> m_live_future;
 
     // This future is set in `service_await_join` and is used to wait for the service to complete. We use a future here
-    // incase join is called multiple times, they will all be released when the service completes.
+    // in case join is called multiple times, so that all callers will all be released when the service completes.
     SharedFuture<void> m_completed_future;
 
     bool m_service_await_live_called{false};
