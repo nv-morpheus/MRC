@@ -111,7 +111,7 @@ class Service
 
     // Ensures the state is at least the current value or higher. Does not change the state if the value is less than or
     // equal the current state
-    bool desired_state(ServiceState ensure_state);
+    bool ensure_state(ServiceState desired_state);
 
     virtual void do_service_start()      = 0;
     virtual void do_service_await_live() = 0;

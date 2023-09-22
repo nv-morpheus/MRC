@@ -87,7 +87,7 @@ void Service::service_start()
             this->do_service_start();
 
             // Use ensure_state here in case the service itself called stop or kill
-            this->desired_state(ServiceState::Running);
+            this->ensure_state(ServiceState::Running);
         } catch (...)
         {
             // On error, set this to completed and rethrow the error to allow for cleanup
@@ -154,7 +154,7 @@ void Service::service_stop()
     }
 
     // Ensure we are at least in the stopping state. If so, execute the stop call
-    if (this->desired_state(ServiceState::Stopping))
+    if (this->ensure_state(ServiceState::Stopping))
     {
         lock.unlock();
 
@@ -173,7 +173,7 @@ void Service::service_kill()
     }
 
     // Ensure we are at least in the stopping state. If so, execute the stop call
-    if (this->desired_state(ServiceState::Killing))
+    if (this->ensure_state(ServiceState::Killing))
     {
         lock.unlock();
 
@@ -294,13 +294,13 @@ bool Service::advance_state(ServiceState new_state, bool assert_state_change)
     return false;
 }
 
-bool Service::desired_state(ServiceState ensure_state)
+bool Service::ensure_state(ServiceState desired_state)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
-    if (ensure_state > m_state)
+    if (desired_state > m_state)
     {
-        return advance_state(ensure_state);
+        return advance_state(desired_state);
     }
 
     return false;
