@@ -123,7 +123,7 @@ class Service
     std::string m_service_name{"mrc::Service"};
 
     // This future is set in `service_await_live` and is used to wait for the service to to be live. We use a future
-    // here incase it is called multiple times, they will all be released when the service is live.
+    // here in case it is called multiple times, so that all callers will all be released when the service is live.
     SharedFuture<void> m_live_future;
 
     // This future is set in `service_await_join` and is used to wait for the service to complete. We use a future here
