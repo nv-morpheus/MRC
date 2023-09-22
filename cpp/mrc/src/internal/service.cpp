@@ -208,15 +208,13 @@ void Service::service_await_join()
 
             try
             {
-                {
-                    Unwinder ensure_completed_set([this]() {
-                        // Always set the state to completed before releasing the future
-                        this->advance_state(ServiceState::Completed);
-                    });
+                Unwinder ensure_completed_set([this]() {
+                    // Always set the state to completed before releasing the future
+                    this->advance_state(ServiceState::Completed);
+                });
 
-                    // Now call the await join (this can throw!)
-                    this->do_service_await_join();
-                }
+                // Now call the await join (this can throw!)
+                this->do_service_await_join();
 
                 // Set the value only if there was not an exception
                 completed_promise.set_value();
