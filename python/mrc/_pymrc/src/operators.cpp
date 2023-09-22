@@ -17,6 +17,7 @@
 
 #include "pymrc/operators.hpp"
 
+#include "pymrc/executor.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
@@ -190,20 +191,26 @@ AsyncOperatorHandler::AsyncOperatorHandler()
         m_loop = m_asyncio.attr("get_event_loop")();
     } catch (std::runtime_error ex)
     {
-        m_loop        = m_asyncio.attr("new_event_loop")();
-        m_loop_thread = std::thread([&loop_ct = m_loop_ct, loop = m_loop]() {
-            while (not loop_ct)
-            {
-                {
-                    // run event loop once
-                    py::gil_scoped_acquire acquire;
-                    loop.attr("stop")();
-                    loop.attr("run_forever")();
-                }
+        auto setup_debugging = create_gil_initializer();
 
-                std::this_thread::yield();
-            }
-        });
+        m_loop        = m_asyncio.attr("new_event_loop")();
+        m_loop_thread = std::thread(
+            [&loop_ct = m_loop_ct, loop = m_loop](std::function<void()> setup_debugging) {
+                setup_debugging();
+
+                while (not loop_ct)
+                {
+                    {
+                        // run event loop once
+                        py::gil_scoped_acquire acquire;
+                        loop.attr("stop")();
+                        loop.attr("run_forever")();
+                    }
+
+                    std::this_thread::yield();
+                }
+            },
+            std::move(setup_debugging));
     }
 }
 
