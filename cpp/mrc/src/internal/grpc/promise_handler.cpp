@@ -17,7 +17,7 @@
 
 #include "internal/grpc/promise_handler.hpp"
 
-#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR
+#include "mrc/utils/string_utils.hpp"  // // IWYU pragma: keep for MRC_CONCAT_STR
 
 #include <boost/fiber/future/future.hpp>  // for future
 #include <glog/logging.h>                 // for COMPACT_GOOGLE_LOG_INFO
