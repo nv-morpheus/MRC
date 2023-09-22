@@ -31,18 +31,19 @@ std::atomic_size_t PromiseWrapper::s_id_counter = 0;
 
 PromiseWrapper::PromiseWrapper(const std::string& method, bool in_runtime) : id(++s_id_counter), method(method)
 {
-    size_t runtime_id = 0;
-    this->prefix = MRC_CONCAT_STR("Promise[" << id << ", " << this << ", " << runtime_id << "](" << method << "): ");
-    VLOG(5) << this->to_string() << "#1 creating promise";
+#if (!defined(NDEBUG))
+    this->prefix = MRC_CONCAT_STR("Promise[" << id << ", " << this << "](" << method << "): ");
+#endif
+    VLOG(20) << this->to_string() << "#1 creating promise";
 }
 
 void PromiseWrapper::set_value(bool val)
 {
     auto tmp_prefix = this->to_string();
 
-    VLOG(5) << tmp_prefix << "#2 setting promise to " << val;
+    VLOG(20) << tmp_prefix << "#2 setting promise to " << val;
     this->promise.set_value(val);
-    VLOG(5) << tmp_prefix << "#3 setting promise to " << val << "... done";
+    VLOG(20) << tmp_prefix << "#3 setting promise to " << val << "... done";
 }
 
 bool PromiseWrapper::get_future()
@@ -51,7 +52,7 @@ bool PromiseWrapper::get_future()
 
     auto value = future.get();
 
-    VLOG(5) << this->to_string() << "#4 got future with value " << value;
+    VLOG(20) << this->to_string() << "#4 got future with value " << value;
 
     return value;
 }
