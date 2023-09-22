@@ -23,7 +23,6 @@
 #include "mrc/node/sink_properties.hpp"  // for SinkProperties, Status
 
 #include <boost/fiber/future/promise.hpp>  // for promise
-#include <boost/fiber/mutex.hpp>
 
 #include <atomic>   // for atomic_size_t
 #include <cstddef>  // for size_t
