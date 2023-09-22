@@ -19,6 +19,9 @@
 
 #include "pymrc/types.hpp"
 
+#include <boost/fiber/future/promise.hpp>
+
+#include <future>
 #include <optional>
 #include <string>
 
@@ -57,20 +60,16 @@ class OperatorProxy
 class AsyncOperatorHandler
 {
   public:
-    AsyncOperatorHandler(PyObjectSubscriber sink);
+    AsyncOperatorHandler();
     ~AsyncOperatorHandler();
 
-    void process_async_generator(PyObjectHolder asyncgen);
-    void wait_completed();
-    void wait_cancel();
+    boost::fibers::future<PyObjectHolder> process_async_generator(PyObjectHolder asyncgen);
 
   private:
-    PyObjectSubscriber m_sink;
     pybind11::module_ m_asyncio;
     PyHolder m_loop;
     std::thread m_loop_thread;
-    std::atomic<bool> m_loop_ct        = false;
-    std::atomic<int32_t> m_outstanding = 0;
+    std::atomic<bool> m_loop_ct = false;
 };
 
 class OperatorsProxy
@@ -79,7 +78,7 @@ class OperatorsProxy
     static PythonOperator build(PyFuncHolder<void(const PyObjectObservable& obs, PyObjectSubscriber& sub)> build_fn);
     static PythonOperator filter(PyFuncHolder<bool(pybind11::object x)> filter_fn);
     static PythonOperator flatten();
-    static PythonOperator flatmap_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn);
+    static PythonOperator concat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn);
     static PythonOperator map(OnDataFunction map_fn);
     static PythonOperator on_completed(PyFuncHolder<std::optional<pybind11::object>()> finally_fn);
     static PythonOperator pairwise();
