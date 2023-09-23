@@ -36,7 +36,6 @@
 #include "mrc/segment/utils.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
 #include <exception>
@@ -54,6 +53,7 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
                                  SegmentRank rank,
                                  pipeline::PipelineResources& resources,
                                  std::size_t partition_id) :
+  Service("segment::SegmentInstance"),
   m_name(definition->name()),
   m_id(definition->id()),
   m_rank(rank),
@@ -78,7 +78,10 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
                     .get();
 }
 
-SegmentInstance::~SegmentInstance() = default;
+SegmentInstance::~SegmentInstance()
+{
+    Service::call_in_destructor();
+}
 
 const std::string& SegmentInstance::name() const
 {
