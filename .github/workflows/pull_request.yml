@@ -47,7 +47,7 @@ jobs:
     name: Prepare
     runs-on: ubuntu-latest
     container:
-      image: rapidsai/ci:latest
+      image: rapidsai/ci-conda:latest
     steps:
       - name: Get PR Info
         id: get-pr-info

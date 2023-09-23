@@ -25,12 +25,13 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+// IWYU pragma: no_include "internal/segment/segment_instance.hpp"
 
 namespace mrc::resources {
 class Manager;
 }  // namespace mrc::resources
 namespace mrc::segment {
-class SegmentInstance;
+class SegmentInstance;  // IWYU pragma: keep
 }  // namespace mrc::segment
 namespace mrc::manifold {
 struct Interface;
