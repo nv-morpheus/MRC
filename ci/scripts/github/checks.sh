@@ -24,7 +24,8 @@ update_conda_env
 
 rapids-logger "Configuring CMake"
 git submodule update --init --recursive
-cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
+CMAKE_CLANG_OPTIONS="-DCMAKE_C_COMPILER:FILEPATH=$(which clang) -DCMAKE_CXX_COMPILER:FILEPATH=$(which clang++) -DCMAKE_CUDA_COMPILER:FILEPATH=$(which nvcc)"
+cmake -B build -G Ninja ${CMAKE_CLANG_OPTIONS} ${CMAKE_BUILD_ALL_FEATURES} .
 
 rapids-logger "Building targets that generate source code"
 cmake --build build --target mrc_style_checks --parallel ${PARALLEL_LEVEL}

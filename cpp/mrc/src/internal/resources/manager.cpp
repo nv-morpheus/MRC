@@ -26,6 +26,7 @@
 #include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/system/device_partition.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
@@ -45,6 +46,7 @@
 #include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
+#include <atomic>
 #include <map>
 #include <optional>
 #include <ostream>
@@ -54,16 +56,18 @@
 
 namespace mrc::resources {
 
+std::atomic_size_t Manager::s_id_counter = 0;
 thread_local Manager* Manager::m_thread_resources{nullptr};
 thread_local PartitionResources* Manager::m_thread_partition{nullptr};
 
 Manager::Manager(const system::SystemProvider& system) :
   SystemProvider(system),
+  m_runtime_id(++s_id_counter),
   m_threading(std::make_unique<system::ThreadingResources>(system))
 {
     const auto& partitions      = this->system().partitions().flattened();
     const auto& host_partitions = this->system().partitions().host_partitions();
-    const bool network_enabled  = !this->system().options().architect_url().empty();
+    bool network_enabled        = !this->system().options().architect_url().empty();
 
     // construct the runnable resources on each host_partition - launch control and main
     for (std::size_t i = 0; i < host_partitions.size(); ++i)
@@ -195,6 +199,11 @@ Manager::Manager(const system::SystemProvider& system) :
 Manager::~Manager()
 {
     m_network.clear();
+}
+
+std::size_t Manager::runtime_id() const
+{
+    return m_runtime_id;
 }
 
 std::size_t Manager::partition_count() const

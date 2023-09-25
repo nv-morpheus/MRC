@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <string>
 #include <thread>
 
 namespace mrc::system {
@@ -36,7 +37,10 @@ class ThreadingResources;
 class FiberTaskQueue final : public core::FiberTaskQueue
 {
   public:
-    FiberTaskQueue(const ThreadingResources& resources, CpuSet cpu_affinity, std::size_t channel_size = 64);
+    FiberTaskQueue(const ThreadingResources& resources,
+                   CpuSet cpu_affinity,
+                   std::string thread_name,
+                   std::size_t channel_size = 64);
     ~FiberTaskQueue() final;
 
     DELETE_COPYABILITY(FiberTaskQueue);
