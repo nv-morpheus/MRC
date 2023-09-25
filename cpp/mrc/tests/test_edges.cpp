@@ -40,7 +40,6 @@
 #include <rxcpp/rx.hpp>  // for observable_member
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <stdexcept>

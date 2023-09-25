@@ -30,7 +30,6 @@
 #include "mrc/cuda/common.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 

@@ -28,7 +28,6 @@
 #include "mrc/options/placement.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <gtest/gtest.h>
 
 #include <memory>

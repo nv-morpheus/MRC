@@ -28,7 +28,6 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
-#include <array>
 #include <exception>
 #include <functional>
 #include <stdexcept>

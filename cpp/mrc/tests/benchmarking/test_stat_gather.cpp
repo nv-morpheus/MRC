@@ -26,6 +26,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <map>
+
 using namespace mrc::benchmarking;
 
 void stat_check_helper(nlohmann::json metrics,

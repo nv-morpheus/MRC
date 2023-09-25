@@ -47,14 +47,12 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 

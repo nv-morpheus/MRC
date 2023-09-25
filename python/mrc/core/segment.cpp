@@ -38,12 +38,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <array>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <sstream>
-#include <vector>
 
 namespace mrc::pymrc {
 
