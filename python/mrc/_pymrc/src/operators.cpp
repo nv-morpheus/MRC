@@ -200,6 +200,11 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_genera
 
     auto result_future = result->get_future();
 
+    // runnable::Context::get_runtime_context().launch_task([](){
+    //     pybind11::gil_scoped_acquire acquire;
+    //     pybind11::print("Hello from Context::launch_task");
+    // });
+
     future.attr("add_done_callback")(py::cpp_function([result = std::move(result)](py::object future) {
         try
         {

@@ -30,10 +30,6 @@ namespace mrc::runnable {
 Future<void> Engine::launch_task(std::function<void()> task)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    if (m_launched)
-    {
-        LOG(FATAL) << "detected attempted reuse of a runnable::Engine; this is a fatal error";
-    }
     m_launched = true;
     return do_launch_task(std::move(task));
 }

@@ -33,6 +33,7 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/context.hpp"
+#include "mrc/runnable/engine.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
@@ -333,7 +334,7 @@ class PythonNodeLoopHandle
 class PythonNodeContext : public mrc::runnable::Context
 {
   public:
-    PythonNodeContext(std::size_t rank, std::size_t size);
+    PythonNodeContext(const mrc::runnable::Runner& runner, mrc::runnable::IEngine& engine, std::size_t rank);
     ~PythonNodeContext() override;
 
     PyHolder get_asyncio_event_loop();

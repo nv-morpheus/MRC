@@ -130,7 +130,7 @@ void Runner::enqueue(std::shared_ptr<IEngines> launcher, std::vector<std::shared
         auto engine  = instance.m_engine;
 
         auto f = engine->launch_task([this, context, &instance] {
-            context->init(*this);
+            context->start();
             update_state(context->rank(), State::Running);
             instance.m_live_promise.set_value();
             m_runnable->main(*context);
