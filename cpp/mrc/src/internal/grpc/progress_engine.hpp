@@ -23,7 +23,6 @@
 #include <rxcpp/rx.hpp>
 
 #include <memory>
-#include <vector>
 
 namespace grpc {
 class CompletionQueue;

@@ -90,13 +90,13 @@ void ThreadResources::initialize_thread(const std::string& desc, const CpuSet& c
     {
         std::stringstream ss;
         ss << "cpu_id: " << cpu_affinity.first();
-        affinity = ss.str();
+        affinity = MRC_CONCAT_STR("cpu[" << cpu_affinity.str() << "]");
     }
     else
     {
         std::stringstream ss;
         ss << "cpus: " << cpu_affinity.str();
-        affinity      = ss.str();
+        affinity      = MRC_CONCAT_STR("cpu[" << cpu_affinity.str() << "]");
         auto numa_set = topology.numaset_for_cpuset(cpu_affinity);
         if (numa_set.weight() != 1)
         {
@@ -110,13 +110,13 @@ void ThreadResources::initialize_thread(const std::string& desc, const CpuSet& c
         DVLOG(10) << "tid: " << std::this_thread::get_id() << "; setting cpu affinity to " << affinity;
         auto rc = hwloc_set_cpubind(topology.handle(), &cpu_affinity.bitmap(), HWLOC_CPUBIND_THREAD);
         CHECK_NE(rc, -1);
-        set_current_thread_name(MRC_CONCAT_STR("[" << desc << "; " << affinity << "]"));
+        set_current_thread_name(MRC_CONCAT_STR(desc << ";" << affinity));
     }
     else
     {
         DVLOG(10) << "thread_binding is disabled; tid: " << std::this_thread::get_id()
                   << " will use the affinity of caller";
-        set_current_thread_name(MRC_CONCAT_STR("[" << desc << "; tid:" << std::this_thread::get_id() << "]"));
+        set_current_thread_name(MRC_CONCAT_STR(desc << ";tid[" << std::this_thread::get_id() << "]"));
     }
 
     // todo(ryan) - enable thread/memory binding should be a system option, not specifically a fiber_pool option

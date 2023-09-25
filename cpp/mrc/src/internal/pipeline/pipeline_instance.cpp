@@ -24,6 +24,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/segment/segment_definition.hpp"
 #include "internal/segment/segment_instance.hpp"
+#include "internal/service.hpp"
 
 #include "mrc/core/addresses.hpp"
 #include "mrc/core/task_queue.hpp"
@@ -46,13 +47,17 @@ namespace mrc::pipeline {
 PipelineInstance::PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
                                    resources::Manager& resources) :
   PipelineResources(resources),
+  Service("pipeline::PipelineInstance"),
   m_definition(std::move(definition))
 {
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
 }
 
-PipelineInstance::~PipelineInstance() = default;
+PipelineInstance::~PipelineInstance()
+{
+    Service::call_in_destructor();
+}
 
 void PipelineInstance::update()
 {

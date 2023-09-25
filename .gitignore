@@ -1,4 +1,5 @@
 /build*/
+.tmp
 *.engine
 .Dockerfile
 .gitignore
@@ -16,6 +17,9 @@ include/mrc/version.hpp
 .vscode/launch.json
 .vscode/settings.json
 .vscode/tasks.json
+
+# Ignore user-defined clangd settings
+.clangd
 
 # Created by https://www.gitignore.io/api/vim,c++,cmake,python,synology
 

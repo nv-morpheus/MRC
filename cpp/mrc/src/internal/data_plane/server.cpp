@@ -36,7 +36,6 @@
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
@@ -47,7 +46,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <map>
 #include <ostream>
 #include <utility>
 
@@ -148,6 +146,7 @@ Server::Server(resources::PartitionResourceBase& provider,
                memory::TransientPool& transient_pool,
                InstanceID instance_id) :
   resources::PartitionResourceBase(provider),
+  Service("data_plane::Server"),
   m_ucx(ucx),
   m_host(host),
   m_instance_id(instance_id),

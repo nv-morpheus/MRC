@@ -35,7 +35,7 @@
 #include <map>
 #include <memory>
 #include <string>
-
+// IWYU pragma: no_include "internal/control_plane/server/subscription_manager.hpp"
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::node {
@@ -45,7 +45,7 @@ class Queue;
 
 namespace mrc::control_plane::server {
 class ClientInstance;
-class SubscriptionService;
+class SubscriptionService;  // IWYU pragma: keep
 }  // namespace mrc::control_plane::server
 namespace mrc::rpc {
 template <typename T>
