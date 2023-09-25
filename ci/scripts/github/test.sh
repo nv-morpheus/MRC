@@ -22,8 +22,8 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-fetch_s3 "${ARTIFACT_ENDPOINT}/dot_cache.tar.bz" "${WORKSPACE_TMP}/dot_cache.tar.bz"
-fetch_s3 "${ARTIFACT_ENDPOINT}/build.tar.bz" "${WORKSPACE_TMP}/build.tar.bz"
+download_artifact "dot_cache.tar.bz"
+download_artifact "build.tar.bz"
 
 tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
 tar xf "${WORKSPACE_TMP}/build.tar.bz"
@@ -60,7 +60,7 @@ cd $(dirname ${REPORTS_DIR})
 tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp ${WORKSPACE_TMP}/test_reports.tar.bz "${ARTIFACT_URL}/test_reports.tar.bz"
+upload_artifact ${WORKSPACE_TMP}/test_reports.tar.bz
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}

@@ -38,6 +38,7 @@ add_library(libmrc
   src/internal/data_plane/server.cpp
   src/internal/executor/executor_definition.cpp
   src/internal/grpc/progress_engine.cpp
+  src/internal/grpc/promise_handler.cpp
   src/internal/grpc/server.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp

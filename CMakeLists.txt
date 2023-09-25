@@ -30,6 +30,7 @@ option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
+option(MRC_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies must be installed first in the conda

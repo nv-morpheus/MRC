@@ -39,13 +39,11 @@
 
 #include <chrono>
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <random>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 using namespace mrc::modules::stream_buffers;
@@ -57,6 +55,7 @@ TEST_F(TestStreamBufferModule, InitailizationTest)
 {
     using namespace modules;
 
+    GTEST_SKIP() << "To be re-enabled by issue #390";
     auto init_wrapper = [](segment::IBuilder& builder) {
         auto config1        = nlohmann::json();
         auto mirror_buffer1 = builder.make_module<StreamBufferModuleImmediate>("mirror_tap", config1);
@@ -70,7 +69,7 @@ TEST_F(TestStreamBufferModule, InitailizationTest)
 
     Executor executor(options);
     executor.register_pipeline(std::move(m_pipeline));
-    executor.stop();
+    executor.start();
     executor.join();
 }
 

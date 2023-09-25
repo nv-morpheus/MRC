@@ -34,16 +34,14 @@
 #include <glog/logging.h>
 
 #include <exception>
-#include <map>
 #include <memory>
 #include <ostream>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::pipeline {
 
 Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources) :
+  Service("pipeline::Manager"),
   m_pipeline(std::move(pipeline)),
   m_resources(resources)
 {
