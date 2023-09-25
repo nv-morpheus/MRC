@@ -39,6 +39,7 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -311,11 +312,35 @@ class PythonSinkComponent : public node::RxSinkComponent<InputT>,
     using base_t::base_t;
 };
 
+class PythonNodeLoopHandle
+{
+  public:
+    PythonNodeLoopHandle();
+    ~PythonNodeLoopHandle();
+
+    uint32_t inc_ref();
+    uint32_t dec_ref();
+
+    PyHolder get_asyncio_event_loop();
+
+  private:
+    uint32_t m_references = 0;
+    PyHolder m_loop;
+    std::atomic<bool> m_loop_ct = false;
+    std::thread m_loop_thread;
+};
+
 class PythonNodeContext : public mrc::runnable::Context
 {
   public:
     PythonNodeContext(std::size_t rank, std::size_t size);
     ~PythonNodeContext() override;
+
+    PyHolder get_asyncio_event_loop();
+
+  private:
+    // this was intended to be a thread-specific-pointer, but I couldn't get boost::thread to link.
+    std::unique_ptr<PythonNodeLoopHandle> m_loop_handle;
 };
 
 template <typename InputT, typename OutputT>

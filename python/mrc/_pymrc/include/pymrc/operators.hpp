@@ -61,15 +61,12 @@ class AsyncOperatorHandler
 {
   public:
     AsyncOperatorHandler();
-    ~AsyncOperatorHandler();
+    ~AsyncOperatorHandler() = default;
 
     boost::fibers::future<PyObjectHolder> process_async_generator(PyObjectHolder asyncgen);
 
   private:
     pybind11::module_ m_asyncio;
-    PyHolder m_loop;
-    std::thread m_loop_thread;
-    std::atomic<bool> m_loop_ct = false;
 };
 
 class OperatorsProxy

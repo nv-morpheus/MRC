@@ -18,9 +18,11 @@
 #include "pymrc/operators.hpp"
 
 #include "pymrc/executor.hpp"
+#include "pymrc/node.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
+#include "mrc/runnable/context.hpp"
 
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/fiber.hpp>
@@ -182,53 +184,18 @@ PythonOperator OperatorsProxy::flatten()
 
 AsyncOperatorHandler::AsyncOperatorHandler()
 {
-    py::gil_scoped_acquire acquire;
-
-    m_asyncio = pybind11::module_::import("asyncio");
-
-    try
-    {
-        m_loop = m_asyncio.attr("get_event_loop")();
-    } catch (std::runtime_error ex)
-    {
-        auto setup_debugging = create_gil_initializer();
-
-        m_loop        = m_asyncio.attr("new_event_loop")();
-        m_loop_thread = std::thread(
-            [&loop_ct = m_loop_ct, loop = m_loop](std::function<void()> setup_debugging) {
-                setup_debugging();
-
-                while (not loop_ct)
-                {
-                    {
-                        // run event loop once
-                        py::gil_scoped_acquire acquire;
-                        loop.attr("stop")();
-                        loop.attr("run_forever")();
-                    }
-
-                    std::this_thread::yield();
-                }
-            },
-            std::move(setup_debugging));
-    }
-}
-
-AsyncOperatorHandler::~AsyncOperatorHandler()
-{
-    if (m_loop_thread.joinable())
-    {
-        m_loop_ct = true;
-        m_loop_thread.join();
-    }
+    pybind11::gil_scoped_acquire acquire;
+    m_asyncio = py::module_::import("asyncio");
 }
 
 boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen)
 {
     py::gil_scoped_acquire acquire;
 
+    auto& ctx = runnable::Context::get_runtime_context().as<PythonNodeContext>();
+    auto loop = ctx.get_asyncio_event_loop();
     auto task   = asyncgen.attr("__anext__")();
-    auto future = m_asyncio.attr("run_coroutine_threadsafe")(task, m_loop);
+    auto future = m_asyncio.attr("run_coroutine_threadsafe")(task, loop);
     auto result = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
 
     auto result_future = result->get_future();
