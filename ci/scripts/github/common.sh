@@ -156,18 +156,6 @@ function fetch_base_branch() {
     rapids-logger "Base branch: ${BASE_BRANCH}"
 }
 
-function fetch_s3() {
-    ENDPOINT=$1
-    DESTINATION=$2
-    if [[ "${USE_S3_CURL}" == "1" ]]; then
-        curl -f "${DISPLAY_URL}${ENDPOINT}" -o "${DESTINATION}"
-        FETCH_STATUS=$?
-    else
-        aws s3 cp --no-progress "${S3_URL}${ENDPOINT}" "${DESTINATION}"
-        FETCH_STATUS=$?
-    fi
-}
-
 function show_conda_info() {
 
     rapids-logger "Check Conda info"
@@ -194,6 +182,6 @@ function download_artifact() {
     if [[ "${LOCAL_CI}" == "1" ]]; then
         cp "${LOCAL_CI_TMP}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
     else
-        fetch_s3 "${ARTIFACT_URL}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
+        aws s3 cp --no-progress "${ARTIFACT_URL}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
     fi
 }
