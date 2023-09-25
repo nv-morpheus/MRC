@@ -278,6 +278,9 @@ class IBuilder
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops);
 
+    template<typename NodeTypeT, typename... ArgsT>
+    auto make_node_explicit(std::string name, ArgsT&&... ops);
+
     /**
      * Creates and returns an instance of a node component with the specified type, name and arguments.
      * @tparam SinkTypeT The sink type of the node component to be created.
@@ -434,6 +437,12 @@ template <typename SinkTypeT,
 auto IBuilder::make_node(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
+}
+
+template<typename NodeTypeT, typename... ArgsT>
+auto IBuilder::make_node_explicit(std::string name, ArgsT&&... ops)
+{
+    return construct_object<NodeTypeT>(name, std::forward<ArgsT>(ops)...);
 }
 
 template <typename SinkTypeT, typename SourceTypeT, template <class, class> class NodeTypeT, typename... ArgsT>

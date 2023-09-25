@@ -17,4 +17,20 @@
 
 #include "pymrc/node.hpp"
 
-namespace mrc::pymrc {}  // namespace mrc::pymrc
+#include <pybind11/gil.h>
+
+namespace mrc::pymrc {
+
+PythonNodeContext::PythonNodeContext(std::size_t rank, std::size_t size) : mrc::runnable::Context(rank, size)
+{
+    pybind11::gil_scoped_acquire acquire;
+    pybind11::print("PythonNodeContext::ctor");
+}
+
+PythonNodeContext::~PythonNodeContext()
+{
+    pybind11::gil_scoped_acquire acquire;
+    pybind11::print("PythonNodeContext::dtor");
+}
+
+}  // namespace mrc::pymrc

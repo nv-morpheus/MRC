@@ -52,7 +52,7 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - clangdev=14
+          - clangdev=16
 
   cudatoolkit:
     specific:

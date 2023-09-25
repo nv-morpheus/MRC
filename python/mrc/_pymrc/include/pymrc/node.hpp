@@ -39,6 +39,7 @@
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -310,14 +311,21 @@ class PythonSinkComponent : public node::RxSinkComponent<InputT>,
     using base_t::base_t;
 };
 
-template <typename InputT, typename OutputT, typename ContextT = mrc::runnable::Context>
-class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
+class PythonNodeContext : public mrc::runnable::Context
+{
+  public:
+    PythonNodeContext(std::size_t rank, std::size_t size);
+    ~PythonNodeContext() override;
+};
+
+template <typename InputT, typename OutputT>
+class PythonNode : public node::RxNode<InputT, OutputT, PythonNodeContext>,
                    public pymrc::AutoRegSourceAdapter<OutputT>,
                    public pymrc::AutoRegSinkAdapter<InputT>,
                    public pymrc::AutoRegIngressPort<OutputT>,
                    public pymrc::AutoRegEgressPort<InputT>
 {
-    using base_t = node::RxNode<InputT, OutputT>;
+    using base_t = node::RxNode<InputT, OutputT, PythonNodeContext>;
 
   public:
     using typename base_t::stream_fn_t;
