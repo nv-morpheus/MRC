@@ -130,6 +130,37 @@ def test_flatten(run_segment):
 
     assert actual == expected
 
+def test_flat_map_async(run_segment):
+
+    input_data = [('a', 5), ('b', 1), ('c', 3)]
+    expected = [
+        ('a', 0), ('a', 1), ('a', 2), ('a', 3), ('a', 4), ('b', 0), ('c', 0), ('c', 1), ('c', 2)
+    ]
+
+    import random
+    random.shuffle(input_data) # the output order is not dictated by the input order
+
+    async def generate(value):
+        name, count = value
+        for i in range(count):
+            yield (name, i)
+
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
+        input.pipe(ops.flat_map_async(generate)).subscribe(output)
+
+    actual, raised_error = run_segment(input_data, node_fn)
+
+    assert set(actual) == set(expected)
+
+    def assert_sequential(name, actual):
+        # the output of individual generators must be sequential
+        import itertools
+        for i, (name, value) in zip(itertools.count(), filter(lambda pair: pair[0] == name, actual)):
+            assert i == value
+
+    assert_sequential('a', actual)
+    assert_sequential('b', actual)
+    assert_sequential('c', actual)
 
 def test_filter(run_segment):
 
