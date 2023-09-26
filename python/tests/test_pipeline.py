@@ -482,8 +482,7 @@ def test_segment_init_error():
 
     with pytest.raises(RuntimeError):
         executor.start()
-
-    executor.join()
+        executor.join()
 
 
 if (__name__ in ("__main__", )):
