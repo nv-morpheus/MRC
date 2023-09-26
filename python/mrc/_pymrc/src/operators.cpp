@@ -23,6 +23,7 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
 
+#include "mrc/core/utils.hpp"
 #include "mrc/runnable/context.hpp"
 
 #include <boost/fiber/context.hpp>
@@ -189,7 +190,52 @@ AsyncOperatorHandler::AsyncOperatorHandler()
     m_asyncio = py::module_::import("asyncio");
 }
 
-boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen)
+void AsyncOperatorHandler::wait_completed() const
+{
+    while (m_outstanding > 0)
+    {
+        boost::this_fiber::yield();
+    }
+}
+
+void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyObjectSubscriber sink)
+{
+    ++m_outstanding;
+    runnable::Context::get_runtime_context().launch_fiber([this, sink, asyncgen]() {
+        while (sink.is_subscribed())
+        {
+            using namespace std::chrono_literals;
+
+            auto gen_yielded = this->future_from_async_generator(asyncgen);
+
+            while (gen_yielded.wait_for(0s) != boost::fibers::future_status::ready)
+            {
+                boost::this_fiber::yield();
+
+                if (not sink.is_subscribed())
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                sink.on_next(gen_yielded.get());
+            } catch (pybind11::error_already_set& ex)
+            {
+                if (ex.matches(PyExc_StopAsyncIteration))
+                {
+                    --m_outstanding;
+                    return;
+                }
+                sink.on_error(std::current_exception());
+                --m_outstanding;
+            }
+        }
+    });
+}
+
+boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::future_from_async_generator(PyObjectHolder asyncgen)
 {
     py::gil_scoped_acquire acquire;
 
@@ -200,11 +246,6 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_genera
     auto result = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
 
     auto result_future = result->get_future();
-
-    runnable::Context::get_runtime_context().launch_fiber([]() {
-        pybind11::gil_scoped_acquire acquire;
-        pybind11::print("Hello from Context::launch_Fiber");
-    });
 
     future.attr("add_done_callback")(py::cpp_function([result = std::move(result)](py::object future) {
         try
@@ -222,10 +263,10 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_genera
     return result_future;
 }
 
-PythonOperator OperatorsProxy::concat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
+PythonOperator OperatorsProxy::flat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
 {
     //  Build and return the map operator
-    return {"concat_map_async", [=](PyObjectObservable source) {
+    return {"flat_map_async", [=](PyObjectObservable source) {
                 return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
                     auto async_handler = std::make_unique<AsyncOperatorHandler>();
                     source.subscribe(
@@ -234,42 +275,16 @@ PythonOperator OperatorsProxy::concat_map_async(PyFuncHolder<PyObjectHolder(pybi
                             auto acquire  = std::make_unique<py::gil_scoped_acquire>();
                             auto asyncgen = flatmap_fn(std::move(value));
                             acquire.reset();
-                            while (sink.is_subscribed())
-                            {
-                                using namespace std::chrono_literals;
-
-                                auto gen_yielded = async_handler.process_async_generator(asyncgen);
-
-                                while (gen_yielded.wait_for(0s) != boost::fibers::future_status::ready)
-                                {
-                                    boost::this_fiber::yield();
-
-                                    if (not sink.is_subscribed())
-                                    {
-                                        return;
-                                    }
-                                }
-
-                                try
-                                {
-                                    sink.on_next(gen_yielded.get());
-                                } catch (pybind11::error_already_set& ex)
-                                {
-                                    if (ex.matches(PyExc_StopAsyncIteration))
-                                    {
-                                        return;
-                                    }
-
-                                    sink.on_error(std::current_exception());
-                                }
-                            }
+                            async_handler.process_async_generator(asyncgen, sink);
                         },
                         [sink, &async_handler = *async_handler](std::exception_ptr ex) {
                             // Forward
+                            async_handler.wait_completed();
                             sink.on_error(std::current_exception());
                         },
                         [sink, &async_handler = *async_handler]() {
                             // Forward
+                            async_handler.wait_completed();
                             sink.on_completed();
                         });
                 });

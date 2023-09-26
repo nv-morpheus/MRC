@@ -55,7 +55,7 @@ PYBIND11_MODULE(operators, py_mod)
     py_mod.def("build", &OperatorsProxy::build);
     py_mod.def("filter", &OperatorsProxy::filter);
     py_mod.def("flatten", &OperatorsProxy::flatten);
-    py_mod.def("concat_map_async", &OperatorsProxy::concat_map_async);
+    py_mod.def("flat_map_async", &OperatorsProxy::flat_map_async);
     py_mod.def("map", &OperatorsProxy::map);
     py_mod.def("on_completed", &OperatorsProxy::on_completed);
     py_mod.def("pairwise", &OperatorsProxy::pairwise);
