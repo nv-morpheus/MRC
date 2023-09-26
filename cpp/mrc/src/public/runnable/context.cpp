@@ -47,11 +47,11 @@ struct FiberLocalContext
 
 }  // namespace
 
-Context::Context(const Runner& runner, IEngine& engine, std::size_t rank) :
+Context::Context(const Runner& runner, IEngine& engine, std::size_t rank, std::size_t size) :
   m_runner(runner),
   m_engine(engine),
   m_rank(rank),
-  m_size(runner.instances().size())
+  m_size(size)
 {}
 
 EngineType Context::execution_context() const
@@ -98,13 +98,12 @@ void Context::yield()
     do_yield();
 }
 
-Future<void> Context::launch_task(std::function<void()> task)
+Future<void> Context::launch_fiber(std::function<void()> task)
 {
-    boost::fibers::async([this, task = std::move(task)]() {
+    return boost::fibers::async([this, task]() {
         auto& fiber_local = FiberLocalContext::get();
         fiber_local.reset(new FiberLocalContext());
         fiber_local->m_context = this;
-
         try
         {
             task();

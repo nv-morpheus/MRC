@@ -80,8 +80,9 @@ PyHolder PythonNodeLoopHandle::get_asyncio_event_loop()
 
 PythonNodeContext::PythonNodeContext(const mrc::runnable::Runner& runner,
                                      mrc::runnable::IEngine& engine,
-                                     std::size_t rank) :
-  mrc::runnable::Context(runner, engine, rank)
+                                     std::size_t rank,
+                                     std::size_t size) :
+  mrc::runnable::Context(runner, engine, rank, size)
 {
     if (m_loop_handle == nullptr)
     {

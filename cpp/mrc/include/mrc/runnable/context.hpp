@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/types.hpp"
+
 #include <glog/logging.h>
 
 #include <cstddef>
@@ -43,7 +44,7 @@ class Context
 {
   public:
     Context() = delete;
-    Context(const Runner& runner, IEngine& engine, std::size_t rank);
+    Context(const Runner& runner, IEngine& engine, std::size_t rank, std::size_t size);
     virtual ~Context() = default;
 
     EngineType execution_context() const;
@@ -56,7 +57,7 @@ class Context
     void barrier();
     void yield();
 
-    Future<void> launch_task(std::function<void()> task);
+    Future<void> launch_fiber(std::function<void()> task);
 
     const std::string& info() const;
 

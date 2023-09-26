@@ -22,6 +22,7 @@
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
+
 #include "mrc/runnable/context.hpp"
 
 #include <boost/fiber/context.hpp>
@@ -192,18 +193,18 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::process_async_genera
 {
     py::gil_scoped_acquire acquire;
 
-    auto& ctx = runnable::Context::get_runtime_context().as<PythonNodeContext>();
-    auto loop = ctx.get_asyncio_event_loop();
+    auto& ctx   = runnable::Context::get_runtime_context().as<PythonNodeContext>();
+    auto loop   = ctx.get_asyncio_event_loop();
     auto task   = asyncgen.attr("__anext__")();
     auto future = m_asyncio.attr("run_coroutine_threadsafe")(task, loop);
     auto result = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
 
     auto result_future = result->get_future();
 
-    // runnable::Context::get_runtime_context().launch_task([](){
-    //     pybind11::gil_scoped_acquire acquire;
-    //     pybind11::print("Hello from Context::launch_task");
-    // });
+    runnable::Context::get_runtime_context().launch_fiber([]() {
+        pybind11::gil_scoped_acquire acquire;
+        pybind11::print("Hello from Context::launch_Fiber");
+    });
 
     future.attr("add_done_callback")(py::cpp_function([result = std::move(result)](py::object future) {
         try

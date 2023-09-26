@@ -334,7 +334,10 @@ class PythonNodeLoopHandle
 class PythonNodeContext : public mrc::runnable::Context
 {
   public:
-    PythonNodeContext(const mrc::runnable::Runner& runner, mrc::runnable::IEngine& engine, std::size_t rank);
+    PythonNodeContext(const mrc::runnable::Runner& runner,
+                      mrc::runnable::IEngine& engine,
+                      std::size_t rank,
+                      std::size_t size);
     ~PythonNodeContext() override;
 
     PyHolder get_asyncio_event_loop();

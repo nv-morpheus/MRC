@@ -338,7 +338,8 @@ class LaunchControl final
         auto resources = std::make_shared<typename WrappedContextT::resource_t>(size);
         for (std::size_t i = 0; i < size; ++i)
         {
-            contexts.push_back(std::make_shared<WrappedContextT>(resources, runner, *engines.launchers()[i], i, args...));
+            contexts.push_back(
+                std::make_shared<WrappedContextT>(resources, runner, *engines.launchers()[i], i, size, args...));
         }
         return std::move(contexts);
     }
