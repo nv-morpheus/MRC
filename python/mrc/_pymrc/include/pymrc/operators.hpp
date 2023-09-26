@@ -19,9 +19,9 @@
 
 #include "pymrc/types.hpp"
 
-#include <boost/fiber/future/promise.hpp>
+#include <pybind11/pybind11.h>  // for module_
 
-#include <future>
+#include <cstdint>  // for uint32_t
 #include <optional>
 #include <string>
 
