@@ -130,6 +130,22 @@ def test_flatten(run_segment):
 
     assert actual == expected
 
+def test_map_async(run_segment):
+
+    input_data = [0, 1, 2, 3]
+    expected = [0, 1, 4, 9]
+
+    async def square_async(value):
+        import asyncio
+        await asyncio.sleep(0)
+        return value * value
+
+    def node_fn(input: mrc.Observable, output: mrc.Subscriber):
+        input.pipe(ops.map_async(square_async)).subscribe(output)
+
+    actual, raised_error = run_segment(input_data, node_fn)
+
+    assert set(actual) == set(expected)
 
 def test_flat_map_async(run_segment):
 

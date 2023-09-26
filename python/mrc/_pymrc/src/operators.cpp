@@ -200,13 +200,53 @@ void AsyncOperatorHandler::wait_error()
     wait_completed();
 }
 
+void AsyncOperatorHandler::process_async_task(PyObjectHolder task, PyObjectSubscriber sink)
+{
+    if (m_cancelled)
+    {
+        return;
+    }
+
+    ++m_outstanding;
+
+    runnable::Context::get_runtime_context().launch_fiber([this, sink, task]() {
+        auto unwinder = Unwinder([this]() {
+            --m_outstanding;
+        });
+
+        using namespace std::chrono_literals;
+
+        auto yielded = this->future_from_async_task(task);
+
+        while (yielded.wait_for(0s) != boost::fibers::future_status::ready)
+        {
+            boost::this_fiber::yield();
+        }
+
+        if (not sink.is_subscribed())
+        {
+            return;
+        }
+
+        try
+        {
+            sink.on_next(yielded.get());
+        } catch (pybind11::error_already_set& ex)
+        {
+            sink.on_error(std::current_exception());
+        }
+    });
+}
+
 void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyObjectSubscriber sink)
 {
     if (m_cancelled)
     {
-        return;  // do we need to
+        return;
     }
+
     ++m_outstanding;
+
     runnable::Context::get_runtime_context().launch_fiber([this, sink, asyncgen]() {
         auto unwinder = Unwinder([this]() {
             --m_outstanding;
@@ -215,9 +255,12 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyOb
         {
             using namespace std::chrono_literals;
 
-            auto gen_yielded = this->future_from_async_generator(asyncgen);
+            auto gil = std::make_unique<pybind11::gil_scoped_acquire>();
+            PyObjectHolder task = asyncgen.attr("__anext__")();
+            gil.reset();
+            auto yielded    = this->future_from_async_task(task);
 
-            while (gen_yielded.wait_for(0s) != boost::fibers::future_status::ready)
+            while (yielded.wait_for(0s) != boost::fibers::future_status::ready)
             {
                 boost::this_fiber::yield();
 
@@ -229,7 +272,7 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyOb
 
             try
             {
-                sink.on_next(gen_yielded.get());
+                sink.on_next(yielded.get());
             } catch (pybind11::error_already_set& ex)
             {
                 if (ex.matches(PyExc_StopAsyncIteration))
@@ -242,19 +285,18 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyOb
     });
 }
 
-boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::future_from_async_generator(PyObjectHolder asyncgen)
+boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::future_from_async_task(PyObjectHolder task)
 {
     py::gil_scoped_acquire acquire;
 
-    auto& ctx   = runnable::Context::get_runtime_context().as<PythonNodeContext>();
-    auto loop   = ctx.get_asyncio_event_loop();
-    auto task   = asyncgen.attr("__anext__")();
-    auto future = m_asyncio.attr("run_coroutine_threadsafe")(task, loop);
-    auto result = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
+    auto& ctx    = runnable::Context::get_runtime_context().as<PythonNodeContext>();
+    auto loop    = ctx.get_asyncio_event_loop();
+    auto future  = m_asyncio.attr("run_coroutine_threadsafe")(task, loop);
+    auto promise = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
 
-    auto result_future = result->get_future();
+    auto result_future = promise->get_future();
 
-    future.attr("add_done_callback")(py::cpp_function([result = std::move(result)](py::object future) {
+    future.attr("add_done_callback")(py::cpp_function([result = std::move(promise)](py::object future) {
         try
         {
             auto acquire = std::make_unique<py::gil_scoped_acquire>();
@@ -272,7 +314,6 @@ boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::future_from_async_ge
 
 PythonOperator OperatorsProxy::flat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
 {
-    //  Build and return the map operator
     return {"flat_map_async", [=](PyObjectObservable source) {
                 return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
                     auto async_handler = std::make_unique<AsyncOperatorHandler>();
@@ -283,6 +324,33 @@ PythonOperator OperatorsProxy::flat_map_async(PyFuncHolder<PyObjectHolder(pybind
                             auto asyncgen = flatmap_fn(std::move(value));
                             acquire.reset();
                             async_handler.process_async_generator(asyncgen, sink);
+                        },
+                        [sink, &async_handler = *async_handler](std::exception_ptr ex) {
+                            // Forward
+                            async_handler.wait_error();
+                            sink.on_error(std::current_exception());
+                        },
+                        [sink, &async_handler = *async_handler]() {
+                            // Forward
+                            async_handler.wait_completed();
+                            sink.on_completed();
+                        });
+                });
+            }};
+}
+
+PythonOperator OperatorsProxy::map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
+{
+    return {"map_async", [=](PyObjectObservable source) {
+                return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    auto async_handler = std::make_unique<AsyncOperatorHandler>();
+                    source.subscribe(
+                        sink,
+                        [sink, flatmap_fn, &async_handler = *async_handler](PyHolder value) {
+                            auto acquire = std::make_unique<py::gil_scoped_acquire>();
+                            auto task    = flatmap_fn(std::move(value));
+                            acquire.reset();
+                            async_handler.process_async_task(task, sink);
                         },
                         [sink, &async_handler = *async_handler](std::exception_ptr ex) {
                             // Forward
