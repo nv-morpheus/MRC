@@ -255,10 +255,10 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyOb
         {
             using namespace std::chrono_literals;
 
-            auto gil = std::make_unique<pybind11::gil_scoped_acquire>();
+            auto gil            = std::make_unique<pybind11::gil_scoped_acquire>();
             PyObjectHolder task = asyncgen.attr("__anext__")();
             gil.reset();
-            auto yielded    = this->future_from_async_task(task);
+            auto yielded = this->future_from_async_task(task);
 
             while (yielded.wait_for(0s) != boost::fibers::future_status::ready)
             {
