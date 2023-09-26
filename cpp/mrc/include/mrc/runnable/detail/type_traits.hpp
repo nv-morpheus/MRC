@@ -85,7 +85,7 @@ static auto unwrap_context(l4_concept c, ThreadContext<T>& t)
     return std::make_pair(self<ctx_thread>{}, self<T>{});
 }
 
-template<typename T>
+template <typename T>
 static auto unwrap_context(l2_concept c, T& t)
 {
     return std::make_pair(self<T>{}, self<T>{});

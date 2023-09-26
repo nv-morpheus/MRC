@@ -72,7 +72,7 @@ class AsyncOperatorHandler
     boost::fibers::future<PyObjectHolder> future_from_async_generator(PyObjectHolder asyncgen);
     pybind11::module_ m_asyncio;
     uint32_t m_outstanding = 0;
-    bool m_cancelled = false;
+    bool m_cancelled       = false;
 };
 
 class OperatorsProxy

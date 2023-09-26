@@ -278,7 +278,7 @@ class IBuilder
               typename... ArgsT>
     auto make_node(std::string name, ArgsT&&... ops);
 
-    template<typename NodeTypeT, typename... ArgsT>
+    template <typename NodeTypeT, typename... ArgsT>
     auto make_node_explicit(std::string name, ArgsT&&... ops);
 
     /**
@@ -439,7 +439,7 @@ auto IBuilder::make_node(std::string name, ArgsT&&... ops)
     return construct_object<NodeTypeT<SinkTypeT, SourceTypeT>>(name, std::forward<ArgsT>(ops)...);
 }
 
-template<typename NodeTypeT, typename... ArgsT>
+template <typename NodeTypeT, typename... ArgsT>
 auto IBuilder::make_node_explicit(std::string name, ArgsT&&... ops)
 {
     return construct_object<NodeTypeT>(name, std::forward<ArgsT>(ops)...);
