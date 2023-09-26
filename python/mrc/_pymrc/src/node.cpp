@@ -51,6 +51,11 @@ PythonNodeLoopHandle::PythonNodeLoopHandle()
 
             std::this_thread::yield();
         }
+
+        pybind11::gil_scoped_acquire acquire;
+        auto shutdown = loop.attr("shutdown_asyncgens")();
+        loop.attr("run_until_complete")(shutdown);
+        loop.attr("close")();
     });
 }
 

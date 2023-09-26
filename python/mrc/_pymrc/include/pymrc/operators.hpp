@@ -66,11 +66,13 @@ class AsyncOperatorHandler
     void process_async_generator(PyObjectHolder asyncgen, PyObjectSubscriber sink);
 
     void wait_completed() const;
+    void wait_error();
 
   private:
     boost::fibers::future<PyObjectHolder> future_from_async_generator(PyObjectHolder asyncgen);
     pybind11::module_ m_asyncio;
-    std::atomic<uint32_t> m_outstanding;
+    uint32_t m_outstanding = 0;
+    bool m_cancelled = false;
 };
 
 class OperatorsProxy

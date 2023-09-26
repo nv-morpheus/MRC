@@ -343,7 +343,7 @@ class PythonNodeContext : public mrc::runnable::Context
     PyHolder get_asyncio_event_loop();
 
   private:
-    // this was intended to be a thread-specific-pointer, but I couldn't get boost::thread to link.
+    // TODO(cwharris): this should be a thread-specific pointer,
     std::unique_ptr<PythonNodeLoopHandle> m_loop_handle;
 };
 

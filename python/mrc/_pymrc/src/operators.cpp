@@ -198,10 +198,23 @@ void AsyncOperatorHandler::wait_completed() const
     }
 }
 
+void AsyncOperatorHandler::wait_error()
+{
+    m_cancelled = true;
+    wait_completed();
+}
+
 void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyObjectSubscriber sink)
 {
+    if (m_cancelled)
+    {
+        return;  // do we need to
+    }
     ++m_outstanding;
     runnable::Context::get_runtime_context().launch_fiber([this, sink, asyncgen]() {
+        auto unwinder = Unwinder([this]() {
+            --m_outstanding;
+        });
         while (sink.is_subscribed())
         {
             using namespace std::chrono_literals;
@@ -225,11 +238,9 @@ void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyOb
             {
                 if (ex.matches(PyExc_StopAsyncIteration))
                 {
-                    --m_outstanding;
                     return;
                 }
                 sink.on_error(std::current_exception());
-                --m_outstanding;
             }
         }
     });
@@ -279,7 +290,7 @@ PythonOperator OperatorsProxy::flat_map_async(PyFuncHolder<PyObjectHolder(pybind
                         },
                         [sink, &async_handler = *async_handler](std::exception_ptr ex) {
                             // Forward
-                            async_handler.wait_completed();
+                            async_handler.wait_error();
                             sink.on_error(std::current_exception());
                         },
                         [sink, &async_handler = *async_handler]() {
