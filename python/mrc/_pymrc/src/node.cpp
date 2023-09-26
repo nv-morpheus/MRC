@@ -20,12 +20,20 @@
 #include "pymrc/executor.hpp"
 
 #include <pybind11/gil.h>
+#include <pybind11/pybind11.h>  // for module_
 
 #include <memory>
-#include <mutex>
 #include <thread>
 
-namespace mrc::pymrc {
+namespace mrc {
+
+namespace runnable {
+
+class IEngine;
+
+}
+
+namespace pymrc {
 
 PythonNodeLoopHandle::PythonNodeLoopHandle()
 {
@@ -110,4 +118,6 @@ PyHolder PythonNodeContext::get_asyncio_event_loop()
     return m_loop_handle->get_asyncio_event_loop();
 }
 
-}  // namespace mrc::pymrc
+}  // namespace pymrc
+
+}  // namespace mrc

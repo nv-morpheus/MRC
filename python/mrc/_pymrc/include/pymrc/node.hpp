@@ -33,17 +33,19 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/context.hpp"
-#include "mrc/runnable/engine.hpp"
+#include "mrc/runnable/runner.hpp"  // for Runner
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
+#include <stdint.h>  // for uint32_t
 
 #include <atomic>
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <thread>  // for thread
 #include <utility>
 
 // Avoid forward declaring template specialization base classes
@@ -51,6 +53,12 @@
 // IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeWritable
 
 namespace mrc {
+
+namespace runnable {
+
+class IEngine;
+
+}
 
 namespace edge {
 

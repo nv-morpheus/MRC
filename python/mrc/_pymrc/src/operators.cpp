@@ -17,7 +17,6 @@
 
 #include "pymrc/operators.hpp"
 
-#include "pymrc/executor.hpp"
 #include "pymrc/node.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
@@ -26,10 +25,9 @@
 #include "mrc/core/utils.hpp"
 #include "mrc/runnable/context.hpp"
 
-#include <boost/fiber/context.hpp>
-#include <boost/fiber/fiber.hpp>
-#include <boost/fiber/future/async.hpp>
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
+#include <boost/fiber/future/promise.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -40,11 +38,9 @@
 #include <pyerrors.h>
 #include <rxcpp/rx.hpp>
 
+#include <chrono>
 #include <exception>
-#include <future>
-#include <sstream>
-#include <stdexcept>
-#include <thread>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>

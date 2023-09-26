@@ -17,13 +17,10 @@
 
 #include "internal/runnable/engine.hpp"
 
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for Future
 
-#include <glog/logging.h>
-
-#include <mutex>
-#include <ostream>
-#include <utility>
+#include <mutex>    // for mutex, lock_guard
+#include <utility>  // for move
 
 namespace mrc::runnable {
 
