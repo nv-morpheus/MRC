@@ -21,6 +21,7 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
+#include <pybind11/gil.h>  // for gil_scoped_acquire
 #include <pybind11/pybind11.h>
 
 #include <sstream>
@@ -29,6 +30,16 @@
 namespace mrc::pytests {
 
 namespace py = pybind11;
+
+// Simple test class which uses pybind11's `gil_scoped_acquire` class in the destructor. Needed to repro #362
+struct RequireGilInDestructor
+{
+    ~RequireGilInDestructor()
+    {
+        // Grab the GIL
+        py::gil_scoped_acquire gil;
+    }
+};
 
 PYBIND11_MODULE(utils, py_mod)
 {
@@ -47,6 +58,8 @@ PYBIND11_MODULE(utils, py_mod)
             throw std::runtime_error(msg);
         },
         py::arg("msg") = "");
+
+    py::class_<RequireGilInDestructor>(py_mod, "RequireGilInDestructor").def(py::init<>());
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

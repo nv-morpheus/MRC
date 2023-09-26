@@ -151,7 +151,7 @@ pytest $MRC_ROOT/python
 ### Docker Installation
 A Dockerfile is provided at `$MRC_ROOT` and can be built with
 ```bash
-docker build -t mrc:latest .
+DOCKER_BUILDKIT=1 docker build -t mrc:latest .
 ```
 To run the container
 ```bash
