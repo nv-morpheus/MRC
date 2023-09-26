@@ -458,6 +458,7 @@ def test_segment_init_error():
         source = builder.make_source("source", gen_data)
         egress = builder.get_egress("b")
         builder.make_edge(source, egress)
+        raise RuntimeError("Test for #360")
 
     def init2(builder: mrc.Builder):
 
@@ -468,12 +469,11 @@ def test_segment_init_error():
         sink = builder.make_sink("sink", on_next)
 
         builder.make_edge(ingress, sink)
-        raise RuntimeError("Test for #360")
 
     pipe = mrc.Pipeline()
 
-    pipe.make_segment("TestSegment11", [], [("b", int, False)], init1)
-    pipe.make_segment("TestSegment22", [("b", int, False)], [], init2)
+    pipe.make_segment("TestSegment1", [], [("b", int, False)], init1)
+    pipe.make_segment("TestSegment2", [("b", int, False)], [], init2)
 
     options = mrc.Options()
 
