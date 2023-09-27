@@ -74,6 +74,8 @@ struct ObjectProperties
 
     virtual runnable::LaunchOptions& launch_options()             = 0;
     virtual const runnable::LaunchOptions& launch_options() const = 0;
+
+    virtual void destroy(){};
 };
 
 inline ObjectProperties::~ObjectProperties() = default;

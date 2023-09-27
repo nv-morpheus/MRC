@@ -48,7 +48,7 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
 
   protected:
     RxSinkBase();
-    ~RxSinkBase() override = default;
+    ~RxSinkBase() override;
 
     const rxcpp::observable<T>& observable() const;
 
@@ -68,6 +68,14 @@ RxSinkBase<T>::RxSinkBase() :
 {
     // Set the default channel
     this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+}
+
+template <typename T>
+RxSinkBase<T>::~RxSinkBase()
+{
+    LOG(INFO) << "~RxSinkBase()";
+    this->release_edge_connection();
+    LOG(INFO) << "~RxSinkBase() - released";
 }
 
 template <typename T>
