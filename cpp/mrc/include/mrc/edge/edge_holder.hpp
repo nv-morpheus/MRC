@@ -53,12 +53,20 @@ class EdgeHolder
     EdgeHolder() = default;
     virtual ~EdgeHolder()
     {
+        auto p = m_connected_edge.get();
         // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
         m_connected_edge.reset();
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+            LOG(INFO) << "edge = " << p << " edge_holder=" << this;
+            if (p)
+            {
+                p->log_edges();
+            }
+            LOG(FATAL) << this
+                       << " A node was destructed which still had dependent connections. Nodes must be kept alive "
+                          "while "
                           "dependent connections are still active";
         }
     }
@@ -69,6 +77,7 @@ class EdgeHolder
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
         if (m_owned_edge.lock() && !m_owned_edge_lifetime)
         {
+            LOG(INFO) << "check_active_connection = " << this << " m_owned_edge.lock() && !m_owned_edge_lifetime";
             // Then someone is using this edge already, cant be changed
             if (do_throw)
             {
@@ -80,6 +89,8 @@ class EdgeHolder
         // Check for set connections. Must be connected to throw error
         if (m_connected_edge && m_connected_edge->is_connected())
         {
+            LOG(INFO) << "check_active_connection = " << this
+                      << " m_connected_edge && m_connected_edge->is_connected()";
             // Then someone is using this edge already, cant be changed
             if (do_throw)
             {
@@ -152,8 +163,10 @@ class EdgeHolder
 
     void release_edge_connection()
     {
+        LOG(INFO) << "Releasing edge connection for edge_holder=" << this;
         m_owned_edge_lifetime.reset();
         m_connected_edge.reset();
+        m_owned_edge.reset();
     }
 
     const std::shared_ptr<Edge<T>>& get_connected_edge() const
