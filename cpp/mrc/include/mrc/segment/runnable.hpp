@@ -46,6 +46,13 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
         CHECK(m_node);
     }
 
+    void destroy() final
+    {
+        LOG(INFO) << "Destroying " << this->type_name() << " in segment";
+        // m_node->release_edge_connection();
+        m_node.reset();
+    }
+
   private:
     NodeT* get_object() const final;
     std::unique_ptr<runnable::Launcher> prepare_launcher(runnable::LaunchControl& launch_control) final;

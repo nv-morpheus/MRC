@@ -28,6 +28,7 @@
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
+#include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/launchable.hpp"   // for Launchable
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
@@ -284,9 +285,28 @@ void BuilderDefinition::initialize()
                    << ", Segment Rank: " << m_rank << ". Exception message:\n"
                    << e.what();
 
-        m_objects.clear();
+        LOG(ERROR) << "********* <--- nodes=" << m_nodes.size() << ", ingress_ports=" << m_ingress_ports.size()
+                   << ", egress_ports=" << m_egress_ports.size() << ", objects=" << m_objects.size()
+                   << ", modules=" << m_modules.size() << " ---> *********";
+
+        for (auto& [name, obj_prop] : m_objects)
+        {
+            if (obj_prop->is_source() && !obj_prop->is_sink())
+            {
+                LOG(ERROR) << "Destroying: " << name;
+                obj_prop->destroy();
+            }
+        }
+
+        LOG(ERROR) << "********* <--- 0";
         m_ingress_ports.clear();
+        LOG(ERROR) << "********* <--- 1";
         m_egress_ports.clear();
+        LOG(ERROR) << "********* <--- 2+";
+        m_nodes.clear();
+        LOG(ERROR) << "********* <--- 2.5";
+        m_objects.clear();
+        LOG(ERROR) << "********* <--- 3";
 
         // Rethrow after logging
         std::rethrow_exception(std::current_exception());
@@ -349,6 +369,7 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
 
     if (object->is_runnable())
     {
+        LOG(ERROR) << "Adding runnable: " << name;
         auto launchable = std::dynamic_pointer_cast<runnable::Launchable>(object);
 
         CHECK(launchable) << "Invalid conversion. Object returned is_runnable() == true, but was not of type "
@@ -360,6 +381,7 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
     // Add to ingress ports list if it is the right type
     if (auto ingress_port = std::dynamic_pointer_cast<IngressPortBase>(object))
     {
+        LOG(ERROR) << "Adding ingress_port: " << name;
         // Save by the original name
         m_ingress_ports[local_name] = ingress_port;
     }
@@ -367,6 +389,7 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
     // Add to egress ports list if it is the right type
     if (auto egress_port = std::dynamic_pointer_cast<EgressPortBase>(object))
     {
+        LOG(ERROR) << "Adding egress_port: " << name;
         // Save by the original name
         m_egress_ports[local_name] = egress_port;
     }

@@ -34,6 +34,11 @@ class Component final : public Object<ResourceT>
     Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
     ~Component() final = default;
 
+    void destroy() final
+    {
+        m_resource.reset();
+    }
+
   private:
     ResourceT* get_object() const final
     {
