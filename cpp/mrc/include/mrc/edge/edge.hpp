@@ -109,6 +109,15 @@ class EdgeBase
         m_disconnectors.clear();
     };
 
+    void log_edges()
+    {
+        LOG(INFO) << "EdgeBase: " << this << " has " << m_linked_edges.size() << " linked edges";
+        for (auto& linked_edge : m_linked_edges)
+        {
+            LOG(INFO) << "  Linked edge: " << linked_edge.get();
+        }
+    }
+
     bool is_connected() const
     {
         return m_is_connected;
@@ -193,6 +202,12 @@ class Edge : public virtual EdgeBase
     friend class EdgeHolder;
     template <typename, typename>
     friend class MultiEdgeHolder;
+
+    void log_edges()
+    {
+        LOG(INFO) << "Edge: " << this;
+        EdgeBase::log_edges();
+    }
 };
 
 class EdgeTypeInfo

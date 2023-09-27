@@ -331,4 +331,10 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
     return nullptr;
 }
 
+void SegmentInstance::shutdown()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    m_builder->shutdown();
+}
+
 }  // namespace mrc::segment

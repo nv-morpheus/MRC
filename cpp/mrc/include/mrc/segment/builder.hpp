@@ -481,13 +481,18 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
 
     if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
     {
+        LOG(INFO) << "\tCreating edge from WritableAcceptor to WritableProvider for " << source_object.name() << " to "
+                  << sink_object.name();
         mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
                        sink_object.template writable_provider_typed<deduced_sink_type_t>());
+        LOG(INFO) << "\tCreating edge from WritableAcceptor to WritableProvider for " << source_object.name() << " to "
+                  << sink_object.name() << " - done";
         return;
     }
 
     if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
     {
+        LOG(INFO) << "\tCreating edge from ReadableProvider to ReadableAcceptor";
         mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
                        sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
         return;

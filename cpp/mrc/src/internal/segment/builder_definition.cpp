@@ -289,28 +289,53 @@ void BuilderDefinition::initialize()
                    << ", egress_ports=" << m_egress_ports.size() << ", objects=" << m_objects.size()
                    << ", modules=" << m_modules.size() << " ---> *********";
 
-        for (auto& [name, obj_prop] : m_objects)
-        {
-            if (obj_prop->is_source() && !obj_prop->is_sink())
-            {
-                LOG(ERROR) << "Destroying: " << name;
-                obj_prop->destroy();
-            }
-        }
-
-        LOG(ERROR) << "********* <--- 0";
-        m_ingress_ports.clear();
-        LOG(ERROR) << "********* <--- 1";
-        m_egress_ports.clear();
-        LOG(ERROR) << "********* <--- 2+";
-        m_nodes.clear();
-        LOG(ERROR) << "********* <--- 2.5";
-        m_objects.clear();
-        LOG(ERROR) << "********* <--- 3";
+        shutdown();
 
         // Rethrow after logging
         std::rethrow_exception(std::current_exception());
     }
+}
+
+void BuilderDefinition::shutdown()
+{
+    if (m_shutdown)
+    {
+        return;
+    }
+
+    m_shutdown = true;
+
+    LOG(INFO) << "Shutting down segment: " << this->name();
+    for (auto& [name, obj_prop] : m_objects)
+    {
+        if (obj_prop->is_source() && !obj_prop->is_sink())
+        {
+            LOG(ERROR) << "Destroying: " << name;
+            obj_prop->destroy();
+        }
+    }
+
+    for (auto& [name, port] : m_ingress_ports)
+    {
+        LOG(ERROR) << "Destroying IP: " << name;
+        port->destroy();
+    }
+
+    for (auto& [name, port] : m_egress_ports)
+    {
+        LOG(ERROR) << "Destroying EP: " << name;
+        port->destroy();
+    }
+
+    LOG(ERROR) << "********* <--- 0";
+    m_ingress_ports.clear();
+    LOG(ERROR) << "********* <--- 1";
+    m_egress_ports.clear();
+    LOG(ERROR) << "********* <--- 2+";
+    m_nodes.clear();
+    LOG(ERROR) << "********* <--- 2.5";
+    m_objects.clear();
+    LOG(ERROR) << "********* <--- 3";
 }
 
 const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& BuilderDefinition::nodes() const

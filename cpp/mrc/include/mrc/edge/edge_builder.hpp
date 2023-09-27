@@ -85,6 +85,7 @@ struct EdgeBuilder final
     template <typename SourceT, typename SinkT = SourceT, bool AllowNarrowingV = true>
     static void make_edge_writable(IWritableAcceptor<SourceT>& source, IWritableProvider<SinkT>& sink)
     {
+        LOG(INFO) << "\t\tcreating writable edge";
         constexpr bool IsConvertable = std::is_convertible_v<SourceT, SinkT>;
         constexpr bool LessBits      = sizeof(SourceT) > sizeof(SinkT);  // Sink requires more bits than source.
         constexpr bool FloatToInt    = std::is_floating_point_v<SourceT> && std::is_integral_v<SinkT>;  // float -> int
@@ -126,6 +127,7 @@ struct EdgeBuilder final
             LOG(FATAL) << "No dynamic lookup available for statically typed objects";
         }
 
+        LOG(INFO) << "\t\twritable edge = " << edge.get() << "\t handle = " << edge->get_handle().get();
         source.set_writable_edge_handle(edge);
     }
 
@@ -173,6 +175,7 @@ struct EdgeBuilder final
             LOG(FATAL) << "No dynamic lookup available for statically typed objects";
         }
 
+        LOG(INFO) << "\t\treadable edge = " << edge.get() << "\t handle = " << edge->get_handle().get();
         sink.set_readable_edge_handle(edge);
     }
 
@@ -226,6 +229,8 @@ struct EdgeBuilder final
 
             auto edge_handle = edge_holder.get_connected_edge();
             edge_holder.release_edge_connection();
+
+            LOG(INFO) << "Splicing edge " << edge_handle.get() << " into " << splice_writable_acceptor;
 
             make_edge_writable(*writable_acceptor, *splice_writable_provider);
             make_edge_writable(*splice_writable_acceptor, sink);
@@ -463,6 +468,7 @@ void make_edge(SourceT& source, SinkT& sink)
     using source_full_t = SourceT;
     using sink_full_t   = SinkT;
 
+    LOG(INFO) << "\tedge_builder::make_edge";
     if constexpr (is_base_of_template<edge::IWritableAcceptor, source_full_t>::value &&
                   is_base_of_template<edge::IWritableProvider, sink_full_t>::value)
     {

@@ -40,6 +40,7 @@ void EdgeBuilder::make_edge_writable_typeless(IWritableAcceptorBase& source,
     auto ingress = sink.get_writable_edge_handle();
 
     // Set to the source
+    LOG(INFO) << "\t\twritable typeless edge = " << ingress.get() << "\t handle = " << ingress->get_handle().get();
     source.set_writable_edge_handle(ingress);
 }
 
@@ -51,6 +52,7 @@ void EdgeBuilder::make_edge_readable_typeless(IReadableProviderBase& source,
     auto egress = source.get_readable_edge_handle();
 
     // Set to the sink
+    LOG(INFO) << "\t\treadable typeless edge = " << egress.get() << "\t handle = " << egress->get_handle().get();
     sink.set_readable_edge_handle(egress);
 }
 

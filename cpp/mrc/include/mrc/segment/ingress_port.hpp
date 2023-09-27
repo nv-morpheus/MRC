@@ -58,6 +58,24 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
       m_source(std::make_unique<node::RxNode<T>>())
     {}
 
+    void destroy() final
+    {
+        LOG(INFO) << "Destroying IngressPort " << this->type_name() << " in segment";
+
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        if (m_source)
+        {
+            auto* src_ptr = get_object();
+            // LOG(INFO) << "\tIP releasing edge connection";
+            // src_ptr->release_edge_connection();
+            // m_source.reset();
+        }
+        else
+        {
+            LOG(INFO) << "\tIP source is null";
+        }
+    }
+
   private:
     node::RxSourceBase<T>* get_object() const final
     {

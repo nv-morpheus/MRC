@@ -119,6 +119,7 @@ class BuilderDefinition : public IBuilder
     const SegmentDefinition& definition() const;
 
     void initialize();
+    void shutdown();
 
     const std::map<std::string, std::shared_ptr<runnable::Launchable>>& nodes() const;
     const std::map<std::string, std::shared_ptr<EgressPortBase>>& egress_ports() const;
@@ -163,6 +164,8 @@ class BuilderDefinition : public IBuilder
     // ingress/egress - these are also nodes/objects
     std::map<std::string, std::shared_ptr<IngressPortBase>> m_ingress_ports;
     std::map<std::string, std::shared_ptr<EgressPortBase>> m_egress_ports;
+
+    bool m_shutdown{false};
 };
 
 }  // namespace mrc::segment

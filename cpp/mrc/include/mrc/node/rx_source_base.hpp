@@ -53,6 +53,7 @@ class RxSourceBase : public ReadableProvider<T>,
   public:
     void source_add_watcher(std::shared_ptr<WatcherInterface> watcher);
     void source_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
+    void release_edge_connection();
 
   protected:
     RxSourceBase();
@@ -87,9 +88,16 @@ RxSourceBase<T>::RxSourceBase() :
 template <typename T>
 RxSourceBase<T>::~RxSourceBase()
 {
-    LOG(ERROR) << "RxSourceBase destructor called releasing edge connection";
+    LOG(ERROR) << "~RxSourceBase";
     this->release_edge_connection();
-    LOG(ERROR) << "RxSourceBase released";
+    LOG(ERROR) << "~RxSourceBase - done";
+}
+
+template <typename T>
+void RxSourceBase<T>::release_edge_connection()
+{
+    LOG(ERROR) << "RxSourceBase releasing edge connection";
+    SourceChannelOwner<T>::release_edge_connection();
 }
 
 template <typename T>

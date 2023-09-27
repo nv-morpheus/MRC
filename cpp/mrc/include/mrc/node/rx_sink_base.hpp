@@ -45,6 +45,7 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
   public:
     void sink_add_watcher(std::shared_ptr<WatcherInterface> watcher);
     void sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
+    void release_edge_connection();
 
   protected:
     RxSinkBase();
@@ -76,6 +77,13 @@ RxSinkBase<T>::~RxSinkBase()
     LOG(INFO) << "~RxSinkBase()";
     this->release_edge_connection();
     LOG(INFO) << "~RxSinkBase() - released";
+}
+
+template <typename T>
+void RxSinkBase<T>::release_edge_connection()
+{
+    LOG(ERROR) << "RxSinkBase releasing edge connection";
+    SinkChannelOwner<T>::release_edge_connection();
 }
 
 template <typename T>

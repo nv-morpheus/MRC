@@ -64,6 +64,24 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
       m_sink(std::make_unique<node::RxNode<T>>())
     {}
 
+    void destroy() final
+    {
+        LOG(INFO) << "Destroying EgressPort " << this->type_name() << " in segment";
+
+        std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+        if (m_sink)
+        {
+            auto* sink_ptr = get_object();
+            LOG(INFO) << "\tEP releasing edge connection";
+            sink_ptr->release_edge_connection();
+            m_sink.reset();
+        }
+        else
+        {
+            LOG(INFO) << "\tEP sink is null";
+        }
+    }
+
   private:
     node::RxSinkBase<T>* get_object() const final
     {

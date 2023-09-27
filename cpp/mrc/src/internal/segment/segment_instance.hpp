@@ -56,6 +56,7 @@ class SegmentInstance final : public Service
 
     std::shared_ptr<manifold::Interface> create_manifold(const PortName& name);
     void attach_manifold(std::shared_ptr<manifold::Interface> manifold);
+    void shutdown();
 
   protected:
     const std::string& info() const;
