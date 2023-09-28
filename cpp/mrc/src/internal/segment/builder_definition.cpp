@@ -328,15 +328,10 @@ void BuilderDefinition::shutdown()
         port->destroy();
     }
 
-    LOG(ERROR) << "********* <--- 0";
     m_ingress_ports.clear();
-    LOG(ERROR) << "********* <--- 1";
     m_egress_ports.clear();
-    LOG(ERROR) << "********* <--- 2+";
     m_nodes.clear();
-    LOG(ERROR) << "********* <--- 2.5";
     m_objects.clear();
-    LOG(ERROR) << "********* <--- 3";
 }
 
 const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& BuilderDefinition::nodes() const
