@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import itertools
+import logging
 import typing
 
 import pytest
@@ -22,6 +23,9 @@ import mrc
 import mrc.core.node
 import mrc.core.operators as ops
 import mrc.tests.test_edges_cpp as m
+
+mrc.logging.init_logging("test_edges")
+mrc.logging.set_level(logging.INFO)
 
 
 @pytest.fixture
