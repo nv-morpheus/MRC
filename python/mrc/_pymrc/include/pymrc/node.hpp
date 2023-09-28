@@ -397,6 +397,11 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
 
   public:
     using base_t::base_t;
+
+    ~PythonSourceComponent()
+    {
+        this->release_edge_connection();
+    }
 };
 
 class SegmentObjectProxy
