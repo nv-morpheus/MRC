@@ -23,6 +23,7 @@
 #include "mrc/edge/edge_channel.hpp"
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
+#include "mrc/edge/forward.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
@@ -57,7 +58,7 @@ using namespace std::chrono_literals;
 
 TEST_CLASS(Edges);
 
-using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)
+using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)p
 
 namespace mrc::node {
 
@@ -995,5 +996,29 @@ TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
     sink->run();
 
     EXPECT_TRUE(node->stream_fn_called);
+}
+
+template <typename T>
+class TestEdgeHolder : public edge::EdgeHolder<T>
+{
+  public:
+    bool has_active_connection() const
+    {
+        return this->check_active_connection(false);
+    }
+
+    void call_release_edge_connection()
+    {
+        this->release_edge_connection();
+    }
+};
+
+TEST_F(TestEdges, EdgeHolderIsConnected)
+{
+    TestEdgeHolder<int> edge_holder;
+
+    EXPECT_FALSE(edge_holder.has_active_connection());
+    edge_holder.call_release_edge_connection();
+    EXPECT_TRUE(edge_holder.has_active_connection());
 }
 }  // namespace mrc
