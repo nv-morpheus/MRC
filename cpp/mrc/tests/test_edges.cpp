@@ -1011,14 +1011,23 @@ class TestEdgeHolder : public edge::EdgeHolder<T>
     {
         this->release_edge_connection();
     }
+
+    void call_init_owned_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_owned_edge(std::move(edge));
+    }
 };
 
 TEST_F(TestEdges, EdgeHolderIsConnected)
 {
     TestEdgeHolder<int> edge_holder;
-
+    auto edge = std::make_shared<edge::Edge<int>>();
     EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
     edge_holder.call_release_edge_connection();
-    EXPECT_TRUE(edge_holder.has_active_connection());
+    EXPECT_FALSE(edge_holder.has_active_connection());
 }
 }  // namespace mrc
