@@ -58,7 +58,7 @@ using namespace std::chrono_literals;
 
 TEST_CLASS(Edges);
 
-using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)p
+using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)
 
 namespace mrc::node {
 
