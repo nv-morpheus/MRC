@@ -30,6 +30,9 @@ class Object;
 template <typename T>
 class Runnable;
 
+template <typename T>
+class Component;
+
 template <typename... PortTypesT>
 class EgressPorts;
 

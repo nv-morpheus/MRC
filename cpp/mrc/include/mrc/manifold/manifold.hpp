@@ -39,11 +39,11 @@ class Manifold : public Interface
     ~Manifold() override;
 
     const PortName& port_name() const final;
+    const std::string& info() const final;
+    void shutdown() override;
 
   protected:
     runnable::IRunnableResources& resources();
-
-    const std::string& info() const;
 
   private:
     void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;

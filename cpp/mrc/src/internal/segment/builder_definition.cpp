@@ -262,7 +262,7 @@ void BuilderDefinition::initialize()
     // construct ingress ports
     for (const auto& [name, initializer] : this->definition().ingress_initializers())
     {
-        DVLOG(10) << "constructing ingress_port: " << name;
+        LOG(INFO) << "constructing ingress_port: " << name;
         auto port = initializer(address);
         this->add_object(name, port);
     }
@@ -270,7 +270,7 @@ void BuilderDefinition::initialize()
     // construct egress ports
     for (const auto& [name, initializer] : this->definition().egress_initializers())
     {
-        DVLOG(10) << "constructing egress_port: " << name;
+        LOG(INFO) << "constructing egress_port: " << name;
         auto port = initializer(address);
         this->add_object(name, port);
     }
@@ -292,6 +292,7 @@ void BuilderDefinition::initialize()
         shutdown();
 
         // Rethrow after logging
+        LOG(ERROR) << "rethrowing exception";
         std::rethrow_exception(std::current_exception());
     }
 }

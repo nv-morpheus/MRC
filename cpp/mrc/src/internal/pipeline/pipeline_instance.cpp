@@ -201,11 +201,14 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
+    LOG(INFO) << "PipelineInstance::do_service_kill";
     mark_joinable();
     for (auto& [id, segment] : m_segments)
     {
+        LOG(INFO) << "\tstopping: " << id;
         stop_segment(id);
         segment->service_kill();
+        LOG(INFO) << "\tstopped: " << id;
     }
 }
 

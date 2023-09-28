@@ -35,6 +35,7 @@ struct EgressDelegate
 {
     virtual ~EgressDelegate()                                                                        = default;
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void shutdown(){};
 };
 
 template <typename T>
@@ -55,6 +56,12 @@ class TypedEgress : public EgressDelegate
 template <typename T>
 class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
 {
+  public:
+    void shutdown() final
+    {
+        node::Router<SegmentAddress, T>::release_edge_connections();
+    }
+
   protected:
     SegmentAddress determine_key_for_value(const T& t) override
     {

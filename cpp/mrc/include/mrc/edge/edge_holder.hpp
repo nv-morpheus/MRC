@@ -50,7 +50,11 @@ template <typename T>
 class EdgeHolder
 {
   public:
-    EdgeHolder() = default;
+    EdgeHolder()
+    {
+        LOG(INFO) << "EdgeHolder() = " << this;
+    };
+
     virtual ~EdgeHolder()
     {
         auto p = m_connected_edge.get();

@@ -29,11 +29,14 @@
 #include "mrc/segment/ingress_ports.hpp"
 #include "mrc/segment/object.hpp"
 
+#include <boost/fiber/all.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
+#include <chrono>  // todo remove
 #include <cstdint>
 #include <memory>
 #include <ostream>
@@ -41,6 +44,8 @@
 #include <utility>
 
 namespace mrc {
+
+using namespace std::literals;
 
 class TestPipeline : public ::testing::Test
 {
@@ -208,7 +213,9 @@ TEST_F(TestPipeline, SegmentInitErrorHandlingFirstSeg)
 
             auto my_float_egress = seg.get_egress<float>("float_port");
 
+            LOG(INFO) << "\n\n********* Making edge";
             seg.make_edge(rx_source, my_float_egress);
+            LOG(INFO) << "\n\n********* Throwing exception";
             throw std::runtime_error("Error in initializer");
         });
 
@@ -228,7 +235,9 @@ TEST_F(TestPipeline, SegmentInitErrorHandlingFirstSeg)
                                                                                                   "called";
                                                                                     }));
 
+                                            LOG(INFO) << "\n\n********* Seg 2 Making edge";
                                             seg.make_edge(my_float_ingress, rx_sink);
+                                            LOG(INFO) << "\n\n********* Seg 2 Making edge - done";
                                         });
 
     Executor exec(std::move(m_options));
