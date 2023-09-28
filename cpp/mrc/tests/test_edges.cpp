@@ -19,8 +19,10 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
+#include "mrc/edge/edge.hpp"  // for Edge
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
+#include "mrc/edge/edge_holder.hpp"  // for EdgeHolder
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/generic_source.hpp"
@@ -40,7 +42,6 @@
 #include <rxcpp/rx.hpp>  // for observable_member
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -57,7 +58,7 @@ using namespace std::chrono_literals;
 
 TEST_CLASS(Edges);
 
-using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)
+using TestEdgesDeathTest = TestEdges;  // NOLINT(readability-identifier-naming)p
 
 namespace mrc::node {
 
@@ -995,5 +996,38 @@ TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
     sink->run();
 
     EXPECT_TRUE(node->stream_fn_called);
+}
+
+template <typename T>
+class TestEdgeHolder : public edge::EdgeHolder<T>
+{
+  public:
+    bool has_active_connection() const
+    {
+        return this->check_active_connection(false);
+    }
+
+    void call_release_edge_connection()
+    {
+        this->release_edge_connection();
+    }
+
+    void call_init_owned_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_owned_edge(std::move(edge));
+    }
+};
+
+TEST_F(TestEdges, EdgeHolderIsConnected)
+{
+    TestEdgeHolder<int> edge_holder;
+    auto edge = std::make_shared<edge::Edge<int>>();
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_release_edge_connection();
+    EXPECT_FALSE(edge_holder.has_active_connection());
 }
 }  // namespace mrc
