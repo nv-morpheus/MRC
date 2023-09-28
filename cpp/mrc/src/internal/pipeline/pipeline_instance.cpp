@@ -103,6 +103,7 @@ void PipelineInstance::stop_segment(const SegmentAddress& address)
         // manifold(name).drop_output(address);
     }
 
+    search->second->shutdown();
     search->second->service_stop();
 }
 
@@ -200,6 +201,7 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
+    LOG(INFO) << "pipeline::PipelineInstance - killing " << m_segments.size() << " segments";
     mark_joinable();
     for (auto& [id, segment] : m_segments)
     {
@@ -228,6 +230,7 @@ void PipelineInstance::do_service_await_join()
     if (first_exception)
     {
         LOG(ERROR) << "pipeline::PipelineInstance - an exception was caught while awaiting on segments - rethrowing";
+        do_service_kill();
         std::rethrow_exception(std::move(first_exception));
     }
 }

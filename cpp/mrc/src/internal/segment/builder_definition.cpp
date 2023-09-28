@@ -285,23 +285,34 @@ void BuilderDefinition::initialize()
                    << ", Segment Rank: " << m_rank << ". Exception message:\n"
                    << e.what();
 
-        for (auto& [name, obj_prop] : m_objects)
-        {
-            if (obj_prop->is_source() && !obj_prop->is_sink())
-            {
-                LOG(ERROR) << "Destroying: " << name;
-                obj_prop->destroy();
-            }
-        }
-
-        m_ingress_ports.clear();
-        m_egress_ports.clear();
-        m_nodes.clear();
-        m_objects.clear();
-
+        shutdown();
         // Rethrow after logging
         std::rethrow_exception(std::current_exception());
     }
+}
+
+void BuilderDefinition::shutdown()
+{
+    if (m_is_shutdown)
+    {
+        return;
+    }
+
+    m_is_shutdown = true;
+    LOG(ERROR) << "Shutting down segment: " << m_definition->name();
+    for (auto& [name, obj_prop] : m_objects)
+    {
+        if (obj_prop->is_source() && !obj_prop->is_sink())
+        {
+            LOG(ERROR) << "Destroying: " << name;
+            obj_prop->destroy();
+        }
+    }
+
+    m_ingress_ports.clear();
+    m_egress_ports.clear();
+    m_nodes.clear();
+    m_objects.clear();
 }
 
 const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& BuilderDefinition::nodes() const
