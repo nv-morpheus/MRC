@@ -19,11 +19,12 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
+#include "mrc/edge/edge.hpp"  // for Edge
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
+#include "mrc/edge/edge_holder.hpp"  // for EdgeHolder
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
-#include "mrc/edge/forward.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
@@ -41,7 +42,6 @@
 #include <rxcpp/rx.hpp>  // for observable_member
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
