@@ -48,8 +48,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
 
     void destroy() final
     {
-        LOG(INFO) << "Destroying " << this->type_name() << " in segment";
-        // m_node->release_edge_connection();
+        LOG(INFO) << "Destroying runnable " << this->type_name();
         m_node.reset();
     }
 

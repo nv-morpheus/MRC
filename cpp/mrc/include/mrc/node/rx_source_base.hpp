@@ -56,7 +56,7 @@ class RxSourceBase : public ReadableProvider<T>,
 
   protected:
     RxSourceBase();
-    ~RxSourceBase() override;
+    ~RxSourceBase() override = default;
 
     const rxcpp::observer<T>& observer() const;
 
@@ -82,14 +82,6 @@ RxSourceBase<T>::RxSourceBase() :
 {
     // Set the default channel
     this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
-}
-
-template <typename T>
-RxSourceBase<T>::~RxSourceBase()
-{
-    LOG(ERROR) << "RxSourceBase destructor called releasing edge connection";
-    this->release_edge_connection();
-    LOG(ERROR) << "RxSourceBase released";
 }
 
 template <typename T>

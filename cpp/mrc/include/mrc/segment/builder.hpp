@@ -464,8 +464,6 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
-    LOG(INFO) << "Creating edge from " << source_object.name() << " to " << sink_object.name();
-
     // If we can determine the type from the actual object, use that, then fall back to hints or defaults.
     using deduced_source_type_t = first_non_void_type_t<source_sp_type_t,  // Deduced type (if possible)
                                                         SourceNodeTypeT,   // Explicit type hint
@@ -611,7 +609,6 @@ void IBuilder::add_throughput_counter(std::shared_ptr<Object<ObjectT>> segment_o
     CHECK(segment_object->is_source());
     using source_type_t = typename ObjectT::source_type_t;
     auto counter        = this->make_throughput_counter(runnable->name());
-
     runnable->object().add_epilogue_tap([counter](const source_type_t& data) {
         counter(1);
     });
