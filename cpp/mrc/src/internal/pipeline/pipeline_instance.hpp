@@ -86,7 +86,7 @@ class PipelineInstance final : public Service, public PipelineResources
     bool m_joinable{false};
     Promise<void> m_joinable_promise;
     SharedFuture<void> m_joinable_future;
-    std::mutex m_kill_mux;
+    boost::fibers::mutex m_kill_mux;
 };
 
 }  // namespace mrc::pipeline
