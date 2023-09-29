@@ -57,7 +57,7 @@ class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
   public:
     void shutdown() final
     {
-        LOG(INFO) << "Releasing edges from manifold ingress";
+        DVLOG(10) << "Releasing edges from manifold ingress";
         node::SourceProperties<T>::release_edge_connection();
     }
 

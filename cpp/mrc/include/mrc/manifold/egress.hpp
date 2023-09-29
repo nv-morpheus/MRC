@@ -59,7 +59,7 @@ class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgr
   public:
     void shutdown() final
     {
-        LOG(INFO) << "Releasing edges from manifold egress";
+        DVLOG(10) << "Releasing edges from manifold egress";
         node::Router<SegmentAddress, T>::release_edge_connections();
     }
 
