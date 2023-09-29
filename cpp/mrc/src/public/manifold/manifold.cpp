@@ -50,6 +50,8 @@ const std::string& Manifold::info() const
     return m_info;
 }
 
+void Manifold::shutdown() {}
+
 void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {
     DVLOG(3) << "manifold " << this->port_name() << ": connecting to upstream segment " << segment::info(address);

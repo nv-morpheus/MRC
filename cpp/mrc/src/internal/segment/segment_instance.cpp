@@ -285,6 +285,7 @@ void SegmentInstance::attach_manifold(std::shared_ptr<manifold::Interface> manif
         if (search != m_builder->egress_ports().end())
         {
             DVLOG(10) << info() << " attaching manifold for egress port " << port_name;
+            m_manifolds.push_back(manifold);
             search->second->connect_to_manifold(std::move(manifold));
             return;
         }
@@ -295,6 +296,7 @@ void SegmentInstance::attach_manifold(std::shared_ptr<manifold::Interface> manif
         if (search != m_builder->ingress_ports().end())
         {
             DVLOG(10) << info() << " attaching manifold for ingress port " << port_name;
+            m_manifolds.push_back(manifold);
             search->second->connect_to_manifold(std::move(manifold));
             return;
         }
@@ -335,6 +337,20 @@ void SegmentInstance::shutdown()
 {
     // TODO: Merge with service_stop
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    LOG(INFO) << info() << " shutting down segment checking for manifolds: " << m_manifolds.size();
+    for (const auto& weak_manifold : m_manifolds)
+    {
+        auto manifold = weak_manifold.lock();
+        if (manifold)
+        {
+            LOG(INFO) << info() << " shutting down manifold: " << manifold->info();
+            manifold->shutdown();
+        }
+        else
+        {
+            LOG(INFO) << info() << " manifold has already been shutdown";
+        }
+    }
     m_builder->shutdown();
 }
 

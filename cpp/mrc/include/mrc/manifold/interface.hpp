@@ -27,9 +27,11 @@ struct Interface
     virtual ~Interface() = default;
 
     virtual const PortName& port_name() const = 0;
+    virtual const std::string& info() const   = 0;
 
-    virtual void start() = 0;
-    virtual void join()  = 0;
+    virtual void start()    = 0;
+    virtual void join()     = 0;
+    virtual void shutdown() = 0;
 
     virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
