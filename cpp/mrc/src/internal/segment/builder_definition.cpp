@@ -293,12 +293,6 @@ void BuilderDefinition::initialize()
 
 void BuilderDefinition::shutdown()
 {
-    if (m_is_shutdown)
-    {
-        return;
-    }
-
-    m_is_shutdown = true;
     LOG(ERROR) << "Shutting down segment: " << m_definition->name();
     for (auto& [name, obj_prop] : m_objects)
     {

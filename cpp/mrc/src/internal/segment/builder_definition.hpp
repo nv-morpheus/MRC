@@ -164,7 +164,6 @@ class BuilderDefinition : public IBuilder
     // ingress/egress - these are also nodes/objects
     std::map<std::string, std::shared_ptr<IngressPortBase>> m_ingress_ports;
     std::map<std::string, std::shared_ptr<EgressPortBase>> m_egress_ports;
-    bool m_is_shutdown{false};
 };
 
 }  // namespace mrc::segment
