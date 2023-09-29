@@ -335,7 +335,7 @@ void SegmentInstance::shutdown()
 {
     // TODO: Merge with service_stop
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    LOG(INFO) << m_name << " - " << info() << " - shutting down segment";
+    DVLOG(10) << m_name << " - " << info() << " - shutting down segment";
     m_builder->shutdown();
 }
 

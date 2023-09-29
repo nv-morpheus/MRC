@@ -112,7 +112,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
     // perform our allocations on the numa domain of the intended target
     // CHECK_LT(partition_id, m_resources->host_resources().size());
     CHECK_LT(partition_id, resources().partition_count());
-    LOG(INFO) << "Enqueing Creation of segment " << ::mrc::segment::info(address);
+    DVLOG(10) << "Enqueing Creation of segment " << ::mrc::segment::info(address);
     resources()
         .partition(partition_id)
         .runnable()
@@ -123,7 +123,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            LOG(INFO) << "Creating segment " << definition->name() << " - " << ::mrc::segment::info(address);
+            DVLOG(10) << "Creating segment " << definition->name() << " - " << ::mrc::segment::info(address);
             auto segment = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
 
             for (const auto& name : definition->egress_port_names())
@@ -152,7 +152,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
                 segment->attach_manifold(manifold);
             }
 
-            LOG(INFO) << "Created segment " << definition->name() << " - " << ::mrc::segment::info(address);
+            DVLOG(10) << "Created segment " << definition->name() << " - " << ::mrc::segment::info(address);
             m_segments[address] = std::move(segment);
         })
         .get();
@@ -205,12 +205,12 @@ void PipelineInstance::do_service_stop()
 void PipelineInstance::do_service_kill()
 {
     std::lock_guard<decltype(m_kill_mux)> guard(m_kill_mux);
-    LOG(INFO) << "pipeline::PipelineInstance - killing " << m_manifolds.size() << " manifolds - " << m_segments.size()
+    DVLOG(10) << "pipeline::PipelineInstance - killing " << m_manifolds.size() << " manifolds - " << m_segments.size()
               << " segments";
     mark_joinable();
     for (const auto& [name, manifold] : m_manifolds)
     {
-        LOG(INFO) << "pipeline::PipelineInstance - killing manifold " << name;
+        DVLOG(10) << "pipeline::PipelineInstance - killing manifold " << name;
         manifold->shutdown();
     }
 

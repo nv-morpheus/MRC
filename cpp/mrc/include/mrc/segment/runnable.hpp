@@ -48,7 +48,7 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
 
     void destroy() final
     {
-        LOG(INFO) << "Destroying runnable " << this->type_name();
+        DVLOG(10) << "Destroying runnable " << this->type_name();
         m_node.reset();
     }
 
