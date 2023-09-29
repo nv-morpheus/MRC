@@ -293,20 +293,34 @@ void BuilderDefinition::initialize()
 
 void BuilderDefinition::shutdown()
 {
-    LOG(ERROR) << "Shutting down segment: " << m_definition->name();
+    DVLOG(10) << "Shutting down segment: " << m_definition->name();
     for (auto& [name, obj_prop] : m_objects)
     {
         if (obj_prop->is_source() && !obj_prop->is_sink())
         {
-            LOG(ERROR) << "Destroying: " << name;
+            DVLOG(10) << "Destroying: " << name;
             obj_prop->destroy();
         }
+    }
+
+    for (auto& [name, port] : m_ingress_ports)
+    {
+        DVLOG(10) << "Destroying Ingress port: " << name;
+        port->destroy();
+    }
+
+    for (auto& [name, port] : m_egress_ports)
+    {
+        DVLOG(10) << "Destroying Egress port: " << name;
+        port->destroy();
     }
 
     m_ingress_ports.clear();
     m_egress_ports.clear();
     m_nodes.clear();
     m_objects.clear();
+
+    DVLOG(10) << "Shutting down segment: " << m_definition->name() << " - done";
 }
 
 const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& BuilderDefinition::nodes() const
