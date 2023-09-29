@@ -201,8 +201,15 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
-    LOG(INFO) << "pipeline::PipelineInstance - killing " << m_segments.size() << " segments";
+    LOG(INFO) << "pipeline::PipelineInstance - killing " << m_manifolds.size() << " manifolds - " << m_segments.size()
+              << " segments";
     mark_joinable();
+    for (const auto& [name, manifold] : m_manifolds)
+    {
+        LOG(INFO) << "pipeline::PipelineInstance - killing manifold " << name;
+        manifold->shutdown();
+    }
+
     for (auto& [id, segment] : m_segments)
     {
         stop_segment(id);

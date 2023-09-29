@@ -83,7 +83,6 @@ class SegmentInstance final : public Service
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_ingress_runners;
-    std::vector<std::weak_ptr<manifold::Interface>> m_manifolds;
 
     mutable std::mutex m_mutex;
 };
