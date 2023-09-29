@@ -35,6 +35,7 @@ class CompositeManifold : public Manifold
     CompositeManifold(PortName port_name, runnable::IRunnableResources& resources) :
       Manifold(std::move(port_name), resources)
     {
+        LOG(INFO) << "CompositeManifold::CompositeManifold(port_name, resources)";
         // construct IngressT and EgressT on the NUMA node / memory domain in which the object will run
         this->resources()
             .main()
@@ -55,22 +56,22 @@ class CompositeManifold : public Manifold
       m_ingress(std::move(ingress)),
       m_egress(std::move(egress))
     {
+        LOG(INFO) << "CompositeManifold::CompositeManifold(resources, ingress, egress)";
         // Already created, link them together
         mrc::make_edge(*m_ingress, *m_egress);
     }
 
     ~CompositeManifold() override
     {
-        LOG(INFO) << "CompositeManifold::~CompositeManifold(): " << info();
+        DVLOG(5) << "CompositeManifold::~CompositeManifold(): " << info();
         shutdown();
     };
 
     void shutdown() final
     {
-        LOG(INFO) << "CompositeManifold::shutdown(): " << info();
+        DVLOG(5) << "CompositeManifold::shutdown(): " << info();
         m_ingress->shutdown();
         m_egress->shutdown();
-        LOG(INFO) << "CompositeManifold::shutdown(): done";
     }
 
   protected:

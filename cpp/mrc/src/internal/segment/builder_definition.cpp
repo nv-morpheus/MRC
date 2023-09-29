@@ -286,7 +286,7 @@ void BuilderDefinition::initialize()
                    << e.what();
 
         shutdown();
-        // Rethrow after logging
+        //  Rethrow after logging
         std::rethrow_exception(std::current_exception());
     }
 }

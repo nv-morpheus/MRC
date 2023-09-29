@@ -201,6 +201,8 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
+    std::lock_guard<std::mutex> guard(m_kill_mux);
+
     LOG(INFO) << "pipeline::PipelineInstance - killing " << m_manifolds.size() << " manifolds - " << m_segments.size()
               << " segments";
     mark_joinable();
@@ -210,11 +212,15 @@ void PipelineInstance::do_service_kill()
         manifold->shutdown();
     }
 
+    m_manifolds.clear();
+
     for (auto& [id, segment] : m_segments)
     {
         stop_segment(id);
         segment->service_kill();
     }
+
+    m_segments.clear();
 }
 
 void PipelineInstance::do_service_await_join()
