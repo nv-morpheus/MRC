@@ -199,18 +199,18 @@ class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 
     Broadcast(bool deep_copy = false)
     {
-        auto edge = std::make_shared<BroadcastEdge>(*this, deep_copy);
+        init_edge(deep_copy);
+    }
 
-        // Save to avoid casting
-        m_edge = edge;
-
-        WritableProvider<T>::init_owned_edge(edge);
+    Broadcast(std::string name, bool deep_copy = false) : m_name(std::move(name))
+    {
+        init_edge(deep_copy);
     }
 
     ~Broadcast()
     {
         // Debug print
-        VLOG(10) << "Destroying TestBroadcast";
+        VLOG(10) << "Destroying Broadcast " << m_name;
     }
 
     void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
@@ -227,11 +227,22 @@ class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 
     void on_complete()
     {
-        VLOG(10) << "TestBroadcast completed";
+        VLOG(10) << "Broadcast completed " << m_name;
     }
 
   private:
+    void init_edge(bool deep_copy)
+    {
+        auto edge = std::make_shared<BroadcastEdge>(*this, deep_copy);
+
+        // Save to avoid casting
+        m_edge = edge;
+
+        WritableProvider<T>::init_owned_edge(edge);
+    }
+
     std::weak_ptr<BroadcastEdge> m_edge;
+    std::string m_name;
 };
 
 }  // namespace mrc::node

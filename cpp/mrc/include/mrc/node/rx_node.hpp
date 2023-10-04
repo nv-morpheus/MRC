@@ -36,6 +36,7 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <string>
 
 namespace mrc::node {
 
@@ -202,7 +203,7 @@ class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor
   public:
     using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
 
-    RxNodeComponent()
+    RxNodeComponent(std::string name = std::string()) : m_name(std::move(name))
     {
         auto edge = std::make_shared<EdgeRxSubscriber<InputT>>(m_subject.get_subscriber());
 
@@ -214,8 +215,19 @@ class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor
         this->make_stream(stream_fn);
     }
 
+    RxNodeComponent(std::string name, stream_fn_t stream_fn) : RxNodeComponent(std::move(name))
+    {
+        this->make_stream(stream_fn);
+    }
+
     template <typename... OpsT>
     RxNodeComponent(OpsT&&... ops) : RxNodeComponent()
+    {
+        this->pipe(std::forward<OpsT>(ops)...);
+    }
+
+    template <typename... OpsT>
+    RxNodeComponent(std::string name, OpsT&&... ops) : RxNodeComponent(std::move(name))
     {
         this->pipe(std::forward<OpsT>(ops)...);
     }
@@ -267,6 +279,7 @@ class RxNodeComponent : public WritableProvider<InputT>, public WritableAcceptor
   private:
     rxcpp::subjects::subject<InputT> m_subject;
     rxcpp::subscription m_subject_subscription;
+    std::string m_name;
 };
 
 }  // namespace mrc::node

@@ -63,7 +63,7 @@ template <typename T>
 class GenericSinkComponent : public RxSinkComponent<T>
 {
   public:
-    GenericSinkComponent()
+    GenericSinkComponent(std::string name = std::string()) : RxSinkComponent<T>(std::move(name))
     {
         RxSinkComponent<T>::set_observer(rxcpp::make_observer_dynamic<T>(
             [this](T data) {

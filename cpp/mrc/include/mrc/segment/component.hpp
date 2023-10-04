@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <ostream>
+#include <string>
 #include <utility>
 
 namespace mrc::segment {
@@ -32,6 +33,10 @@ class Component final : public Object<ResourceT>
 {
   public:
     Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
+    Component(std::string name, std::unique_ptr<ResourceT> resource) :
+      m_resource(std::move(resource)),
+      m_name(std::move(name))
+    {}
     ~Component() final = default;
 
   private:
@@ -42,6 +47,7 @@ class Component final : public Object<ResourceT>
     }
 
     std::unique_ptr<ResourceT> m_resource;
+    std::string m_name;
 };
 
 }  // namespace mrc::segment
