@@ -34,6 +34,8 @@ namespace mrc::node {
 class BroadcastTypeless : public edge::IWritableProviderBase, public edge::IWritableAcceptorBase
 {
   public:
+    BroadcastTypeless(std::string name = std::string()) : m_name(std::move(name)) {}
+
     std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
     {
         auto* self = const_cast<BroadcastTypeless*>(this);
@@ -141,6 +143,7 @@ class BroadcastTypeless : public edge::IWritableProviderBase, public edge::IWrit
     }
 
   private:
+    std::string m_name;
     std::mutex m_mutex;
     std::vector<std::weak_ptr<edge::DeferredWritableMultiEdgeBase>> m_upstream_handles;
     std::vector<std::shared_ptr<edge::WritableEdgeHandle>> m_downstream_handles;
