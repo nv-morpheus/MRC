@@ -38,6 +38,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mrc::node {
@@ -51,8 +52,9 @@ template <typename T, typename ContextT>
 class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxEpilogueTap<T>
 {
   public:
-    RxSource() = default;
+    RxSource(std::string name = std::string()) : RxSourceBase<T>(std::move(name)) {}
     RxSource(rxcpp::observable<T> observable);
+    RxSource(std::string name, rxcpp::observable<T> observable);
     ~RxSource() override = default;
 
     void set_observable(rxcpp::observable<T> observable);
@@ -68,6 +70,12 @@ class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxE
 
 template <typename T, typename ContextT>
 RxSource<T, ContextT>::RxSource(rxcpp::observable<T> observable) : RxSourceBase<T>()
+{
+    set_observable(observable);
+}
+
+template <typename T, typename ContextT>
+RxSource<T, ContextT>::RxSource(std::string name, rxcpp::observable<T> observable) : RxSourceBase<T>(std::move(name))
 {
     set_observable(observable);
 }

@@ -152,6 +152,8 @@ template <typename ObjectT>
 class Object : public virtual ObjectProperties
 {
   public:
+    Object(std::string name = std::string()) : m_name(std::move(name)){};
+
     ObjectT& object();
 
     std::string name() const final;

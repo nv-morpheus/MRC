@@ -41,7 +41,18 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     Runnable(ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {}
 
+    template <typename... ArgsT>
+    Runnable(std::string name, ArgsT&&... args) :
+      Object<NodeT>(std::move(name)),
+      m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
+    {}
+
     Runnable(std::unique_ptr<NodeT> node) : m_node(std::move(node))
+    {
+        CHECK(m_node);
+    }
+
+    Runnable(std::string name, std::unique_ptr<NodeT> node) : Object<NodeT>(std::move(name)), m_node(std::move(node))
     {
         CHECK(m_node);
     }

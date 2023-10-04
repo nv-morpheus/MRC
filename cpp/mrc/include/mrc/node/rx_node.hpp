@@ -50,10 +50,13 @@ class RxNode : public RxSinkBase<InputT>,
     // function defining the stream, i.e. operations linking Sink -> Source
     using stream_fn_t = std::function<rxcpp::observable<OutputT>(const rxcpp::observable<InputT>&)>;
 
-    RxNode();
+    RxNode(std::string name = std::string());
 
     template <typename... OpsT>
     RxNode(OpsT&&... ops);
+
+    template <typename... OpsT>
+    RxNode(std::string name, OpsT&&... ops);
 
     ~RxNode() override = default;
 
@@ -67,6 +70,12 @@ class RxNode : public RxSinkBase<InputT>,
     }
 
     void make_stream(stream_fn_t fn);
+
+    void set_name(std::string name)
+    {
+        RxSinkBase<InputT>::m_name    = name;
+        RxSourceBase<OutputT>::m_name = std::move(name);
+    }
 
   private:
     // the following method(s) are moved to private from their original scopes to prevent access from deriving classes
@@ -85,7 +94,9 @@ class RxNode : public RxSinkBase<InputT>,
 };
 
 template <typename InputT, typename OutputT, typename ContextT>
-RxNode<InputT, OutputT, ContextT>::RxNode() :
+RxNode<InputT, OutputT, ContextT>::RxNode(std::string name) :
+  RxSinkBase<InputT>{name},
+  RxSourceBase<OutputT>{name},
   m_stream([](const rxcpp::observable<InputT>& obs) {
       // Default to just returning the input
       return obs;
@@ -95,6 +106,15 @@ RxNode<InputT, OutputT, ContextT>::RxNode() :
 template <typename InputT, typename OutputT, typename ContextT>
 template <typename... OpsT>
 RxNode<InputT, OutputT, ContextT>::RxNode(OpsT&&... ops)
+{
+    pipe(std::forward<OpsT>(ops)...);
+}
+
+template <typename InputT, typename OutputT, typename ContextT>
+template <typename... OpsT>
+RxNode<InputT, OutputT, ContextT>::RxNode(std::string name, OpsT&&... ops) :
+  RxSinkBase<InputT>{name},
+  RxSourceBase<OutputT>{name}
 {
     pipe(std::forward<OpsT>(ops)...);
 }
