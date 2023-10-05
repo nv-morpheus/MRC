@@ -325,6 +325,18 @@ GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
              py::arg("counter"),                                                                                   \
              py::arg("msg_count") = 5);
 
+py::class_<segment::Object<SourceBase>, mrc::segment::ObjectProperties, std::shared_ptr<segment::Object<SourceBase>>>(
+    py_mod,
+    "SourceBase")
+    .def(py::init<>([](mrc::segment::IBuilder& parent, const std::string& name, py::dict counter, size_t msg_count) {
+             auto stage = parent.construct_object<SourceBase>(name, name, std::move(counter), msg_count);
+             return stage;
+         }),
+         py::arg("parent"),
+         py::arg("name"),
+         py::arg("counter"),
+         py::arg("msg_count") = 5);
+
 PYBIND11_MODULE(test_edges_cpp, py_mod)
 {
     py_mod.doc() = R"pbdoc()pbdoc";
@@ -356,29 +368,29 @@ PYBIND11_MODULE(test_edges_cpp, py_mod)
     mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedA>>::register_dynamic_cast_converter();
     mrc::edge::EdgeConnector<std::shared_ptr<Base>, std::shared_ptr<DerivedB>>::register_dynamic_cast_converter();
 
-    CREATE_TEST_NODE_CLASS(SourceBase);
-    CREATE_TEST_NODE_CLASS(SourceDerivedA);
-    CREATE_TEST_NODE_CLASS(SourceDerivedB);
+    // CREATE_TEST_NODE_CLASS(SourceBase);
+    // CREATE_TEST_NODE_CLASS(SourceDerivedA);
+    // CREATE_TEST_NODE_CLASS(SourceDerivedB);
 
-    CREATE_TEST_NODE_CLASS(NodeBase);
-    CREATE_TEST_NODE_CLASS(NodeDerivedA);
-    CREATE_TEST_NODE_CLASS(NodeDerivedB);
+    // CREATE_TEST_NODE_CLASS(NodeBase);
+    // CREATE_TEST_NODE_CLASS(NodeDerivedA);
+    // CREATE_TEST_NODE_CLASS(NodeDerivedB);
 
-    CREATE_TEST_NODE_CLASS(SinkBase);
-    CREATE_TEST_NODE_CLASS(SinkDerivedA);
-    CREATE_TEST_NODE_CLASS(SinkDerivedB);
+    // CREATE_TEST_NODE_CLASS(SinkBase);
+    // CREATE_TEST_NODE_CLASS(SinkDerivedA);
+    // CREATE_TEST_NODE_CLASS(SinkDerivedB);
 
-    CREATE_TEST_NODE_CLASS(SourceComponentBase);
-    CREATE_TEST_NODE_CLASS(SourceComponentDerivedA);
-    CREATE_TEST_NODE_CLASS(SourceComponentDerivedB);
+    // CREATE_TEST_NODE_CLASS(SourceComponentBase);
+    // CREATE_TEST_NODE_CLASS(SourceComponentDerivedA);
+    // CREATE_TEST_NODE_CLASS(SourceComponentDerivedB);
 
-    CREATE_TEST_NODE_CLASS(NodeComponentBase);
-    CREATE_TEST_NODE_CLASS(NodeComponentDerivedA);
-    CREATE_TEST_NODE_CLASS(NodeComponentDerivedB);
+    // CREATE_TEST_NODE_CLASS(NodeComponentBase);
+    // CREATE_TEST_NODE_CLASS(NodeComponentDerivedA);
+    // CREATE_TEST_NODE_CLASS(NodeComponentDerivedB);
 
-    CREATE_TEST_NODE_CLASS(SinkComponentBase);
-    CREATE_TEST_NODE_CLASS(SinkComponentDerivedA);
-    CREATE_TEST_NODE_CLASS(SinkComponentDerivedB);
+    // CREATE_TEST_NODE_CLASS(SinkComponentBase);
+    // CREATE_TEST_NODE_CLASS(SinkComponentDerivedA);
+    // CREATE_TEST_NODE_CLASS(SinkComponentDerivedB);
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
