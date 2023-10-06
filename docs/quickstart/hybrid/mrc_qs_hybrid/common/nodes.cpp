@@ -39,7 +39,7 @@ class DataObjectSource : public mrc::pymrc::PythonSource<std::shared_ptr<common:
     // using typename base_t::subscriber_fn_t;
 
   public:
-    DataObjectSource(size_t count) : PythonSource(build()), m_count(count) {}
+    DataObjectSource(std::string name, size_t count) : PythonSource(std::move(name), build()), m_count(count) {}
 
   private:
     subscriber_fn_t build()
@@ -66,7 +66,9 @@ class DataObjectNode
     using base_t = mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
 
   public:
-    DataObjectNode() : PythonNode(base_t::op_factory_from_sub_fn(build())) {}
+    DataObjectNode(std::string name = std::string()) :
+      PythonNode(std::move(name), base_t::op_factory_from_sub_fn(build()))
+    {}
 
   private:
     subscribe_fn_t build()
@@ -96,7 +98,8 @@ class DataObjectSink : public mrc::pymrc::PythonSink<std::shared_ptr<common::Dat
     // using typename base_t::sink_type_t;
 
   public:
-    DataObjectSink() : PythonSink(build_on_next(), build_on_complete()) {}
+    DataObjectSink(std::string name = std::string()) : PythonSink(std::move(name), build_on_next(), build_on_complete())
+    {}
 
   private:
     on_next_fn_t build_on_next()

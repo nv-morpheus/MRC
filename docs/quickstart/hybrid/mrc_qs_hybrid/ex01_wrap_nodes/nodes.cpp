@@ -35,7 +35,7 @@ namespace py = pybind11;
 class MyDataObjectSource : public mrc::pymrc::PythonSource<std::shared_ptr<common::DataObject>>
 {
   public:
-    MyDataObjectSource(size_t count) : PythonSource(build()), m_count(count) {}
+    MyDataObjectSource(std::string name, size_t count) : PythonSource(std::move(name), build()), m_count(count) {}
 
   private:
     subscriber_fn_t build()
@@ -62,7 +62,9 @@ class MyDataObjectNode
     using base_t = mrc::pymrc::PythonNode<std::shared_ptr<common::DataObject>, std::shared_ptr<common::DataObject>>;
 
   public:
-    MyDataObjectNode() : PythonNode(base_t::op_factory_from_sub_fn(build())) {}
+    MyDataObjectNode(std::string name = std::string()) :
+      PythonNode(std::move(name), base_t::op_factory_from_sub_fn(build()))
+    {}
 
   private:
     subscribe_fn_t build()
@@ -89,7 +91,9 @@ class MyDataObjectNode
 class MyDataObjectSink : public mrc::pymrc::PythonSink<std::shared_ptr<common::DataObject>>
 {
   public:
-    MyDataObjectSink() : PythonSink(build_on_next(), build_on_complete()) {}
+    MyDataObjectSink(std::string name = std::string()) :
+      PythonSink(std::move(name), build_on_next(), build_on_complete())
+    {}
 
   private:
     on_next_fn_t build_on_next()
