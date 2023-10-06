@@ -304,26 +304,40 @@ class TestSinkComponent : public pymrc::PythonSinkComponent<std::shared_ptr<T>>,
     }
 };
 
-GENERATE_NODE_TYPES(TestSource, Source);
+class SourceBase : public TestSource<Base>
+{
+    using TestSource<Base>::TestSource;
+};
+class SourceDerivedA : public TestSource<DerivedA>
+{
+    using TestSource<DerivedA>::TestSource;
+};
+class SourceDerivedB : public TestSource<DerivedB>
+{
+  public:
+    using TestSource<DerivedB>::TestSource;
+};
+
+// GENERATE_NODE_TYPES(TestSource, Source);
 GENERATE_NODE_TYPES(TestSourceComponent, SourceComponent);
 GENERATE_NODE_TYPES(TestNode, Node);
 GENERATE_NODE_TYPES(TestNodeComponent, NodeComponent);
 GENERATE_NODE_TYPES(TestSink, Sink);
 GENERATE_NODE_TYPES(TestSinkComponent, SinkComponent);
 
-// #define CREATE_TEST_NODE_CLASS(class_name)                                                                         \
-//     py::class_<segment::Object<class_name>,                                                                        \
-//                mrc::segment::ObjectProperties,                                                                     \
-//                std::shared_ptr<segment::Object<class_name>>>(py_mod, #class_name)                                  \
-//         .def(py::init<>(                                                                                           \
-//                  [](mrc::segment::IBuilder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
-//                      auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count);  \
-//                      return stage;                                                                                 \
-//                  }),                                                                                               \
-//              py::arg("parent"),                                                                                    \
-//              py::arg("name"),                                                                                      \
-//              py::arg("counter"),                                                                                   \
-//              py::arg("msg_count") = 5);
+#define CREATE_TEST_NODE_CLASS(class_name)                                                                         \
+    py::class_<segment::Object<class_name>,                                                                        \
+               mrc::segment::ObjectProperties,                                                                     \
+               std::shared_ptr<segment::Object<class_name>>>(py_mod, #class_name)                                  \
+        .def(py::init<>(                                                                                           \
+                 [](mrc::segment::IBuilder& parent, const std::string& name, py::dict counter, size_t msg_count) { \
+                     auto stage = parent.construct_object<class_name>(name, name, std::move(counter), msg_count);  \
+                     return stage;                                                                                 \
+                 }),                                                                                               \
+             py::arg("parent"),                                                                                    \
+             py::arg("name"),                                                                                      \
+             py::arg("counter"),                                                                                   \
+             py::arg("msg_count") = 5);
 
 PYBIND11_MODULE(test_edges_cpp, py_mod)
 {
