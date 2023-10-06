@@ -33,6 +33,8 @@ class RxRunnable : public runnable::RunnableWithContext<ContextT>, public RxSubs
     RxRunnable()           = default;
     ~RxRunnable() override = default;
 
+    void shutdown(ContextT& ctx);
+
   private:
     // implemented by node objects and will be final
     virtual void on_shutdown_critical_section()      = 0;
@@ -53,8 +55,6 @@ class RxRunnable : public runnable::RunnableWithContext<ContextT>, public RxSubs
 
     void run(ContextT& ctx) final;
     void on_state_update(const state_t& state) final;
-
-    void shutdown(ContextT& ctx);
 
     rxcpp::composite_subscription m_subscription;
 };

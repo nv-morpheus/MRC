@@ -299,6 +299,11 @@ void BuilderDefinition::shutdown()
         if (obj_prop->is_source() && !obj_prop->is_sink())
         {
             DVLOG(10) << "Destroying: " << name;
+            auto& ctx          = Context<>::get_runtime_context();
+            auto source_object = std::dynamic_pointer_cast<Object<node::RxRunnable<decltype(ctx)>>>(obj_prop);
+            auto& runnable     = source_object->object();
+            runnable.shutdown(ctx);
+
             obj_prop->destroy();
         }
     }
