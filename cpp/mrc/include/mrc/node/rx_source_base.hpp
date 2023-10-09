@@ -55,10 +55,11 @@ class RxSourceBase : public ReadableProvider<T>,
     void source_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
 
   protected:
-    RxSourceBase();
+    RxSourceBase(std::string name = std::string());
     ~RxSourceBase() override = default;
 
     const rxcpp::observer<T>& observer() const;
+    std::string m_name;
 
   private:
     // // the following methods are moved to private from their original scopes to prevent access from deriving classes
@@ -68,7 +69,8 @@ class RxSourceBase : public ReadableProvider<T>,
 };
 
 template <typename T>
-RxSourceBase<T>::RxSourceBase() :
+RxSourceBase<T>::RxSourceBase(std::string name) :
+  m_name(std::move(name)),
   m_observer(rxcpp::make_observer_dynamic<T>(
       [this](T data) {
           this->watcher_epilogue(WatchableEvent::sink_on_data, true, &data);

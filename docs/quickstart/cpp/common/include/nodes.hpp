@@ -19,12 +19,14 @@
 
 #include <mrc/node/rx_source.hpp>
 
+#include <string>
+
 namespace mrc::quickstart::cpp::common {
 
 class IntSource : public mrc::node::RxSource<int>
 {
   public:
-    IntSource();
+    IntSource(std::string name = std::string());
 };
 
 }  // namespace mrc::quickstart::cpp::common

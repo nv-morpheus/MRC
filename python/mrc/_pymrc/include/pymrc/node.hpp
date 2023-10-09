@@ -380,11 +380,11 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
 
     using base_t::base_t;
 
-    PythonSource(const subscriber_fn_t& f) :
-      base_t(rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
-          // Call the wrapped subscriber function
-          f(s);
-      }))
+    PythonSource(std::string name, const subscriber_fn_t& f) :
+      base_t(std::move(name), rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
+                 // Call the wrapped subscriber function
+                 f(s);
+             }))
     {}
 };
 

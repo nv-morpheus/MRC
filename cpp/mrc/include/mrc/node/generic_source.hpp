@@ -71,7 +71,7 @@ template <typename T>
 class GenericSourceComponent : public ForwardingEgressProvider<T>
 {
   public:
-    GenericSourceComponent()           = default;
+    GenericSourceComponent(std::string name = std::string()) : m_name(std::move(name)) {}
     ~GenericSourceComponent() override = default;
 
   private:
@@ -81,6 +81,8 @@ class GenericSourceComponent : public ForwardingEgressProvider<T>
     }
 
     virtual mrc::channel::Status get_data(T& data) = 0;
+
+    std::string m_name;
 };
 
 template <typename T>
@@ -90,6 +92,10 @@ class LambdaSourceComponent : public GenericSourceComponent<T>
     using get_data_fn_t = std::function<mrc::channel::Status(T&)>;
 
     LambdaSourceComponent(get_data_fn_t get_data_fn) : m_get_data_fn(std::move(get_data_fn)) {}
+    LambdaSourceComponent(std::string name, get_data_fn_t get_data_fn) :
+      GenericSourceComponent<T>(std::move(name)),
+      m_get_data_fn(std::move(get_data_fn))
+    {}
     ~LambdaSourceComponent() override = default;
 
   private:

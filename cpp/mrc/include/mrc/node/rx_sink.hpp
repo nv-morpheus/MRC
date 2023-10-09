@@ -84,11 +84,18 @@ class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProlo
     using on_error_fn_t    = std::function<void(std::exception_ptr)>;
     using on_complete_fn_t = std::function<void()>;
 
-    RxSink()           = default;
+    RxSink(std::string name = std::string()) : RxSinkBase<T>(std::move(name)) {}
+
     ~RxSink() override = default;
 
     template <typename... ArgsT>
     RxSink(ArgsT&&... args)
+    {
+        set_observer(std::forward<ArgsT>(args)...);
+    }
+
+    template <typename... ArgsT>
+    RxSink(std::string name, ArgsT&&... args) : RxSinkBase<T>(std::move(name))
     {
         set_observer(std::forward<ArgsT>(args)...);
     }
@@ -174,11 +181,12 @@ class RxSinkComponent : public WritableProvider<T>
 
     RxSinkComponent()
     {
-        auto edge = std::make_shared<EdgeRxObserver<T>>();
+        init_edge();
+    }
 
-        m_sink_edge = edge;
-
-        WritableProvider<T>::init_owned_edge(edge);
+    RxSinkComponent(std::string name = std::string()) : m_name(std::move(name))
+    {
+        init_edge();
     }
 
     ~RxSinkComponent() = default;
@@ -186,12 +194,12 @@ class RxSinkComponent : public WritableProvider<T>
     template <typename... ArgsT>
     RxSinkComponent(ArgsT&&... args) : RxSinkComponent()
     {
-        // auto edge = std::make_shared<EdgeRxObserver<T>>();
+        set_observer(std::forward<ArgsT>(args)...);
+    }
 
-        // m_sink_edge = edge;
-
-        // WritableProvider<T>::init_owned_edge(edge);
-
+    template <typename... ArgsT>
+    RxSinkComponent(std::string name, ArgsT&&... args) : RxSinkComponent(std::move(name))
+    {
         set_observer(std::forward<ArgsT>(args)...);
     }
 
@@ -204,7 +212,17 @@ class RxSinkComponent : public WritableProvider<T>
     }
 
   private:
+    void init_edge()
+    {
+        auto edge = std::make_shared<EdgeRxObserver<T>>();
+
+        m_sink_edge = edge;
+
+        WritableProvider<T>::init_owned_edge(edge);
+    }
+
     std::weak_ptr<EdgeRxObserver<T>> m_sink_edge;
+    std::string m_name;
     // observer_t m_observer;
 };
 

@@ -34,6 +34,8 @@ namespace mrc::node {
 class BroadcastTypeless : public edge::IWritableProviderBase, public edge::IWritableAcceptorBase
 {
   public:
+    BroadcastTypeless(std::string name = std::string()) : m_name(std::move(name)) {}
+
     std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
     {
         auto* self = const_cast<BroadcastTypeless*>(this);
@@ -141,6 +143,7 @@ class BroadcastTypeless : public edge::IWritableProviderBase, public edge::IWrit
     }
 
   private:
+    std::string m_name;
     std::mutex m_mutex;
     std::vector<std::weak_ptr<edge::DeferredWritableMultiEdgeBase>> m_upstream_handles;
     std::vector<std::shared_ptr<edge::WritableEdgeHandle>> m_downstream_handles;
@@ -199,18 +202,18 @@ class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 
     Broadcast(bool deep_copy = false)
     {
-        auto edge = std::make_shared<BroadcastEdge>(*this, deep_copy);
+        init_edge(deep_copy);
+    }
 
-        // Save to avoid casting
-        m_edge = edge;
-
-        WritableProvider<T>::init_owned_edge(edge);
+    Broadcast(std::string name, bool deep_copy = false) : m_name(std::move(name))
+    {
+        init_edge(deep_copy);
     }
 
     ~Broadcast()
     {
         // Debug print
-        VLOG(10) << "Destroying TestBroadcast";
+        VLOG(10) << "Destroying Broadcast " << m_name;
     }
 
     void set_writable_edge_handle(std::shared_ptr<edge::WritableEdgeHandle> ingress) override
@@ -227,11 +230,22 @@ class Broadcast : public WritableProvider<T>, public edge::IWritableAcceptor<T>
 
     void on_complete()
     {
-        VLOG(10) << "TestBroadcast completed";
+        VLOG(10) << "Broadcast completed " << m_name;
     }
 
   private:
+    void init_edge(bool deep_copy)
+    {
+        auto edge = std::make_shared<BroadcastEdge>(*this, deep_copy);
+
+        // Save to avoid casting
+        m_edge = edge;
+
+        WritableProvider<T>::init_owned_edge(edge);
+    }
+
     std::weak_ptr<BroadcastEdge> m_edge;
+    std::string m_name;
 };
 
 }  // namespace mrc::node

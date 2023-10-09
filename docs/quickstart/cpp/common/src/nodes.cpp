@@ -21,13 +21,13 @@
 
 namespace mrc::quickstart::cpp::common {
 
-IntSource::IntSource() :
-  mrc::node::RxSource<int>(rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
-      s.on_next(1);
-      s.on_next(2);
-      s.on_next(3);
-      s.on_completed();
-  }))
+IntSource::IntSource(std::string name) :
+  mrc::node::RxSource<int>(std::move(name), rxcpp::observable<>::create<int>([](rxcpp::subscriber<int> s) {
+                               s.on_next(1);
+                               s.on_next(2);
+                               s.on_next(3);
+                               s.on_completed();
+                           }))
 {}
 
 }  // namespace mrc::quickstart::cpp::common

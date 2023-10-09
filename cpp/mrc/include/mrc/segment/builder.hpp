@@ -79,14 +79,14 @@ namespace {
 namespace hana = boost::hana;
 
 template <typename T>
-auto has_source_add_watcher = hana::is_valid(
-    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
-                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_source_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).source_add_watcher(
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
-auto has_sink_add_watcher = hana::is_valid(
-    [](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
-                         std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
+auto has_sink_add_watcher =
+    hana::is_valid([](auto&& thing) -> decltype(std::forward<decltype(thing)>(thing).sink_add_watcher(
+                                        std::declval<std::shared_ptr<mrc::WatcherInterface>>())) {});
 
 template <typename T>
 void add_stats_watcher_if_rx_source(T& thing, std::string name)
@@ -364,7 +364,8 @@ class IBuilder
 template <typename ObjectT, typename... ArgsT>
 std::shared_ptr<Object<ObjectT>> IBuilder::construct_object(std::string name, ArgsT&&... args)
 {
-    auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+    // auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
+    auto uptr = std::make_unique<ObjectT>(name, std::forward<ArgsT>(args)...);
 
     return make_object(std::move(name), std::move(uptr));
 }
@@ -376,13 +377,13 @@ std::shared_ptr<Object<ObjectT>> IBuilder::make_object(std::string name, std::un
 
     if constexpr (std::is_base_of_v<runnable::Runnable, ObjectT>)
     {
-        segment_object = std::make_shared<Runnable<ObjectT>>(std::move(node));
-        this->add_object(name, segment_object);
+        segment_object = std::make_shared<Runnable<ObjectT>>(name, std::move(node));
+        this->add_object(std::move(name), segment_object);
     }
     else
     {
-        segment_object = std::make_shared<Component<ObjectT>>(std::move(node));
-        this->add_object(name, segment_object);
+        segment_object = std::make_shared<Component<ObjectT>>(name, std::move(node));
+        this->add_object(std::move(name), segment_object);
     }
 
     CHECK(segment_object);
@@ -400,6 +401,7 @@ auto IBuilder::make_source(std::string name, CreateFnT&& create_fn)
     return construct_object<NodeTypeT<SourceTypeT>>(
         name,
         rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
+    // rxcpp::observable<>::create<SourceTypeT>(name, std::forward<CreateFnT>(create_fn)));
 }
 
 template <typename SourceTypeT, template <class, class = mrc::runnable::Context> class NodeTypeT>

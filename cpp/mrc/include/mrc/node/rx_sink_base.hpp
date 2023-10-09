@@ -47,10 +47,11 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
     void sink_remove_watcher(std::shared_ptr<WatcherInterface> watcher);
 
   protected:
-    RxSinkBase();
+    RxSinkBase(std::string name = std::string());
     ~RxSinkBase() override = default;
 
     const rxcpp::observable<T>& observable() const;
+    std::string m_name;
 
   private:
     // this is our channel reader progress engine
@@ -61,7 +62,8 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
 };
 
 template <typename T>
-RxSinkBase<T>::RxSinkBase() :
+RxSinkBase<T>::RxSinkBase(std::string name) :
+  m_name(std::move(name)),
   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
       progress_engine(s);
   }))
