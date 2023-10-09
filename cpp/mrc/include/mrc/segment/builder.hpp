@@ -364,7 +364,6 @@ class IBuilder
 template <typename ObjectT, typename... ArgsT>
 std::shared_ptr<Object<ObjectT>> IBuilder::construct_object(std::string name, ArgsT&&... args)
 {
-    // auto uptr = std::make_unique<ObjectT>(std::forward<ArgsT>(args)...);
     auto uptr = std::make_unique<ObjectT>(name, std::forward<ArgsT>(args)...);
 
     return make_object(std::move(name), std::move(uptr));
@@ -401,7 +400,6 @@ auto IBuilder::make_source(std::string name, CreateFnT&& create_fn)
     return construct_object<NodeTypeT<SourceTypeT>>(
         name,
         rxcpp::observable<>::create<SourceTypeT>(std::forward<CreateFnT>(create_fn)));
-    // rxcpp::observable<>::create<SourceTypeT>(name, std::forward<CreateFnT>(create_fn)));
 }
 
 template <typename SourceTypeT, template <class, class = mrc::runnable::Context> class NodeTypeT>

@@ -84,7 +84,10 @@ class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProlo
     using on_error_fn_t    = std::function<void(std::exception_ptr)>;
     using on_complete_fn_t = std::function<void()>;
 
-    RxSink(std::string name = std::string()) : RxSinkBase<T>(std::move(name)) {}
+    RxSink(std::string name = std::string()) : RxSinkBase<T>(name), SinkProperties<T>(name)
+    {
+        LOG(INFO) << "RxSink constructor";
+    }
 
     ~RxSink() override = default;
 
@@ -95,7 +98,7 @@ class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProlo
     }
 
     template <typename... ArgsT>
-    RxSink(std::string name, ArgsT&&... args) : RxSinkBase<T>(std::move(name))
+    RxSink(std::string name, ArgsT&&... args) : RxSinkBase<T>(name), SinkProperties<T>(name)
     {
         set_observer(std::forward<ArgsT>(args)...);
     }
