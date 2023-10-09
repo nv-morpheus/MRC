@@ -111,7 +111,7 @@ class SourceProperties : public edge::EdgeHolder<T>, public SourcePropertiesBase
     }
 
   protected:
-    SourceProperties()
+    SourceProperties(std::string name = std::string()) : edge::EdgeHolder<T>(std::move(name))
     {
         // Set the default edge to be a null one in case no connection is made
         this->init_connected_edge(std::make_shared<NullWritableEdge<T>>());

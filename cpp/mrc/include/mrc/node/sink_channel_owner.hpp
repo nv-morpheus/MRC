@@ -42,7 +42,7 @@ class SinkChannelOwner : public virtual SinkProperties<T>
     }
 
   protected:
-    SinkChannelOwner() = default;
+    SinkChannelOwner(std::string name = std::string()) : SinkProperties<T>(std::move(name)){};
 
     void do_set_channel(edge::EdgeChannel<T>& edge_channel)
     {
