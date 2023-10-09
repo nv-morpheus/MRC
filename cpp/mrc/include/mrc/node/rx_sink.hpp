@@ -84,10 +84,7 @@ class RxSink : public RxSinkBase<T>, public RxRunnable<ContextT>, public RxProlo
     using on_error_fn_t    = std::function<void(std::exception_ptr)>;
     using on_complete_fn_t = std::function<void()>;
 
-    RxSink(std::string name = std::string()) : RxSinkBase<T>(name), SinkProperties<T>(name)
-    {
-        LOG(INFO) << "RxSink constructor";
-    }
+    RxSink(std::string name = std::string()) : RxSinkBase<T>(name), SinkProperties<T>(name) {}
 
     ~RxSink() override = default;
 
