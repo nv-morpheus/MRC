@@ -365,7 +365,6 @@ def gen_parameters(*args,
     return parameters
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize("source_component,sink_component", gen_parameters("source", "sink", is_fail_fn=all))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize("sink_cpp", [True, False], ids=["sink_cpp", "sink_py"])
@@ -394,7 +393,6 @@ def test_source_to_sink(run_segment,
     assert results == expected_node_counts
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize("source_component,node_component,sink_component",
                          gen_parameters("source", "node", "sink", is_fail_fn=lambda c: c[0] and c[1]))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
@@ -428,7 +426,6 @@ def fail_if_more_derived_type(combo: typing.Tuple):
     return False
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize("sink1_component,sink2_component",
                          gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
@@ -465,7 +462,6 @@ def test_source_to_broadcast_to_sinks(run_segment,
     assert results == expected_node_counts
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize("sink1_component,sink2_component",
                          gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
@@ -508,7 +504,6 @@ def test_multi_source_to_broadcast_to_multi_sink(run_segment,
     assert results == expected_node_counts
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
 @pytest.mark.parametrize(
     "source_type", gen_parameters("source", is_fail_fn=lambda _: False, values={
@@ -526,7 +521,6 @@ def test_source_to_null(run_segment, source_cpp: bool, source_type: type):
     assert results == expected_node_counts
 
 
-@pytest.mark.skip(reason="TODO: DO NOT MERGE")
 @pytest.mark.parametrize(
     "source_cpp,node_cpp",
     gen_parameters("source", "node", is_fail_fn=lambda _: False, values={
