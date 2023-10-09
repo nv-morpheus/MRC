@@ -70,6 +70,7 @@ class RxSourceBase : public ReadableProvider<T>,
 
 template <typename T>
 RxSourceBase<T>::RxSourceBase(std::string name) :
+  SourceChannelOwner<T>(name),
   m_name(std::move(name)),
   m_observer(rxcpp::make_observer_dynamic<T>(
       [this](T data) {

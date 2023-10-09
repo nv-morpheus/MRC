@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <typeindex>
 
 namespace mrc::node {
@@ -109,7 +110,7 @@ class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
     }
 
   protected:
-    SinkProperties()
+    SinkProperties(std::string name = std::string()) : edge::EdgeHolder<T>(std::move(name))
     {
         // Set the default edge to be a null one in case no connection is made
         this->init_connected_edge(std::make_shared<NullReadableEdge<T>>());

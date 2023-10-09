@@ -34,6 +34,7 @@ template <typename T>
 class SourceChannelOwner : public virtual SourceProperties<T>
 {
   public:
+    SourceChannelOwner(std::string name = std::string()) : SourceProperties<T>(std::move(name)){};
     ~SourceChannelOwner() override = default;
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
@@ -44,8 +45,6 @@ class SourceChannelOwner : public virtual SourceProperties<T>
     }
 
   protected:
-    SourceChannelOwner() = default;
-
     void do_set_channel(edge::EdgeChannel<T>& edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use

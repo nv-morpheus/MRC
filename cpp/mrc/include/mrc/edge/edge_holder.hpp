@@ -37,7 +37,9 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <typeindex>
 #include <utility>
@@ -50,7 +52,8 @@ template <typename T>
 class EdgeHolder
 {
   public:
-    EdgeHolder() = default;
+    EdgeHolder(std::string name = std::string()) : m_name(std::move(name)){};
+
     virtual ~EdgeHolder()
     {
         // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
@@ -58,10 +61,16 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+            LOG(FATAL) << "EdgeHolder[" << m_name << "] "
+                       << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
                           "dependent connections are still active";
         }
     }
+
+    const std::string& name() const
+    {
+        return m_name;
+    };
 
   protected:
     bool check_active_connection(bool do_throw = true) const
@@ -188,6 +197,8 @@ class EdgeHolder
     // Holds a pointer to any set edge (different from init edge). Maintains lifetime
     std::shared_ptr<Edge<T>> m_connected_edge;
 
+    std::string m_name;
+
     // Allow edge builder to call set_edge
     friend EdgeBuilder;
 
@@ -200,8 +211,13 @@ template <typename KeyT, typename T>
 class MultiEdgeHolder
 {
   public:
-    MultiEdgeHolder()          = default;
+    MultiEdgeHolder(std::string name = std::string()) : m_name(std::move(name)){};
     virtual ~MultiEdgeHolder() = default;
+
+    const std::string& name() const
+    {
+        return m_name;
+    };
 
   protected:
     void init_owned_edge(KeyT key, std::shared_ptr<Edge<T>> edge)
@@ -276,7 +292,9 @@ class MultiEdgeHolder
         {
             if (create_if_missing)
             {
-                m_edges[key] = EdgeHolder<T>();
+                std::ostringstream edge_name;
+                edge_name << m_name << "_" << key;
+                m_edges[key] = EdgeHolder<T>(edge_name.str());
                 return m_edges[key];
             }
 
@@ -320,6 +338,8 @@ class MultiEdgeHolder
 
     // Keeps pairs of get_edge/set_edge for each key
     std::map<KeyT, EdgeHolder<T>> m_edges;
+
+    std::string m_name;
 
     // Allow edge builder to call set_edge
     friend EdgeBuilder;

@@ -54,7 +54,7 @@
 // IWYU thinks we need vector for make_segment
 // IWYU pragma: no_include <vector>
 
-using namespace std::chrono_literals;
+using namespace std::literals;
 
 TEST_CLASS(Edges);
 
@@ -1002,6 +1002,7 @@ template <typename T>
 class TestEdgeHolder : public edge::EdgeHolder<T>
 {
   public:
+    TestEdgeHolder(std::string name) : edge::EdgeHolder<T>(std::move(name)) {}
     bool has_active_connection() const
     {
         return this->check_active_connection(false);
@@ -1020,7 +1021,7 @@ class TestEdgeHolder : public edge::EdgeHolder<T>
 
 TEST_F(TestEdges, EdgeHolderIsConnected)
 {
-    TestEdgeHolder<int> edge_holder;
+    TestEdgeHolder<int> edge_holder("test_holder"s);
     auto edge = std::make_shared<edge::Edge<int>>();
     EXPECT_FALSE(edge_holder.has_active_connection());
 
@@ -1029,5 +1030,11 @@ TEST_F(TestEdges, EdgeHolderIsConnected)
 
     edge_holder.call_release_edge_connection();
     EXPECT_FALSE(edge_holder.has_active_connection());
+}
+
+TEST_F(TestEdges, EdgeHolderName)
+{
+    TestEdgeHolder<int> edge_holder("test_holder"s);
+    EXPECT_EQ(edge_holder.name(), "test_holder"s);
 }
 }  // namespace mrc

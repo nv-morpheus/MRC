@@ -63,6 +63,7 @@ class RxSinkBase : public WritableProvider<T>, public ReadableAcceptor<T>, publi
 
 template <typename T>
 RxSinkBase<T>::RxSinkBase(std::string name) :
+  SinkChannelOwner<T>(name),
   m_name(std::move(name)),
   m_observable(rxcpp::observable<>::create<T>([this](rxcpp::subscriber<T> s) {
       progress_engine(s);

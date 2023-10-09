@@ -285,8 +285,11 @@ class DeferredWritableMultiEdge : public MultiEdgeHolder<std::size_t, T>,
                                   public DeferredWritableMultiEdgeBase
 {
   public:
-    DeferredWritableMultiEdge(determine_indices_fn_t indices_fn = nullptr, bool deep_copy = false) :
-      m_indices_fn(std::move(indices_fn))
+    DeferredWritableMultiEdge(determine_indices_fn_t indices_fn = nullptr,
+                              bool deep_copy                    = false,
+                              std::string name                  = std::string()) :
+      m_indices_fn(std::move(indices_fn)),
+      MultiEdgeHolder<std::size_t, T>(std::move(name))
     {
         // // Generate warning if deep_copy = True but type does not support it
         // if constexpr (!std::is_copy_constructible_v<T>)
