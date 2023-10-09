@@ -71,9 +71,9 @@ zip_keys:
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
 boost:
-  - 1.74.0
+  - 1.82
 boost_cpp:
-  - 1.74.0
+  - 1.82
 gflags:
   - 2.2
 glog:
