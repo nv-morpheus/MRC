@@ -99,6 +99,8 @@ template <typename InputT, typename OutputT, typename ContextT>
 RxNode<InputT, OutputT, ContextT>::RxNode(std::string name) :
   RxSinkBase<InputT>{name},
   RxSourceBase<OutputT>{name},
+  SinkProperties<InputT>(name),
+  SourceProperties<OutputT>(name),
   m_stream([](const rxcpp::observable<InputT>& obs) {
       // Default to just returning the input
       return obs;

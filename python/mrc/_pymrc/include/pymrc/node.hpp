@@ -32,6 +32,8 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/sink_properties.hpp"
+#include "mrc/node/source_properties.hpp"
 #include "mrc/runnable/context.hpp"
 
 #include <pybind11/cast.h>
@@ -295,6 +297,8 @@ class PythonSink : public node::RxSink<InputT, ContextT>,
     using typename base_t::observer_t;
 
     using base_t::base_t;
+
+    PythonSink(std::string name = std::string()) : node::SinkProperties<InputT>(name), base_t(name) {}
 };
 
 template <typename InputT>
@@ -324,6 +328,12 @@ class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
     using subscribe_fn_t = std::function<rxcpp::subscription(rxcpp::observable<InputT>, rxcpp::subscriber<OutputT>)>;
 
     using base_t::base_t;
+
+    PythonNode(std::string name = std::string()) :
+      node::SinkProperties<InputT>(name),
+      node::SourceProperties<OutputT>(name),
+      base_t(name)
+    {}
 
   protected:
     static auto op_factory_from_sub_fn(subscribe_fn_t sub_fn)
@@ -381,7 +391,8 @@ class PythonSource : public node::RxSource<OutputT, ContextT>,
     using base_t::base_t;
 
     PythonSource(std::string name, const subscriber_fn_t& f) :
-      base_t(std::move(name), rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
+      node::SourceProperties<OutputT>(name),
+      base_t(name, rxcpp::observable<>::create<OutputT>([f](rxcpp::subscriber<OutputT>& s) {
                  // Call the wrapped subscriber function
                  f(s);
              }))
@@ -397,6 +408,16 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
 
   public:
     using base_t::base_t;
+
+    PythonSourceComponent(std::string name, const typename base_t::get_data_fn_t& f) :
+      node::SourceProperties<OutputT>(name),
+      base_t(name, f)
+    {}
+
+    ~PythonSourceComponent()
+    {
+        this->release_edge_connection();
+    }
 };
 
 class SegmentObjectProxy
