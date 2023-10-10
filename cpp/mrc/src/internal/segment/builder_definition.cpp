@@ -303,18 +303,6 @@ void BuilderDefinition::shutdown()
         }
     }
 
-    for (auto& [name, port] : m_ingress_ports)
-    {
-        DVLOG(10) << "Destroying Ingress port: " << name;
-        port->destroy();
-    }
-
-    for (auto& [name, port] : m_egress_ports)
-    {
-        DVLOG(10) << "Destroying Egress port: " << name;
-        port->destroy();
-    }
-
     m_ingress_ports.clear();
     m_egress_ports.clear();
     m_nodes.clear();

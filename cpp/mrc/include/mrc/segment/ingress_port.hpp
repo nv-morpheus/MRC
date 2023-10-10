@@ -85,6 +85,13 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         manifold->add_output(m_segment_address, m_source.get());
     }
 
+    void destroy() final
+    {
+        DVLOG(10) << "Destroying ingress port " << this->type_name();
+        m_source->on_shutdown_critical_section();
+        m_source.reset();
+    }
+
     SegmentAddress m_segment_address;
     PortName m_port_name;
     std::unique_ptr<node::RxNode<T>> m_source;

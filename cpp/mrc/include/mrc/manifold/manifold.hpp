@@ -39,7 +39,7 @@ class Manifold : public Interface
     ~Manifold() override;
 
     const PortName& port_name() const final;
-    const std::string& info() const;
+    const std::string& info() const final;
     void shutdown() override;
 
   protected:
