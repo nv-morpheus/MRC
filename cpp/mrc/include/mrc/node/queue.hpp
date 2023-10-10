@@ -23,17 +23,24 @@
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 
+#include <string>
+
 namespace mrc::node {
 
 template <typename T>
 class Queue : public WritableProvider<T>, public ReadableProvider<T>
 {
   public:
-    Queue()
+    Queue(std::string name = std::string()) : SinkProperties<T>(name), SourceProperties<T>(name)
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
-    ~Queue() override = default;
+
+    ~Queue() override
+    {
+        SinkProperties<T>::release_edge_connection();
+        SourceProperties<T>::release_edge_connection();
+    };
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {

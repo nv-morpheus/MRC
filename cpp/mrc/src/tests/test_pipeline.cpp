@@ -199,7 +199,7 @@ TEST_F(TestPipeline, Queue)
 
     auto segment = pipeline->make_segment("seg_1", [](segment::IBuilder& s) {
         auto source = s.make_object("source", test::nodes::infinite_int_rx_source());
-        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>());
+        auto queue  = s.make_object("queue", std::make_unique<node::Queue<int>>("queue"));
         auto sink   = s.make_object("sink", test::nodes::int_sink());
         s.make_edge(source, queue);
         s.make_edge(queue, sink);
