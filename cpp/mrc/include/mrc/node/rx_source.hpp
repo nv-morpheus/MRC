@@ -52,7 +52,7 @@ template <typename T, typename ContextT>
 class RxSource : public RxSourceBase<T>, public RxRunnable<ContextT>, public RxEpilogueTap<T>
 {
   public:
-    RxSource(std::string name = std::string()) : RxSourceBase<T>(std::move(name)) {}
+    RxSource(std::string name = std::string()) : RxSourceBase<T>(name), SourceProperties<T>(name) {}
     RxSource(rxcpp::observable<T> observable);
     RxSource(std::string name, rxcpp::observable<T> observable);
     ~RxSource() override = default;
@@ -75,7 +75,9 @@ RxSource<T, ContextT>::RxSource(rxcpp::observable<T> observable) : RxSourceBase<
 }
 
 template <typename T, typename ContextT>
-RxSource<T, ContextT>::RxSource(std::string name, rxcpp::observable<T> observable) : RxSourceBase<T>(std::move(name))
+RxSource<T, ContextT>::RxSource(std::string name, rxcpp::observable<T> observable) :
+  RxSourceBase<T>(name),
+  SourceProperties<T>(name)
 {
     set_observable(observable);
 }
