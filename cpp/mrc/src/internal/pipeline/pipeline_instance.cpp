@@ -89,7 +89,7 @@ void PipelineInstance::join_segment(const SegmentAddress& address)
     search->second->service_await_join();
 }
 
-void PipelineInstance::stop_segment(const SegmentAddress& address)
+void PipelineInstance::stop_segment(const SegmentAddress& address, bool kill)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
@@ -97,13 +97,11 @@ void PipelineInstance::stop_segment(const SegmentAddress& address)
     auto [id, rank]    = segment_address_decode(address);
     const auto& segdef = m_definition->find_segment(id);
 
-    for (const auto& name : segdef->ingress_port_names())
+    if (kill)
     {
-        DVLOG(3) << "Dropping IngressPort for " << ::mrc::segment::info(address) << " on manifold " << name;
-        // manifold(name).drop_output(address);
+        search->second->shutdown();
     }
 
-    search->second->shutdown();
     search->second->service_stop();
 }
 
@@ -218,7 +216,7 @@ void PipelineInstance::do_service_kill()
 
     for (auto& [id, segment] : m_segments)
     {
-        stop_segment(id);
+        stop_segment(id, true);
         segment->service_kill();
     }
 

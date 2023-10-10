@@ -27,11 +27,15 @@
 
 namespace mrc::node {
 
+using namespace std::string_literals;
+
 template <typename T>
 class Queue : public WritableProvider<T>, public ReadableProvider<T>
 {
   public:
-    Queue(std::string name = std::string()) : SinkProperties<T>(name), SourceProperties<T>(name)
+    Queue(const std::string& name = std::string()) :
+      SinkProperties<T>(name + "-sink"s),
+      SourceProperties<T>(name + "-source"s)
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }

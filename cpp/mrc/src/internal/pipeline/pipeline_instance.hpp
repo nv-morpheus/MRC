@@ -52,7 +52,7 @@ class PipelineInstance final : public Service, public PipelineResources
     // we need to stage those object that are created into some struct/container so we can mass start them after all
     // object have been created
     void create_segment(const SegmentAddress& address, std::uint32_t partition_id);
-    void stop_segment(const SegmentAddress& address);
+    void stop_segment(const SegmentAddress& address, bool kill = false);
     void join_segment(const SegmentAddress& address);
     void remove_segment(const SegmentAddress& address);
 
