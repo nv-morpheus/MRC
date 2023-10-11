@@ -52,7 +52,11 @@ template <typename T>
 class EdgeHolder
 {
   public:
-    EdgeHolder(std::string name = std::string()) : m_name(std::move(name)){};
+    EdgeHolder(std::string name = std::string()) : m_name(std::move(name))
+    {
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                  << "Created: " << this->connection_info();
+    };
 
     virtual ~EdgeHolder()
     {
@@ -61,9 +65,10 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "EdgeHolder[" << m_name << "] "
+            LOG(FATAL) << "EdgeHolder(" << this << ")[" << m_name << "] "
                        << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
-                          "dependent connections are still active";
+                          "dependent connections are still active\n"
+                       << this->connection_info();
         }
     }
 
@@ -73,6 +78,21 @@ class EdgeHolder
     };
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_owned_edge=" << m_owned_edge.lock() << "\tm_owned_edge_lifetime=" << m_owned_edge_lifetime
+           << "\tm_connected_edge=" << m_connected_edge;
+
+        bool is_connected = false;
+        if (m_connected_edge)
+        {
+            is_connected = m_connected_edge->is_connected();
+        }
+
+        ss << "\tis_connected=" << is_connected << "\tcheck_active_connection=" << this->check_active_connection(false);
+        return ss.str();
+    }
     bool check_active_connection(bool do_throw = true) const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
@@ -110,12 +130,16 @@ class EdgeHolder
         edge->add_connector([this]() {
             // Drop the object keeping the weak_edge alive
             this->m_owned_edge_lifetime.reset();
+            LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                      << "add_connector called " << this->connection_info();
         });
 
         // Now register a disconnector to keep clean everything up. Only runs if connected
         edge->add_disconnector([this]() {
             this->m_owned_edge_lifetime.reset();
             this->m_owned_edge.reset();
+            LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                      << "add_disconnector called " << this->connection_info();
         });
 
         // Set to the temp edge to ensure its alive until get_edge is called
@@ -123,6 +147,7 @@ class EdgeHolder
 
         // Set to the weak ptr as well
         m_owned_edge = edge;
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] init_owned_edge called " << this->connection_info();
     }
 
     void init_connected_edge(std::shared_ptr<Edge<T>> edge)
@@ -131,6 +156,8 @@ class EdgeHolder
         this->check_active_connection();
 
         m_connected_edge = edge;
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] init_connected_edge called "
+                  << this->connection_info();
     }
 
     std::shared_ptr<EdgeHandle> get_edge_connection() const
@@ -157,11 +184,30 @@ class EdgeHolder
         auto unpacked_edge = edge_obj->get_handle_typed<Edge<T>>();
 
         this->set_edge_handle(unpacked_edge);
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] make_edge_connection called "
+                  << this->connection_info();
     }
 
     void release_edge_connection()
     {
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                  << "Releasing edge connection " << this->connection_info();
+
         m_connected_edge.reset();
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                  << "Released?=" << !this->check_active_connection(false) << " " << this->connection_info();
+    }
+
+    void disconnect()
+    {
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                  << "disconnect " << this->connection_info();
+
+        m_connected_edge.reset();
+        m_owned_edge_lifetime.reset();
+        m_owned_edge.reset();
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] "
+                  << "disconnected?=" << !this->check_active_connection(false) << " " << this->connection_info();
     }
 
     const std::shared_ptr<Edge<T>>& get_connected_edge() const
@@ -186,6 +232,8 @@ class EdgeHolder
 
         // Now indicate that we have a connection
         edge->connect();
+
+        LOG(INFO) << "EdgeHolder(" << this << ")[" << m_name << "] set_edge_handle called " << this->connection_info();
     }
 
     // Used for retrieving the current edge without altering its lifetime
@@ -220,11 +268,23 @@ class MultiEdgeHolder
     };
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_edges.size()=" << m_edges.size();
+        for (const auto& [key, edge_pair] : m_edges)
+        {
+            ss << "\n\tkey=" << key << "\t" << edge_pair.connection_info();
+        }
+        return ss.str();
+    }
     void init_owned_edge(KeyT key, std::shared_ptr<Edge<T>> edge)
     {
         auto& edge_pair = this->get_edge_pair(key, true);
 
         edge_pair.init_owned_edge(std::move(edge));
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] init_owned_edge called "
+                  << this->connection_info();
     }
 
     std::shared_ptr<EdgeHandle> get_edge_connection(const KeyT& key) const
@@ -232,6 +292,8 @@ class MultiEdgeHolder
         auto& edge_pair = this->get_edge_pair(key);
 
         return edge_pair.get_edge_connection();
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] get_edge_connection called "
+                  << this->connection_info();
     }
 
     void make_edge_connection(KeyT key, std::shared_ptr<EdgeHandle> edge_obj)
@@ -239,6 +301,8 @@ class MultiEdgeHolder
         auto& edge_pair = this->get_edge_pair(key, true);
 
         edge_pair.make_edge_connection(std::move(edge_obj));
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] make_edge_connection called "
+                  << this->connection_info();
     }
 
     void release_edge_connection(const KeyT& key)
@@ -248,6 +312,9 @@ class MultiEdgeHolder
         edge_pair.release_edge_connection();
 
         m_edges.erase(key);
+
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] release_edge_connection called "
+                  << this->connection_info();
     }
 
     const std::shared_ptr<Edge<T>>& get_connected_edge(const KeyT& key) const
@@ -255,6 +322,9 @@ class MultiEdgeHolder
         auto& edge_pair = this->get_edge_pair(key);
 
         return edge_pair.get_connected_edge();
+
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] get_connected_edge called "
+                  << this->connection_info();
     }
 
     void release_edge_connections()
@@ -265,6 +335,9 @@ class MultiEdgeHolder
         }
 
         m_edges.clear();
+
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] release_edge_connections called "
+                  << this->connection_info();
     }
 
     size_t edge_connection_count() const
@@ -301,6 +374,9 @@ class MultiEdgeHolder
             throw std::runtime_error(MRC_CONCAT_STR("Could not find edge pair for key: " << key));
         }
 
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] get_edge_pair called "
+                  << this->connection_info();
+
         return found->second;
     }
 
@@ -334,6 +410,9 @@ class MultiEdgeHolder
         auto& edge_pair = this->get_edge_pair(key, true);
 
         edge_pair.set_edge_handle(std::move(edge));
+
+        LOG(INFO) << "MultiEdgeHolder(" << this << ")[" << m_name << "] set_edge_handle called "
+                  << this->connection_info();
     }
 
     // Keeps pairs of get_edge/set_edge for each key
