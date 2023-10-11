@@ -205,8 +205,7 @@ class MultiIngressAcceptor : public virtual MultiSourceProperties<T, KeyT>, publ
 };
 
 template <typename T>
-class ForwardingEgressProvider : public ReadableProvider<T>,
-                                 public std::enable_shared_from_this<ForwardingEgressProvider<T>>
+class ForwardingEgressProvider : public ReadableProvider<T>
 {
   protected:
     class ForwardingEdge : public edge::IEdgeReadable<T>
@@ -229,14 +228,9 @@ class ForwardingEgressProvider : public ReadableProvider<T>,
     {
         auto inner_edge = std::make_shared<ForwardingEdge>(*this);
 
-        // It is possible for the lambda to outlive this object, so we need to capture a weak_ptr
-        std::weak_ptr<ForwardingEgressProvider<T>> weak_ptr = this->shared_from_this();
-        inner_edge->add_disconnector([weak_egress_provider = std::move(weak_ptr)]() {
-            if (auto egress_provider = weak_egress_provider.lock())
-            {
-                // Only call the on_complete if we have been connected
-                egress_provider->on_complete();
-            }
+        inner_edge->add_disconnector([this]() {
+            // Only call the on_complete if we have been connected
+            this->on_complete();
         });
 
         ReadableProvider<T>::init_owned_edge(inner_edge);
