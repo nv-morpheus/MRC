@@ -1017,6 +1017,21 @@ class TestEdgeHolder : public edge::EdgeHolder<T>
     {
         this->init_owned_edge(std::move(edge));
     }
+
+    void call_init_connected_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_connected_edge(std::move(edge));
+    }
+};
+
+template <typename T>
+class TestEdge : public edge::Edge<T>
+{
+  public:
+    void call_connect()
+    {
+        this->connect();
+    }
 };
 
 TEST_F(TestEdges, EdgeHolderIsConnected)
@@ -1037,4 +1052,30 @@ TEST_F(TestEdges, EdgeHolderName)
     TestEdgeHolder<int> edge_holder("test_holder"s);
     EXPECT_EQ(edge_holder.name(), "test_holder"s);
 }
+
+TEST_F(TestEdges, EdgeHolderConnectRelase)
+{
+    TestEdgeHolder<int> edge_holder("test_holder"s);
+    auto edge = std::make_shared<TestEdge<int>>();
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_connected_edge(std::make_shared<node::NullWritableEdge<int>>());
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge->call_connect();
+    EXPECT_TRUE(edge_holder.has_active_connection());
+
+    edge_holder.call_release_edge_connection();
+
+    // EdgeHolder is disconnected, but someone is still holding a reference to the edge
+    EXPECT_TRUE(edge_holder.has_active_connection());
+
+    edge.reset();
+
+    EXPECT_FALSE(edge_holder.has_active_connection());
+}
+
 }  // namespace mrc
