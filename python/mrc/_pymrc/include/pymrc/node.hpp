@@ -412,16 +412,7 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
     PythonSourceComponent(std::string name, const typename base_t::get_data_fn_t& f) :
       node::SourceProperties<OutputT>(name),
       base_t(name, f)
-    {
-        LOG(INFO) << "PythonSourceComponent(" << name << ")";
-    }
-
-    // ~PythonSourceComponent()
-    // {
-    //     // LOG(INFO) << "PythonSourceComponent releasing edge connections";
-    //     // this->release_edge_connection();
-    //     // LOG(INFO) << "PythonSourceComponent released";
-    // }
+    {}
 };
 
 class SegmentObjectProxy

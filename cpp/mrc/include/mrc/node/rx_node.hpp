@@ -164,7 +164,7 @@ void RxNode<InputT, OutputT, ContextT>::on_kill(const rxcpp::subscription& subsc
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_shutdown_critical_section()
 {
-    DVLOG(10) << " releasing source channel";
+    DVLOG(10) << "releasing source channel";
     RxSourceBase<OutputT>::release_edge_connection();
 }
 

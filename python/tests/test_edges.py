@@ -129,7 +129,6 @@ def add_source(seg: mrc.Builder,
         f"{node_name}.on_completed": 1,
     })
 
-    print(f"source={node_type} component={is_component} is_cpp={is_cpp}")
     if (is_cpp):
         return getattr(m, node_type)(seg, node_name, node_counts, msg_count=msg_count)
     else:
@@ -221,7 +220,6 @@ def add_sink(seg: mrc.Builder,
 
     sink = None
 
-    print(f"sink={node_type} component={is_component} is_cpp={is_cpp}")
     if (is_cpp):
         sink = getattr(m, node_type)(seg, node_name, node_counts)
     else:
@@ -392,10 +390,8 @@ def test_source_to_sink(run_segment,
 
     def segment_init(seg: mrc.Builder):
 
-        print("\n\n**********\n")
         source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=source_component)
-        sink = add_sink(seg, source, is_cpp=sink_cpp, data_type=sink_type, is_component=sink_component)
-        print(f"{source}[{type(source)}] --> {sink}[{type(sink)}]\n***********", flush=True)
+        add_sink(seg, source, is_cpp=sink_cpp, data_type=sink_type, is_component=sink_component)
 
     results = run_segment(segment_init)
 

@@ -23,7 +23,7 @@
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for Mutex
 #include "mrc/utils/type_utils.hpp"
 
 #include <memory>

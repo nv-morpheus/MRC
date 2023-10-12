@@ -117,7 +117,7 @@ class TestSourceImpl : public PythonTestNodeMixin
     using source_t = std::shared_ptr<T>;
 
     TestSourceImpl(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
-      PythonTestNodeMixin(name, std::move(counter)),
+      PythonTestNodeMixin(std::move(name), std::move(counter)),
       m_msg_count(msg_count)
     {
         this->init_counter("on_next");
@@ -151,7 +151,7 @@ class TestSource : public pymrc::PythonSource<std::shared_ptr<T>>, public TestSo
 
     TestSource(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(name),
-      TestSourceImpl<T>(name, std::move(counter), msg_count)
+      TestSourceImpl<T>(std::move(name), std::move(counter), msg_count)
     {
         this->set_observable(this->build());
     }
@@ -165,7 +165,7 @@ class TestSourceComponent : public pymrc::PythonSourceComponent<std::shared_ptr<
 
     TestSourceComponent(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(name, build()),
-      TestSourceImpl<T>(name, std::move(counter), msg_count)
+      TestSourceImpl<T>(std::move(name), std::move(counter), msg_count)
     {}
 
   private:
@@ -198,7 +198,7 @@ class TestNodeImpl : public PythonTestNodeMixin
     using sink_type_t   = std::shared_ptr<T>;
     using source_type_t = std::shared_ptr<T>;
 
-    TestNodeImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(name, std::move(counter))
+    TestNodeImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
         this->init_counter("on_next");
         this->init_counter("on_error");
@@ -255,7 +255,7 @@ class TestSinkImpl : public PythonTestNodeMixin
   public:
     using sink_type_t = std::shared_ptr<T>;
 
-    TestSinkImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(name, std::move(counter))
+    TestSinkImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
         this->init_counter("on_next");
         this->init_counter("on_error");
@@ -285,7 +285,7 @@ class TestSink : public pymrc::PythonSink<std::shared_ptr<T>>, public TestSinkIm
   public:
     TestSink(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(name),
-      TestSinkImpl<T>(name, std::move(counter))
+      TestSinkImpl<T>(std::move(name), std::move(counter))
     {
         this->set_observer(this->build());
     }
@@ -299,7 +299,7 @@ class TestSinkComponent : public pymrc::PythonSinkComponent<std::shared_ptr<T>>,
   public:
     TestSinkComponent(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       base_t(name),
-      TestSinkImpl<T>(name, std::move(counter))
+      TestSinkImpl<T>(std::move(name), std::move(counter))
     {
         this->set_observer(this->build());
     }
