@@ -28,8 +28,8 @@ mrc.logging.init_logging("test_edges")
 mrc.logging.set_level(logging.INFO)
 
 
-@pytest.fixture
-def ex_runner():
+@pytest.fixture(params=[mrc.core.options.EngineType.Thread, mrc.core.options.EngineType.Fiber], ids=["thread", "fiber"])
+def ex_runner(request: pytest.FixtureRequest):
 
     def run_exec(segment_init):
         pipeline = mrc.Pipeline()
@@ -40,7 +40,7 @@ def ex_runner():
 
         # Set to 1 thread
         options.topology.user_cpuset = "0-0"
-        options.engine_factories.default_engine_type = mrc.core.options.EngineType.Thread
+        options.engine_factories.default_engine_type = request.param
 
         executor = mrc.Executor(options)
 
