@@ -28,7 +28,6 @@
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/launchable.hpp"   // for Launchable
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep

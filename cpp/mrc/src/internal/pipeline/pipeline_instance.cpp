@@ -37,6 +37,7 @@
 
 #include <exception>
 #include <memory>
+#include <mutex>  // for lock_guard
 #include <ostream>
 #include <string>
 #include <utility>
