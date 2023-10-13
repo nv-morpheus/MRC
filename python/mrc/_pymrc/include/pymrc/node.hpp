@@ -407,8 +407,6 @@ class PythonSourceComponent : public node::LambdaSourceComponent<OutputT>,
     using base_t = node::LambdaSourceComponent<OutputT>;
 
   public:
-    using base_t::base_t;
-
     PythonSourceComponent(std::string name, const typename base_t::get_data_fn_t& f) :
       node::SourceProperties<OutputT>(name),
       base_t(name, f)
