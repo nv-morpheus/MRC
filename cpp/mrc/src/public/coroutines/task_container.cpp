@@ -166,7 +166,6 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         // Call do_start and immediately resume the coroutine.
         auto waiting_coro = this->do_start(std::move(lock), op);
 
-        VLOG(10) << "Resuming handle: " << waiting_coro.address();
         waiting_coro.resume();
     }
     else
