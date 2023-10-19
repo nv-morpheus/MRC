@@ -25,7 +25,6 @@
 
 #include <coroutine>
 #include <string>
-#include <type_traits>
 
 using namespace mrc;
 

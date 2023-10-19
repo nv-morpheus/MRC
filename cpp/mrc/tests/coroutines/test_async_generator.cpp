@@ -22,8 +22,6 @@
 #include <gtest/gtest.h>
 
 #include <coroutine>
-#include <string>
-#include <thread>
 
 using namespace mrc;
 

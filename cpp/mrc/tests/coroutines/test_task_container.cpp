@@ -15,18 +15,7 @@
  * limitations under the License.
  */
 
-#include "mrc/coroutines/task.hpp"
-#include "mrc/coroutines/task_container.hpp"
-
-using namespace mrc;
-using namespace mrc::coroutines;
-
 #include <gtest/gtest.h>
-
-#include <chrono>
-#include <thread>
-
-using namespace mrc;
 
 class TestCoroTaskContainer : public ::testing::Test
 {};

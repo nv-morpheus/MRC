@@ -19,7 +19,9 @@
 
 #include <glog/logging.h>
 
+#include <ostream>
 #include <thread>
+#include <utility>
 
 namespace mrc::coroutines {
 

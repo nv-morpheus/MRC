@@ -17,18 +17,16 @@
 
 #pragma once
 
-#include "mrc/core/bitmap.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/task_container.hpp"
 
 #include <coroutine>
-#include <functional>
+#include <cstddef>
 #include <memory>
 #include <mutex>
+#include <string>
 
 namespace mrc::coroutines {
-
-class TaskContainer;
 
 /**
  * @brief Scheduler base class
