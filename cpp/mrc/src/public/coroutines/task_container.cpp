@@ -19,8 +19,6 @@
 
 #include "mrc/coroutines/scheduler.hpp"
 
-#include <glog/logging.h>
-
 #include <exception>
 #include <iostream>
 #include <mutex>
