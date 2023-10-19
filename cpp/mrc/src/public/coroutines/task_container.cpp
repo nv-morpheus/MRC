@@ -19,6 +19,9 @@
 
 #include "mrc/coroutines/scheduler.hpp"
 
+#include <glog/logging.h>
+
+#include <coroutine>
 #include <exception>
 #include <iostream>
 #include <mutex>
@@ -27,45 +30,48 @@
 
 namespace mrc::coroutines {
 
-TaskContainer::StartOperation::StartOperation(TaskContainer& parent, Task<void>&& task, GarbageCollectPolicy cleanup) :
-  m_parent(parent),
-  m_task(std::move(task)),
-  m_cleanup(cleanup)
-{}
-
-std::coroutine_handle<> TaskContainer::StartOperation::await_suspend(std::coroutine_handle<> awaiting_coroutine)
+TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e) :
+  m_scheduler_lifetime(std::move(e)),
+  m_scheduler(m_scheduler_lifetime.get())
 {
-    m_awaiting_coroutine = awaiting_coroutine;
-    return m_parent.schedule_start_operation(this);
-}
-
-TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t concurrency) :
-  m_scheduler(std::move(e)),
-  m_concurrency(concurrency)
-{
-    if (m_scheduler == nullptr)
+    if (m_scheduler_lifetime == nullptr)
     {
-        throw std::runtime_error{"task_container cannot have a nullptr executor"};
+        throw std::runtime_error{"TaskContainer cannot have a nullptr executor"};
     }
 }
 
 TaskContainer::~TaskContainer()
 {
     // This will hang the current thread.. but if tasks are not complete thats also pretty bad.
-    while (!empty())
+    while (!this->empty())
     {
-        garbage_collect();
+        this->garbage_collect();
     }
 }
 
-TaskContainer::StartOperation TaskContainer::start(Task<void>&& task, GarbageCollectPolicy cleanup)
+auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) -> void
 {
-    return StartOperation{*this, std::move(task), cleanup};
+    m_size.fetch_add(1, std::memory_order::relaxed);
+
+    std::scoped_lock lk{m_mutex};
+
+    if (cleanup == GarbageCollectPolicy::yes)
+    {
+        gc_internal();
+    }
+
+    // Store the task inside a cleanup task for self deletion.
+    auto pos  = m_tasks.emplace(m_tasks.end(), std::nullopt);
+    auto task = make_cleanup_task(std::move(user_task), pos);
+    *pos      = std::move(task);
+
+    // Start executing from the cleanup task to schedule the user's task onto the thread pool.
+    pos->value().resume();
 }
 
-auto TaskContainer::garbage_collect() -> std::size_t  // __attribute__((used))
+auto TaskContainer::garbage_collect() -> std::size_t
 {
-    std::lock_guard lk{m_mutex};
+    std::scoped_lock lk{m_mutex};
     return gc_internal();
 }
 
@@ -91,6 +97,12 @@ auto TaskContainer::empty() const -> bool
     return size() == 0;
 }
 
+auto TaskContainer::capacity() const -> std::size_t
+{
+    std::atomic_thread_fence(std::memory_order::acquire);
+    return m_tasks.size();
+}
+
 auto TaskContainer::garbage_collect_and_yield_until_empty() -> Task<void>
 {
     while (!empty())
@@ -100,6 +112,7 @@ auto TaskContainer::garbage_collect_and_yield_until_empty() -> Task<void>
     }
 }
 
+TaskContainer::TaskContainer(Scheduler& e) : m_scheduler(&e) {}
 auto TaskContainer::gc_internal() -> std::size_t
 {
     std::size_t deleted{0};
@@ -107,6 +120,7 @@ auto TaskContainer::gc_internal() -> std::size_t
     {
         for (const auto& pos : m_tasks_to_delete)
         {
+            // Destroy the cleanup task and the user task.
             if (pos->has_value())
             {
                 pos->value().destroy();
@@ -130,89 +144,23 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         co_await user_task;
     } catch (const std::exception& e)
     {
-        // what would be a good way to report this to the user...?  Catching here is required
+        // TODO(MDD): what would be a good way to report this to the user...?  Catching here is required
         // since the co_await will unwrap the unhandled exception on the task.
         // The user's task should ideally be wrapped in a catch all and handle it themselves, but
         // that cannot be guaranteed.
-        std::cerr << "Task_container user_task had an unhandled exception e.what()= " << e.what() << "\n";
+        LOG(ERROR) << "coro::task_container user_task had an unhandled exception e.what()= " << e.what() << "\n";
     } catch (...)
     {
         // don't crash if they throw something that isn't derived from std::exception
-        std::cerr << "Task_container user_task had unhandle exception, not derived from std::exception.\n";
+        LOG(ERROR) << "coro::task_container user_task had unhandle exception, not derived from std::exception.\n";
     }
 
-    std::unique_lock lock{m_mutex};
-
+    std::scoped_lock lk{m_mutex};
+    m_tasks_to_delete.push_back(pos);
+    // This has to be done within scope lock to make sure this coroutine task completes before the
+    // task container object destructs -- if it was waiting on .empty() to become true.
     m_size.fetch_sub(1, std::memory_order::relaxed);
-
-    // Check for waiting start operations
-    if (!m_waiting_start_operations.empty())
-    {
-        auto* op = m_waiting_start_operations.front();
-        m_waiting_start_operations.pop_front();
-
-        // We must run GC before adding this to the tasks to delete, otherwise we will delete this task while it is
-        // still running
-        if (op->m_cleanup == GarbageCollectPolicy::yes)
-        {
-            gc_internal();
-        }
-
-        // Defer adding to the tasks to delete until after GC is run
-        m_tasks_to_delete.push_back(pos);
-
-        // Call do_start and immediately resume the coroutine.
-        auto waiting_coro = this->do_start(std::move(lock), op);
-
-        waiting_coro.resume();
-    }
-    else
-    {
-        // No waiting start operations, schedule this to be deleted
-        m_tasks_to_delete.push_back(pos);
-    }
-
     co_return;
-}
-
-auto TaskContainer::do_start(std::unique_lock<std::mutex>&& lock, StartOperation* op) -> std::coroutine_handle<>
-{
-    // Take ownership of the lock object
-    auto local_lock = std::move(lock);
-
-    m_size.fetch_add(1, std::memory_order::relaxed);
-
-    // Store the task inside a cleanup task for self deletion.
-    auto pos = m_tasks.emplace(m_tasks.end(), std::nullopt);
-
-    auto task = make_cleanup_task(std::move(op->m_task), pos);
-
-    *pos = std::move(task);
-
-    // Start executing from the cleanup task to schedule the user's task onto the thread pool.
-    pos->value().resume();
-
-    return std::move(op->m_awaiting_coroutine);
-}
-
-std::coroutine_handle<> TaskContainer::schedule_start_operation(StartOperation* op)
-{
-    std::unique_lock lock(m_mutex);
-
-    if (m_size < m_concurrency)
-    {
-        // If op requested a GC before starting, do that now while we have the Mutex
-        if (op->m_cleanup == GarbageCollectPolicy::yes)
-        {
-            gc_internal();
-        }
-
-        return this->do_start(std::move(lock), op);
-    }
-
-    m_waiting_start_operations.push_back(op);
-
-    return std::noop_coroutine();
 }
 
 }  // namespace mrc::coroutines

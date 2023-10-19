@@ -41,7 +41,6 @@
 #include "mrc/coroutines/task.hpp"
 
 #include <atomic>
-#include <coroutine>
 #include <cstddef>
 #include <list>
 #include <memory>
@@ -55,6 +54,21 @@ class Scheduler;
 class TaskContainer
 {
   public:
+    using task_position_t = std::list<std::optional<Task<>>>::iterator;
+
+    /**
+     * @param e Tasks started in the container are scheduled onto this executor.  For tasks created
+     *           from a coro::io_scheduler, this would usually be that coro::io_scheduler instance.
+     */
+    TaskContainer(std::shared_ptr<Scheduler> e);
+
+    TaskContainer(const TaskContainer&)                    = delete;
+    TaskContainer(TaskContainer&&)                         = delete;
+    auto operator=(const TaskContainer&) -> TaskContainer& = delete;
+    auto operator=(TaskContainer&&) -> TaskContainer&      = delete;
+
+    ~TaskContainer();
+
     enum class GarbageCollectPolicy
     {
         /// Execute garbage collection.
@@ -63,40 +77,6 @@ class TaskContainer
         no
     };
 
-    struct StartOperation
-    {
-        StartOperation(TaskContainer& parent, Task<void>&& task, GarbageCollectPolicy cleanup);
-
-        constexpr static auto await_ready() noexcept -> bool
-        {
-            return false;
-        }
-
-        std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting_coroutine);
-
-        constexpr static auto await_resume() noexcept -> void {}
-
-        TaskContainer& m_parent;
-        Task<void> m_task;
-        GarbageCollectPolicy m_cleanup;
-
-        std::coroutine_handle<> m_awaiting_coroutine;
-    };
-
-    using task_position_t = std::list<std::optional<Task<>>>::iterator;
-
-    /**
-     * @param e Tasks started in the container are scheduled onto this executor.  For tasks created
-     *           from a coro::io_scheduler, this would usually be that coro::io_scheduler instance.
-     * @param opts Task container options.
-     */
-    TaskContainer(std::shared_ptr<Scheduler> e, std::size_t concurrency = 1024);
-    TaskContainer(const TaskContainer&)                    = delete;
-    TaskContainer(TaskContainer&&)                         = delete;
-    auto operator=(const TaskContainer&) -> TaskContainer& = delete;
-    auto operator=(TaskContainer&&) -> TaskContainer&      = delete;
-    ~TaskContainer();
-
     /**
      * Stores a user task and starts its execution on the container's thread pool.
      * @param user_task The scheduled user's task to store in this task container and start its execution.
@@ -104,14 +84,14 @@ class TaskContainer
      *                call?  Calling at regular intervals will reduce memory usage of completed
      *                tasks and allow for the task container to re-use allocated space.
      */
-    StartOperation start(Task<void>&& user_task, GarbageCollectPolicy cleanup = GarbageCollectPolicy::yes);
+    auto start(Task<void>&& user_task, GarbageCollectPolicy cleanup = GarbageCollectPolicy::yes) -> void;
 
     /**
      * Garbage collects any tasks that are marked as deleted.  This frees up space to be re-used by
      * the task container for newly stored tasks.
      * @return The number of tasks that were deleted.
      */
-    auto garbage_collect() -> std::size_t;  // __attribute__((used))
+    auto garbage_collect() -> std::size_t;
 
     /**
      * @return The number of tasks that are awaiting deletion.
@@ -134,6 +114,11 @@ class TaskContainer
     auto empty() const -> bool;
 
     /**
+     * @return The capacity of this task manager before it will need to grow in size.
+     */
+    auto capacity() const -> std::size_t;
+
+    /**
      * Will continue to garbage collect and yield until all tasks are complete.  This method can be
      * co_await'ed to make it easier to wait for the task container to have all its tasks complete.
      *
@@ -143,6 +128,11 @@ class TaskContainer
     auto garbage_collect_and_yield_until_empty() -> Task<void>;
 
   private:
+    /**
+     * Special constructor for internal types to create their embeded task containers.
+     */
+    TaskContainer(Scheduler& e);
+
     /**
      * Interal GC call, expects the public function to lock.
      */
@@ -162,41 +152,22 @@ class TaskContainer
      */
     auto make_cleanup_task(Task<void> user_task, task_position_t pos) -> Task<void>;
 
-    /**
-     * @brief Starts the task associated with the provided operator.
-     *
-     * @param lock Move a lock into this function to prevent locking and relocking issues
-     * @param op Operator to start
-     * @return std::coroutine_handle<> Returns a handle to the operator's coroutine which should be `resume()`. This
-     * value is returned instead of called directly to allow it to be used as the return value in await_suspend()
-     */
-    virtual auto do_start(std::unique_lock<std::mutex>&& lock, StartOperation* op) -> std::coroutine_handle<>;
-
-    /**
-     * @brief Implements the scheduling of the start() call. Can possibly block depending on the number of outstanding
-     * tasks.
-     *
-     * @param op The awaitable operation to schedule
-     * @return std::coroutine_handle<> Returns a handle to the operator's coroutine which should be `resume()`. This is
-     * returned instead of called directly to allow it to be used as the return value in await_suspend()
-     */
-    virtual std::coroutine_handle<> schedule_start_operation(StartOperation* op);
-
     /// Mutex for safely mutating the task containers across threads, expected usage is within
     /// thread pools for indeterminate lifetime requests.
     std::mutex m_mutex{};
-    /// The max number of concurrent tasks
-    std::size_t m_concurrency{1024};
     /// The number of alive tasks.
     std::atomic<std::size_t> m_size{};
     /// Maintains the lifetime of the tasks until they are completed.
     std::list<std::optional<Task<void>>> m_tasks{};
     /// The set of tasks that have completed and need to be deleted.
     std::vector<task_position_t> m_tasks_to_delete{};
-    /// The current free position within the task indexes list.  Anything before
-    std::shared_ptr<Scheduler> m_scheduler{nullptr};
+    /// The executor to schedule tasks that have just started. This is only used for lifetime management and may be
+    /// nullptr
+    std::shared_ptr<Scheduler> m_scheduler_lifetime{nullptr};
+    /// This is used internally since io_scheduler cannot pass itself in as a shared_ptr.
+    Scheduler* m_scheduler{nullptr};
 
-    std::list<StartOperation*> m_waiting_start_operations;
+    friend Scheduler;
 };
 
 }  // namespace mrc::coroutines

@@ -60,7 +60,7 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     /**
      * @brief Description of Scheduler
      */
-    virtual const std::string& description() const = 0;
+    virtual std::string description() const = 0;
 
     /**
      * Schedules the currently executing coroutine to be run on this thread pool.  This must be
@@ -72,7 +72,7 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     [[nodiscard]] virtual auto schedule() -> Operation;
 
     // Enqueues a message without waiting for it. Must return void since the caller will not get the return value
-    virtual TaskContainer::StartOperation schedule(Task<void>&& task);
+    virtual void schedule(Task<void>&& task);
 
     /**
      * Schedules any coroutine handle that is ready to be resumed.
@@ -81,13 +81,8 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     virtual auto resume(std::coroutine_handle<> coroutine) -> void = 0;
 
     /**
-     * @brief Runs the selected task until it is complete. Blocks the current thread and may optionally use that thread
-     * for execution.
-     *
-     * @param task The task to run.
+     * Yields the current task to the end of the queue of waiting tasks.
      */
-    virtual void run_until_complete(Task<void> task);
-
     [[nodiscard]] auto yield() -> Operation;
 
     /**
@@ -104,11 +99,30 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
   protected:
     virtual auto on_thread_start(std::size_t) -> void;
 
+    /**
+     * @brief Get the task container object
+     *
+     * @return TaskContainer&
+     */
     TaskContainer& get_task_container() const;
 
   private:
+    /**
+     * @brief Builds a task container to maintain the lifetime of fire-and-forget tasks scheduled with
+     * schedule(Task<void>&& task)
+     *
+     * @return std::unique_ptr<TaskContainer>
+     */
     virtual std::unique_ptr<TaskContainer> make_task_container() const;
 
+    /**
+     * @brief When co_await schedule() is called, this function will be executed by the awaiter. Each scheduler
+     * implementation should determine how and when to execute the operation.
+     *
+     * @param operation The schedule() awaitable pointer
+     * @return std::coroutine_handle<> Return a coroutine handle to which will be
+     * used as the return value for await_suspend().
+     */
     virtual std::coroutine_handle<> schedule_operation(Operation* operation) = 0;
 
     mutable std::mutex m_mutex;

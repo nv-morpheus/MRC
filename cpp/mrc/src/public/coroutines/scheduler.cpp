@@ -17,8 +17,11 @@
 
 #include "mrc/coroutines/scheduler.hpp"
 
+#include "mrc/coroutines/task_container.hpp"
+
 #include <glog/logging.h>
 
+#include <memory>
 #include <ostream>
 #include <thread>
 #include <utility>
@@ -41,22 +44,9 @@ auto Scheduler::schedule() -> Operation
     return Operation{*this};
 }
 
-TaskContainer::StartOperation Scheduler::schedule(Task<void>&& task)
+void Scheduler::schedule(Task<void>&& task)
 {
-    return this->get_task_container().start(std::move(task));
-}
-
-void Scheduler::run_until_complete(Task<void> task)
-{
-    auto& task_container = this->get_task_container();
-
-    task_container.start(std::move(task));
-
-    // This will hang the current thread.. but if tasks are not complete thats also pretty bad.
-    while (!task_container.empty())
-    {
-        task_container.garbage_collect();
-    }
+    return m_task_container->start(std::move(task));
 }
 
 auto Scheduler::yield() -> Operation
@@ -85,23 +75,14 @@ auto Scheduler::on_thread_start(std::size_t thread_id) -> void
     m_thread_local_scheduler = this;
 }
 
-std::unique_ptr<TaskContainer> Scheduler::make_task_container() const
-{
-    return std::make_unique<TaskContainer>(const_cast<Scheduler*>(this)->shared_from_this());
-}
-
 TaskContainer& Scheduler::get_task_container() const
 {
-    std::unique_lock lock(m_mutex);
-
-    if (!m_task_container)
-    {
-        auto* non_const_this = const_cast<Scheduler*>(this);
-
-        non_const_this->m_task_container = this->make_task_container();
-    }
-
     return *m_task_container;
+}
+
+std::unique_ptr<TaskContainer> Scheduler::make_task_container() const
+{
+    return std::unique_ptr<TaskContainer>(new TaskContainer(*const_cast<Scheduler*>(this)));
 }
 
 }  // namespace mrc::coroutines
