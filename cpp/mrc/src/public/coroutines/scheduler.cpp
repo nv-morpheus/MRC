@@ -1,0 +1,105 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "mrc/coroutines/scheduler.hpp"
+
+#include <glog/logging.h>
+
+#include <thread>
+
+namespace mrc::coroutines {
+
+thread_local Scheduler* Scheduler::m_thread_local_scheduler{nullptr};
+thread_local std::size_t Scheduler::m_thread_id{0};
+
+Scheduler::Operation::Operation(Scheduler& scheduler) : m_scheduler(scheduler) {}
+
+std::coroutine_handle<> Scheduler::Operation::await_suspend(std::coroutine_handle<> awaiting_coroutine) noexcept
+{
+    m_awaiting_coroutine = awaiting_coroutine;
+    return m_scheduler.schedule_operation(this);
+}
+
+auto Scheduler::schedule() -> Operation
+{
+    return Operation{*this};
+}
+
+TaskContainer::StartOperation Scheduler::schedule(Task<void>&& task)
+{
+    return this->get_task_container().start(std::move(task));
+}
+
+void Scheduler::run_until_complete(Task<void> task)
+{
+    auto& task_container = this->get_task_container();
+
+    task_container.start(std::move(task));
+
+    // This will hang the current thread.. but if tasks are not complete thats also pretty bad.
+    while (!task_container.empty())
+    {
+        task_container.garbage_collect();
+    }
+}
+
+auto Scheduler::yield() -> Operation
+{
+    return schedule();
+}
+
+auto Scheduler::from_current_thread() noexcept -> Scheduler*
+{
+    return m_thread_local_scheduler;
+}
+
+auto Scheduler::get_thread_id() noexcept -> std::size_t
+{
+    if (m_thread_local_scheduler == nullptr)
+    {
+        return std::hash<std::thread::id>()(std::this_thread::get_id());
+    }
+    return m_thread_id;
+}
+
+auto Scheduler::on_thread_start(std::size_t thread_id) -> void
+{
+    DVLOG(10) << "scheduler: " << description() << " initializing";
+    m_thread_id              = thread_id;
+    m_thread_local_scheduler = this;
+}
+
+std::unique_ptr<TaskContainer> Scheduler::make_task_container() const
+{
+    return std::make_unique<TaskContainer>(const_cast<Scheduler*>(this)->shared_from_this());
+}
+
+TaskContainer& Scheduler::get_task_container() const
+{
+    std::unique_lock lock(m_mutex);
+
+    if (!m_task_container)
+    {
+        auto* non_const_this = const_cast<Scheduler*>(this);
+
+        non_const_this->m_task_container = this->make_task_container();
+    }
+
+    return *m_task_container;
+}
+
+}  // namespace mrc::coroutines
