@@ -33,18 +33,11 @@ TaskContainer::StartOperation::StartOperation(TaskContainer& parent, Task<void>&
   m_cleanup(cleanup)
 {}
 
-constexpr auto TaskContainer::StartOperation::await_ready() noexcept -> bool
-{
-    return false;
-}
-
-auto TaskContainer::StartOperation::await_suspend(std::coroutine_handle<> awaiting_coroutine) noexcept
+std::coroutine_handle<> TaskContainer::StartOperation::await_suspend(std::coroutine_handle<> awaiting_coroutine)
 {
     m_awaiting_coroutine = awaiting_coroutine;
     return m_parent.schedule_start_operation(this);
 }
-
-constexpr auto TaskContainer::StartOperation::await_resume() noexcept -> void {}
 
 TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t concurrency) :
   m_scheduler(std::move(e)),

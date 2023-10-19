@@ -68,11 +68,14 @@ class TaskContainer
     {
         StartOperation(TaskContainer& parent, Task<void>&& task, GarbageCollectPolicy cleanup);
 
-        constexpr static auto await_ready() noexcept -> bool;
+        constexpr static auto await_ready() noexcept -> bool
+        {
+            return false;
+        }
 
-        auto await_suspend(std::coroutine_handle<> awaiting_coroutine) noexcept;
+        std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting_coroutine);
 
-        constexpr static auto await_resume() noexcept -> void;
+        constexpr static auto await_resume() noexcept -> void {}
 
         TaskContainer& m_parent;
         Task<void> m_task;
