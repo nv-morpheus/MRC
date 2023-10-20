@@ -25,9 +25,12 @@
 #include <mutex>
 #include <string>
 
+// IWYU thinks this is needed, but it's not
+// IWYU pragma: no_include "mrc/coroutines/task_container.hpp"
+
 namespace mrc::coroutines {
 
-class TaskContainer;
+class TaskContainer;  // IWYU pragma: keep
 
 /**
  * @brief Scheduler base class
