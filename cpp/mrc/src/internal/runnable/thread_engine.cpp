@@ -24,7 +24,6 @@
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/packaged_task.hpp>
 
 #include <optional>

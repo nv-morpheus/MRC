@@ -35,13 +35,10 @@
 #include "mrc/types.hpp"
 #include "mrc/utils/bytes_to_string.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 
-#include <map>
 #include <memory>
 #include <ostream>
-#include <set>
 #include <string>
 #include <thread>
 #include <utility>

@@ -22,6 +22,7 @@
 
 #include "mrc/core/error.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
