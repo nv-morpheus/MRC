@@ -18,6 +18,7 @@ find_package(prometheus-cpp REQUIRED)
 
 # Keep all source files sorted!!!
 add_library(pymrc
+  src/coro.cpp
   src/executor.cpp
   src/logging.cpp
   src/module_registry.cpp
