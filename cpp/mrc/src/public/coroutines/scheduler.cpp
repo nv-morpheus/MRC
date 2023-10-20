@@ -39,6 +39,8 @@ std::coroutine_handle<> Scheduler::Operation::await_suspend(std::coroutine_handl
     return m_scheduler.schedule_operation(this);
 }
 
+Scheduler::Scheduler() : m_task_container(new TaskContainer(*this)) {}
+
 auto Scheduler::schedule() -> Operation
 {
     return Operation{*this};
@@ -78,11 +80,6 @@ auto Scheduler::on_thread_start(std::size_t thread_id) -> void
 TaskContainer& Scheduler::get_task_container() const
 {
     return *m_task_container;
-}
-
-std::unique_ptr<TaskContainer> Scheduler::make_task_container() const
-{
-    return std::unique_ptr<TaskContainer>(new TaskContainer(*const_cast<Scheduler*>(this)));
 }
 
 }  // namespace mrc::coroutines

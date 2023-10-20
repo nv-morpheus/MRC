@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mrc/coroutines/task.hpp"
-#include "mrc/coroutines/task_container.hpp"
 
 #include <coroutine>
 #include <cstddef>
@@ -27,6 +26,8 @@
 #include <string>
 
 namespace mrc::coroutines {
+
+class TaskContainer;
 
 /**
  * @brief Scheduler base class
@@ -54,7 +55,7 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
         Operation* m_next{nullptr};
     };
 
-    Scheduler()          = default;
+    Scheduler();
     virtual ~Scheduler() = default;
 
     /**
@@ -108,14 +109,6 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
 
   private:
     /**
-     * @brief Builds a task container to maintain the lifetime of fire-and-forget tasks scheduled with
-     * schedule(Task<void>&& task)
-     *
-     * @return std::unique_ptr<TaskContainer>
-     */
-    virtual std::unique_ptr<TaskContainer> make_task_container() const;
-
-    /**
      * @brief When co_await schedule() is called, this function will be executed by the awaiter. Each scheduler
      * implementation should determine how and when to execute the operation.
      *
@@ -127,6 +120,7 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
 
     mutable std::mutex m_mutex;
 
+    // Maintains the lifetime of fire-and-forget tasks scheduled with schedule(Task<void>&& task)
     std::unique_ptr<TaskContainer> m_task_container;
 
     thread_local static Scheduler* m_thread_local_scheduler;
