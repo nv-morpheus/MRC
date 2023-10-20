@@ -35,10 +35,10 @@ mrc::coroutines::Task<int> subtract(int a, int b)
 mrc::coroutines::Task<mrc::pymrc::PyHolder> call_fib_async(mrc::pymrc::PyHolder fib, int value, int minus)
 {
     auto result = co_await subtract(value, minus);
-    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([fib, result]() {
+    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([](auto fib, auto result) {
         pybind11::gil_scoped_acquire acquire;
         return fib(result);
-    }());
+    }(fib, result));
 }
 
 mrc::coroutines::Task<mrc::pymrc::PyHolder> raise_at_depth_async(mrc::pymrc::PyHolder fn, int depth)
@@ -48,22 +48,29 @@ mrc::coroutines::Task<mrc::pymrc::PyHolder> raise_at_depth_async(mrc::pymrc::PyH
         throw std::runtime_error("depth reached zero in c++");
     }
 
-    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([fn, depth]() {
+    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([](auto fn, auto depth) {
         pybind11::gil_scoped_acquire acquire;
         return fn(depth - 1);
-    }());
+    }(fn, depth));
+
+    // co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([fn, depth]() {
+    //     pybind11::gil_scoped_acquire acquire;
+    //     return fn(depth - 1);
+    // }());
 }
 
 mrc::coroutines::Task<mrc::pymrc::PyHolder> call_async(mrc::pymrc::PyHolder fn)
 {
-    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([fn]() {
+    co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([](auto fn) {
         pybind11::gil_scoped_acquire acquire;
         return fn();
-    }());
+    }(fn));
 }
 
 PYBIND11_MODULE(coro, _module)
 {
+    pybind11::module_::import("mrc.core.coro"); // satisfies automatic type conversions for tasks
+
     _module.def("call_fib_async", &call_fib_async);
     _module.def("raise_at_depth_async", &raise_at_depth_async);
     _module.def("call_async", &call_async);
