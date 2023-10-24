@@ -278,7 +278,7 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
             mrc::pymrc::PyHolder o_result;                                                                   \
             {                                                                                                \
                 pybind11::gil_scoped_release nogil;                                                          \
-                o_result = co_await mrc::pymrc::coro::PyTaskToCppAwaitable(std::move(o_task));                    \
+                o_result = co_await mrc::pymrc::coro::PyTaskToCppAwaitable(std::move(o_task));               \
                 DCHECK_EQ(PyGILState_Check(), 0) << "Should not have the GIL after returning from co_await"; \
             }                                                                                                \
             if (pybind11::detail::cast_is_temporary_value_reference<ret_type>::value)                        \
