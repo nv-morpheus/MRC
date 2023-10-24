@@ -14,12 +14,13 @@
 # limitations under the License.
 
 import asyncio
+
 import pytest
 
-from mrc.core import coro as pycoro # pylint: disable=morpheus-incorrect-lib-from-import
 from mrc._pymrc.tests.coro.coro import call_async
 from mrc._pymrc.tests.coro.coro import call_fib_async
 from mrc._pymrc.tests.coro.coro import raise_at_depth_async
+from mrc.core import coro as pycoro
 
 
 @pytest.mark.asyncio
