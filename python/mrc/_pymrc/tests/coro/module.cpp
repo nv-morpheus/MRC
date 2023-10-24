@@ -52,11 +52,6 @@ mrc::coroutines::Task<mrc::pymrc::PyHolder> raise_at_depth_async(mrc::pymrc::PyH
         pybind11::gil_scoped_acquire acquire;
         return fn(depth - 1);
     }(fn, depth));
-
-    // co_return co_await mrc::pymrc::coro::PyTaskToCppAwaitable([fn, depth]() {
-    //     pybind11::gil_scoped_acquire acquire;
-    //     return fn(depth - 1);
-    // }());
 }
 
 mrc::coroutines::Task<mrc::pymrc::PyHolder> call_async(mrc::pymrc::PyHolder fn)
