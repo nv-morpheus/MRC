@@ -26,8 +26,6 @@
 #include <coroutine>
 #include <stdexcept>
 
-namespace morpheus::tests::pycoro {
-
 mrc::coroutines::Task<int> subtract(int a, int b)
 {
     co_return a - b;
@@ -71,5 +69,3 @@ PYBIND11_MODULE(coro, _module)
     _module.def("raise_at_depth_async", &raise_at_depth_async);
     _module.def("call_async", &call_async);
 }
-
-}  // namespace morpheus::tests::pycoro

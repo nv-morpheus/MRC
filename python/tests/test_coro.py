@@ -19,7 +19,7 @@ import pytest
 from mrc._pymrc.tests.coro.coro import call_async
 from mrc._pymrc.tests.coro.coro import call_fib_async
 from mrc._pymrc.tests.coro.coro import raise_at_depth_async
-from mrc.core import coro as pycoro
+from mrc.core import coro
 
 
 @pytest.mark.asyncio
@@ -31,13 +31,13 @@ async def test_coro():
 
         # nonlocal hit_inside
 
-        result = await pycoro.wrap_coroutine(asyncio.sleep(1, result=['a', 'b', 'c']))
+        result = await coro.wrap_coroutine(asyncio.sleep(1, result=['a', 'b', 'c']))
 
         # hit_inside = True
 
         return [result]
 
-    returned_val = await pycoro.wrap_coroutine(inner())
+    returned_val = await coro.wrap_coroutine(inner())
 
     assert returned_val == 'a'
     # assert hit_inside
@@ -61,7 +61,7 @@ async def test_coro_many():
 
         return ['a', 'b', 'c']
 
-    coros = [pycoro.wrap_coroutine(inner()) for _ in range(expected_count)]
+    coros = [coro.wrap_coroutine(inner()) for _ in range(expected_count)]
 
     returned_vals = await asyncio.gather(*coros)
 
