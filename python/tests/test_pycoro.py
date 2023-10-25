@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import asyncio
-
 import pytest
 
 from mrc._pymrc.tests.coro.coro import call_async
@@ -48,17 +47,17 @@ async def test_coro():
 async def test_coro_many():
 
     expected_count = 1000
-    # hit_count = 0
+    hit_count = 0
 
     start_time = asyncio.get_running_loop().time()
 
     async def inner():
 
-        # nonlocal hit_count
+        nonlocal hit_count
 
         await asyncio.sleep(0.1)
 
-        # hit_count += 1
+        hit_count += 1
 
         return ['a', 'b', 'c']
 
@@ -69,8 +68,8 @@ async def test_coro_many():
     end_time = asyncio.get_running_loop().time()
 
     assert returned_vals == ['a'] * expected_count
-    # assert hit_count == expected_count
-    # assert (end_time - start_time) < 1.5
+    assert hit_count == expected_count
+    assert (end_time - start_time) < 1.5
 
 
 @pytest.mark.asyncio
