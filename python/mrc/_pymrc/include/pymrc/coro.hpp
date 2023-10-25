@@ -28,12 +28,10 @@
 #include <pybind11/pytypes.h>
 #include <pymrc/types.hpp>
 
-#include <array>
 #include <coroutine>
 #include <exception>
 #include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 
 // Dont directly include python headers
@@ -182,7 +180,7 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
         }
     }
 
-    bool await_ready() noexcept // NOLINT(readability-convert-member-functions-to-static)
+    static bool await_ready() noexcept  // NOLINT(readability-convert-member-functions-to-static)
     {
         // Always suspend
         return false;

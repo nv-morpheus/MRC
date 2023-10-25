@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-#include <pymrc/coro.hpp>
-
 #include <mrc/coroutines/task.hpp>
+#include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pymrc/coro.hpp>
 #include <pymrc/types.hpp>
 
+#include <coroutine>
 #include <stdexcept>
 
 namespace morpheus::tests::pycoro {
@@ -64,7 +65,7 @@ mrc::coroutines::Task<mrc::pymrc::PyHolder> call_async(mrc::pymrc::PyHolder fn)
 
 PYBIND11_MODULE(coro, _module)
 {
-    pybind11::module_::import("mrc.core.coro"); // satisfies automatic type conversions for tasks
+    pybind11::module_::import("mrc.core.coro");  // satisfies automatic type conversions for tasks
 
     _module.def("call_fib_async", &call_fib_async);
     _module.def("raise_at_depth_async", &raise_at_depth_async);
