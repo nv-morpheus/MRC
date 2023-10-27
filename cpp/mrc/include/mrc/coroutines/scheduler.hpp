@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mrc/coroutines/task.hpp"
-
 #include <coroutine>
 #include <cstddef>
 #include <memory>

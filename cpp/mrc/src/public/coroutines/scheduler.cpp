@@ -17,14 +17,10 @@
 
 #include "mrc/coroutines/scheduler.hpp"
 
-#include "mrc/coroutines/task_container.hpp"
-
 #include <glog/logging.h>
 
-#include <memory>
 #include <ostream>
 #include <thread>
-#include <utility>
 
 namespace mrc::coroutines {
 
