@@ -18,9 +18,6 @@
 
 namespace mrc::pymrc {
 
-template <typename T>
-using Task = mrc::coroutines::Task<T>;
-
 class ExceptionCatcher
 {
   public:
@@ -122,8 +119,8 @@ template <typename T>
 class IReadable
 {
   public:
-    virtual ~IReadable()                                    = default;
-    virtual Task<mrc::channel::Status> async_read(T& value) = 0;
+    virtual ~IReadable()                                                = default;
+    virtual coroutines::Task<mrc::channel::Status> async_read(T& value) = 0;
 };
 
 template <typename T>
@@ -134,7 +131,7 @@ class BoostFutureReader : public IReadable<T>
     BoostFutureReader(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
     {}
 
-    Task<mrc::channel::Status> async_read(T& value) override
+    coroutines::Task<mrc::channel::Status> async_read(T& value) override
     {
         co_return co_await m_awaiter(std::ref(value));
     }
@@ -147,8 +144,8 @@ template <typename T>
 class IWritable
 {
   public:
-    virtual ~IWritable()                                      = default;
-    virtual Task<mrc::channel::Status> async_write(T&& value) = 0;
+    virtual ~IWritable()                                                  = default;
+    virtual coroutines::Task<mrc::channel::Status> async_write(T&& value) = 0;
 };
 
 template <typename T>
@@ -159,7 +156,7 @@ class BoostFutureWriter : public IWritable<T>
     BoostFutureWriter(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
     {}
 
-    Task<mrc::channel::Status> async_write(T&& value) override
+    coroutines::Task<mrc::channel::Status> async_write(T&& value) override
     {
         co_return co_await m_awaiter(std::move(value));
     }
@@ -252,13 +249,13 @@ class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
     void run(mrc::runnable::Context& ctx) override;
     void on_state_update(const state_t& state) final;
 
-    Task<void> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
+    coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
 
-    Task<void> process_one(InputT&& value,
-                           std::shared_ptr<IWritable<OutputT>> writer,
-                           task_buffer_t& task_buffer,
-                           std::shared_ptr<mrc::coroutines::Scheduler> on,
-                           ExceptionCatcher& catcher);
+    coroutines::Task<> process_one(InputT&& value,
+                                   std::shared_ptr<IWritable<OutputT>> writer,
+                                   task_buffer_t& task_buffer,
+                                   std::shared_ptr<mrc::coroutines::Scheduler> on,
+                                   ExceptionCatcher& catcher);
 
     virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value) = 0;
 
@@ -284,7 +281,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 }
 
 template <typename InputT, typename OutputT>
-Task<void> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
+coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
     // Get the generator and receiver
     auto input_generator = CoroutineRunnableSink<InputT>::build_readable_generator(m_stop_source.get_token());
@@ -328,11 +325,11 @@ Task<void> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coro
 }
 
 template <typename InputT, typename OutputT>
-Task<void> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
-                                                         std::shared_ptr<IWritable<OutputT>> writer,
-                                                         task_buffer_t& task_buffer,
-                                                         std::shared_ptr<mrc::coroutines::Scheduler> on,
-                                                         ExceptionCatcher& catcher)
+coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
+                                                                 std::shared_ptr<IWritable<OutputT>> writer,
+                                                                 task_buffer_t& task_buffer,
+                                                                 std::shared_ptr<mrc::coroutines::Scheduler> on,
+                                                                 ExceptionCatcher& catcher)
 {
     co_await on->yield();
 
