@@ -85,7 +85,7 @@ class BoostFutureAwaiter
             return false;
         }
 
-        bool await_suspend(std::coroutine_handle<> continuation) noexcept
+        void await_suspend(std::coroutine_handle<> continuation) noexcept
         {
             // Launch a new fiber that waits on the future and then resumes the coroutine
             boost::fibers::async(
@@ -98,8 +98,6 @@ class BoostFutureAwaiter
                     continuation.resume();
                 },
                 std::move(continuation));
-
-            return true;
         }
 
         auto await_resume() noexcept
