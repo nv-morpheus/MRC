@@ -25,12 +25,7 @@
 #include <mutex>
 #include <string>
 
-// IWYU thinks this is needed, but it's not
-// IWYU pragma: no_include "mrc/coroutines/task_container.hpp"
-
 namespace mrc::coroutines {
-
-class TaskContainer;  // IWYU pragma: keep
 
 /**
  * @brief Scheduler base class
@@ -75,9 +70,6 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
      */
     [[nodiscard]] virtual auto schedule() -> Operation;
 
-    // Enqueues a message without waiting for it. Must return void since the caller will not get the return value
-    virtual void schedule(Task<void>&& task);
-
     /**
      * Schedules any coroutine handle that is ready to be resumed.
      * @param handle The coroutine handle to schedule.
@@ -103,13 +95,6 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
   protected:
     virtual auto on_thread_start(std::size_t) -> void;
 
-    /**
-     * @brief Get the task container object
-     *
-     * @return TaskContainer&
-     */
-    TaskContainer& get_task_container() const;
-
   private:
     /**
      * @brief When co_await schedule() is called, this function will be executed by the awaiter. Each scheduler
@@ -122,9 +107,6 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     virtual std::coroutine_handle<> schedule_operation(Operation* operation) = 0;
 
     mutable std::mutex m_mutex;
-
-    // Maintains the lifetime of fire-and-forget tasks scheduled with schedule(Task<void>&& task)
-    std::unique_ptr<TaskContainer> m_task_container;
 
     thread_local static Scheduler* m_thread_local_scheduler;
     thread_local static std::size_t m_thread_id;

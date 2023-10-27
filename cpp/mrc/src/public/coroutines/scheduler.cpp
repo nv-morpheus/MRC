@@ -39,16 +39,11 @@ std::coroutine_handle<> Scheduler::Operation::await_suspend(std::coroutine_handl
     return m_scheduler.schedule_operation(this);
 }
 
-Scheduler::Scheduler() : m_task_container(new TaskContainer(*this)) {}
+Scheduler::Scheduler() = default;
 
 auto Scheduler::schedule() -> Operation
 {
     return Operation{*this};
-}
-
-void Scheduler::schedule(Task<void>&& task)
-{
-    return m_task_container->start(std::move(task));
 }
 
 auto Scheduler::yield() -> Operation
@@ -75,11 +70,6 @@ auto Scheduler::on_thread_start(std::size_t thread_id) -> void
     DVLOG(10) << "scheduler: " << description() << " initializing";
     m_thread_id              = thread_id;
     m_thread_local_scheduler = this;
-}
-
-TaskContainer& Scheduler::get_task_container() const
-{
-    return *m_task_container;
 }
 
 }  // namespace mrc::coroutines
