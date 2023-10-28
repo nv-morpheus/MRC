@@ -102,6 +102,7 @@ TEST_F(TestAsyncioRunnable, Execute)
     };
 
     p.make_segment("seg1"s, init);
+    p.make_segment("seg2"s, init);
 
     auto options = std::make_shared<mrc::Options>();
     options->topology().user_cpuset("0");
@@ -112,5 +113,5 @@ TEST_F(TestAsyncioRunnable, Execute)
     exec.start();
     exec.join();
 
-    EXPECT_EQ(counter, 66);
+    EXPECT_EQ(counter, 132);
 }

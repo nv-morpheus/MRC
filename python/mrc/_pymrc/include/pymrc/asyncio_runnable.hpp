@@ -18,8 +18,12 @@
 #pragma once
 
 #include "pymrc/asyncio_scheduler.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
+
+#include "mrc/coroutines/sync_wait.hpp"
 
 #include <boost/fiber/future/async.hpp>
+#include <boost/fiber/operations.hpp>
 #include <mrc/channel/buffered_channel.hpp>
 #include <mrc/channel/status.hpp>
 #include <mrc/coroutines/async_generator.hpp>
@@ -32,6 +36,8 @@
 #include <coroutine>
 #include <exception>
 #include <functional>
+#include <memory>
+#include <stop_token>
 
 namespace mrc::pymrc {
 
@@ -264,7 +270,7 @@ class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
     void run(mrc::runnable::Context& ctx) override;
     void on_state_update(const state_t& state) final;
 
-    coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
+    coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler, std::stop_source stop_source);
 
     coroutines::Task<> process_one(InputT&& value,
                                    std::shared_ptr<IWritable<OutputT>> writer,
@@ -279,16 +285,90 @@ class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
     size_t m_concurrency{8};
 };
 
+static void handle_fibers(std::stop_token token)
+{
+    while (not token.stop_requested())
+    {
+        if (boost::fibers::has_ready_fibers())
+        {
+            boost::this_fiber::yield();
+        }
+    }
+}
+
+class FiberAwareAsyncioRunner
+{
+  public:
+    FiberAwareAsyncioRunner(PyObjectHolder loop) : m_loop(std::move(loop))
+    {
+        m_thread = std::jthread([loop = m_loop](std::stop_token stop_token) {
+            while (not stop_token.stop_requested())
+            {
+                if (boost::fibers::has_ready_fibers())
+                {
+                    boost::this_fiber::yield();
+                }
+                pybind11::gil_scoped_acquire acquire;
+                loop.attr("stop")();
+                loop.attr("run_forever")();
+            }
+        });
+    }
+
+    ~FiberAwareAsyncioRunner()
+    {
+        // {
+        //     pybind11::gil_scoped_acquire acquire;
+        //     m_loop.attr("call_soon_threadsafe")(pybind11::cpp_function([loop = m_loop]() {  //
+        //         loop.attr("stop")();
+        //     }));
+        // }
+        m_thread.request_stop();
+        m_thread.join();
+    }
+
+    PyObjectHolder get_loop()
+    {
+        return m_loop;
+    }
+
+  private:
+    PyObjectHolder m_loop;
+    std::jthread m_thread;
+};
+
 template <typename InputT, typename OutputT>
 void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 {
     // auto& scheduler = ctx.scheduler();
 
+    PyObjectHolder loop = []() {
+        pybind11::gil_scoped_acquire acquire;
+        return static_cast<PyObjectHolder>(pybind11::module_::import("asyncio").attr("get_event_loop")());
+    }();
+
+    std::unique_ptr<FiberAwareAsyncioRunner> runner;
+    {
+        pybind11::gil_scoped_acquire acquire;
+        if (not loop.attr("is_running")().cast<bool>())
+        {
+            runner = std::make_unique<FiberAwareAsyncioRunner>(loop);
+        }
+    }
+
     // TODO(MDD): Eventually we should get this from the context object. For now, just create it directly
-    auto scheduler = std::make_shared<AsyncioScheduler>(m_concurrency);
+    auto scheduler = std::make_shared<AsyncioScheduler>(loop);
+
+    auto stop_source = std::stop_source();
 
     // Now use the scheduler to run the main task until it is complete
-    scheduler->run_until_complete(this->main_task(scheduler));
+    auto task = this->main_task(scheduler, stop_source);
+
+    task.resume();
+
+    handle_fibers(stop_source.get_token());
+
+    coroutines::sync_wait(task);
 
     // Need to drop the output edges
     mrc::node::SourceProperties<OutputT>::release_edge_connection();
@@ -296,8 +376,10 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 }
 
 template <typename InputT, typename OutputT>
-coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
+coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler,
+                                                               std::stop_source stop_source)
 {
+    co_await scheduler->yield();
     // Get the generator and receiver
     auto input_generator = CoroutineRunnableSink<InputT>::build_readable_generator(m_stop_source.get_token());
     auto output_receiver = CoroutineRunnableSource<OutputT>::build_writable_receiver();
@@ -335,6 +417,8 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
     co_await task_buffer.completed();
 
     co_await outstanding_tasks.garbage_collect_and_yield_until_empty();
+
+    stop_source.request_stop();
 
     catcher.rethrow_next_exception();
 }
