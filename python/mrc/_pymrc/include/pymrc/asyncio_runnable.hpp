@@ -291,8 +291,8 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
     scheduler->run_until_complete(this->main_task(scheduler));
 
     // Need to drop the output edges
-    mrc::node::SourceProperties<InputT>::release_edge_connection();
-    mrc::node::SinkProperties<OutputT>::release_edge_connection();
+    mrc::node::SourceProperties<OutputT>::release_edge_connection();
+    mrc::node::SinkProperties<InputT>::release_edge_connection();
 }
 
 template <typename InputT, typename OutputT>

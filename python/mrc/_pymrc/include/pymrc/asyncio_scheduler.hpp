@@ -25,6 +25,9 @@
 #include <mrc/coroutines/task.hpp>
 #include <mrc/coroutines/task_container.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+
+#include <stdexcept>
 
 namespace py = pybind11;
 
@@ -78,25 +81,29 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
         auto asyncio_mod = py::module_::import("asyncio");
 
-        py::object loop;
+        auto loop = [asyncio_mod]() -> py::object {
+            try
+            {
+                return asyncio_mod.attr("get_running_loop")();
+            } catch (...)
+            {
+                return py::none();
+            }
+        }();
 
-        try
+        if (not loop.is_none())
         {
-            // Otherwise check if one is already allocated
-            loop = asyncio_mod.attr("get_running_loop")();
-        } catch (std::runtime_error&)
-        {
-            // Need to create a loop
-            LOG(INFO) << "AsyncioScheduler::run() > Creating new event loop";
-
-            // Gets (or more likely, creates) an event loop and runs it forever until stop is called
-            loop = asyncio_mod.attr("new_event_loop")();
-
-            // Set the event loop as the current event loop
-            asyncio_mod.attr("set_event_loop")(loop);
+            throw std::runtime_error("asyncio loop already running, but runnable is expected to create it.");
         }
 
-        m_loop = std::move(loop);
+        // Need to create a loop
+        LOG(INFO) << "AsyncioScheduler::run() > Creating new event loop";
+
+        // Gets (or more likely, creates) an event loop and runs it forever until stop is called
+        m_loop = asyncio_mod.attr("new_event_loop")();
+
+        // Set the event loop as the current event loop
+        asyncio_mod.attr("set_event_loop")(m_loop);
 
         return m_loop;
     }
