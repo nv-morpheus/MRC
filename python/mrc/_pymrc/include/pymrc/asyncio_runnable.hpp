@@ -36,14 +36,21 @@
 
 namespace mrc::pymrc {
 
+/**
+ * @brief A wrapper for executing a function as an async boost fiber, the result of which is a
+ * C++20 coroutine awaiter.
+ */
 template <typename SignatureT>
-class BoostFutureAwaiter
+class BoostFutureAwaitableOperation
 {
     class Awaiter;
 
   public:
-    BoostFutureAwaiter(std::function<SignatureT> fn) : m_fn(std::move(fn)) {}
+    BoostFutureAwaitableOperation(std::function<SignatureT> fn) : m_fn(std::move(fn)) {}
 
+    /**
+     * @brief Calls the wrapped function as an asyncboost fiber and returns a C++20 coroutine awaiter.
+     */
     template <typename... ArgsT>
     auto operator()(ArgsT&&... args) -> Awaiter
     {
@@ -118,7 +125,7 @@ class BoostFutureReader : public IReadable<T>
     }
 
   private:
-    BoostFutureAwaiter<mrc::channel::Status(T&)> m_awaiter;
+    BoostFutureAwaitableOperation<mrc::channel::Status(T&)> m_awaiter;
 };
 
 template <typename T>
@@ -143,7 +150,7 @@ class BoostFutureWriter : public IWritable<T>
     }
 
   private:
-    BoostFutureAwaiter<mrc::channel::Status(T&&)> m_awaiter;
+    BoostFutureAwaitableOperation<mrc::channel::Status(T&&)> m_awaiter;
 };
 
 template <typename T>
