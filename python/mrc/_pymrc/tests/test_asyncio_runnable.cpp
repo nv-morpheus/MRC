@@ -20,41 +20,29 @@
 #include "pymrc/asyncio_runnable.hpp"
 #include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
-#include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
-#include "mrc/node/rx_node.hpp"
+#include "mrc/coroutines/async_generator.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
-#include "mrc/node/rx_source_base.hpp"
+#include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/runnable/types.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
-#include <glog/logging.h>
+#include <boost/fiber/policy.hpp>
 #include <gtest/gtest.h>
-#include <pybind11/cast.h>
-#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pybind11/stl.h>  // IWYU pragma: keep
+#include <pybind11/stl.h>
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
-#include <cstddef>
-#include <functional>
-#include <iostream>
-#include <map>
+#include <coroutine>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
