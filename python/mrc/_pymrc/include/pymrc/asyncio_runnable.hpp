@@ -26,6 +26,7 @@
 #include <mrc/coroutines/closable_ring_buffer.hpp>
 #include <mrc/coroutines/task.hpp>
 #include <mrc/coroutines/task_container.hpp>
+#include <mrc/exceptions/exception_catcher.hpp>
 #include <mrc/node/sink_properties.hpp>
 #include <mrc/runnable/forward.hpp>
 
@@ -34,41 +35,6 @@
 #include <functional>
 
 namespace mrc::pymrc {
-
-class ExceptionCatcher
-{
-  public:
-    void set_exception(std::exception_ptr ex)
-    {
-        auto lock = std::lock_guard(m_mutex);
-        m_exceptions.push(ex);
-    }
-
-    bool has_exception()
-    {
-        auto lock = std::lock_guard(m_mutex);
-        return not m_exceptions.empty();
-    }
-
-    void rethrow_next_exception()
-    {
-        auto lock = std::lock_guard(m_mutex);
-
-        if (m_exceptions.empty())
-        {
-            return;
-        }
-
-        auto ex = m_exceptions.front();
-        m_exceptions.pop();
-
-        std::rethrow_exception(ex);
-    }
-
-  private:
-    std::mutex m_mutex{};
-    std::queue<std::exception_ptr> m_exceptions{};
-};
 
 template <typename SignatureT>
 class BoostFutureAwaiter
@@ -367,8 +333,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
         }
     } catch (...)
     {
-        // TODO(cwharris): communicate error back to the runnable's main main task
-        catcher.set_exception(std::current_exception());
+        catcher.push_exception(std::current_exception());
     }
 
     // Return the slot to the task buffer

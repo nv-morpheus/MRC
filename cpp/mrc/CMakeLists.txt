@@ -124,6 +124,7 @@ add_library(libmrc
   src/public/cuda/sync.cpp
   src/public/edge/edge_adapter_registry.cpp
   src/public/edge/edge_builder.cpp
+  src/public/exceptions/exception_catcher.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/memory/codable/buffer.cpp
