@@ -167,23 +167,22 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
                                 public mrc::node::SourceChannelOwner<T>
 {
   protected:
-    CoroutineRunnableSource()
+    CoroutineRunnableSource() :
+      m_writer([this](T&& value) {
+          return this->get_writable_edge()->await_write(std::move(value));
+      })
     {
         // Set the default channel
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
-
-        m_writer = std::make_shared<BoostFutureWriter<T>>([this](T&& value) {
-            return this->get_writable_edge()->await_write(std::move(value));
-        });
     }
 
-    auto get_writable_receiver() -> std::shared_ptr<BoostFutureWriter<T>>
+    coroutines::Task<mrc::channel::Status> async_write(T&& value)
     {
-        return m_writer;
+        co_return co_await m_writer.async_write(std::move(value));
     }
 
   private:
-    std::shared_ptr<BoostFutureWriter<T>> m_writer;
+    BoostFutureWriter<T> m_writer;
 };
 
 template <typename InputT, typename OutputT>
@@ -205,7 +204,6 @@ class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
     coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
 
     coroutines::Task<> process_one(InputT&& value,
-                                   std::shared_ptr<BoostFutureWriter<OutputT>> writer,
                                    task_buffer_t& task_buffer,
                                    std::shared_ptr<mrc::coroutines::Scheduler> on,
                                    ExceptionCatcher& catcher);
@@ -236,9 +234,6 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    // Get the generator and receiver
-    auto output_receiver = CoroutineRunnableSource<OutputT>::get_writable_receiver();
-
     // Create the task buffer to limit the number of running tasks
     task_buffer_t task_buffer{{.capacity = m_concurrency}};
 
@@ -246,8 +241,8 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
     ExceptionCatcher catcher{};
 
-    while (not m_stop_source.stop_requested() and not catcher.has_exception()) {
-        
+    while (not m_stop_source.stop_requested() and not catcher.has_exception())
+    {
         InputT data;
 
         auto read_status = co_await this->async_read(data);
@@ -260,7 +255,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
         // Wait for an available slot in the task buffer
         co_await task_buffer.write(0);
 
-        outstanding_tasks.start(this->process_one(std::move(data), output_receiver, task_buffer, scheduler, catcher));
+        outstanding_tasks.start(this->process_one(std::move(data), task_buffer, scheduler, catcher));
     }
 
     // Close the buffer
@@ -276,7 +271,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
-                                                                 std::shared_ptr<BoostFutureWriter<OutputT>> writer,
                                                                  task_buffer_t& task_buffer,
                                                                  std::shared_ptr<mrc::coroutines::Scheduler> on,
                                                                  ExceptionCatcher& catcher)
@@ -295,7 +289,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
             // Weird bug, cant directly move the value into the async_write call
             auto data = std::move(*iter);
 
-            co_await writer->async_write(std::move(data));
+            co_await this->async_write(std::move(data));
 
             // Advance the iterator
             co_await ++iter;
