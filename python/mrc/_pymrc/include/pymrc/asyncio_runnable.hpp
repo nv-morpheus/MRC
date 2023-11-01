@@ -104,7 +104,7 @@ class BoostFutureAwaitableOperation
 };
 
 /**
- * @brief A MRC Sink which receives from a channel with an awaitable internal interface.
+ * @brief A MRC Sink which receives from a channel using an awaitable interface.
  */
 template <typename T>
 class AsyncSink : public mrc::node::WritableProvider<T>,
@@ -131,7 +131,7 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
 };
 
 /**
- * @brief A MRC Source which produces to a channel with an awaitable internal interface.
+ * @brief A MRC Source which produces to a channel using an awaitable interface.
  */
 template <typename T>
 class AsyncSource : public mrc::node::WritableAcceptor<T>,
