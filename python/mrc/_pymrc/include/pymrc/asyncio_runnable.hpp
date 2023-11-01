@@ -179,7 +179,7 @@ class AsyncioRunnable : public AsyncSink<InputT>,
 
     coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
 
-    coroutines::Task<> process_one(InputT&& value,
+    coroutines::Task<> process_one(InputT value,
                                    task_buffer_t& task_buffer,
                                    std::shared_ptr<mrc::coroutines::Scheduler> on,
                                    ExceptionCatcher& catcher);
@@ -277,7 +277,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 }
 
 template <typename InputT, typename OutputT>
-coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
+coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
                                                                  task_buffer_t& task_buffer,
                                                                  std::shared_ptr<mrc::coroutines::Scheduler> on,
                                                                  ExceptionCatcher& catcher)
