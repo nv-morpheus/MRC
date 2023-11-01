@@ -228,6 +228,8 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 
         auto py_awaitable = coro::BoostFibersMainPyAwaitable(this->main_task(scheduler));
 
+        LOG(INFO) << "AsyncioRunnable::run() > Calling run_until_complete() on main_task()";
+
         loop.attr("run_until_complete")(std::move(py_awaitable));
     }
 
