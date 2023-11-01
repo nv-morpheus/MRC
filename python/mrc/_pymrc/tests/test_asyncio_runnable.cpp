@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-#include "test_pymrc.hpp"
-
 #include "pymrc/asyncio_runnable.hpp"
+#include "pymrc/coro.hpp"
 #include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
-#include "pymrc/types.hpp"
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include "mrc/coroutines/async_generator.hpp"
@@ -35,6 +33,7 @@
 
 #include <boost/fiber/policy.hpp>
 #include <gtest/gtest.h>
+#include <pybind11/cast.h>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/gil.h>
@@ -46,6 +45,7 @@
 #include <coroutine>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
