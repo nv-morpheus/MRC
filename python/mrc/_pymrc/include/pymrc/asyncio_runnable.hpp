@@ -103,13 +103,16 @@ class BoostFutureAwaitableOperation
     std::function<SignatureT> m_fn;
 };
 
+/**
+ * @brief A MRC Sink which receives from a channel with an awaitable internal interface.
+ */
 template <typename T>
-class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
-                              public mrc::node::ReadableAcceptor<T>,
-                              public mrc::node::SinkChannelOwner<T>
+class AsyncSink : public mrc::node::WritableProvider<T>,
+                  public mrc::node::ReadableAcceptor<T>,
+                  public mrc::node::SinkChannelOwner<T>
 {
   protected:
-    CoroutineRunnableSink() :
+    AsyncSink() :
       m_read_async([this](T& value) {
           return this->get_readable_edge()->await_read(value);
       })
@@ -127,13 +130,16 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
     BoostFutureAwaitableOperation<mrc::channel::Status(T&)> m_read_async;
 };
 
+/**
+ * @brief A MRC Source which produces to a channel with an awaitable internal interface.
+ */
 template <typename T>
-class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
-                                public mrc::node::ReadableProvider<T>,
-                                public mrc::node::SourceChannelOwner<T>
+class AsyncSource : public mrc::node::WritableAcceptor<T>,
+                    public mrc::node::ReadableProvider<T>,
+                    public mrc::node::SourceChannelOwner<T>
 {
   protected:
-    CoroutineRunnableSource() :
+    AsyncSource() :
       m_write_async([this](T&& value) {
           return this->get_writable_edge()->await_write(std::move(value));
       })
@@ -151,9 +157,12 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
     BoostFutureAwaitableOperation<mrc::channel::Status(T&&)> m_write_async;
 };
 
+/**
+ * @brief A MRC Runnable base class which hosts it's own asyncio loop and exposes a flatmap hook
+ */
 template <typename InputT, typename OutputT>
-class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
-                        public CoroutineRunnableSource<OutputT>,
+class AsyncioRunnable : public AsyncSink<InputT>,
+                        public AsyncSource<OutputT>,
                         public mrc::runnable::RunnableWithContext<>
 {
     using state_t       = mrc::runnable::Runnable::State;
