@@ -104,22 +104,14 @@ class BoostFutureAwaitableOperation
 };
 
 template <typename T>
-class IReadable
-{
-  public:
-    virtual ~IReadable()                                                = default;
-    virtual coroutines::Task<mrc::channel::Status> async_read(T& value) = 0;
-};
-
-template <typename T>
-class BoostFutureReader : public IReadable<T>
+class BoostFutureReader
 {
   public:
     template <typename FuncT>
     BoostFutureReader(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
     {}
 
-    coroutines::Task<mrc::channel::Status> async_read(T& value) override
+    coroutines::Task<mrc::channel::Status> async_read(T& value)
     {
         co_return co_await m_awaiter(std::ref(value));
     }
@@ -129,22 +121,14 @@ class BoostFutureReader : public IReadable<T>
 };
 
 template <typename T>
-class IWritable
-{
-  public:
-    virtual ~IWritable()                                                  = default;
-    virtual coroutines::Task<mrc::channel::Status> async_write(T&& value) = 0;
-};
-
-template <typename T>
-class BoostFutureWriter : public IWritable<T>
+class BoostFutureWriter
 {
   public:
     template <typename FuncT>
     BoostFutureWriter(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
     {}
 
-    coroutines::Task<mrc::channel::Status> async_write(T&& value) override
+    coroutines::Task<mrc::channel::Status> async_write(T&& value)
     {
         co_return co_await m_awaiter(std::move(value));
     }
@@ -213,7 +197,7 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
     //     co_return;
     // }
 
-    auto build_writable_receiver() -> std::shared_ptr<IWritable<T>>
+    auto build_writable_receiver() -> std::shared_ptr<BoostFutureWriter<T>>
     {
         return std::make_shared<BoostFutureWriter<T>>([this](T&& value) {
             return this->get_writable_edge()->await_write(std::move(value));
@@ -240,7 +224,7 @@ class AsyncioRunnable : public CoroutineRunnableSink<InputT>,
     coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
 
     coroutines::Task<> process_one(InputT&& value,
-                                   std::shared_ptr<IWritable<OutputT>> writer,
+                                   std::shared_ptr<BoostFutureWriter<OutputT>> writer,
                                    task_buffer_t& task_buffer,
                                    std::shared_ptr<mrc::coroutines::Scheduler> on,
                                    ExceptionCatcher& catcher);
@@ -314,7 +298,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
-                                                                 std::shared_ptr<IWritable<OutputT>> writer,
+                                                                 std::shared_ptr<BoostFutureWriter<OutputT>> writer,
                                                                  task_buffer_t& task_buffer,
                                                                  std::shared_ptr<mrc::coroutines::Scheduler> on,
                                                                  ExceptionCatcher& catcher)
