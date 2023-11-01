@@ -35,6 +35,8 @@ namespace mrc::pymrc {
 class AsyncioScheduler : public mrc::coroutines::Scheduler
 {
   public:
+    AsyncioScheduler(PyObjectHolder loop) : m_loop(std::move(loop)) {}
+
     std::string description() const override
     {
         return "AsyncioScheduler";
@@ -50,10 +52,8 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
         py::gil_scoped_acquire gil;
 
-        auto& loop = this->get_loop();
-
         // TODO(MDD): Check whether or not we need thread safe version
-        loop.attr("call_soon_threadsafe")(py::cpp_function([this, handle = std::move(coroutine)]() {
+        m_loop.attr("call_soon_threadsafe")(py::cpp_function([this, handle = std::move(coroutine)]() {
             if (handle.done())
             {
                 LOG(WARNING) << "AsyncioScheduler::resume() > Attempted to resume a completed coroutine";
@@ -66,59 +66,6 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
         }));
     }
 
-    mrc::pymrc::PyHolder& init_loop()
-    {
-        CHECK_EQ(PyGILState_Check(), 1) << "Must have the GIL when calling AsyncioScheduler::init_loop()";
-
-        std::unique_lock lock(m_mutex);
-
-        if (m_loop)
-        {
-            return m_loop;
-        }
-
-        auto asyncio_mod = py::module_::import("asyncio");
-
-        auto loop = [asyncio_mod]() -> py::object {
-            try
-            {
-                return asyncio_mod.attr("get_running_loop")();
-            } catch (...)
-            {
-                return py::none();
-            }
-        }();
-
-        if (not loop.is_none())
-        {
-            throw std::runtime_error("asyncio loop already running, but runnable is expected to create it.");
-        }
-
-        // Need to create a loop
-        LOG(INFO) << "AsyncioScheduler::run() > Creating new event loop";
-
-        // Gets (or more likely, creates) an event loop and runs it forever until stop is called
-        m_loop = asyncio_mod.attr("new_event_loop")();
-
-        // Set the event loop as the current event loop
-        asyncio_mod.attr("set_event_loop")(m_loop);
-
-        return m_loop;
-    }
-
-    // Runs the task until its complete
-    void run_until_complete(coroutines::Task<>&& task)
-    {
-        mrc::pymrc::AcquireGIL gil;
-
-        auto& loop = this->init_loop();
-
-        LOG(INFO) << "AsyncioScheduler::run() > Calling run_until_complete() on main_task()";
-
-        // Use the BoostFibersMainPyAwaitable to allow fibers to be progressed
-        loop.attr("run_until_complete")(mrc::pymrc::coro::BoostFibersMainPyAwaitable(std::move(task)));
-    }
-
   private:
     std::coroutine_handle<> schedule_operation(Operation* operation) override
     {
@@ -126,21 +73,6 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
         return std::noop_coroutine();
     }
-
-    mrc::pymrc::PyHolder& get_loop()
-    {
-        if (!m_loop)
-        {
-            throw std::runtime_error("Must call init_loop() before get_loop()");
-        }
-
-        // TODO(MDD): Check that we are on the same thread as the loop
-        return m_loop;
-    }
-
-    std::mutex m_mutex;
-
-    std::atomic_size_t m_outstanding{0};
 
     mrc::pymrc::PyHolder m_loop;
 };

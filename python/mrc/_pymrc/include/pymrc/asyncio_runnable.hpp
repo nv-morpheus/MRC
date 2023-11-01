@@ -18,6 +18,7 @@
 #pragma once
 
 #include "pymrc/asyncio_scheduler.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <mrc/channel/buffered_channel.hpp>
@@ -193,13 +194,42 @@ class AsyncioRunnable : public AsyncSink<InputT>,
 template <typename InputT, typename OutputT>
 void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 {
-    // auto& scheduler = ctx.scheduler();
+    {
+        py::gil_scoped_acquire gil;
 
-    // TODO(MDD): Eventually we should get this from the context object. For now, just create it directly
-    auto scheduler = std::make_shared<AsyncioScheduler>();
+        auto asyncio = py::module_::import("asyncio");
 
-    // Now use the scheduler to run the main task until it is complete
-    scheduler->run_until_complete(this->main_task(scheduler));
+        auto loop = [](auto& asyncio) -> PyObjectHolder {
+            try
+            {
+                return asyncio.attr("get_running_loop")();
+            } catch (...)
+            {
+                return py::none();
+            }
+        }(asyncio);
+
+        if (not loop.is_none())
+        {
+            throw std::runtime_error("asyncio loop already running, but runnable is expected to create it.");
+        }
+
+        // Need to create a loop
+        LOG(INFO) << "AsyncioRunnable::run() > Creating new event loop";
+
+        // Gets (or more likely, creates) an event loop and runs it forever until stop is called
+        loop = asyncio.attr("new_event_loop")();
+
+        // Set the event loop as the current event loop
+        asyncio.attr("set_event_loop")(loop);
+
+        // TODO(MDD): Eventually we should get this from the context object. For now, just create it directly
+        auto scheduler = std::make_shared<AsyncioScheduler>(loop);
+
+        auto py_awaitable = coro::BoostFibersMainPyAwaitable(this->main_task(scheduler));
+
+        loop.attr("run_until_complete")(std::move(py_awaitable));
+    }
 
     // Need to drop the output edges
     mrc::node::SourceProperties<OutputT>::release_edge_connection();
