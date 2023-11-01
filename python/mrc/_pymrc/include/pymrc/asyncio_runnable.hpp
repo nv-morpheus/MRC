@@ -152,24 +152,9 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
-    auto build_readable_generator(std::stop_token stop_token) -> mrc::coroutines::AsyncGenerator<T>
+    coroutines::Task<mrc::channel::Status> async_read(T& value)
     {
-        while (!stop_token.stop_requested())
-        {
-            T value;
-
-            // Pull a message off of the upstream channel
-            auto status = co_await m_reader.async_read(std::ref(value));
-
-            if (status != mrc::channel::Status::success)
-            {
-                break;
-            }
-
-            co_yield std::move(value);
-        }
-
-        co_return;
+        co_return co_await m_reader.async_read(std::ref(value));
     }
 
   private:
@@ -252,33 +237,30 @@ template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
     // Get the generator and receiver
-    auto input_generator = CoroutineRunnableSink<InputT>::build_readable_generator(m_stop_source.get_token());
     auto output_receiver = CoroutineRunnableSource<OutputT>::get_writable_receiver();
 
     // Create the task buffer to limit the number of running tasks
     task_buffer_t task_buffer{{.capacity = m_concurrency}};
 
-    size_t i = 0;
-
-    auto iter = co_await input_generator.begin();
-
     coroutines::TaskContainer outstanding_tasks(scheduler);
 
     ExceptionCatcher catcher{};
 
-    while (not catcher.has_exception() and iter != input_generator.end())
-    {
-        // Weird bug, cant directly move the value into the process_one call
-        auto data = std::move(*iter);
+    while (not m_stop_source.stop_requested() and not catcher.has_exception()) {
+        
+        InputT data;
+
+        auto read_status = co_await this->async_read(data);
+
+        if (read_status != mrc::channel::Status::success)
+        {
+            break;
+        }
 
         // Wait for an available slot in the task buffer
-        co_await task_buffer.write(i);
+        co_await task_buffer.write(0);
 
         outstanding_tasks.start(this->process_one(std::move(data), output_receiver, task_buffer, scheduler, catcher));
-
-        // Advance the iterator
-        co_await ++iter;
-        ++i;
     }
 
     // Close the buffer
