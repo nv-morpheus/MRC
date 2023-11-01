@@ -196,7 +196,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
     // auto& scheduler = ctx.scheduler();
 
     // TODO(MDD): Eventually we should get this from the context object. For now, just create it directly
-    auto scheduler = std::make_shared<AsyncioScheduler>(m_concurrency);
+    auto scheduler = std::make_shared<AsyncioScheduler>();
 
     // Now use the scheduler to run the main task until it is complete
     scheduler->run_until_complete(this->main_task(scheduler));

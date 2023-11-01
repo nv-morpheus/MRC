@@ -35,8 +35,6 @@ namespace mrc::pymrc {
 class AsyncioScheduler : public mrc::coroutines::Scheduler
 {
   public:
-    AsyncioScheduler(size_t concurrency) {}
-
     std::string description() const override
     {
         return "AsyncioScheduler";
