@@ -19,6 +19,7 @@
 
 #include "pymrc/coro.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 
 #include <boost/fiber/future/async.hpp>
 #include <mrc/coroutines/scheduler.hpp>
@@ -28,52 +29,67 @@
 #include <pybind11/pytypes.h>
 
 #include <stdexcept>
+#include <utility>
 
 namespace py = pybind11;
 
 namespace mrc::pymrc {
+
+/**
+ * @brief A MRC Scheduler which allows resuming C++20 coroutines on an Asyncio event loop.
+ */
 class AsyncioScheduler : public mrc::coroutines::Scheduler
 {
-  public:
-    AsyncioScheduler(PyObjectHolder loop) : m_loop(std::move(loop)) {}
-
-    std::string description() const override
+  private:
+    class ContinueOnLoopOperation
     {
-        return "AsyncioScheduler";
-    }
+      public:
+        ContinueOnLoopOperation(PyObjectHolder loop) : m_loop(std::move(loop)) {}
 
-    void resume(std::coroutine_handle<> coroutine) override
-    {
-        if (coroutine.done())
+        static bool await_ready() noexcept
         {
-            LOG(WARNING) << "AsyncioScheduler::resume() > Attempted to resume a completed coroutine";
-            return;
+            return false;
         }
 
-        py::gil_scoped_acquire gil;
+        void await_suspend(std::coroutine_handle<> handle) noexcept
+        {
+            AsyncioScheduler::resume(m_loop, handle);
+        }
 
-        // TODO(MDD): Check whether or not we need thread safe version
-        m_loop.attr("call_soon_threadsafe")(py::cpp_function([this, handle = std::move(coroutine)]() {
-            if (handle.done())
-            {
-                LOG(WARNING) << "AsyncioScheduler::resume() > Attempted to resume a completed coroutine";
-                return;
-            }
+        static void await_resume() noexcept {}
 
-            py::gil_scoped_release nogil;
+      private:
+        PyObjectHolder m_loop;
+    };
 
+    static void resume(PyObjectHolder loop, std::coroutine_handle<> handle) noexcept
+    {
+        pybind11::gil_scoped_acquire acquire;
+        loop.attr("call_soon_threadsafe")(pybind11::cpp_function([handle]() {  //
+            pybind11::gil_scoped_release release;
             handle.resume();
         }));
     }
 
-  private:
-    std::coroutine_handle<> schedule_operation(Operation* operation) override
-    {
-        this->resume(std::move(operation->m_awaiting_coroutine));
+  public:
+    AsyncioScheduler(PyObjectHolder loop) : m_loop(std::move(loop)) {}
 
-        return std::noop_coroutine();
+    void resume(std::coroutine_handle<> handle) noexcept override
+    {
+        AsyncioScheduler::resume(m_loop, handle);
     }
 
+    [[nodiscard]] coroutines::Task<> schedule() override
+    {
+        co_await ContinueOnLoopOperation(m_loop);
+    }
+
+    [[nodiscard]] coroutines::Task<> yield() override
+    {
+        co_await ContinueOnLoopOperation(m_loop);
+    }
+
+  private:
     mrc::pymrc::PyHolder m_loop;
 };
 

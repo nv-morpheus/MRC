@@ -115,7 +115,6 @@ add_library(libmrc
   src/public/core/logging.cpp
   src/public/core/thread.cpp
   src/public/coroutines/event.cpp
-  src/public/coroutines/scheduler.cpp
   src/public/coroutines/sync_wait.cpp
   src/public/coroutines/task_container.cpp
   src/public/coroutines/thread_local_context.cpp
