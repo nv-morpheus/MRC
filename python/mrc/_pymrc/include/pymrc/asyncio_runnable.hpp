@@ -104,47 +104,13 @@ class BoostFutureAwaitableOperation
 };
 
 template <typename T>
-class BoostFutureReader
-{
-  public:
-    template <typename FuncT>
-    BoostFutureReader(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
-    {}
-
-    coroutines::Task<mrc::channel::Status> async_read(T& value)
-    {
-        co_return co_await m_awaiter(std::ref(value));
-    }
-
-  private:
-    BoostFutureAwaitableOperation<mrc::channel::Status(T&)> m_awaiter;
-};
-
-template <typename T>
-class BoostFutureWriter
-{
-  public:
-    template <typename FuncT>
-    BoostFutureWriter(FuncT&& fn) : m_awaiter(std::forward<FuncT>(fn))
-    {}
-
-    coroutines::Task<mrc::channel::Status> async_write(T&& value)
-    {
-        co_return co_await m_awaiter(std::move(value));
-    }
-
-  private:
-    BoostFutureAwaitableOperation<mrc::channel::Status(T&&)> m_awaiter;
-};
-
-template <typename T>
 class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
                               public mrc::node::ReadableAcceptor<T>,
                               public mrc::node::SinkChannelOwner<T>
 {
   protected:
     CoroutineRunnableSink() :
-      m_reader([this](T& value) {
+      m_read_async([this](T& value) {
           return this->get_readable_edge()->await_read(value);
       })
     {
@@ -152,13 +118,13 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
-    coroutines::Task<mrc::channel::Status> async_read(T& value)
+    coroutines::Task<mrc::channel::Status> read_async(T& value)
     {
-        co_return co_await m_reader.async_read(std::ref(value));
+        co_return co_await m_read_async(std::ref(value));
     }
 
   private:
-    BoostFutureReader<T> m_reader;
+    BoostFutureAwaitableOperation<mrc::channel::Status(T&)> m_read_async;
 };
 
 template <typename T>
@@ -168,7 +134,7 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
 {
   protected:
     CoroutineRunnableSource() :
-      m_writer([this](T&& value) {
+      m_write_async([this](T&& value) {
           return this->get_writable_edge()->await_write(std::move(value));
       })
     {
@@ -176,13 +142,13 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
-    coroutines::Task<mrc::channel::Status> async_write(T&& value)
+    coroutines::Task<mrc::channel::Status> write_async(T&& value)
     {
-        co_return co_await m_writer.async_write(std::move(value));
+        co_return co_await m_write_async(std::move(value));
     }
 
   private:
-    BoostFutureWriter<T> m_writer;
+    BoostFutureAwaitableOperation<mrc::channel::Status(T&&)> m_write_async;
 };
 
 template <typename InputT, typename OutputT>
@@ -245,7 +211,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
     {
         InputT data;
 
-        auto read_status = co_await this->async_read(data);
+        auto read_status = co_await this->read_async(data);
 
         if (read_status != mrc::channel::Status::success)
         {
@@ -289,7 +255,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT&& value,
             // Weird bug, cant directly move the value into the async_write call
             auto data = std::move(*iter);
 
-            co_await this->async_write(std::move(data));
+            co_await this->write_async(std::move(data));
 
             // Advance the iterator
             co_await ++iter;
