@@ -143,7 +143,10 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
                               public mrc::node::SinkChannelOwner<T>
 {
   protected:
-    CoroutineRunnableSink()
+    CoroutineRunnableSink() :
+      m_reader([this](T& value) {
+          return this->get_readable_edge()->await_read(value);
+      })
     {
         // Set the default channel
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
@@ -151,16 +154,12 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
 
     auto build_readable_generator(std::stop_token stop_token) -> mrc::coroutines::AsyncGenerator<T>
     {
-        auto read_awaiter = BoostFutureReader<T>([this](T& value) {
-            return this->get_readable_edge()->await_read(value);
-        });
-
         while (!stop_token.stop_requested())
         {
             T value;
 
             // Pull a message off of the upstream channel
-            auto status = co_await read_awaiter.async_read(std::ref(value));
+            auto status = co_await m_reader.async_read(std::ref(value));
 
             if (status != mrc::channel::Status::success)
             {
@@ -172,6 +171,9 @@ class CoroutineRunnableSink : public mrc::node::WritableProvider<T>,
 
         co_return;
     }
+
+  private:
+    BoostFutureReader<T> m_reader;
 };
 
 template <typename T>
@@ -184,25 +186,19 @@ class CoroutineRunnableSource : public mrc::node::WritableAcceptor<T>,
     {
         // Set the default channel
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
-    }
 
-    // auto build_readable_generator(std::stop_token stop_token)
-    //     -> mrc::coroutines::AsyncGenerator<mrc::coroutines::detail::VoidValue>
-    // {
-    //     while (!stop_token.stop_requested())
-    //     {
-    //         co_yield mrc::coroutines::detail::VoidValue{};
-    //     }
-
-    //     co_return;
-    // }
-
-    auto build_writable_receiver() -> std::shared_ptr<BoostFutureWriter<T>>
-    {
-        return std::make_shared<BoostFutureWriter<T>>([this](T&& value) {
+        m_writer = std::make_shared<BoostFutureWriter<T>>([this](T&& value) {
             return this->get_writable_edge()->await_write(std::move(value));
         });
     }
+
+    auto get_writable_receiver() -> std::shared_ptr<BoostFutureWriter<T>>
+    {
+        return m_writer;
+    }
+
+  private:
+    std::shared_ptr<BoostFutureWriter<T>> m_writer;
 };
 
 template <typename InputT, typename OutputT>
@@ -257,7 +253,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 {
     // Get the generator and receiver
     auto input_generator = CoroutineRunnableSink<InputT>::build_readable_generator(m_stop_source.get_token());
-    auto output_receiver = CoroutineRunnableSource<OutputT>::build_writable_receiver();
+    auto output_receiver = CoroutineRunnableSource<OutputT>::get_writable_receiver();
 
     // Create the task buffer to limit the number of running tasks
     task_buffer_t task_buffer{{.capacity = m_concurrency}};
