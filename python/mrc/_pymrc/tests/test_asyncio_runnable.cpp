@@ -22,6 +22,8 @@
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include "mrc/coroutines/async_generator.hpp"
+#include "mrc/coroutines/sync_wait.hpp"
+#include "mrc/coroutines/task.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/options/engine_groups.hpp"
@@ -31,6 +33,7 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 
+#include <boost/fiber/operations.hpp>
 #include <boost/fiber/policy.hpp>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
@@ -44,6 +47,8 @@
 #include <atomic>
 #include <coroutine>
 #include <memory>
+#include <stdexcept>
+#include <stop_token>
 #include <string>
 #include <utility>
 
@@ -163,7 +168,7 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
     auto options = std::make_shared<mrc::Options>();
     options->topology().user_cpuset("0");
     // AsyncioRunnable only works with the Thread engine due to asyncio loops being thread-specific.
-    options->engine_factories().set_default_engine_type(runnable::EngineType::Thread);
+    options->engine_factories().set_default_engine_type(mrc::runnable::EngineType::Thread);
 
     pymrc::Executor exec{options};
     exec.register_pipeline(p);
@@ -172,4 +177,56 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
     exec.join();
 
     EXPECT_EQ(counter, 60);
+}
+
+template <typename OperationT>
+auto run_operation(OperationT& operation) -> mrc::coroutines::Task<int>
+{
+    auto stop_source = std::stop_source();
+
+    auto coro = [](auto& operation, auto stop_source) -> mrc::coroutines::Task<int> {
+        try
+        {
+            auto value = co_await operation();
+            stop_source.request_stop();
+            co_return value;
+        } catch (...)
+        {
+            stop_source.request_stop();
+            throw;
+        }
+    }(operation, stop_source);
+
+    coro.resume();
+
+    while (not stop_source.stop_requested())
+    {
+        if (boost::fibers::has_ready_fibers())
+        {
+            boost::this_fiber::yield();
+        }
+    }
+
+    co_return co_await coro;
+}
+
+TEST_F(TestAsyncioRunnable, BoostFutureAwaitableOperationCanReturn)
+{
+    auto operation = mrc::pymrc::BoostFutureAwaitableOperation<int()>([]() {
+        using namespace std::chrono_literals;
+        boost::this_fiber::sleep_for(10ms);
+        return 5;
+    });
+
+    ASSERT_EQ(mrc::coroutines::sync_wait(run_operation(operation)), 5);
+}
+
+TEST_F(TestAsyncioRunnable, BoostFutureAwaitableOperationCanThrow)
+{
+    auto operation = mrc::pymrc::BoostFutureAwaitableOperation<int()>([]() {
+        throw std::runtime_error("oops");
+        return 5;
+    });
+
+    ASSERT_THROW(mrc::coroutines::sync_wait(run_operation(operation)), std::runtime_error);
 }

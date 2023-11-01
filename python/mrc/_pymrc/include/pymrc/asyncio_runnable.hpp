@@ -91,7 +91,7 @@ class BoostFutureAwaitableOperation
                 std::move(continuation));
         }
 
-        auto await_resume() noexcept
+        auto await_resume()
         {
             return m_future.get();
         }
