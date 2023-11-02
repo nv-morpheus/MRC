@@ -115,7 +115,6 @@ add_library(libmrc
   src/public/core/logging.cpp
   src/public/core/thread.cpp
   src/public/coroutines/event.cpp
-  src/public/coroutines/scheduler.cpp
   src/public/coroutines/sync_wait.cpp
   src/public/coroutines/task_container.cpp
   src/public/coroutines/thread_local_context.cpp
@@ -124,6 +123,7 @@ add_library(libmrc
   src/public/cuda/sync.cpp
   src/public/edge/edge_adapter_registry.cpp
   src/public/edge/edge_builder.cpp
+  src/public/exceptions/exception_catcher.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/memory/codable/buffer.cpp

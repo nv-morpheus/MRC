@@ -21,6 +21,7 @@ add_subdirectory(coro)
 
 # Keep all source files sorted!!!
 add_executable(test_pymrc
+  test_asyncio_runnable.cpp
   test_codable_pyobject.cpp
   test_executor.cpp
   test_main.cpp
