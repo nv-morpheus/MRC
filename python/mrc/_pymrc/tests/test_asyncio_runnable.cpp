@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-#include "test_pymrc.hpp"
-
 #include "pymrc/asyncio_runnable.hpp"
 #include "pymrc/coro.hpp"
 #include "pymrc/executor.hpp"
