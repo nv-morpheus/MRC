@@ -74,16 +74,26 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
   public:
     AsyncioScheduler(PyObjectHolder loop) : m_loop(std::move(loop)) {}
 
+
+    /**
+     * @brief Resumes a coroutine on the scheduler's Asyncio event loop
+     */
     void resume(std::coroutine_handle<> handle) noexcept override
     {
         AsyncioScheduler::resume(m_loop, handle);
     }
 
+    /**
+     * @brief Suspends the current function and resumes it on the scheduler's Asyncio event loop
+    */
     [[nodiscard]] coroutines::Task<> schedule() override
     {
         co_await ContinueOnLoopOperation(m_loop);
     }
 
+    /**
+     * @brief Suspends the current function and resumes it on the scheduler's Asyncio event loop
+    */
     [[nodiscard]] coroutines::Task<> yield() override
     {
         co_await ContinueOnLoopOperation(m_loop);

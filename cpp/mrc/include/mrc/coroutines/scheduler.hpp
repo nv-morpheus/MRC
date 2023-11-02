@@ -35,9 +35,19 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
   public:
     virtual ~Scheduler() = default;
 
+    /**
+     * @brief Resumes a coroutine according to the scheduler's implementation.
+     */
     virtual void resume(std::coroutine_handle<> handle) noexcept = 0;
 
+    /**
+     * @brief Suspends the current function and resumes it according to the scheduler's implementation.
+    */
     [[nodiscard]] virtual Task<> schedule() = 0;
+
+    /**
+     * @brief Suspends the current function and resumes it according to the scheduler's implementation.
+    */
     [[nodiscard]] virtual Task<> yield()    = 0;
 };
 
