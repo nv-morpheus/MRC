@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "test_pymrc.hpp"
 #include "pymrc/asyncio_runnable.hpp"
 #include "pymrc/coro.hpp"
 #include "pymrc/executor.hpp"
@@ -37,6 +38,8 @@
 #include <boost/fiber/policy.hpp>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
+#include <chrono>
+#include <functional>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/gil.h>
@@ -57,41 +60,7 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 using namespace py::literals;
 
-class TestWithPythonInterpreter : public ::testing::Test
-{
-  public:
-    virtual void interpreter_setup() = 0;
-
-  protected:
-    void SetUp() override;
-
-    void TearDown() override;
-
-  private:
-    static bool m_initialized;
-};
-
-bool TestWithPythonInterpreter::m_initialized;
-
-void TestWithPythonInterpreter::SetUp()
-{
-    if (!m_initialized)
-    {
-        m_initialized = true;
-        pybind11::initialize_interpreter();
-        interpreter_setup();
-    }
-}
-
-void TestWithPythonInterpreter::TearDown() {}
-
-class __attribute__((visibility("default"))) TestAsyncioRunnable : public TestWithPythonInterpreter
-{
-    void interpreter_setup() override
-    {
-        pybind11::module_::import("mrc.core.coro");
-    }
-};
+PYMRC_TEST_CLASS(AsyncioRunnable);
 
 class PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
 {
@@ -124,6 +93,8 @@ class PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
 
 TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
 {
+    pybind11::module_::import("mrc.core.coro");
+
     py::object globals = py::globals();
     py::exec(
         R"(

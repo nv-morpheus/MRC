@@ -231,6 +231,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
         LOG(INFO) << "AsyncioRunnable::run() > Calling run_until_complete() on main_task()";
 
         loop.attr("run_until_complete")(std::move(py_awaitable));
+        loop.attr("close")();
     }
 
     // Need to drop the output edges
