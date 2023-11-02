@@ -122,6 +122,9 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
+    /**
+     * @brief Asynchronously reads a value from the sink's channel
+     */
     coroutines::Task<mrc::channel::Status> read_async(T& value)
     {
         co_return co_await m_read_async(std::ref(value));
@@ -149,6 +152,9 @@ class AsyncSource : public mrc::node::WritableAcceptor<T>,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
+    /**
+     * @brief Asynchronously writes a value to the source's channel
+     */
     coroutines::Task<mrc::channel::Status> write_async(T&& value)
     {
         co_return co_await m_write_async(std::move(value));
@@ -174,16 +180,33 @@ class AsyncioRunnable : public AsyncSink<InputT>,
     ~AsyncioRunnable() override = default;
 
   private:
+    /**
+     * @brief Runnable's entrypoint.
+     */
     void run(mrc::runnable::Context& ctx) override;
+
+    /**
+     * @brief Runnable's state control, for stopping from MRC.
+     */
     void on_state_update(const state_t& state) final;
 
+    /**
+     * @brief The top-level coroutine which is run while the asyncio event loop is running.
+     */
     coroutines::Task<> main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler);
 
+    /**
+     * @brief The per-value coroutine run asynchronously alongside other calls.
+     */
     coroutines::Task<> process_one(InputT value,
                                    task_buffer_t& task_buffer,
                                    std::shared_ptr<mrc::coroutines::Scheduler> on,
                                    ExceptionCatcher& catcher);
 
+    /**
+     * @brief Value's read from the sink's channel are fed to this function and yields from the
+     * resulting generator are written to the source's channel.
+     */
     virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value) = 0;
 
     std::stop_source m_stop_source;
