@@ -174,13 +174,22 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
     PyTaskToCppAwaitable(mrc::pymrc::PyObjectHolder&& task) : m_task(std::move(task))
     {
         pybind11::gil_scoped_acquire acquire;
-        if (pybind11::module_::import("inspect").attr("iscoroutine")(m_task).cast<bool>())
+
+        auto asyncio = pybind11::module_::import("asyncio");
+        auto inspect = pybind11::module_::import("inspect");
+
+        if (not asyncio.attr("isfuture")(m_task).cast<bool>())
         {
-            m_task = pybind11::module_::import("asyncio").attr("create_task")(m_task);
+            if (not asyncio.attr("iscoroutine")(m_task).cast<bool>())
+            {
+                throw std::runtime_error(MRC_CONCAT_STR("PyTaskToCppAwaitable expected task or coroutine but got " << pybind11::repr(m_task).cast<std::string>()));
+            }
+
+            m_task = asyncio.attr("create_task")(m_task);
         }
     }
 
-    static bool await_ready() noexcept  // NOLINT(readability-convert-member-functions-to-static)
+    static bool await_ready() noexcept
     {
         // Always suspend
         return false;

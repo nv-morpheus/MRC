@@ -168,6 +168,62 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
     EXPECT_EQ(counter, 60);
 }
 
+TEST_F(TestAsyncioRunnable, UseAsyncioGeneratorThrows)
+{
+    // pybind11::module_::import("mrc.core.coro");
+
+    py::object globals = py::globals();
+    py::exec(
+        R"(
+            async def fn(value):
+                yield value
+        )",
+        globals);
+
+    pymrc::PyObjectHolder fn = static_cast<py::object>(globals["fn"]);
+
+    ASSERT_FALSE(fn.is_none());
+
+    std::atomic<unsigned int> counter = 0;
+    pymrc::Pipeline p;
+
+    auto init = [&counter, &fn](mrc::segment::IBuilder& seg) {
+        auto src = seg.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            if (s.is_subscribed())
+            {
+                s.on_next(5);
+                s.on_next(10);
+            }
+
+            s.on_completed();
+        });
+
+        auto internal = seg.construct_object<PythonCallbackAsyncioRunnable>("internal", fn);
+
+        auto sink = seg.make_sink<int>("sink", [&counter](int x) {
+            counter.fetch_add(x, std::memory_order_relaxed);
+        });
+
+        seg.make_edge(src, internal);
+        seg.make_edge(internal, sink);
+    };
+
+    p.make_segment("seg1"s, init);
+    p.make_segment("seg2"s, init);
+
+    auto options = std::make_shared<mrc::Options>();
+    options->topology().user_cpuset("0");
+    // AsyncioRunnable only works with the Thread engine due to asyncio loops being thread-specific.
+    options->engine_factories().set_default_engine_type(mrc::runnable::EngineType::Thread);
+
+    pymrc::Executor exec{options};
+    exec.register_pipeline(p);
+
+    exec.start();
+
+    ASSERT_THROW(exec.join(), std::runtime_error);
+}
+
 TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
 {
     // pybind11::module_::import("mrc.core.coro");
@@ -220,9 +276,8 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
     exec.register_pipeline(p);
 
     exec.start();
-    exec.join();
 
-    EXPECT_EQ(counter, 60);
+    ASSERT_THROW(exec.join(), std::runtime_error);
 }
 
 template <typename OperationT>
