@@ -176,7 +176,6 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
         pybind11::gil_scoped_acquire acquire;
 
         auto asyncio = pybind11::module_::import("asyncio");
-        auto inspect = pybind11::module_::import("inspect");
 
         if (not asyncio.attr("isfuture")(m_task).cast<bool>())
         {
