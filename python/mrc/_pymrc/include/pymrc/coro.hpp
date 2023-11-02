@@ -182,7 +182,8 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
         {
             if (not asyncio.attr("iscoroutine")(m_task).cast<bool>())
             {
-                throw std::runtime_error(MRC_CONCAT_STR("PyTaskToCppAwaitable expected task or coroutine but got " << pybind11::repr(m_task).cast<std::string>()));
+                throw std::runtime_error(MRC_CONCAT_STR("PyTaskToCppAwaitable expected task or coroutine but got "
+                                                        << pybind11::repr(m_task).cast<std::string>()));
             }
 
             m_task = asyncio.attr("create_task")(m_task);
