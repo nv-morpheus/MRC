@@ -16,6 +16,7 @@
  */
 
 #include "test_pymrc.hpp"
+
 #include "pymrc/asyncio_runnable.hpp"
 #include "pymrc/coro.hpp"
 #include "pymrc/executor.hpp"
@@ -38,8 +39,6 @@
 #include <boost/fiber/policy.hpp>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
-#include <chrono>
-#include <functional>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/gil.h>
@@ -48,7 +47,9 @@
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
+#include <chrono>
 #include <coroutine>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <stop_token>
@@ -60,7 +61,26 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 using namespace py::literals;
 
-PYMRC_TEST_CLASS(AsyncioRunnable);
+class __attribute__((visibility("default"))) TestAsyncioRunnable : public ::testing::Test
+{
+  public:
+    static void SetUpTestSuite()
+    {
+        m_interpreter = std::make_unique<pybind11::scoped_interpreter>();
+        pybind11::gil_scoped_acquire acquire;
+        pybind11::module_::import("mrc.core.coro");
+    }
+
+    static void TearDownTestSuite()
+    {
+        m_interpreter.reset();
+    }
+
+  private:
+    static std::unique_ptr<pybind11::scoped_interpreter> m_interpreter;
+};
+
+std::unique_ptr<pybind11::scoped_interpreter> TestAsyncioRunnable::m_interpreter;
 
 class PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
 {
@@ -93,8 +113,6 @@ class PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
 
 TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
 {
-    pybind11::module_::import("mrc.core.coro");
-
     py::object globals = py::globals();
     py::exec(
         R"(
@@ -102,6 +120,63 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasks)
                 import asyncio
                 await asyncio.sleep(0)
                 return value * 2
+        )",
+        globals);
+
+    pymrc::PyObjectHolder fn = static_cast<py::object>(globals["fn"]);
+
+    ASSERT_FALSE(fn.is_none());
+
+    std::atomic<unsigned int> counter = 0;
+    pymrc::Pipeline p;
+
+    auto init = [&counter, &fn](mrc::segment::IBuilder& seg) {
+        auto src = seg.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            if (s.is_subscribed())
+            {
+                s.on_next(5);
+                s.on_next(10);
+            }
+
+            s.on_completed();
+        });
+
+        auto internal = seg.construct_object<PythonCallbackAsyncioRunnable>("internal", fn);
+
+        auto sink = seg.make_sink<int>("sink", [&counter](int x) {
+            counter.fetch_add(x, std::memory_order_relaxed);
+        });
+
+        seg.make_edge(src, internal);
+        seg.make_edge(internal, sink);
+    };
+
+    p.make_segment("seg1"s, init);
+    p.make_segment("seg2"s, init);
+
+    auto options = std::make_shared<mrc::Options>();
+    options->topology().user_cpuset("0");
+    // AsyncioRunnable only works with the Thread engine due to asyncio loops being thread-specific.
+    options->engine_factories().set_default_engine_type(mrc::runnable::EngineType::Thread);
+
+    pymrc::Executor exec{options};
+    exec.register_pipeline(p);
+
+    exec.start();
+    exec.join();
+
+    EXPECT_EQ(counter, 60);
+}
+
+TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
+{
+    // pybind11::module_::import("mrc.core.coro");
+
+    py::object globals = py::globals();
+    py::exec(
+        R"(
+            async def fn(value):
+                raise RuntimeError("oops")
         )",
         globals);
 

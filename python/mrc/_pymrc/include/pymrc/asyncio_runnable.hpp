@@ -217,6 +217,8 @@ class AsyncioRunnable : public AsyncSink<InputT>,
 template <typename InputT, typename OutputT>
 void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 {
+    std::exception_ptr exception;
+
     {
         py::gil_scoped_acquire gil;
 
@@ -253,13 +255,25 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 
         LOG(INFO) << "AsyncioRunnable::run() > Calling run_until_complete() on main_task()";
 
-        loop.attr("run_until_complete")(std::move(py_awaitable));
+        try
+        {
+            loop.attr("run_until_complete")(std::move(py_awaitable));
+        } catch (...)
+        {
+            exception = std::current_exception();
+        }
+
         loop.attr("close")();
     }
 
     // Need to drop the output edges
     mrc::node::SourceProperties<OutputT>::release_edge_connection();
     mrc::node::SinkProperties<InputT>::release_edge_connection();
+
+    if (exception != nullptr)
+    {
+        std::rethrow_exception(exception);
+    }
 }
 
 template <typename InputT, typename OutputT>
@@ -345,7 +359,6 @@ void AsyncioRunnable<InputT, OutputT>::on_state_update(const state_t& state)
         break;
 
     case state_t::Kill:
-
         m_stop_source.request_stop();
         break;
 
