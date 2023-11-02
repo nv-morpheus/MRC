@@ -65,7 +65,7 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
     static void resume(PyObjectHolder loop, std::coroutine_handle<> handle) noexcept
     {
         pybind11::gil_scoped_acquire acquire;
-        loop.attr("call_soon_threadsafe")(pybind11::cpp_function([handle]() {  //
+        loop.attr("call_soon_threadsafe")(pybind11::cpp_function([handle]() {
             pybind11::gil_scoped_release release;
             handle.resume();
         }));
@@ -73,7 +73,6 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
   public:
     AsyncioScheduler(PyObjectHolder loop) : m_loop(std::move(loop)) {}
-
 
     /**
      * @brief Resumes a coroutine on the scheduler's Asyncio event loop
