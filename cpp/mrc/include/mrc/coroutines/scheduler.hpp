@@ -48,7 +48,7 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     /**
      * @brief Suspends the current function and resumes it according to the scheduler's implementation.
      */
-    [[nodiscard]] virtual Task<> yield()    = 0;
+    [[nodiscard]] virtual Task<> yield() = 0;
 };
 
 }  // namespace mrc::coroutines
