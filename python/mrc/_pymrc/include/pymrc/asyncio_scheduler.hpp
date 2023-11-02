@@ -85,7 +85,7 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
     /**
      * @brief Suspends the current function and resumes it on the scheduler's Asyncio event loop
-    */
+     */
     [[nodiscard]] coroutines::Task<> schedule() override
     {
         co_await ContinueOnLoopOperation(m_loop);
@@ -93,7 +93,7 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
 
     /**
      * @brief Suspends the current function and resumes it on the scheduler's Asyncio event loop
-    */
+     */
     [[nodiscard]] coroutines::Task<> yield() override
     {
         co_await ContinueOnLoopOperation(m_loop);
