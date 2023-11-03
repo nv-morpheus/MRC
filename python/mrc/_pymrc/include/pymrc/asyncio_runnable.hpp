@@ -176,7 +176,6 @@ class AsyncioRunnable : public AsyncSink<InputT>,
     using task_buffer_t = mrc::coroutines::ClosableRingBuffer<size_t>;
 
   public:
-    AsyncioRunnable(size_t concurrency = 8) : m_concurrency(concurrency){};
     ~AsyncioRunnable() override = default;
 
   private:
@@ -199,7 +198,6 @@ class AsyncioRunnable : public AsyncSink<InputT>,
      * @brief The per-value coroutine run asynchronously alongside other calls.
      */
     coroutines::Task<> process_one(InputT value,
-                                   task_buffer_t& task_buffer,
                                    std::shared_ptr<mrc::coroutines::Scheduler> on,
                                    ExceptionCatcher& catcher);
 
@@ -211,7 +209,11 @@ class AsyncioRunnable : public AsyncSink<InputT>,
 
     std::stop_source m_stop_source;
 
-    size_t m_concurrency{8};
+    /**
+     * @brief A semaphore used to control the number of outstanding operations. Acquire one before
+     * a beginning a task, and release it before finishing.
+    */
+    std::counting_semaphore<8> m_task_tickets{8};
 };
 
 template <typename InputT, typename OutputT>
@@ -279,8 +281,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    // Create the task buffer to limit the number of running tasks
-    task_buffer_t task_buffer{{.capacity = m_concurrency}};
+    co_await scheduler->yield();
 
     coroutines::TaskContainer outstanding_tasks(scheduler);
 
@@ -288,6 +289,8 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
     while (not m_stop_source.stop_requested() and not catcher.has_exception())
     {
+        m_task_tickets.acquire();
+
         InputT data;
 
         auto read_status = co_await this->read_async(data);
@@ -297,17 +300,8 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
             break;
         }
 
-        // Wait for an available slot in the task buffer
-        co_await task_buffer.write(0);
-
-        outstanding_tasks.start(this->process_one(std::move(data), task_buffer, scheduler, catcher));
+        outstanding_tasks.start(this->process_one(std::move(data), scheduler, catcher));
     }
-
-    // Close the buffer
-    task_buffer.close();
-
-    // Now block until all tasks are complete
-    co_await task_buffer.completed();
 
     co_await outstanding_tasks.garbage_collect_and_yield_until_empty();
 
@@ -316,7 +310,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
-                                                                 task_buffer_t& task_buffer,
                                                                  std::shared_ptr<mrc::coroutines::Scheduler> on,
                                                                  ExceptionCatcher& catcher)
 {
@@ -344,8 +337,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
         catcher.push_exception(std::current_exception());
     }
 
-    // Return the slot to the task buffer
-    co_await task_buffer.read();
+    m_task_tickets.release();
 }
 
 template <typename InputT, typename OutputT>
