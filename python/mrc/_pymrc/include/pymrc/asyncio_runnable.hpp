@@ -281,8 +281,6 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    co_await scheduler->yield();
-
     coroutines::TaskContainer outstanding_tasks(scheduler);
 
     ExceptionCatcher catcher{};
