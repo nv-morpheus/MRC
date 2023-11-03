@@ -211,7 +211,7 @@ class AsyncioRunnable : public AsyncSink<InputT>,
 
     /**
      * @brief A semaphore used to control the number of outstanding operations. Acquire one before
-     * a beginning a task, and release it before finishing.
+     * beginning a task, and release it when finished.
     */
     std::counting_semaphore<8> m_task_tickets{8};
 };
