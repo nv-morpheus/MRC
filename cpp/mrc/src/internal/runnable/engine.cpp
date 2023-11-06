@@ -17,23 +17,16 @@
 
 #include "internal/runnable/engine.hpp"
 
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for Future
 
-#include <glog/logging.h>
-
-#include <mutex>
-#include <ostream>
-#include <utility>
+#include <mutex>    // for mutex, lock_guard
+#include <utility>  // for move
 
 namespace mrc::runnable {
 
 Future<void> Engine::launch_task(std::function<void()> task)
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    if (m_launched)
-    {
-        LOG(FATAL) << "detected attempted reuse of a runnable::Engine; this is a fatal error";
-    }
     m_launched = true;
     return do_launch_task(std::move(task));
 }

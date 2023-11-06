@@ -28,12 +28,9 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/node/rx_sink_base.hpp"
-#include "mrc/node/rx_source_base.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/types.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -44,7 +41,6 @@
 #include <exception>
 #include <fstream>
 #include <functional>
-#include <future>
 #include <iterator>
 #include <map>
 #include <stdexcept>
@@ -52,7 +48,6 @@
 #include <type_traits>
 #include <typeindex>
 #include <utility>
-#include <vector>
 
 // IWYU thinks we need array for py::print
 // IWYU pragma: no_include <array>
@@ -390,7 +385,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::seg
                                                                         const std::string& name,
                                                                         pybind11::args operators)
 {
-    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    // auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    auto node = self.make_node_explicit<PythonNode<PyHolder, PyHolder>>(name);
 
     node->object().make_stream(
         [operators = PyObjectHolder(std::move(operators))](const PyObjectObservable& input) -> PyObjectObservable {
@@ -412,7 +408,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
         "make_node_full(name, sub_fn) is deprecated and will be removed in a future version. Use "
         "make_node(name, mrc.core.operators.build(sub_fn)) instead.");
 
-    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    // auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    auto node = self.make_node_explicit<PythonNode<PyHolder, PyHolder>>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pymrc::PyObjectSubscriber output) {

@@ -32,6 +32,9 @@ class IExecutor;
 }
 
 namespace mrc::pymrc {
+
+std::function<void()> create_gil_initializer();
+
 class Pipeline;
 
 // Export everything in the mrc::pymrc namespace by default since we compile with -fvisibility=hidden

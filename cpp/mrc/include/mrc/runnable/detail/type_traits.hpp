@@ -85,16 +85,10 @@ static auto unwrap_context(l4_concept c, ThreadContext<T>& t)
     return std::make_pair(self<ctx_thread>{}, self<T>{});
 }
 
-static auto unwrap_context(l2_concept c, Context& t)
-{
-    return std::make_pair(self<Context>{}, self<Context>{});
-}
-
 template <typename T>
-static error unwrap_context(error e, T& t)
+static auto unwrap_context(l2_concept c, T& t)
 {
-    static_assert(invalid_concept<T>::error, "object is not a Context");
-    return {};
+    return std::make_pair(self<T>{}, self<T>{});
 }
 
 template <typename T>

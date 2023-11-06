@@ -248,7 +248,7 @@ class SpecializedRunner : public Runner
         auto resources = std::make_shared<typename WrappedContextT::resource_t>(size);
         for (std::size_t i = 0; i < size; ++i)
         {
-            contexts.push_back(std::make_shared<WrappedContextT>(resources, i, size, std::forward<ArgsT>(args)...));
+            contexts.push_back(std::make_shared<WrappedContextT>(resources, i, std::forward<ArgsT>(args)...));
         }
         return std::move(contexts);
     }

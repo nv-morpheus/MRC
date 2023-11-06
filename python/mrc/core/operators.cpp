@@ -28,7 +28,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <array>
 #include <sstream>
 
 namespace mrc::pymrc {
@@ -55,7 +54,9 @@ PYBIND11_MODULE(operators, py_mod)
     py_mod.def("build", &OperatorsProxy::build);
     py_mod.def("filter", &OperatorsProxy::filter);
     py_mod.def("flatten", &OperatorsProxy::flatten);
+    py_mod.def("flat_map_async", &OperatorsProxy::flat_map_async);
     py_mod.def("map", &OperatorsProxy::map);
+    py_mod.def("map_async", &OperatorsProxy::map_async);
     py_mod.def("on_completed", &OperatorsProxy::on_completed);
     py_mod.def("pairwise", &OperatorsProxy::pairwise);
     py_mod.def("to_list", &OperatorsProxy::to_list);
