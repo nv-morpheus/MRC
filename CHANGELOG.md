@@ -1,3 +1,37 @@
+# MRC 23.11.00 (30 Nov 2023)
+
+## 🐛 Bug Fixes
+
+- Use a traditional semaphore in AsyncioRunnable ([#412](https://github.com/nv-morpheus/MRC/pull/412)) [@cwharris](https://github.com/cwharris)
+- Fix libhwloc &amp; stubgen versions to match dev yaml ([#405](https://github.com/nv-morpheus/MRC/pull/405)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Update boost versions to match version used in dev env ([#404](https://github.com/nv-morpheus/MRC/pull/404)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Fix EdgeHolder from incorrectly reporting an active connection ([#402](https://github.com/nv-morpheus/MRC/pull/402)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Safe handling of control plane promises &amp; fix CI ([#391](https://github.com/nv-morpheus/MRC/pull/391)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Revert boost upgrade, and update clang to v16 ([#382](https://github.com/nv-morpheus/MRC/pull/382)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Fixing an issue with `update-versions.sh` which always blocked CI ([#377](https://github.com/nv-morpheus/MRC/pull/377)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Add test for  gc being invoked in a thread finalizer ([#365](https://github.com/nv-morpheus/MRC/pull/365)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Adopt patched pybind11 ([#364](https://github.com/nv-morpheus/MRC/pull/364)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 📖 Documentation
+
+- Add missing flags to docker command to mount the working dir and set -cap-add=sys_nice ([#383](https://github.com/nv-morpheus/MRC/pull/383)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Make Quick Start Guide not use `make_node_full` ([#376](https://github.com/nv-morpheus/MRC/pull/376)) [@cwharris](https://github.com/cwharris)
+
+## 🚀 New Features
+
+- Add AsyncioRunnable ([#411](https://github.com/nv-morpheus/MRC/pull/411)) [@cwharris](https://github.com/cwharris)
+- Adding more coroutine components to support async generators and task containers ([#408](https://github.com/nv-morpheus/MRC/pull/408)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Update ObservableProxy::pipe to support any number of operators ([#387](https://github.com/nv-morpheus/MRC/pull/387)) [@cwharris](https://github.com/cwharris)
+- Updates for MRC/Morpheus to build in the same RAPIDS devcontainer environment ([#375](https://github.com/nv-morpheus/MRC/pull/375)) [@cwharris](https://github.com/cwharris)
+
+## 🛠️ Improvements
+
+- Move Pycoro from Morpheus to MRC ([#409](https://github.com/nv-morpheus/MRC/pull/409)) [@cwharris](https://github.com/cwharris)
+- update rapidsai/ci to rapidsai/ci-conda ([#396](https://github.com/nv-morpheus/MRC/pull/396)) [@AyodeAwe](https://github.com/AyodeAwe)
+- Add local CI scripts &amp; rebase docker image ([#394](https://github.com/nv-morpheus/MRC/pull/394)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Use `copy-pr-bot` ([#369](https://github.com/nv-morpheus/MRC/pull/369)) [@ajschmidt8](https://github.com/ajschmidt8)
+- Update Versions for v23.11.00 ([#357](https://github.com/nv-morpheus/MRC/pull/357)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+
 # MRC 23.07.00 (19 Jul 2023)
 
 ## 🚨 Breaking Changes
