@@ -35,6 +35,10 @@ class Runner;
 }  // namespace mrc::runnable
 
 namespace mrc::rpc {
+class PromiseHandler;
+}  // namespace mrc::rpc
+
+namespace mrc::rpc {
 
 class Server : public Service
 {
@@ -61,7 +65,7 @@ class Server : public Service
     std::shared_ptr<grpc::ServerCompletionQueue> m_cq;
     std::unique_ptr<grpc::Server> m_server;
     std::unique_ptr<mrc::runnable::Runner> m_progress_engine;
-    std::unique_ptr<mrc::runnable::Runner> m_event_hander;
+    std::unique_ptr<mrc::rpc::PromiseHandler> m_event_hander;
 };
 
 }  // namespace mrc::rpc

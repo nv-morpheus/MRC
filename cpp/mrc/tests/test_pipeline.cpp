@@ -16,7 +16,9 @@
  */
 
 #include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_source_base.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/executor.hpp"
@@ -33,12 +35,9 @@
 
 #include <atomic>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <ostream>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc {
 

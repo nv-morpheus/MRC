@@ -20,13 +20,11 @@
 #include "mrc/modules/module_registry_util.hpp"
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/version.hpp"
 
 #include <gtest/gtest.h>
+#include <rxcpp/rx.hpp>
 
-#include <map>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>

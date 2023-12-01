@@ -39,7 +39,6 @@
 #include "mrc/runtime/remote_descriptor_handle.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <gtest/gtest.h>
 

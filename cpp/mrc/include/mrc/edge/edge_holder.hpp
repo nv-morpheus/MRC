@@ -152,7 +152,6 @@ class EdgeHolder
 
     void release_edge_connection()
     {
-        m_owned_edge_lifetime.reset();
         m_connected_edge.reset();
     }
 

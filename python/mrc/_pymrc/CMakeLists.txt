@@ -18,6 +18,7 @@ find_package(prometheus-cpp REQUIRED)
 
 # Keep all source files sorted!!!
 add_library(pymrc
+  src/coro.cpp
   src/executor.cpp
   src/logging.cpp
   src/module_registry.cpp
@@ -49,8 +50,9 @@ target_link_libraries(pymrc
   PUBLIC
     ${PROJECT_NAME}::libmrc
     ${Python_LIBRARIES}
-    prometheus-cpp::core
     pybind11::pybind11
+  PRIVATE
+    prometheus-cpp::core
 )
 
 target_include_directories(pymrc

@@ -17,6 +17,7 @@
 
 #include "internal/system/partition_provider.hpp"
 
+#include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 

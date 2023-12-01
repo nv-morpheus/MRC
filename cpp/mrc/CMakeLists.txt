@@ -38,6 +38,7 @@ add_library(libmrc
   src/internal/data_plane/server.cpp
   src/internal/executor/executor_definition.cpp
   src/internal/grpc/progress_engine.cpp
+  src/internal/grpc/promise_handler.cpp
   src/internal/grpc/server.cpp
   src/internal/memory/device_resources.cpp
   src/internal/memory/host_resources.cpp
@@ -115,12 +116,14 @@ add_library(libmrc
   src/public/core/thread.cpp
   src/public/coroutines/event.cpp
   src/public/coroutines/sync_wait.cpp
+  src/public/coroutines/task_container.cpp
   src/public/coroutines/thread_local_context.cpp
   src/public/coroutines/thread_pool.cpp
   src/public/cuda/device_guard.cpp
   src/public/cuda/sync.cpp
   src/public/edge/edge_adapter_registry.cpp
   src/public/edge/edge_builder.cpp
+  src/public/exceptions/exception_catcher.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
   src/public/memory/codable/buffer.cpp
