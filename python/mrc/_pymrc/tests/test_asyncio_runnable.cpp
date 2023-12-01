@@ -80,7 +80,7 @@ class __attribute__((visibility("default"))) TestAsyncioRunnable : public ::test
 
 std::unique_ptr<pybind11::scoped_interpreter> TestAsyncioRunnable::m_interpreter;
 
-class PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
+class __attribute__((visibility("default"))) PythonCallbackAsyncioRunnable : public pymrc::AsyncioRunnable<int, int>
 {
   public:
     PythonCallbackAsyncioRunnable(pymrc::PyObjectHolder operation) : m_operation(std::move(operation)) {}

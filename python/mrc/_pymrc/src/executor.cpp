@@ -25,7 +25,6 @@
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/async.hpp>
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/future/future_status.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
