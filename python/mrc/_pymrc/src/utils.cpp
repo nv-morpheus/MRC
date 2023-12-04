@@ -27,6 +27,7 @@
 #include <pyerrors.h>
 #include <warnings.h>
 
+#include <regex>
 #include <string>
 #include <utility>
 
@@ -80,6 +81,7 @@ py::object cast_from_json(const json& source)
     {
         return py::none();
     }
+
     if (source.is_array())
     {
         py::list list_;
@@ -94,18 +96,22 @@ py::object cast_from_json(const json& source)
     {
         return py::bool_(source.get<bool>());
     }
+
     if (source.is_number_float())
     {
         return py::float_(source.get<double>());
     }
+
     if (source.is_number_integer())
     {
         return py::int_(source.get<json::number_integer_t>());
     }
+
     if (source.is_number_unsigned())
     {
         return py::int_(source.get<json::number_unsigned_t>());  // std::size_t ?
     }
+
     if (source.is_object())
     {
         py::dict dict;
@@ -116,9 +122,27 @@ py::object cast_from_json(const json& source)
 
         return std::move(dict);
     }
+
     if (source.is_string())
     {
-        return py::str(source.get<std::string>());
+        std::string str_val = source.get<std::string>();
+        std::regex uuid_regex("cache_object:([0-9a-fA-F-]{36})");
+        std::smatch uuid_match;
+
+        if (std::regex_search(str_val, uuid_match, uuid_regex))
+        {
+            std::string uuid = uuid_match[1];
+
+            auto& cache      = PythonObjectCache::get_handle();
+            if (cache.contains(uuid))
+            {
+                return cache.get(uuid);
+            } else {
+                throw std::runtime_error("Cached object id not found in cache: " + uuid);
+            }
+        }
+
+        return py::str(str_val);
     }
 
     return py::none();
