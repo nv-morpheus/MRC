@@ -17,9 +17,14 @@
 
 #include "pymrc/utils.hpp"
 
+<<<<<<< HEAD
 #include "pymrc/utilities/acquire_gil.hpp"
 
 #include <glog/logging.h>
+    =======
+#include "pymrc/utilities/object_cache.hpp"
+
+    >>>>>>> 1c95d226 (Utils updates)
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -32,189 +37,208 @@
 #include <string>
 #include <utility>
 
-namespace mrc::pymrc {
-
-namespace py = pybind11;
-
-using nlohmann::json;
-
-void import_module_object(py::module_& dest, const std::string& source, const std::string& member)
+    namespace mrc::pymrc
 {
-    dest.attr(member.c_str()) = py::module_::import(source.c_str()).attr(member.c_str());
-}
+    namespace py = pybind11;
 
-void import_module_object(py::module_& dest, const py::module_& mod)
-{
-    // Get the module name and save in __dict__
-    auto mod_name               = mod.attr("__name__")().cast<std::string>();
-    dest.attr(mod_name.c_str()) = mod;
-}
+    using nlohmann::json;
 
-void import(pybind11::module_& dest, const std::string& mod)
-{
-    dest.attr(mod.c_str()) = py::module_::import(mod.c_str());
-}
-
-void from_import(pybind11::module_& dest, const std::string& mod, const std::string& attr)
-{
-    from_import_as(dest, mod, attr, attr);
-}
-
-void from_import_as(py::module_& dest, const std::string& from, const std::string& import, const std::string& as)
-{
-    dest.attr(as.c_str()) = py::module_::import(from.c_str()).attr(import.c_str());
-}
-
-const std::type_info* cpptype_info_from_object(py::object& obj)
-{
-    py::detail::type_info* tinfo = py::detail::get_type_info((PyTypeObject*)obj.ptr());
-    if (tinfo != nullptr)
+    void import_module_object(py::module_ & dest, const std::string& source, const std::string& member)
     {
-        return tinfo->cpptype;
+        dest.attr(member.c_str()) = py::module_::import(source.c_str()).attr(member.c_str());
     }
 
-    return nullptr;
-}
-
-std::string get_py_type_name(const pybind11::object& obj)
-{
-    if (!obj)
+    void import_module_object(py::module_ & dest, const py::module_& mod)
     {
-        // calling py::type::of on a null object will trigger an abort
-        return "";
+        // Get the module name and save in __dict__
+        auto mod_name               = mod.attr("__name__")().cast<std::string>();
+        dest.attr(mod_name.c_str()) = mod;
     }
 
-    const auto py_type = py::type::of(obj);
-    return py_type.attr("__name__").cast<std::string>();
-}
-
-py::object cast_from_json(const json& source)
-{
-    if (source.is_null())
+    void import(pybind11::module_ & dest, const std::string& mod)
     {
+        dest.attr(mod.c_str()) = py::module_::import(mod.c_str());
+    }
+
+    void from_import(pybind11::module_ & dest, const std::string& mod, const std::string& attr)
+    {
+        from_import_as(dest, mod, attr, attr);
+    }
+
+    void from_import_as(py::module_ & dest, const std::string& from, const std::string& import, const std::string& as)
+    {
+        dest.attr(as.c_str()) = py::module_::import(from.c_str()).attr(import.c_str());
+    }
+
+    const std::type_info* cpptype_info_from_object(py::object & obj)
+    {
+        py::detail::type_info* tinfo = py::detail::get_type_info((PyTypeObject*)obj.ptr());
+        if (tinfo != nullptr)
+        {
+            return tinfo->cpptype;
+        }
+
+        return nullptr;
+    }
+
+    std::string get_py_type_name(const pybind11::object& obj)
+    {
+        if (!obj)
+        {
+            // calling py::type::of on a null object will trigger an abort
+            return "";
+        }
+
+        const auto py_type = py::type::of(obj);
+        return py_type.attr("__name__").cast<std::string>();
+    }
+
+    py::object cast_from_json(const json& source)
+    {
+        if (source.is_null())
+        {
+            return py::none();
+        }
+        if (source.is_array())
+        {
+            py::list list_;
+            for (const auto& element : source)
+            {
+                list_.append(cast_from_json(element));
+            }
+            return std::move(list_);
+        }
+
+        if (source.is_boolean())
+        {
+            return py::bool_(source.get<bool>());
+        }
+        if (source.is_number_float())
+        {
+            return py::float_(source.get<double>());
+        }
+        if (source.is_number_integer())
+        {
+            return py::int_(source.get<json::number_integer_t>());
+        }
+        if (source.is_number_unsigned())
+        {
+            return py::int_(source.get<json::number_unsigned_t>());  // std::size_t ?
+        }
+        if (source.is_object())
+        {
+            py::dict dict;
+            for (const auto& it : source.items())
+            {
+                dict[py::str(it.key())] = cast_from_json(it.value());
+            }
+
+            return std::move(dict);
+        }
+        if (source.is_string())
+        {
+            return py::str(source.get<std::string>());
+        }
+
         return py::none();
-    }
-    if (source.is_array())
-    {
-        py::list list_;
-        for (const auto& element : source)
-        {
-            list_.append(cast_from_json(element));
-        }
-        return std::move(list_);
+        // throw std::runtime_error("Unsupported conversion type.");
     }
 
-    if (source.is_boolean())
+    json cast_from_pyobject_impl(const py::object& source, const std::string& parent_path = "")
     {
-        return py::bool_(source.get<bool>());
-    }
-    if (source.is_number_float())
-    {
-        return py::float_(source.get<double>());
-    }
-    if (source.is_number_integer())
-    {
-        return py::int_(source.get<json::number_integer_t>());
-    }
-    if (source.is_number_unsigned())
-    {
-        return py::int_(source.get<json::number_unsigned_t>());  // std::size_t ?
-    }
-    if (source.is_object())
-    {
-        py::dict dict;
-        for (const auto& it : source.items())
+        // Dont return via initializer list with JSON. It performs type deduction and gives different results
+        // NOLINTBEGIN(modernize-return-braced-init-list)
+        if (source.is_none())
         {
-            dict[py::str(it.key())] = cast_from_json(it.value());
+            return json();
         }
 
-        return std::move(dict);
-    }
-    if (source.is_string())
-    {
-        return py::str(source.get<std::string>());
-    }
-
-    return py::none();
-    // throw std::runtime_error("Unsupported conversion type.");
-}
-
-json cast_from_pyobject_impl(const py::object& source, const std::string& parent_path = "")
-{
-    // Dont return via initializer list with JSON. It performs type deduction and gives different results
-    // NOLINTBEGIN(modernize-return-braced-init-list)
-    if (source.is_none())
-    {
-        return json();
-    }
-    if (py::isinstance<py::dict>(source))
-    {
-        const auto py_dict = source.cast<py::dict>();
-        auto json_obj      = json::object();
-        for (const auto& p : py_dict)
+        if (py::isinstance<py::dict>(source))
         {
-            std::string key{p.first.cast<std::string>()};
-            std::string path{parent_path + "/" + key};
-            json_obj[key] = cast_from_pyobject_impl(p.second.cast<py::object>(), path);
+            const auto py_dict = source.cast<py::dict>();
+            auto json_obj      = json::object();
+            for (const auto& p : py_dict)
+            {
+                std::string key{p.first.cast<std::string>()};
+                std::string path{parent_path + "/" + key};
+                json_obj[key] = cast_from_pyobject_impl(p.second.cast<py::object>(), path);
+            }
+
+            return json_obj;
         }
 
-        return json_obj;
-    }
-    if (py::isinstance<py::list>(source) || py::isinstance<py::tuple>(source))
-    {
-        const auto py_list = source.cast<py::list>();
-        auto json_arr      = json::array();
-        for (const auto& p : py_list)
+        if (py::isinstance<py::list>(source) || py::isinstance<py::tuple>(source))
         {
-            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), parent_path));
+            const auto py_list = source.cast<py::list>();
+            auto json_arr      = json::array();
+            for (const auto& p : py_list)
+            {
+                json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), parent_path));
+            }
+
+            return json_arr;
         }
 
-        return json_arr;
-    }
-    if (py::isinstance<py::bool_>(source))
-    {
-        return json(py::cast<bool>(source));
-    }
-    if (py::isinstance<py::int_>(source))
-    {
-        return json(py::cast<long>(source));
-    }
-    if (py::isinstance<py::float_>(source))
-    {
-        return json(py::cast<double>(source));
-    }
-    if (py::isinstance<py::str>(source))
-    {
-        return json(py::cast<std::string>(source));
-    }
-
-    // else unsupported return throw a type error
-    {
-        AcquireGIL gil;
-        std::ostringstream error_message;
-        std::string path{parent_path};
-        if (path.empty())
+        if (py::isinstance<py::bool_>(source))
         {
-            path = "/";
+            return json(py::cast<bool>(source));
         }
 
-        error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " << get_py_type_name(source)
-                      << " at path: " << path << " is not JSON serializable";
+        if (py::isinstance<py::int_>(source))
+        {
+            return json(py::cast<long>(source));
+        }
 
-        DVLOG(5) << error_message.str();
-        throw py::type_error(error_message.str());
+        if (py::isinstance<py::float_>(source))
+        {
+            return json(py::cast<double>(source));
+        }
+
+        if (py::isinstance<py::str>(source))
+        {
+            return json(py::cast<std::string>(source));
+        }
+
+        // else unsupported return throw a type error
+        // {
+        //     AcquireGIL gil;
+        //     std::ostringstream error_message;
+        //     std::string path{parent_path};
+        //     if (path.empty())
+        //     {
+        //         path = "/";
+        //     }
+
+        //     error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " <<
+        //     get_py_type_name(source)
+        //                   << " at path: " << path << " is not JSON serializable";
+
+        //     DVLOG(5) << error_message.str();
+        //     throw py::type_error(error_message.str());
+        // }
+
+        /* We don't know how to serialize the Object, throw it into cache and return a reference ID*/
+        // Use Python's uuid module to generate a UUID
+        py::object uuid_module = py::module_::import("uuid");
+        py::object uuid_obj    = uuid_module.attr("uuid4")();
+        std::string uuid_str   = py::str(uuid_obj);
+
+        // Remove constness and cache the object
+        py::object non_const_source = const_cast<py::object&>(source);
+        PythonObjectCache::get_handle().cache_object(uuid_str, non_const_source);
+
+        // Return the UUID string
+        return json(std::string("cache_object:") + uuid_str);
+        // NOLINTEND(modernize-return-braced-init-list)
     }
 
-    // NOLINTEND(modernize-return-braced-init-list)
-}
+    json cast_from_pyobject(const py::object& source)
+    {
+        return cast_from_pyobject_impl(source);
+    }
 
-json cast_from_pyobject(const py::object& source)
-{
-    return cast_from_pyobject_impl(source);
-}
-
-void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
-{
-    PyErr_WarnEx(PyExc_DeprecationWarning, deprecation_message.c_str(), stack_level);
-}
+    void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
+    {
+        PyErr_WarnEx(PyExc_DeprecationWarning, deprecation_message.c_str(), stack_level);
+    }
 }  // namespace mrc::pymrc
