@@ -54,6 +54,7 @@ dependencies:
           - librmm=23.06
           - ninja=1.10
           - nlohmann_json=3.9
+          - pkg-config=0.29
           - pybind11-stubgen=0.10
           - python=3.10
           - scikit-build>=0.17
