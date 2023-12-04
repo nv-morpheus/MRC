@@ -17,6 +17,8 @@
 
 #include "pymrc/utils.hpp"
 
+#include "pymrc/utilities/object_cache.hpp"
+
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -131,6 +133,7 @@ json cast_from_pyobject(const py::object& source)
     {
         return json();
     }
+
     if (py::isinstance<py::dict>(source))
     {
         const auto py_dict = source.cast<py::dict>();
@@ -142,6 +145,7 @@ json cast_from_pyobject(const py::object& source)
 
         return json_obj;
     }
+
     if (py::isinstance<py::list>(source) || py::isinstance<py::tuple>(source))
     {
         const auto py_list = source.cast<py::list>();
@@ -153,25 +157,39 @@ json cast_from_pyobject(const py::object& source)
 
         return json_arr;
     }
+
     if (py::isinstance<py::bool_>(source))
     {
         return json(py::cast<bool>(source));
     }
+
     if (py::isinstance<py::int_>(source))
     {
         return json(py::cast<long>(source));
     }
+
     if (py::isinstance<py::float_>(source))
     {
         return json(py::cast<double>(source));
     }
+
     if (py::isinstance<py::str>(source))
     {
         return json(py::cast<std::string>(source));
     }
 
-    // else unsupported return null
-    return json();
+    /* We don't know how to serialize the Object, throw it into cache and return a reference ID*/
+    // Use Python's uuid module to generate a UUID
+    py::object uuid_module = py::module_::import("uuid");
+    py::object uuid_obj    = uuid_module.attr("uuid4")();
+    std::string uuid_str   = py::str(uuid_obj);
+
+    // Remove constness and cache the object
+    py::object non_const_source = const_cast<py::object&>(source);
+    PythonObjectCache::get_handle().cache_object(uuid_str, non_const_source);
+
+    // Return the UUID string
+    return json(std::string("cache_object:") + uuid_str);
     // NOLINTEND(modernize-return-braced-init-list)
 }
 
