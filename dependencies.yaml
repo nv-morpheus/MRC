@@ -6,8 +6,26 @@ files:
       cuda: ["11.8"]
       arch: [x86_64]
     includes:
-      - empty
-      - build_cpp
+      - build
+      - developer_productivity
+      - code_style
+      - testing
+      - benchmarking
+      - ci
+      - examples
+      - cudatoolkit
+
+  ci:
+    output: conda
+    matrix:
+      cuda: ["11.8"]
+      arch: [x86_64]
+    includes:
+      - build
+      - code_style
+      - testing
+      - benchmarking
+      - ci
       - cudatoolkit
 
 channels:
@@ -19,13 +37,7 @@ channels:
 
 dependencies:
 
-  empty:
-    common:
-      - output_types: [conda]
-        packages:
-          - cxx-compiler
-
-  build_cpp:
+  build:
     common:
       - output_types: [conda]
         packages:
@@ -46,6 +58,55 @@ dependencies:
           - python=3.10
           - scikit-build>=0.17
           - ucx=1.14
+
+  developer_productivity:
+    common:
+      - output_types: [conda]
+        packages:
+          - clang=16
+          - clang-tools=16
+          - clangdev=16
+          - clangxx=16
+          - libclang=16
+          - libclang-cpp=16
+          - llvmdev=16
+          - gdb
+          - bash-completion
+
+  code_style:
+    common:
+      - output_types: [conda]
+        packages:
+          - flake8
+          - yapf
+          - include-what-you-use=0.20
+
+  testing:
+    common:
+      - output_types: [conda]
+        packages:
+          - pytest
+          - pytest-timeout
+          - pytest-asyncio
+
+  benchmarking:
+    common:
+      - output_types: [conda]
+        packages:
+          - benchmark=1.6.0
+
+  ci:
+    common:
+      - output_types: [conda]
+        packages:
+          - codecov=2.1
+
+  examples:
+    common:
+      - output_types: [conda]
+        packages:
+          - numpy>=1.21
+
   cudatoolkit:
     specific:
       - output_types: [conda]
