@@ -40,6 +40,7 @@ dependencies:
 - ninja=1.10
 - nlohmann_json=3.9
 - numpy>=1.21
+- pre-commit
 - pybind11-stubgen=0.10
 - pytest
 - pytest-asyncio

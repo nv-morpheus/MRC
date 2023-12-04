@@ -63,15 +63,16 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - clang=16
+          - bash-completion
           - clang-tools=16
+          - clang=16
           - clangdev=16
           - clangxx=16
-          - libclang=16
-          - libclang-cpp=16
-          - llvmdev=16
           - gdb
-          - bash-completion
+          - libclang-cpp=16
+          - libclang=16
+          - llvmdev=16
+          - pre-commit
 
   code_style:
     common:
@@ -100,6 +101,7 @@ dependencies:
       - output_types: [conda]
         packages:
           - codecov=2.1
+          - pre-commit
 
   examples:
     common:
