@@ -396,7 +396,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::seg
         [operators = PyObjectHolder(std::move(operators))](const PyObjectObservable& input) -> PyObjectObservable {
             AcquireGIL gil;
 
-            // Call the pipe function to convert all of the args to a new observable
+            // Call the pipe function to convert all the args to a new observable
             return ObservableProxy::pipe(&input, py::cast<py::args>(operators));
         });
 
