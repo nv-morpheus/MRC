@@ -118,6 +118,7 @@ dependencies:
       - output_types: [conda]
         packages:
           - doxygen=1.9.2
+          - graphviz=3.0
 
   cudatoolkit:
     specific:

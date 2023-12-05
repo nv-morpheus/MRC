@@ -24,6 +24,7 @@ dependencies:
 - flake8
 - gcovr=5.0
 - glog=0.6
+- graphviz=3.0
 - gtest=1.13
 - gxx=11.2
 - include-what-you-use=0.20
