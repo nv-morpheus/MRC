@@ -47,7 +47,7 @@ jobs:
     needs:
       - checks
       - prepare
-      - pi_pipe
+      - ci_pipe
     secrets: inherit
     uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
   checks:
