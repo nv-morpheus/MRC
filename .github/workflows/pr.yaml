@@ -43,6 +43,9 @@ permissions:
   statuses: none
 
 jobs:
+  pr-builder:
+    needs:
+      - checks
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
