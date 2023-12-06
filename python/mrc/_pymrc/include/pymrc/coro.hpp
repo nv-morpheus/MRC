@@ -31,7 +31,9 @@
 #include <coroutine>
 #include <exception>
 #include <memory>
-#include <ostream>
+#include <sstream>    // for operator<<, basic_ostringstream
+#include <stdexcept>  // for runtime_error
+#include <string>     // for string
 #include <utility>
 
 // Dont directly include python headers

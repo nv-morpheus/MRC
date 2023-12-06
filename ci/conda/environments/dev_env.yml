@@ -27,7 +27,7 @@ dependencies:
   - benchmark=1.6.0
   - boost-cpp=1.82
   - ccache
-  - cmake=3.24
+  - cmake=3.25
   - cuda-toolkit # Version comes from the channel above
   - cxx-compiler # Sets up the distro versions of our compilers
   - doxygen=1.9.2

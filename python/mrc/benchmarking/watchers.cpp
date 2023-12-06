@@ -26,11 +26,9 @@
 #include <pybind11/gil.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 
-#include <array>
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <vector>
 
 namespace mrc::pymrc {
 namespace py = pybind11;

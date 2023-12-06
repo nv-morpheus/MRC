@@ -18,21 +18,15 @@
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
-#include "mrc/node/rx_sink_base.hpp"
-#include "mrc/node/rx_source_base.hpp"
-#include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
-#include <map>
 #include <memory>
 #include <sstream>
-#include <vector>
 
 namespace mrc::pymrc {
 
