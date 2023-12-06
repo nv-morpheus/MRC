@@ -46,6 +46,8 @@ jobs:
   pr-builder:
     needs:
       - checks
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
