@@ -7,6 +7,7 @@ files:
       arch: [x86_64]
     includes:
       - build
+      - checks
       - developer_productivity
       - code_style
       - testing
@@ -29,6 +30,12 @@ files:
       - ci
       - documentation
       - cudatoolkit
+
+  checks:
+    output: none
+    includes:
+      - checks
+
 
 channels:
   - conda-forge
@@ -62,6 +69,12 @@ dependencies:
           - scikit-build>=0.17
           - ucx=1.14
 
+  checks:
+    common:
+      - output_types: [conda]
+        packages:
+          - pre-commit
+
   developer_productivity:
     common:
       - output_types: [conda]
@@ -75,7 +88,6 @@ dependencies:
           - libclang-cpp=16
           - libclang=16
           - llvmdev=16
-          - pre-commit
 
   code_style:
     common:
