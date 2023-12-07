@@ -286,8 +286,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Callable
-from typing import Dict
+from typing import Callable, Dict
 
 
 class VersioneerConfig:

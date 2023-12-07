@@ -6,6 +6,26 @@ repos:
         hooks:
             - id: rapids-dependency-file-generator
               args: ["--clean"]
+      - repo: https://github.com/PyCQA/isort
+        rev: 5.12.0
+        hooks:
+              - id: isort
+                # Use the config file specific to each subproject so that each
+                # project can specify its own first/third-party packages.
+                args: ["--config-root=python/", "--resolve-all-configs"]
+                files: python/.*
+                types_or: [python, cython, pyi]
+      # - repo: https://github.com/pre-commit/mirrors-clang-format
+      #   rev: v16.0.6
+      #   hooks:
+      #         - id: clang-format
+      #           types_or: [c, c++, cuda]
+      #           args: ["-fallback-style=none", "-style=file", "-i"]
+      - repo: https://github.com/google/yapf
+        rev: ''  # Use the sha / tag you want to point at
+        hooks:
+              - id: yapf
+                args: ["--style", "./python/setup.cfg"]
 
 default_language_version:
       python: python3
