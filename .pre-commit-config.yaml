@@ -10,9 +10,7 @@ repos:
         rev: 5.12.0
         hooks:
               - id: isort
-                # Use the config file specific to each subproject so that each
-                # project can specify its own first/third-party packages.
-                args: ["--config-root=python/", "--resolve-all-configs"]
+                args: ["--settings-file=./python/setup.cfg"]
                 files: ^python/
       - repo: https://github.com/PyCQA/flake8
         rev: 6.1.0
@@ -21,7 +19,7 @@ repos:
                 args: ["--config=./python/setup.cfg"]
                 files: ^python/
       - repo: https://github.com/google/yapf
-        rev: v0.40.2  # Use the sha / tag you want to point at
+        rev: v0.40.2
         hooks:
               - id: yapf
                 args: ["--style", "./python/setup.cfg"]
