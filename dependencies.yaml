@@ -93,8 +93,6 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - flake8
-          - yapf
           - include-what-you-use=0.20
 
   testing:

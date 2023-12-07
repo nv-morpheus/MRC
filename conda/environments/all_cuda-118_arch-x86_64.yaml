@@ -26,7 +26,6 @@ dependencies:
 - cuda-version=11.8
 - cxx-compiler
 - doxygen=1.9.2
-- flake8
 - gcovr=5.0
 - gdb
 - glog=0.6
@@ -52,5 +51,4 @@ dependencies:
 - python=3.10
 - scikit-build>=0.17
 - ucx=1.14
-- yapf
 name: all_cuda-118_arch-x86_64
