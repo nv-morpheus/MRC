@@ -43,6 +43,18 @@ permissions:
   statuses: none
 
 jobs:
+  pr-builder:
+    needs:
+      - checks
+      - prepare
+      - ci_pipe
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
+  checks:
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
+    with:
+      enable_check_generated_files: false
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
