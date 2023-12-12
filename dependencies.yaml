@@ -84,10 +84,12 @@ dependencies:
           - clang=16
           - clangdev=16
           - clangxx=16
+          - flake8
           - gdb
           - libclang-cpp=16
           - libclang=16
           - llvmdev=16
+          - yapf
 
   code_style:
     common:
