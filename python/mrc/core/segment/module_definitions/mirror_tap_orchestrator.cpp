@@ -26,18 +26,14 @@
 #include "mrc/experimental/modules/stream_buffer/stream_buffer_module.hpp"
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/module_registry_util.hpp"
-#include "mrc/node/operators/broadcast.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <rxcpp/rx.hpp>
 
-#include <array>
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>

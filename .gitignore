@@ -1,3 +1,26 @@
+/build*/
+.tmp
+*.engine
+.Dockerfile
+.gitignore
+/*conda-bld*/
+
+# Ignore generated pyi files for pybind and cython modules
+docs/quickstart/**/*.pyi
+python/**/*.pyi
+
+# Ignore version header file
+include/mrc/version.hpp
+
+# Ignore all vscode options that are in the workspace file
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+
+# Ignore user-defined clangd settings
+.clangd
+
 # Created by https://www.gitignore.io/api/vim,c++,cmake,python,synology
 
 ### C++ ###
@@ -177,29 +200,3 @@ tags
 
 
 # End of https://www.gitignore.io/api/vim,c++,cmake,python,synology
-
-.tmp
-/build*/
-*.engine
-.Dockerfile
-.gitignore
-/*conda-bld*/
-
-# Ignore generated pyi files for pybind and cython modules
-docs/quickstart/**/*.pyi
-python/**/*.pyi
-
-# Ignore version header file
-include/mrc/version.hpp
-
-# Ignore all vscode options that are in the workspace file
-.vscode/extensions.json
-.vscode/launch.json
-.vscode/settings.json
-.vscode/tasks.json
-
-# Ignore user-defined clangd settings
-.clangd
-
-# Ignore vcpkg.json files to allow it to be used without accidentally committing
-/vcpkg.json

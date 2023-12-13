@@ -16,7 +16,7 @@
 # limitations under the License.
 
 
-ARG FROM_IMAGE="rapidsai/ci"
+ARG FROM_IMAGE="rapidsai/ci-conda"
 ARG CUDA_VER=11.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
@@ -35,14 +35,12 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libnuma1 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./ci/conda/environments/* /opt/mrc/conda/environments/
+COPY ./conda/environments/all_cuda-118_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/dev_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/clang_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/ci_env.yml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 

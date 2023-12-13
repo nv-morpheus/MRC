@@ -27,6 +27,7 @@
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/runtime/partition_runtime.hpp"
 #include "internal/runtime/runtime.hpp"
+#include "internal/system/partition.hpp"
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
@@ -43,7 +44,6 @@
 #include "mrc/pubsub/subscriber.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>
@@ -66,7 +66,7 @@ static auto make_resources(std::function<void(Options& options)> options_lambda 
 {
     auto resources = std::make_unique<resources::SystemResources>(
         system::SystemProvider(tests::make_system([&](Options& options) {
-            options.topology().user_cpuset("0-3");
+            options.topology().user_cpuset("0");
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
@@ -85,9 +85,10 @@ class TestControlPlane : public ::testing::Test
 
 TEST_F(TestControlPlane, LifeCycle)
 {
-    // auto sr     = make_runtime([](Options& options) {
-    //     options.enable_server(false);
-    // });
+    auto sr     = make_runtime([](Options& options) {
+        options.enable_server(true);
+        options.architect_url("localhost:13337");
+    });
     auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
@@ -110,7 +111,36 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnect)
     server->service_start();
     server->service_await_live();
 
-    auto cr = make_resources([](Options& options) {
+    auto cr = make_runtime([](Options& options) {
+        options.architect_url("localhost:13337");
+    });
+
+    // the total number of partition is system dependent
+    auto expected_partitions = cr->resources().system().partitions().flattened().size();
+    EXPECT_EQ(cr->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
+              expected_partitions);
+
+    // destroying the resources should gracefully shutdown the data plane and the control plane.
+    cr.reset();
+
+    server->service_stop();
+    server->service_await_join();
+}
+
+TEST_F(TestControlPlane, SingleClientConnectDisconnectSingleCore)
+{
+    // Similar to SingleClientConnectDisconnect except both client & server are locked to the same core
+    // making issue #379 easier to reproduce.
+    auto sr     = make_runtime([](Options& options) {
+        options.topology().user_cpuset("0");
+    });
+    auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
+
+    server->service_start();
+    server->service_await_live();
+
+    auto cr = make_runtime([](Options& options) {
+        options.topology().user_cpuset("0");
         options.architect_url("localhost:13337");
     });
 

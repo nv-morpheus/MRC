@@ -23,7 +23,6 @@
 
 #include <chrono>
 #include <cstdint>
-#include <map>
 #include <ostream>
 #include <utility>
 
@@ -40,6 +39,9 @@ void ProgressEngine::data_source(rxcpp::subscriber<ProgressEvent>& s)
 
     while (s.is_subscribed())
     {
+        event.ok  = false;
+        event.tag = nullptr;
+
         switch (m_cq->AsyncNext<gpr_timespec>(&event.tag, &event.ok, gpr_time_0(GPR_CLOCK_REALTIME)))
         {
         case grpc::CompletionQueue::NextStatus::GOT_EVENT: {

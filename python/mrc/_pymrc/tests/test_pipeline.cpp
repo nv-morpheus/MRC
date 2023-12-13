@@ -31,9 +31,7 @@
 #include "mrc/options/topology.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>
@@ -46,7 +44,6 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>

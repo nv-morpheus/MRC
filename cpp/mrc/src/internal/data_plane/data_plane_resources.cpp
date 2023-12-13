@@ -37,6 +37,7 @@ DataPlaneResources::DataPlaneResources(resources::PartitionResourceBase& base,
                                        const InstanceID& instance_id,
                                        control_plane::Client& control_plane_client) :
   resources::PartitionResourceBase(base),
+  Service("DataPlaneResources"),
   m_ucx(ucx),
   m_host(host),
   m_control_plane_client(control_plane_client),

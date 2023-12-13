@@ -54,9 +54,7 @@
 #include <atomic>
 #include <optional>
 #include <sstream>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::remote_descriptor {
 
@@ -85,6 +83,7 @@ ucs_status_t active_message_callback(void* arg,
 }  // namespace
 
 Manager::Manager(const InstanceID& instance_id, resources::PartitionResources& resources) :
+  Service("remote_descriptor::Manager"),
   m_instance_id(instance_id),
   m_resources(resources)
 {

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "internal/grpc/progress_engine.hpp"
+#include "internal/grpc/promise_handler.hpp"
 #include "internal/grpc/stream_writer.hpp"
 #include "internal/runnable/runnable_resources.hpp"
 #include "internal/service.hpp"
@@ -153,7 +154,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     using prepare_fn_t =
         std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
-    ClientStream(prepare_fn_t prepare_fn, runnable::IRunnableResources& runnable) :
+    ClientStream(prepare_fn_t prepare_fn, runnable::RunnableResources& runnable) :
+      Service("rpc::ClientStream"),
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),
       m_reader_source(std::make_unique<mrc::node::RxSource<IncomingData>>(
@@ -197,21 +199,10 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         while (s.is_subscribed())
         {
             CHECK(m_stream);
-            Promise<bool> read;
+            auto* wrapper = new PromiseWrapper("Client::Read");
             IncomingData data;
-            // DVLOG(20) << "ClientStream: Read with Promise: " << &read;
-            m_stream->Read(&data.msg, &read);
-            // DVLOG(20) << "ClientStream: Read returned with Promise: " << &read;
-
-            auto future = read.get_future();
-
-            while (future.wait_for(std::chrono::milliseconds(100)) != boost::fibers::future_status::ready)
-            {
-                boost::this_fiber::yield();
-            }
-
-            auto ok = future.get();
-            // DVLOG(20) << "ClientStream: Read future returned Promise: " << &read << ", Status: " << ok;
+            m_stream->Read(&data.msg, wrapper);
+            auto ok = wrapper->get_future();
             if (!ok)
             {
                 m_write_channel.reset();
@@ -231,9 +222,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> promise;
-            m_stream->Write(request, &promise);
-            auto ok = promise.get_future().get();
+            auto* wrapper = new PromiseWrapper("Client::Write");
+            m_stream->Write(request, wrapper);
+            auto ok = wrapper->get_future();
             if (!ok)
             {
                 m_can_write = false;
@@ -249,10 +240,20 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         CHECK(m_stream);
         if (m_can_write)
         {
-            Promise<bool> writes_done;
-            m_stream->WritesDone(&writes_done);
-            writes_done.get_future().get();
-            DVLOG(10) << "client issued writes done to server";
+            {
+                auto* wrapper = new PromiseWrapper("Client::WritesDone");
+                m_stream->WritesDone(wrapper);
+                wrapper->get_future();
+            }
+
+            {
+                // Now issue finish since this is OK at the client level
+                auto* wrapper = new PromiseWrapper("Client::Finish");
+                m_stream->Finish(&m_status, wrapper);
+                wrapper->get_future();
+            }
+
+            // DVLOG(10) << "client issued writes done to server";
         };
     }
 
@@ -304,9 +305,9 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         m_stream = m_prepare_fn(&m_context);
 
         DVLOG(10) << "starting grpc bidi client stream";
-        Promise<bool> promise;
-        m_stream->StartCall(&promise);
-        auto ok = promise.get_future().get();
+        auto* wrapper = new PromiseWrapper("Client::StartCall", false);
+        m_stream->StartCall(wrapper);
+        auto ok = wrapper->get_future();
 
         if (!ok)
         {
@@ -347,10 +348,6 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
             m_writer->await_join();
             m_reader->await_join();
-
-            Promise<bool> finish;
-            m_stream->Finish(&m_status, &finish);
-            auto ok = finish.get_future().get();
         }
     }
 

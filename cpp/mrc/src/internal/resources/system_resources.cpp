@@ -23,6 +23,7 @@
 #include "internal/network/network_resources.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/runnable/runnable_resources.hpp"
+#include "internal/system/device_partition.hpp"
 #include "internal/system/engine_factory_cpu_sets.hpp"
 #include "internal/system/host_partition.hpp"
 #include "internal/system/partition.hpp"
@@ -39,6 +40,7 @@
 
 #include <glog/logging.h>
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <optional>
@@ -49,11 +51,13 @@
 
 namespace mrc::resources {
 
+std::atomic_size_t Manager::s_id_counter = 0;
 thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
 thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
 SystemResources::SystemResources(const system::SystemProvider& system) :
   SystemProvider(system),
+  m_runtime_id(++s_id_counter),
   m_threading_resources(std::make_unique<system::ThreadingResources>(system))
 {
     // Create the system-wide runnable first
@@ -238,6 +242,11 @@ SystemResources::SystemResources(const system::SystemProvider& system) :
 SystemResources::~SystemResources()
 {
     m_network.clear();
+}
+
+std::size_t Manager::runtime_id() const
+{
+    return m_runtime_id;
 }
 
 SystemResources& SystemResources::get_resources()

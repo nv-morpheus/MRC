@@ -63,6 +63,7 @@ add_executable(test_mrc_private
   test_reusable_pool.cpp
   # test_runnable.cpp
   # test_runtime.cpp
+  test_service.cpp
   test_system.cpp
   test_topology.cpp
   test_ucx.cpp

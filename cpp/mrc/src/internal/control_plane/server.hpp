@@ -25,7 +25,7 @@
 #include <cstddef>
 #include <memory>
 #include <stop_token>
-
+// IWYU pragma: no_include "internal/control_plane/server/subscription_manager.hpp"
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
 
 namespace mrc::control_plane::server {

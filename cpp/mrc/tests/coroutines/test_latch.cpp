@@ -44,7 +44,6 @@
 
 #include <coroutine>
 #include <cstdint>
-#include <string>
 
 using namespace mrc;
 

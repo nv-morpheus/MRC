@@ -27,9 +27,9 @@
 #include "mrc/modules/module_registry.hpp"
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
+#include "mrc/runnable/launchable.hpp"
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
-#include "mrc/segment/initializers.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"

@@ -25,6 +25,7 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/generic_node.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/generic_source.hpp"
@@ -64,12 +65,10 @@
 #include <cstddef>
 #include <exception>
 #include <functional>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 
@@ -573,7 +572,7 @@ TEST_F(TestNext, RxWithReusableOnNextAndOnError)
     });
 
     static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t)>>::value, " ");
-    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t &&)>>::value, " ");
+    static_assert(rxcpp::detail::is_on_next_of<data_t, std::function<void(data_t&&)>>::value, " ");
 
     auto observer = rxcpp::make_observer_dynamic<data_t>(
         [](data_t&& int_ptr) {

@@ -28,13 +28,11 @@
 #include <rxcpp/rx.hpp>
 
 #include <chrono>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 using namespace mrc::memory::literals;

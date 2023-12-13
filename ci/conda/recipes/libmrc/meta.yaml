@@ -62,12 +62,12 @@ requirements:
     - libgrpc
     - gtest 1.13.*
     - libabseil
-    - libhwloc 2.5.*
+    - libhwloc 2.9.2
     - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
-    - pybind11-stubgen 0.10.5
+    - pybind11-stubgen 0.10
     - python {{ python }}
     - scikit-build >=0.17
     - ucx
@@ -98,7 +98,7 @@ outputs:
         - glog
         - libgrpc
         - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
-        - libhwloc 2.5.*
+        - libhwloc 2.9.2
         - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.*

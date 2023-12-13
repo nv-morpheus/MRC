@@ -38,6 +38,7 @@
 #include "internal/ucx/registration_cache.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/literals.hpp"
@@ -62,15 +63,11 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <optional>
 #include <ostream>
-#include <set>
-#include <string>
 #include <thread>
 #include <utility>
-#include <vector>
 
 using namespace mrc;
 using namespace mrc::memory::literals;

@@ -43,11 +43,23 @@ permissions:
   statuses: none
 
 jobs:
+  pr-builder:
+    needs:
+      - checks
+      - prepare
+      - ci_pipe
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
+  checks:
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
+    with:
+      enable_check_generated_files: false
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
     container:
-      image: rapidsai/ci:latest
+      image: rapidsai/ci-conda:latest
     steps:
       - name: Get PR Info
         id: get-pr-info
@@ -71,9 +83,9 @@ jobs:
       # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
       conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
       # Build container
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230711
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230920
       # Test container
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230711
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230920
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:

@@ -19,7 +19,6 @@
 
 #include <glog/logging.h>
 
-#include <cstdint>
 #include <optional>
 
 namespace mrc::codable {

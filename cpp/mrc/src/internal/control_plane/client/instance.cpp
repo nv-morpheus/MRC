@@ -24,6 +24,7 @@
 #include "internal/utils/contains.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/runnable/launch_control.hpp"
@@ -49,6 +50,7 @@ Instance::Instance(Client& client,
                    resources::PartitionResourceBase& base,
                    mrc::edge::IWritableAcceptor<const protos::StateUpdate>& update_channel) :
   resources::PartitionResourceBase(base),
+  Service("control_plane::client::Instance"),
   m_client(client),
   m_instance_id(instance_id)
 {

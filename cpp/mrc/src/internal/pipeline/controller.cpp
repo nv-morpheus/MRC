@@ -31,12 +31,10 @@
 #include <algorithm>
 #include <exception>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <set>
 #include <utility>
-#include <vector>
 
 namespace mrc::pipeline {
 

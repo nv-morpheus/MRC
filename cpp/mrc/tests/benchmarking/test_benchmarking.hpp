@@ -31,13 +31,11 @@
 #include <rxcpp/rx.hpp>
 
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <random>
 #include <set>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc {
 

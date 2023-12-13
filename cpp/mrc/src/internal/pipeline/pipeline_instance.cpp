@@ -21,6 +21,7 @@
 #include "internal/pipeline/manifold_instance.hpp"
 #include "internal/pipeline/pipeline_definition.hpp"
 #include "internal/runtime/resource_manager_base.hpp"
+#include "internal/service.hpp"
 
 #include "mrc/core/utils.hpp"
 #include "mrc/exceptions/runtime_error.hpp"

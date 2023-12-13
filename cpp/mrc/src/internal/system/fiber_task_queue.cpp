@@ -27,7 +27,6 @@
 
 #include <boost/fiber/channel_op_status.hpp>
 #include <boost/fiber/fiber.hpp>
-#include <boost/fiber/future/future.hpp>
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 
@@ -47,6 +46,7 @@ FiberTaskQueue::FiberTaskQueue(const ThreadingResources& resources,
   m_thread(resources.make_thread(std::move(thread_name), m_cpu_affinity, [this] {
       main();
   }))
+
 {
     DVLOG(10) << "awaiting fiber task queue worker thread running on cpus " << m_cpu_affinity;
     enqueue([] {}).get();
@@ -108,7 +108,7 @@ void FiberTaskQueue::launch(task_pkg_t&& pkg) const
     boost::fibers::fiber fiber(std::move(pkg.first));
     auto& props(fiber.properties<FiberPriorityProps>());
     props.set_priority(pkg.second.priority);
-    // DVLOG(10) << *this << ": created fiber " << fiber.get_id() << " with priority " << pkg.second.priority;
+    DVLOG(10) << *this << ": created fiber " << fiber.get_id() << " with priority " << pkg.second.priority;
     fiber.detach();
 }
 

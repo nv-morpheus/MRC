@@ -35,9 +35,7 @@ id
 export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 export BUILD_CC=${BUILD_CC:-"gcc"}
 
-export CONDA_ENV_YML="${MRC_ROOT}/ci/conda/environments/dev_env.yml"
-export CONDA_CLANG_ENV_YML="${MRC_ROOT}/ci/conda/environments/clang_env.yml"
-export CONDA_CI_ENV_YML="${MRC_ROOT}/ci/conda/environments/ci_env.yml"
+export CONDA_ENV_YML="${MRC_ROOT}/conda/environments/all_cuda-118_arch-x86_64.yaml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON"
@@ -56,7 +54,12 @@ export S3_URL="s3://rapids-downloads/ci/mrc"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/mrc"
 export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
-export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
+
+if [[ "${LOCAL_CI}" == "1" ]]; then
+    export DISPLAY_ARTIFACT_URL="${LOCAL_CI_TMP}"
+else
+    export DISPLAY_ARTIFACT_URL="${DISPLAY_URL}${ARTIFACT_ENDPOINT}"
+fi
 
 # Set sccache env vars
 export SCCACHE_S3_KEY_PREFIX=mrc-${NVARCH}-${BUILD_CC}
@@ -78,34 +81,26 @@ function update_conda_env() {
     # Deactivate the environment first before updating
     conda deactivate
 
-    # Make sure we have the conda-merge package installed
-    if [[ -z "$(conda list | grep conda-merge)" ]]; then
-        rapids-mamba-retry install -q -n mrc -c conda-forge "conda-merge>=0.2"
+    if [[ "${SKIP_CONDA_ENV_UPDATE}" == "" ]]; then
+        # Update the conda env with prune remove excess packages (in case one was removed from the env)
+        rapids-mamba-retry env update -n mrc --prune --file ${CONDA_ENV_YML}
     fi
-
-    # Create a temp directory which we store the combined environment file in
-    condatmpdir=$(mktemp -d)
-
-    # Merge the environments together so we can use --prune. Otherwise --prune
-    # will clobber the last env update
-    conda run -n mrc --live-stream conda-merge ${CONDA_ENV_YML} ${CONDA_CLANG_ENV_YML} ${CONDA_CI_ENV_YML} > ${condatmpdir}/merged_env.yml
-
-    # Update the conda env with prune remove excess packages (in case one was removed from the env)
-    rapids-mamba-retry env update -n mrc --prune --file ${condatmpdir}/merged_env.yml
-
-    # Delete the temp directory
-    rm -rf ${condatmpdir}
 
     # Finally, reactivate
     conda activate mrc
 
     rapids-logger "Final Conda Environment"
-    conda list
+    mamba list
 }
 
 print_env_vars
 
-function fetch_base_branch() {
+function fetch_base_branch_gh_api() {
+    # For PRs, $GIT_BRANCH is like: pull-request/989
+    REPO_NAME=$(basename "${GITHUB_REPOSITORY}")
+    ORG_NAME="${GITHUB_REPOSITORY_OWNER}"
+    PR_NUM="${GITHUB_REF_NAME##*/}"
+
     rapids-logger "Retrieving base branch from GitHub API"
     [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
     RESP=$(
@@ -115,25 +110,31 @@ function fetch_base_branch() {
         "${GITHUB_API_URL}/repos/${ORG_NAME}/${REPO_NAME}/pulls/${PR_NUM}"
     )
 
-    BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
+    export BASE_BRANCH=$(echo "${RESP}" | jq -r '.base.ref')
 
     # Change target is the branch name we are merging into but due to the weird way jenkins does
     # the checkout it isn't recognized by git without the origin/ prefix
     export CHANGE_TARGET="origin/${BASE_BRANCH}"
-    git submodule update --init --recursive
-    rapids-logger "Base branch: ${BASE_BRANCH}"
 }
 
-function fetch_s3() {
-    ENDPOINT=$1
-    DESTINATION=$2
-    if [[ "${USE_S3_CURL}" == "1" ]]; then
-        curl -f "${DISPLAY_URL}${ENDPOINT}" -o "${DESTINATION}"
-        FETCH_STATUS=$?
+function fetch_base_branch_local() {
+    rapids-logger "Retrieving base branch from git"
+    git remote add upstream ${GIT_UPSTREAM_URL}
+    git fetch upstream --tags
+    source ${MRC_ROOT}/ci/scripts/common.sh
+    export BASE_BRANCH=$(get_base_branch)
+    export CHANGE_TARGET="upstream/${BASE_BRANCH}"
+}
+
+function fetch_base_branch() {
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        fetch_base_branch_local
     else
-        aws s3 cp --no-progress "${S3_URL}${ENDPOINT}" "${DESTINATION}"
-        FETCH_STATUS=$?
+        fetch_base_branch_gh_api
     fi
+
+    git submodule update --init --recursive
+    rapids-logger "Base branch: ${BASE_BRANCH}"
 }
 
 function show_conda_info() {
@@ -142,4 +143,26 @@ function show_conda_info() {
     conda info
     conda config --show-sources
     conda list --show-channel-urls
+}
+
+function upload_artifact() {
+    FILE_NAME=$1
+    BASE_NAME=$(basename "${FILE_NAME}")
+    rapids-logger "Uploading artifact: ${BASE_NAME}"
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        cp ${FILE_NAME} "${LOCAL_CI_TMP}/${BASE_NAME}"
+    else
+        aws s3 cp --only-show-errors "${FILE_NAME}" "${ARTIFACT_URL}/${BASE_NAME}"
+        echo "- ${DISPLAY_ARTIFACT_URL}/${BASE_NAME}" >> ${GITHUB_STEP_SUMMARY}
+    fi
+}
+
+function download_artifact() {
+    ARTIFACT=$1
+    rapids-logger "Downloading ${ARTIFACT} from ${DISPLAY_ARTIFACT_URL}"
+    if [[ "${LOCAL_CI}" == "1" ]]; then
+        cp "${LOCAL_CI_TMP}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
+    else
+        aws s3 cp --no-progress "${ARTIFACT_URL}/${ARTIFACT}" "${WORKSPACE_TMP}/${ARTIFACT}"
+    fi
 }
