@@ -42,6 +42,7 @@ dependencies:
 - llvmdev=16
 - ninja=1.10
 - nlohmann_json=3.9
+- nodejs=18
 - numpy>=1.21
 - pkg-config=0.29
 - pre-commit
