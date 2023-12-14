@@ -51,7 +51,8 @@
 
 namespace mrc::resources {
 
-std::atomic_size_t Manager::s_id_counter = 0;
+std::atomic_size_t SystemResources::s_id_counter = 0;
+
 thread_local SystemResources* SystemResources::m_thread_resources{nullptr};
 thread_local PartitionResources* SystemResources::m_thread_partition{nullptr};
 
@@ -244,7 +245,7 @@ SystemResources::~SystemResources()
     m_network.clear();
 }
 
-std::size_t Manager::runtime_id() const
+std::size_t SystemResources::runtime_id() const
 {
     return m_runtime_id;
 }

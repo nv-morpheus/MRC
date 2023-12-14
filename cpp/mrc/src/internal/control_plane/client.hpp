@@ -37,10 +37,10 @@
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
-#include <stddef.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>

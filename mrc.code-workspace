@@ -191,12 +191,12 @@
             "editor.semanticHighlighting.enabled": true,
             "editor.suggest.insertMode": "replace",
             "editor.tabSize": 4,
-            "editor.wordBasedSuggestions": false,
+            "editor.wordBasedSuggestions": "off",
             "editor.wordWrapColumn": 120
         },
         "[python]": {
             "editor.codeActionsOnSave": {
-                "source.organizeImports": true
+                "source.organizeImports": "explicit"
             },
             "editor.formatOnSave": true,
             "editor.tabSize": 4

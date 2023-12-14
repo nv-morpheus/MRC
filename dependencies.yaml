@@ -64,6 +64,7 @@ dependencies:
           - ninja=1.10
           - nlohmann_json=3.9
           - nodejs=18
+          - numactl-libs-cos7-x86_64
           - pkg-config=0.29
           - pybind11-stubgen=0.10
           - python=3.10

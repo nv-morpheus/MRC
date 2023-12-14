@@ -43,6 +43,7 @@ dependencies:
 - ninja=1.10
 - nlohmann_json=3.9
 - nodejs=18
+- numactl-libs-cos7-x86_64
 - numpy>=1.21
 - pkg-config=0.29
 - pre-commit

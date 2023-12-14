@@ -74,7 +74,8 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
 }
 
 ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system) :
-  SystemProvider(std::move(system))
+  SystemProvider(std::move(system)),
+  Service("ExecutorDefinition")
 {}
 
 // ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::ThreadingResources> resources) :

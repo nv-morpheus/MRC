@@ -154,7 +154,7 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
     using prepare_fn_t =
         std::function<std::unique_ptr<grpc::ClientAsyncReaderWriter<RequestT, ResponseT>>(grpc::ClientContext* context)>;
 
-    ClientStream(prepare_fn_t prepare_fn, runnable::RunnableResources& runnable) :
+    ClientStream(prepare_fn_t prepare_fn, runnable::IRunnableResources& runnable) :
       Service("rpc::ClientStream"),
       m_prepare_fn(prepare_fn),
       m_runnable(runnable),

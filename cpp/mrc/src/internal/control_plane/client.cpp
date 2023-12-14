@@ -444,11 +444,44 @@ void Client::forward_state(State state)
 //     return contains(m_subscription_services, name);
 // }
 
-void Client::issue_event(const protos::EventType& event_type)
+AsyncEventStatus Client::issue_event(const protos::EventType& event_type)
 {
     protos::Event event;
     event.set_event(event_type);
-    m_writer->await_write(std::move(event));
+    return this->write_event(std::move(event), false);
 }
 
+AsyncEventStatus Client::write_event(protos::Event event, bool await_response)
+{
+    if (event.tag() != 0)
+    {
+        LOG(WARNING) << "event tag is set but this field should exclusively be used by the control plane client. "
+                        "Clearing to avoid confusion";
+        event.clear_tag();
+    }
+
+    AsyncEventStatus status;
+
+    if (await_response)
+    {
+        // If we are supporting awaiting, create the promise now
+        Promise<protos::Event> promise;
+
+        // Set the future to the status
+        status.set_future(promise.get_future());
+
+        // Set the tag to the request ID to allow looking up the promise later
+        event.set_tag(status.request_id());
+
+        // Save the promise to the pending promises to be retrieved later
+        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+        m_pending_events[status.request_id()] = std::move(promise);
+    }
+
+    // Finally, write the event
+    m_writer->await_write(std::move(event));
+
+    return status;
+}
 }  // namespace mrc::control_plane
