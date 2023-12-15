@@ -32,6 +32,7 @@ dependencies:
 - librmm=23.06
 - ninja=1.10
 - nlohmann_json=3.9
+- numactl-libs-cos7-x86_64
 - pkg-config=0.29
 - pre-commit
 - pybind11-stubgen=0.10
