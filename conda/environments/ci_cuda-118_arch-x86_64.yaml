@@ -21,7 +21,6 @@ dependencies:
 - cuda-version=11.8
 - cxx-compiler
 - doxygen=1.9.2
-- flake8
 - gcovr=5.0
 - glog=0.6
 - graphviz=3.0
@@ -33,6 +32,7 @@ dependencies:
 - librmm=23.06
 - ninja=1.10
 - nlohmann_json=3.9
+- numactl-libs-cos7-x86_64
 - pkg-config=0.29
 - pre-commit
 - pybind11-stubgen=0.10
@@ -42,5 +42,4 @@ dependencies:
 - python=3.10
 - scikit-build>=0.17
 - ucx=1.14
-- yapf
 name: ci_cuda-118_arch-x86_64

@@ -63,6 +63,7 @@ dependencies:
           - librmm=23.06
           - ninja=1.10
           - nlohmann_json=3.9
+          - numactl-libs-cos7-x86_64
           - pkg-config=0.29
           - pybind11-stubgen=0.10
           - python=3.10
@@ -84,17 +85,17 @@ dependencies:
           - clang=16
           - clangdev=16
           - clangxx=16
+          - flake8
           - gdb
           - libclang-cpp=16
           - libclang=16
           - llvmdev=16
+          - yapf
 
   code_style:
     common:
       - output_types: [conda]
         packages:
-          - flake8
-          - yapf
           - include-what-you-use=0.20
 
   testing:
