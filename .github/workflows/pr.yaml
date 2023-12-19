@@ -67,6 +67,7 @@ jobs:
       has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
       has_skip_ci_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'skip-ci') || false }}
       pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
+
   checks:
     needs: [prepare]
     if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
@@ -74,6 +75,7 @@ jobs:
     uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
     with:
       enable_check_generated_files: false
+
   ci_pipe:
     name: CI Pipeline
     needs: [prepare]
