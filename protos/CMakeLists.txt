@@ -93,7 +93,7 @@ add_dependencies(${PROJECT_NAME}_style_checks mrc_protos-headers-target)
 
 install(
   TARGETS mrc_protos mrc_architect_protos
-  EXPORT ${PROJECT_NAME}-core-exports
+  EXPORT ${PROJECT_NAME}-exports
   PUBLIC_HEADER
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/protos"
 )

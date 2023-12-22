@@ -73,7 +73,7 @@ rapids_cmake_install_lib_dir(lib_dir)
 install(
   TARGETS pymrc
   DESTINATION ${lib_dir}
-  EXPORT ${PROJECT_NAME}-core-exports
+  EXPORT ${PROJECT_NAME}-exports
   COMPONENT Python
 )
 
