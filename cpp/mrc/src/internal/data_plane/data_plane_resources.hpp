@@ -31,6 +31,14 @@
 #include <memory>
 #include <string>
 
+namespace ucxx {
+class Context;
+class Endpoint;
+class Worker;
+class Request;
+class Address;
+}  // namespace ucxx
+
 namespace mrc::control_plane {
 class Client;
 }  // namespace mrc::control_plane
@@ -97,11 +105,13 @@ class DataPlaneResources2
     DataPlaneResources2();
     ~DataPlaneResources2();
 
-    ucx::Context& context() const;
+    ucxx::Context& context() const;
 
-    ucx::Worker& worker() const;
+    ucxx::Worker& worker() const;
 
-    std::shared_ptr<ucx::Endpoint> create_endpoint(const std::string& address);
+    std::string address() const;
+
+    std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address);
 
     // Advances the worker
     uint32_t progress();
@@ -109,15 +119,20 @@ class DataPlaneResources2
     // Flushes the worker
     void flush();
 
-    std::shared_ptr<Request> send_async(const ucx::Endpoint& endpoint, void* addr, std::size_t bytes, std::uint64_t tag);
-    std::shared_ptr<Request> receive_async(void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask);
+    std::shared_ptr<ucxx::Request> send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                              void* addr,
+                                              std::size_t bytes,
+                                              std::uint64_t tag);
+    std::shared_ptr<ucxx::Request> receive_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
   private:
-    std::shared_ptr<ucx::Context> m_context;
-    std::shared_ptr<ucx::Worker> m_worker;
+    std::shared_ptr<ucxx::Context> m_context;
+    std::shared_ptr<ucxx::Worker> m_worker;
+    std::shared_ptr<ucxx::Address> m_address;
+
     std::shared_ptr<ucx::RegistrationCache> m_registration_cache;
 
-    std::map<std::string, std::shared_ptr<ucx::Endpoint>> m_endpoints;
+    std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints;
 };
 
 }  // namespace mrc::data_plane

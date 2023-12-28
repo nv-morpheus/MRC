@@ -59,10 +59,12 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
+#include <ucxx/api.h>
 
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -352,26 +354,50 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     resources.reset();
 }
 
-TEST_F(TestNetwork, Simple)
-{
-    data_plane::DataPlaneResources2 resources1;
-    data_plane::DataPlaneResources2 resources2;
+// TEST_F(TestNetwork, Simple)
+// {
+//     data_plane::DataPlaneResources2 resources1;
+//     data_plane::DataPlaneResources2 resources2;
 
-    auto endpoint1 = resources2.create_endpoint(resources1.worker().address());
-    auto endpoint2 = resources1.create_endpoint(resources2.worker().address());
+//     auto endpoint1 = resources2.create_endpoint(resources1.worker().address());
+//     auto endpoint2 = resources1.create_endpoint(resources2.worker().address());
+
+//     uint32_t send_data = 42;
+//     uint32_t recv_data = 0;
+
+//     auto receive_request = resources2.receive_async(&recv_data, sizeof(uint32_t), 1, ALL1_BITS);
+
+//     auto send_request = resources1.send_async(*endpoint2, &send_data, sizeof(uint32_t), 1);
+
+//     while (!send_request->is_complete() || !receive_request->is_complete())
+//     {
+//         resources1.progress();
+//         resources2.progress();
+//     }
+
+//     EXPECT_EQ(send_data, recv_data);
+// }
+
+TEST_F(TestNetwork, UCXX)
+{
+    data_plane::DataPlaneResources2 resources;
+
+    auto ep = resources.create_endpoint(resources.address());
 
     uint32_t send_data = 42;
     uint32_t recv_data = 0;
 
-    auto receive_request = resources2.receive_async(&recv_data, sizeof(uint32_t), 1, ALL1_BITS);
+    auto receive_request = resources.receive_async(ep);
 
-    auto send_request = resources1.send_async(*endpoint2, &send_data, sizeof(uint32_t), 1);
+    auto send_request = resources.send_async(ep, &send_data, sizeof(uint32_t), 1);
 
-    while (!send_request->is_complete() || !receive_request->is_complete())
+    while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources1.progress();
-        resources2.progress();
+        resources.progress();
     }
+
+    // Now copy the data into the recv_data variable
+    std::memcpy(&recv_data, receive_request->getRecvBuffer()->data(), receive_request->getRecvBuffer()->getSize());
 
     EXPECT_EQ(send_data, recv_data);
 }

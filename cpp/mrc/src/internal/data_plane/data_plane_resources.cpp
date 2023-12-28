@@ -28,6 +28,8 @@
 #include "mrc/memory/literals.hpp"
 
 #include <ucp/api/ucp.h>
+#include <ucs/memory/memory_type.h>
+#include <ucxx/api.h>
 
 #include <memory>
 
@@ -124,13 +126,18 @@ const InstanceID& DataPlaneResources::instance_id() const
 DataPlaneResources2::DataPlaneResources2()
 {
     DVLOG(10) << "initializing ucx context";
-    m_context = std::make_shared<ucx::Context>();
+
+    int64_t featureFlags = UCP_FEATURE_TAG | UCP_FEATURE_AM | UCP_FEATURE_RMA;
+
+    m_context = ucxx::createContext({}, featureFlags);
 
     DVLOG(10) << "initialize a ucx data_plane worker";
-    m_worker = std::make_shared<ucx::Worker>(m_context);
+    m_worker = ucxx::createWorker(m_context, false, false);
+
+    m_address = m_worker->getAddress();
 
     DVLOG(10) << "initialize the registration cache for this context";
-    m_registration_cache = std::make_shared<ucx::RegistrationCache>(m_context);
+    // m_registration_cache = std::make_shared<ucx::RegistrationCache>(m_context);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -138,19 +145,30 @@ DataPlaneResources2::DataPlaneResources2()
 
 DataPlaneResources2::~DataPlaneResources2() {}
 
-ucx::Context& DataPlaneResources2::context() const
+ucxx::Context& DataPlaneResources2::context() const
 {
     return *m_context;
 }
 
-ucx::Worker& DataPlaneResources2::worker() const
+ucxx::Worker& DataPlaneResources2::worker() const
 {
     return *m_worker;
 }
 
-std::shared_ptr<ucx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address)
+std::string DataPlaneResources2::address() const
 {
-    return std::make_shared<ucx::Endpoint>(m_worker, address);
+    return m_address->getString();
+}
+
+std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address)
+{
+    auto address_obj = ucxx::createAddressFromString(address);
+
+    auto endpoint = m_worker->createEndpointFromWorkerAddress(address_obj);
+
+    m_endpoints[address] = endpoint;
+
+    return endpoint;
 }
 
 uint32_t DataPlaneResources2::progress()
@@ -167,61 +185,19 @@ void DataPlaneResources2::flush()
     }
 }
 
-std::shared_ptr<Request> DataPlaneResources2::send_async(const ucx::Endpoint& endpoint,
-                                                         void* addr,
-                                                         std::size_t bytes,
-                                                         std::uint64_t tag)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                               void* addr,
+                                                               std::size_t bytes,
+                                                               std::uint64_t tag)
 {
-    auto* request_ptr = new std::shared_ptr<Request>();
-
-    auto request = std::make_shared<Request>();
-
-    // Increment the request's reference count to ensure that it is not deleted until the callback is run
-    *request_ptr = request;
-
-    CHECK_EQ(request->m_request, nullptr);
-    CHECK(request->m_state == Request::State::Init);
-    request->m_state = Request::State::Running;
-
-    ucp_request_param_t send_params;
-    send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
-    send_params.cb.send      = Callbacks::send2;
-
-    // Set the user data to the request pointer so that the callback can decrement the reference count
-    send_params.user_data = request_ptr;
-
-    request->m_request = ucp_tag_send_nbx(endpoint.handle(), addr, bytes, tag, &send_params);
-    CHECK(request->m_request);
-    CHECK(!UCS_PTR_IS_ERR(request->m_request));
+    auto request = endpoint->amSend(addr, bytes, UCS_MEMORY_TYPE_HOST);
 
     return request;
 }
-std::shared_ptr<Request> DataPlaneResources2::receive_async(void* addr,
-                                                            std::size_t bytes,
-                                                            std::uint64_t tag,
-                                                            std::uint64_t mask)
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async(std::shared_ptr<ucxx::Endpoint> endpoint)
 {
-    auto* request_ptr = new std::shared_ptr<Request>();
-
-    auto request = std::make_shared<Request>();
-
-    // Increment the request's reference count to ensure that it is not deleted until the callback is run
-    *request_ptr = request;
-
-    CHECK_EQ(request->m_request, nullptr);
-    CHECK(request->m_state == Request::State::Init);
-    request->m_state = Request::State::Running;
-
-    ucp_request_param_t params;
-    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
-    params.cb.recv      = Callbacks::recv2;
-
-    // Set the user data to the request pointer so that the callback can decrement the reference count
-    params.user_data = request_ptr;
-
-    request->m_request = ucp_tag_recv_nbx(m_worker->handle(), addr, bytes, tag, mask, &params);
-    CHECK(request->m_request);
-    CHECK(!UCS_PTR_IS_ERR(request->m_request));
+    auto request = endpoint->amRecv();
 
     return request;
 }
