@@ -17,14 +17,19 @@
 
 #pragma once
 
+#include "ucxx/request.h"
+
+#include "internal/data_plane/request.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
+#include "internal/ucx/forward.hpp"
 
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -86,6 +91,40 @@ class DataPlaneResources final : private Service, private resources::PartitionRe
     std::unique_ptr<Client> m_client;
 
     friend network::NetworkResources;
+};
+
+class DataPlaneResources2
+{
+  public:
+    DataPlaneResources2();
+    ~DataPlaneResources2();
+
+    ucx::Context& context() const;
+
+    ucx::Worker& worker() const;
+
+    std::shared_ptr<ucx::Endpoint> create_endpoint(const std::string& address);
+
+    // Advances the worker
+    uint32_t progress();
+
+    // Flushes the worker
+    void flush();
+
+    std::shared_ptr<Request> send_async(const ucx::Endpoint& endpoint, void* addr, std::size_t bytes, std::uint64_t tag);
+    std::shared_ptr<Request> receive_async(void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask);
+
+    std::shared_ptr<ucxx::Request> receive_async2(void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask);
+
+  private:
+    std::shared_ptr<ucx::Context> m_context;
+    std::shared_ptr<ucx::Worker> m_worker;
+    std::shared_ptr<ucx::RegistrationCache> m_registration_cache;
+
+    std::map<std::string, std::shared_ptr<ucx::Endpoint>> m_endpoints;
+
+    std::shared_ptr<ucxx::Context> m_context2;
+    std::shared_ptr<ucxx::Worker> m_worker2;
 };
 
 }  // namespace mrc::data_plane

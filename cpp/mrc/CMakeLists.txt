@@ -187,12 +187,13 @@ target_link_libraries(libmrc
     gRPC::grpc++
     gRPC::grpc
     gRPC::gpr
+    ucxx::ucxx
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199
     ucx::ucp
-    ucx::ucs
-    ucx::ucp
+    ucx::ucs # Not exported by UCXX
+    # ucx::ucp
     NodeJs::Node
     UV::uv
 )
@@ -216,9 +217,12 @@ if (MRC_ENABLE_CODECOV)
 endif()
 
 # In debug mode, dont allow missing symbols
-target_link_options(libmrc PUBLIC "$<$<CONFIG:Debug>:-Wl,--no-allow-shlib-undefined>")
+# target_link_options(libmrc PUBLIC "$<$<CONFIG:Debug>:-Wl,--no-allow-shlib-undefined>")
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
+
+target_compile_options(libmrc PUBLIC "-fsanitize=address")
+target_link_options(libmrc PUBLIC "-fsanitize=address")
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 

@@ -27,6 +27,9 @@ struct Callbacks final
     // internal point-to-point
     static void send(void* request, ucs_status_t status, void* user_data);
     static void recv(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data);
+
+    static void send2(void* request, ucs_status_t status, void* user_data);
+    static void recv2(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data);
 };
 
 }  // namespace mrc::data_plane

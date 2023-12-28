@@ -10,7 +10,7 @@ dependencies:
 - benchmark=1.6.0
 - boost-cpp=1.82
 - ccache
-- cmake=3.25
+- cmake=3.27
 - codecov=2.1
 - cuda-cudart-dev=11.8
 - cuda-nvcc
@@ -27,10 +27,10 @@ dependencies:
 - graphviz=3.0
 - gtest=1.13
 - gxx=11.2
-- include-what-you-use=0.20
+- include-what-you-use=0.21
 - libgrpc=1.54.0
 - libhwloc=2.9.2
-- librmm=23.06
+- librmm=23.12
 - ninja=1.10
 - nlohmann_json=3.9
 - nodejs=18

@@ -165,9 +165,13 @@ void Client::do_service_start(std::stop_token stop_token)
                 switch (m_cq->AsyncNext<gpr_timespec>(&event.tag, &event.ok, gpr_time_0(GPR_CLOCK_REALTIME)))
                 {
                 case grpc::CompletionQueue::NextStatus::GOT_EVENT: {
-                    backoff       = 1;
-                    auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
+                    backoff = 1;
+
+                    auto* promise = static_cast<rpc::PromiseWrapper*>(event.tag);
+
                     promise->set_value(event.ok);
+
+                    delete promise;
                 }
                 break;
                 case grpc::CompletionQueue::NextStatus::TIMEOUT: {

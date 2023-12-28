@@ -25,6 +25,7 @@ namespace mrc::data_plane {
 
 class Callbacks;
 class Client;
+class DataPlaneResources2;
 
 class Request final
 {
@@ -36,6 +37,8 @@ class Request final
     DELETE_MOVEABILITY(Request);
 
     // std::optional<Status> is_complete();
+    bool is_complete();
+
     bool await_complete();
 
     // attempts to cancel the request
@@ -59,6 +62,7 @@ class Request final
 
     friend Client;
     friend Callbacks;
+    friend DataPlaneResources2;
 };
 
 }  // namespace mrc::data_plane

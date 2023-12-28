@@ -39,6 +39,11 @@ PromiseWrapper::PromiseWrapper(std::string method, bool in_runtime) : id(++s_id_
     VLOG(20) << this->to_string() << "#1 creating promise";
 }
 
+PromiseWrapper::~PromiseWrapper()
+{
+    VLOG(20) << this->to_string() << "#5 destroying promise";
+}
+
 void PromiseWrapper::set_value(bool val)
 {
     auto tmp_prefix = this->to_string();

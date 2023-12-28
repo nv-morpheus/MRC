@@ -34,7 +34,7 @@ struct PromiseWrapper
 {
     PromiseWrapper(std::string method, bool in_runtime = true);
 
-    ~PromiseWrapper() = default;
+    ~PromiseWrapper();
 
     size_t id;
     std::string method;

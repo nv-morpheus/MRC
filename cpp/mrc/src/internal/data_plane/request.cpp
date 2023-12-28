@@ -19,6 +19,7 @@
 
 #include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
+#include <ucp/api/ucp.h>
 
 #include <ostream>
 
@@ -28,13 +29,30 @@ Request::Request() = default;
 
 Request::~Request()
 {
-    CHECK(m_state == State::Init) << "A Request that is in use is being destroyed";
+    CHECK(this->is_complete()) << "A Request that is in use is being destroyed";
+
+    if (m_rkey != nullptr)
+    {
+        ucp_rkey_destroy(reinterpret_cast<ucp_rkey_h>(m_rkey));
+        m_rkey = nullptr;
+    }
+
+    if (m_request != nullptr)
+    {
+        ucp_request_free(m_request);
+        m_request = nullptr;
+    }
 }
 
 void Request::reset()
 {
     m_state   = State::Init;
     m_request = nullptr;
+}
+
+bool Request::is_complete()
+{
+    return m_state != State::Init && m_state != State::Running;
 }
 
 bool Request::await_complete()

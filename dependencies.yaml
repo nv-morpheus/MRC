@@ -52,7 +52,7 @@ dependencies:
         packages:
           - boost-cpp=1.82
           - ccache
-          - cmake=3.25
+          - cmake=3.27
           - cuda-nvcc
           - cxx-compiler
           - glog=0.6
@@ -60,7 +60,7 @@ dependencies:
           - gxx=11.2
           - libgrpc=1.54.0
           - libhwloc=2.9.2
-          - librmm=23.06
+          - librmm=23.12
           - ninja=1.10
           - nlohmann_json=3.9
           - nodejs=18
@@ -82,14 +82,14 @@ dependencies:
       - output_types: [conda]
         packages:
           - bash-completion
-          - clang-tools=16
-          - clang=16
-          - clangdev=16
-          - clangxx=16
+          - clang-tools=17
+          - clang=17
+          - clangdev=17
+          - clangxx=17
           - gdb
-          - libclang-cpp=16
-          - libclang=16
-          - llvmdev=16
+          - libclang-cpp=17
+          - libclang=17
+          - llvmdev=17
 
   code_style:
     common:
@@ -97,7 +97,7 @@ dependencies:
         packages:
           - flake8
           - yapf
-          - include-what-you-use=0.20
+          - include-what-you-use=0.21
 
   testing:
     common:

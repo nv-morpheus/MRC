@@ -17,13 +17,17 @@
 
 #include "internal/data_plane/data_plane_resources.hpp"
 
+#include "internal/data_plane/callbacks.hpp"
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/memory/literals.hpp"
+
+#include <ucp/api/ucp.h>
 
 #include <memory>
 
@@ -115,6 +119,109 @@ mrc::runnable::LaunchOptions DataPlaneResources::launch_options(std::size_t conc
 const InstanceID& DataPlaneResources::instance_id() const
 {
     return m_instance_id;
+}
+
+DataPlaneResources2::DataPlaneResources2()
+{
+    DVLOG(10) << "initializing ucx context";
+    m_context = std::make_shared<ucx::Context>();
+
+    DVLOG(10) << "initialize a ucx data_plane worker";
+    m_worker = std::make_shared<ucx::Worker>(m_context);
+
+    DVLOG(10) << "initialize the registration cache for this context";
+    m_registration_cache = std::make_shared<ucx::RegistrationCache>(m_context);
+
+    // flush any work that needs to be done by the workers
+    this->flush();
+}
+
+DataPlaneResources2::~DataPlaneResources2() {}
+
+ucx::Context& DataPlaneResources2::context() const
+{
+    return *m_context;
+}
+
+ucx::Worker& DataPlaneResources2::worker() const
+{
+    return *m_worker;
+}
+
+std::shared_ptr<ucx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address)
+{
+    return std::make_shared<ucx::Endpoint>(m_worker, address);
+}
+
+uint32_t DataPlaneResources2::progress()
+{
+    // Forward the worker once
+    return m_worker->progress();
+}
+
+void DataPlaneResources2::flush()
+{
+    while (m_worker->progress() != 0)
+    {
+        // Loop again
+    }
+}
+
+std::shared_ptr<Request> DataPlaneResources2::send_async(const ucx::Endpoint& endpoint,
+                                                         void* addr,
+                                                         std::size_t bytes,
+                                                         std::uint64_t tag)
+{
+    auto* request_ptr = new std::shared_ptr<Request>();
+
+    auto request = std::make_shared<Request>();
+
+    // Increment the request's reference count to ensure that it is not deleted until the callback is run
+    *request_ptr = request;
+
+    CHECK_EQ(request->m_request, nullptr);
+    CHECK(request->m_state == Request::State::Init);
+    request->m_state = Request::State::Running;
+
+    ucp_request_param_t send_params;
+    send_params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    send_params.cb.send      = Callbacks::send2;
+
+    // Set the user data to the request pointer so that the callback can decrement the reference count
+    send_params.user_data = request_ptr;
+
+    request->m_request = ucp_tag_send_nbx(endpoint.handle(), addr, bytes, tag, &send_params);
+    CHECK(request->m_request);
+    CHECK(!UCS_PTR_IS_ERR(request->m_request));
+
+    return request;
+}
+std::shared_ptr<Request> DataPlaneResources2::receive_async(void* addr,
+                                                            std::size_t bytes,
+                                                            std::uint64_t tag,
+                                                            std::uint64_t mask)
+{
+    auto* request_ptr = new std::shared_ptr<Request>();
+
+    auto request = std::make_shared<Request>();
+
+    // Increment the request's reference count to ensure that it is not deleted until the callback is run
+    *request_ptr = request;
+
+    CHECK_EQ(request->m_request, nullptr);
+    CHECK(request->m_state == Request::State::Init);
+    request->m_state = Request::State::Running;
+
+    ucp_request_param_t params;
+    params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
+    params.cb.recv      = Callbacks::recv2;
+    params.user_data    = &request;
+
+    request->m_request = ucp_tag_recv_nbx(m_worker->handle(), addr, bytes, tag, mask, &params);
+    CHECK(request->m_request);
+    CHECK(!UCS_PTR_IS_ERR(request->m_request));
+
+    return request;
 }
 
 }  // namespace mrc::data_plane

@@ -23,6 +23,7 @@
 #include <ucp/api/ucp.h>
 
 #include <atomic>
+#include <memory>
 #include <ostream>
 
 namespace mrc::data_plane {
@@ -85,6 +86,83 @@ void Callbacks::recv(void* request, ucs_status_t status, const ucp_tag_recv_info
         LOG(FATAL) << "data_plane: pre_posted_recv_callback failed with status: " << ucs_status_string(status);
         user_req->m_state = Request::State::Error;
     }
+}
+
+void Callbacks::send2(void* request, ucs_status_t status, void* user_data)
+{
+    DVLOG(10) << "send callback start for request " << request;
+
+    DCHECK(user_data);
+
+    // Get the request pointer from the user data. We cast to a pointer to a shared pointer so we can delete it
+    auto* user_req_ptr = static_cast<std::shared_ptr<Request>*>(user_data);
+
+    // Convert to a ref so its easy to use
+    auto& user_req = *user_req_ptr;
+
+    DCHECK(user_req->m_state == Request::State::Running);
+
+    // if (user_req->m_rkey != nullptr)
+    // {
+    //     ucp_rkey_destroy(reinterpret_cast<ucp_rkey_h>(user_req->m_rkey));
+    // }
+
+    if (status == UCS_OK)
+    {
+        // ucp_request_free(request);
+        // user_req->m_request = nullptr;
+        user_req->m_state = Request::State::OK;
+    }
+
+    else if (status == UCS_ERR_CANCELED)
+    {
+        // ucp_request_free(request);
+        // user_req->m_request = nullptr;
+        user_req->m_state = Request::State::Cancelled;
+    }
+    else
+    {
+        // todo(ryan) - set the promise exception ptr
+        LOG(FATAL) << "data_plane: pre_posted_recv_callback failed with status: " << ucs_status_string(status);
+        user_req->m_state = Request::State::Error;
+    }
+
+    // Delete the instance (of just the shared pointer) to decrement the reference count
+    delete user_req_ptr;
+}
+
+void Callbacks::recv2(void* request, ucs_status_t status, const ucp_tag_recv_info_t* msg_info, void* user_data)
+{
+    DCHECK(user_data);
+    // Get the request pointer from the user data. We cast to a pointer to a shared pointer so we can delete it
+    auto* user_req_ptr = static_cast<std::shared_ptr<Request>*>(user_data);
+
+    // Convert to a ref so its easy to use
+    auto& user_req = *user_req_ptr;
+
+    DCHECK(user_req->m_state == Request::State::Running);
+
+    if (status == UCS_OK)  // cpp20 [[likely]]
+    {
+        // ucp_request_free(request);
+        // user_req->m_request = nullptr;
+        user_req->m_state = Request::State::OK;
+    }
+    else if (status == UCS_ERR_CANCELED)
+    {
+        // ucp_request_free(request);
+        // user_req->m_request = nullptr;
+        user_req->m_state = Request::State::Cancelled;
+    }
+    else
+    {
+        // todo(ryan) - set the promise exception ptr
+        LOG(FATAL) << "data_plane: pre_posted_recv_callback failed with status: " << ucs_status_string(status);
+        user_req->m_state = Request::State::Error;
+    }
+
+    // Delete the instance (of just the shared pointer) to decrement the reference count
+    delete user_req_ptr;
 }
 
 }  // namespace mrc::data_plane

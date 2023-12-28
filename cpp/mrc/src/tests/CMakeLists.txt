@@ -71,13 +71,13 @@ add_executable(test_mrc_private
 
 target_link_libraries(test_mrc_private
   PRIVATE
-  ${PROJECT_NAME}::libmrc
-  GTest::gtest
-  hwloc::hwloc
-  ucx::ucs
-  ucx::ucp
-  pthread
-  mrc_test_protos
+    ${PROJECT_NAME}::libmrc
+    GTest::gtest
+    hwloc::hwloc
+    ucx::ucs
+    # ucx::ucp
+    pthread
+    mrc_test_protos
 )
 
 # Necessary include to prevent IWYU from showing absolute paths

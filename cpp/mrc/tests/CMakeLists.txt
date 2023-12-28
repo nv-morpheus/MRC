@@ -43,8 +43,8 @@ add_executable(test_mrc
 
 target_link_libraries(test_mrc
   PRIVATE
-  ${PROJECT_NAME}::libmrc
-  GTest::gtest
+    ${PROJECT_NAME}::libmrc
+    GTest::gtest
 )
 
 add_test(
