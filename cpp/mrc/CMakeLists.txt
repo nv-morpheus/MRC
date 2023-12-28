@@ -221,8 +221,8 @@ endif()
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
-target_compile_options(libmrc PUBLIC "-fsanitize=address")
-target_link_options(libmrc PUBLIC "-fsanitize=address")
+# target_compile_options(libmrc PUBLIC "-fsanitize=address")
+# target_link_options(libmrc PUBLIC "-fsanitize=address")
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 

@@ -215,7 +215,9 @@ std::shared_ptr<Request> DataPlaneResources2::receive_async(void* addr,
     ucp_request_param_t params;
     params.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA | UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
     params.cb.recv      = Callbacks::recv2;
-    params.user_data    = &request;
+
+    // Set the user data to the request pointer so that the callback can decrement the reference count
+    params.user_data = request_ptr;
 
     request->m_request = ucp_tag_recv_nbx(m_worker->handle(), addr, bytes, tag, mask, &params);
     CHECK(request->m_request);
@@ -223,5 +225,20 @@ std::shared_ptr<Request> DataPlaneResources2::receive_async(void* addr,
 
     return request;
 }
+
+// std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
+//                                                             std::size_t bytes,
+//                                                             std::uint64_t tag,
+//                                                             std::uint64_t mask)
+// {
+
+//     ucxx::Endpoint endpoint(m_worker, m_worker->address());
+
+//     auto request = endpoint.amRecv();
+
+//     request.
+
+//     return request;
+// }
 
 }  // namespace mrc::data_plane

@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "ucxx/request.h"
-
 #include "internal/data_plane/request.hpp"
 #include "internal/memory/transient_pool.hpp"
 #include "internal/resources/partition_resources_base.hpp"
@@ -114,17 +112,12 @@ class DataPlaneResources2
     std::shared_ptr<Request> send_async(const ucx::Endpoint& endpoint, void* addr, std::size_t bytes, std::uint64_t tag);
     std::shared_ptr<Request> receive_async(void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask);
 
-    std::shared_ptr<ucxx::Request> receive_async2(void* addr, std::size_t bytes, std::uint64_t tag, std::uint64_t mask);
-
   private:
     std::shared_ptr<ucx::Context> m_context;
     std::shared_ptr<ucx::Worker> m_worker;
     std::shared_ptr<ucx::RegistrationCache> m_registration_cache;
 
     std::map<std::string, std::shared_ptr<ucx::Endpoint>> m_endpoints;
-
-    std::shared_ptr<ucxx::Context> m_context2;
-    std::shared_ptr<ucxx::Worker> m_worker2;
 };
 
 }  // namespace mrc::data_plane
