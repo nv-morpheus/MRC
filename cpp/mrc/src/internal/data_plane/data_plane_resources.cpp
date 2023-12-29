@@ -171,32 +171,56 @@ std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::
     return endpoint;
 }
 
-uint32_t DataPlaneResources2::progress()
+bool DataPlaneResources2::progress()
 {
     // Forward the worker once
+    return m_worker->progressOnce();
+}
+
+bool DataPlaneResources2::flush()
+{
     return m_worker->progress();
 }
 
-void DataPlaneResources2::flush()
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      void* buffer,
+                                                                      size_t length,
+                                                                      uint64_t tag)
 {
-    while (m_worker->progress() != 0)
-    {
-        // Loop again
-    }
-}
+    // TODO(MDD): Check that this EP belongs to this resource
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                               void* addr,
-                                                               std::size_t bytes,
-                                                               std::uint64_t tag)
-{
-    auto request = endpoint->amSend(addr, bytes, UCS_MEMORY_TYPE_HOST);
+    auto request = endpoint->tagSend(buffer, length, tag);
 
     return request;
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async(std::shared_ptr<ucxx::Endpoint> endpoint)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      void* buffer,
+                                                                      size_t length,
+                                                                      uint64_t tag,
+                                                                      uint64_t tag_mask)
 {
+    // TODO(MDD): Check that this EP belongs to this resource
+    // TODO(MDD): Once 0.35 is released, support tag_mask
+    auto request = endpoint->tagRecv(buffer, length, tag);
+
+    return request;
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                  void* addr,
+                                                                  std::size_t bytes,
+                                                                  ucs_memory_type_t mem_type)
+{
+    // TODO(MDD): Check that this EP belongs to this resource
+    auto request = endpoint->amSend(addr, bytes, mem_type);
+
+    return request;
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint)
+{
+    // TODO(MDD): Check that this EP belongs to this resource
     auto request = endpoint->amRecv();
 
     return request;

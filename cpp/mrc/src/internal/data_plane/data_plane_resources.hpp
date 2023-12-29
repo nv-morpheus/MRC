@@ -26,6 +26,8 @@
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
+#include <ucs/memory/memory_type.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -114,16 +116,27 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address);
 
     // Advances the worker
-    uint32_t progress();
+    bool progress();
 
     // Flushes the worker
-    void flush();
+    bool flush();
 
-    std::shared_ptr<ucxx::Request> send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                              void* addr,
-                                              std::size_t bytes,
-                                              std::uint64_t tag);
-    std::shared_ptr<ucxx::Request> receive_async(std::shared_ptr<ucxx::Endpoint> endpoint);
+    std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     void* buffer,
+                                                     size_t length,
+                                                     uint64_t tag);
+
+    std::shared_ptr<ucxx::Request> tagged_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     void* buffer,
+                                                     size_t length,
+                                                     uint64_t tag,
+                                                     uint64_t tag_mask);
+
+    std::shared_ptr<ucxx::Request> am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                 void* addr,
+                                                 std::size_t bytes,
+                                                 ucs_memory_type_t mem_type);
+    std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
   private:
     std::shared_ptr<ucxx::Context> m_context;

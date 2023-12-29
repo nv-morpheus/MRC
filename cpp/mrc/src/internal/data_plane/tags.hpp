@@ -23,8 +23,13 @@
 #include <stdexcept>
 #include <tuple>
 
+namespace mrc::data_plane {
+
 static constexpr ucp_tag_t ALL1_BITS = 0xFFFFFFFFFFFFFFFF;  // NOLINT
 static constexpr ucp_tag_t ALL0_BITS = 0x0000000000000000;  // NOLINT
+
+static constexpr ucp_tag_t TAG_MASK_FULL = ALL1_BITS;  // NOLINT
+static constexpr ucp_tag_t TAG_MASK_NONE = ALL0_BITS;  // NOLINT
 
 static constexpr ucp_tag_t TAG_MSG_MASK = 0xF000000000000000;  // leading 4 bits are 1111  // NOLINT
 static constexpr ucp_tag_t TAG_RND_MSG  = 0x8000000000000000;  // leading 4 bits are 1000  // NOLINT
@@ -34,6 +39,63 @@ static constexpr ucp_tag_t TAG_UKN_MSG  = 0x1000000000000000;  // leading 4 bits
 
 static constexpr ucp_tag_t TAG_CTRL_MASK = 0xFFFF000000000000;  // 48-bits  // NOLINT
 static constexpr ucp_tag_t TAG_USER_MASK = 0x0000FFFFFFFFFFFF;  // 48-bits  // NOLINT
+
+struct TagMasks
+{
+    /**
+     * @brief Full mask. Matches any tag. All bits are 1
+     *
+     */
+    static constexpr ucp_tag_t Full = 0xFFFFFFFFFFFFFFFF;
+
+    /**
+     * @brief Empty mask. Matches no tag. All bits are 0
+     *
+     */
+    static constexpr ucp_tag_t Empty = 0x0000000000000000;
+
+    /**
+     * @brief Any message. Leading 4 bits are 1111
+     *
+     */
+    static constexpr ucp_tag_t AnyMsg = 0xF000000000000000;
+
+    /**
+     * @brief Rendezvous message. Leading 4 bits are 1000
+     *
+     */
+    static constexpr ucp_tag_t RndvMsg = 0x8000000000000000;
+
+    /**
+     * @brief Eager message. Leading 4 bits are 0100
+     *
+     */
+    static constexpr ucp_tag_t EagerMsg = 0x4000000000000000;
+
+    /**
+     * @brief Peer-to-Peer message. Leading 4 bits are 0010
+     *
+     */
+    static constexpr ucp_tag_t P2PMsg = 0x2000000000000000;
+
+    /**
+     * @brief Unknown message. Leading 4 bits are 0001
+     *
+     */
+    static constexpr ucp_tag_t UnknownMsg = 0x1000000000000000;
+
+    /**
+     * @brief Control message. Upper 16-bits
+     *
+     */
+    static constexpr ucp_tag_t ControlMsg = 0xFFFF000000000000;
+
+    /**
+     * @brief User message. Lower 48-bits
+     *
+     */
+    static constexpr ucp_tag_t UserMsg = 0x0000FFFFFFFFFFFF;
+};
 
 static ucp_tag_t decode_tag_msg(const ucp_tag_t& tag)
 {
@@ -50,3 +112,4 @@ static std::uint64_t decode_user_bits(const ucp_tag_t& tag)
 {
     return tag & TAG_USER_MASK;
 }
+}  // namespace mrc::data_plane
