@@ -20,9 +20,12 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/types.hpp"
 #include "mrc/memory/buffer_view.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <google/protobuf/message.h>
 
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <typeindex>
 

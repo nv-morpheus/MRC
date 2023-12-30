@@ -45,7 +45,7 @@ add_executable(test_mrc_private
   pipelines/multi_segment.cpp
   pipelines/single_segment.cpp
   segments/common_segments.cpp
-  # test_codable.cpp
+  test_codable.cpp
   # test_control_plane_components.cpp
   # test_control_plane.cpp
   test_expected.cpp

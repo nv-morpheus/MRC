@@ -23,6 +23,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/forward.hpp"
 
+#include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
@@ -122,18 +123,25 @@ class DataPlaneResources2
     bool flush();
 
     std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                     void* buffer,
-                                                     size_t length,
+                                                     memory::const_buffer_view buffer_view,
+                                                     uint64_t tag);
+
+    std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     const void* buffer,
+                                                     size_t bytes,
                                                      uint64_t tag);
 
     std::shared_ptr<ucxx::Request> tagged_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      void* buffer,
-                                                     size_t length,
+                                                     size_t bytes,
                                                      uint64_t tag,
                                                      uint64_t tag_mask);
 
     std::shared_ptr<ucxx::Request> am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                 void* addr,
+                                                 memory::const_buffer_view buffer_view);
+
+    std::shared_ptr<ucxx::Request> am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                 const void* addr,
                                                  std::size_t bytes,
                                                  ucs_memory_type_t mem_type);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);

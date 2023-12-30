@@ -49,10 +49,10 @@ Runtime::Runtime(std::unique_ptr<resources::SystemResources> resources) :
 {
     CHECK(m_sys_resources) << "resources cannot be null";
 
-    // for (int i = 0; i < m_sys_resources->partition_count(); i++)
-    // {
-    //     m_partitions.push_back(std::make_unique<Partition>(m_sys_resources->partition(i)));
-    // }
+    for (int i = 0; i < m_sys_resources->partition_count(); i++)
+    {
+        m_partitions.push_back(std::make_unique<PartitionRuntime>(*this, i));
+    }
 
     // // Now create the threading resources and system wide runnable so it is available to AsyncService
     // m_sys_threading_resources = std::make_unique<system::ThreadingResources>(*this);

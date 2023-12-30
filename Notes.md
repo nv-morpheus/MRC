@@ -203,7 +203,44 @@ Publisher<T> Data Path:
    * Pairs the descriptor handle with a destination
  * `DescriptorMessage` -> `protos::RemoteDescriptor`
    * extracts the protobuf from the `LocalDescriptorHandle` (releasing it from tracking the `Storage` lifetime)
- *
- *
- * Subscriber<T> Data Path:
+
+
+Subscriber<T> Data Path:
  * Data Plane Tagged Received -> Transient Buffer -> RemoteDescriptor -> Subscriber/Source<T> ->
+
+
+## Data Plane Order of Operations
+
+The following steps are the order of operations that occur when an object is passed from one Egress to a remote Ingress:
+
+1. Transfer of ownership from value `T` to a `Descriptor` object
+   1. No serialization occurs here. The goal is to convert the type `T` into a type erased object `Descriptor` which can be transferred or kept local
+2. The descriptor is then tagged with its destination and converted into a `DescriptorMessage`
+   1. The `DescriptorMessage` object combines a `Descriptor` with a destination. This is necessary to determine if the object will stay local or be sent to a remote machine and needs to be serialized
+3. At this point, the path splits into two:
+   1. If the destination is local, the `DescriptorMessage` is sent to the corresponding Ingress object which will then perform the inverse steps:
+      1. Convert the `DescriptorMessage` into a `Descriptor` object
+      2. Convert the `Descriptor` object into a `T` object
+   2. If the destination is remote, the `Descriptor` will need to be serialized in order to be sent to another machine. The remaining steps outline the remote process.
+4. If the destination is remote, the `DescriptorMessage` payload is converted into an `EncodedDescriptor` message.
+   1. Because this requires knowing the type `T`, this must all happen on the egress object to be templated.
+   2. To convert to an `EncodedDescriptor` you must provide a `IStorageProvider`
+5. The `Storage` object associated with the `EncodedDescriptor` contains a protobuf which is then directly serialized and sent across the wire via UCX
+6. Upon receiving the active message containing the protobuf bytes, the object is then converted back into a `Storage` object so it can be used to decode the data
+7. The `Storage` object is then converted into a `RemoteDescriptor` object because some of the data may have been sent eagerly and is already available, but some may still reside on the remote machine/
+8. The `RemoteDescriptor` object is then converted into an `EncodedDescriptor` object ensuring all of the data is now available locally
+   1. This happens at the network level since it may require issuing network requests to retrieve the data
+9. The `EncodedDescriptor` object is then converted into a `Descriptor` object which can then be converted into a `T` object
+   1. This happens at the Ingress level since it requires knowing the type `T` to perform the deserialization
+
+* `EncodedObjectProto`
+  * Wrapper around the `EncodedObject` proto which simplifies adding objects and querying information from the protobuf
+* `LocalDescriptor`
+  * Combines local memory buffers, which are registered with the UCX runtime, with a `EncodedObjectProto` object.
+  * This object facilitates serialization/deserialization of the data
+  * This object owns memory buffers since serialization can create a protobuf which is larger than the eager size
+    * For example, when serializing an object which contains a block of GPU memory. The serialization may create descriptors which only reference the block address and size. This data needs to be separated from the `EncodedObjectProto` because it will not be serialized and sent in the active message
+  * During deserialization, any descriptors which reference memory blocks will need the data locally available.
+* `RemoteDescriptor`
+  * Similar to a `LocalDescriptor` except it does not own any memory buffers. Any memory buffers referenced in the `EncodedObject` proto are not available locally and will need to be retrieved from the remote machine
+  * Can be converted directly to a `LocalDescriptor` by fetching any remote memory blocks

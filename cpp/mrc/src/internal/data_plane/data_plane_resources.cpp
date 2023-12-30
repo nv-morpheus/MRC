@@ -23,6 +23,7 @@
 #include "internal/memory/host_resources.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
+#include "internal/ucx/utils.hpp"
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/memory/literals.hpp"
@@ -183,13 +184,21 @@ bool DataPlaneResources2::flush()
 }
 
 std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      void* buffer,
+                                                                      memory::const_buffer_view buffer_view,
+                                                                      uint64_t tag)
+{
+    return this->tagged_send_async(endpoint, buffer_view.data(), buffer_view.bytes(), tag);
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      const void* buffer,
                                                                       size_t length,
                                                                       uint64_t tag)
 {
     // TODO(MDD): Check that this EP belongs to this resource
 
-    auto request = endpoint->tagSend(buffer, length, tag);
+    // Const cast away because UCXX only accepts void*
+    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, tag);
 
     return request;
 }
@@ -208,12 +217,23 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::share
 }
 
 std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                  void* addr,
+                                                                  memory::const_buffer_view buffer_view)
+{
+    return this->am_send_async(endpoint,
+                               buffer_view.data(),
+                               buffer_view.bytes(),
+                               ucx::to_ucs_memory_type(buffer_view.kind()));
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                  const void* addr,
                                                                   std::size_t bytes,
                                                                   ucs_memory_type_t mem_type)
 {
     // TODO(MDD): Check that this EP belongs to this resource
-    auto request = endpoint->amSend(addr, bytes, mem_type);
+
+    // Const cast away because UCXX only accepts void*
+    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type);
 
     return request;
 }

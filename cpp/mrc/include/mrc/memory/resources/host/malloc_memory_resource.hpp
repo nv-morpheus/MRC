@@ -19,10 +19,20 @@
 
 #include "mrc/memory/resources/memory_resource.hpp"
 
+#include <memory>
+
 namespace mrc::memory {
 
 class malloc_memory_resource final : public memory_resource
 {
+  public:
+    static std::shared_ptr<malloc_memory_resource> instance()
+    {
+        static std::shared_ptr<malloc_memory_resource> instance = std::make_shared<malloc_memory_resource>();
+        return instance;
+    }
+
+  private:
     void* do_allocate(std::size_t bytes) final
     {
         return std::malloc(bytes);

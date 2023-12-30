@@ -19,4 +19,28 @@
 
 #include "internal/ucx/common.hpp"
 
-namespace mrc::ucx {}  // namespace mrc::ucx
+#include "mrc/memory/memory_kind.hpp"
+
+#include <ucs/memory/memory_type.h>
+
+namespace mrc::ucx {
+
+ucs_memory_type_t to_ucs_memory_type(memory::memory_kind kind)
+{
+    switch (kind)
+    {
+    case memory::memory_kind::none:
+        return UCS_MEMORY_TYPE_UNKNOWN;
+    case memory::memory_kind::host:
+    case memory::memory_kind::pinned:
+        return UCS_MEMORY_TYPE_HOST;
+    case memory::memory_kind::device:
+        return UCS_MEMORY_TYPE_CUDA;
+    case memory::memory_kind::managed:
+        return UCS_MEMORY_TYPE_CUDA_MANAGED;
+    default:
+        throw std::runtime_error("Unknown memory kind");
+    }
+}
+
+}  // namespace mrc::ucx

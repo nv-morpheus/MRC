@@ -19,6 +19,8 @@
 
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/encode.hpp"
+#include "mrc/memory/buffer.hpp"
+#include "mrc/memory/buffer_view.hpp"
 
 #include <memory>
 #include <utility>
@@ -74,6 +76,49 @@ class EncodedObject<std::unique_ptr<T>> : public EncodedStorage
 
   private:
     std::unique_ptr<T> m_object;
+};
+
+class EncodedObjectProto
+{
+  public:
+    EncodedObjectProto() = default;
+
+    bool operator==(const EncodedObjectProto& other) const;
+
+    size_t objects_size() const;
+    size_t descriptors_size() const;
+
+    bool context_acquired() const;
+
+    obj_idx_t push_context(std::type_index type_index);
+
+    void pop_context(obj_idx_t object_idx);
+
+    // Adds an eager descriptor and copies the data into the protobuf
+    void add_eager_descriptor(memory::const_buffer_view view);
+
+    // Adds a remote memory descriptor and sets the properties
+    void add_remote_memory_descriptor(uint64_t instance_id,
+                                      uintptr_t address,
+                                      size_t bytes,
+                                      uintptr_t memory_block_address,
+                                      size_t memory_block_size,
+                                      void* remote_key,
+                                      memory::memory_kind memory_kind);
+
+    memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
+
+    memory::buffer_view to_bytes(memory::buffer_view buffer) const;
+
+    static std::unique_ptr<EncodedObjectProto> from_bytes(memory::const_buffer_view view);
+
+  private:
+    mrc::codable::protos::EncodedObject m_proto;
+
+    bool m_context_acquired{false};
+    mutable std::mutex m_mutex;
+
+    std::optional<obj_idx_t> m_parent{std::nullopt};
 };
 
 }  // namespace mrc::codable

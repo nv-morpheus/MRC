@@ -17,6 +17,7 @@
 
 #include "tests/common.hpp"
 
+#include "internal/codable/codable_storage.hpp"
 #include "internal/control_plane/client.hpp"
 #include "internal/control_plane/client/connections_manager.hpp"
 #include "internal/control_plane/client/instance.hpp"
@@ -37,12 +38,15 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "mrc/codable/encoded_object.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/literals.hpp"
+#include "mrc/memory/memory_kind.hpp"
 #include "mrc/memory/resources/arena_resource.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 #include "mrc/memory/resources/host/pinned_memory_resource.hpp"
 #include "mrc/memory/resources/logging_resource.hpp"
 #include "mrc/memory/resources/memory_resource.hpp"
@@ -399,6 +403,38 @@ TEST_F(TestNetwork, SimpleActiveMessage)
     std::memcpy(&recv_data, receive_request->getRecvBuffer()->data(), receive_request->getRecvBuffer()->getSize());
 
     EXPECT_EQ(send_data, recv_data);
+}
+
+TEST_F(TestNetwork, TransferStorageObject)
+{
+    data_plane::DataPlaneResources2 resources;
+
+    auto ep = resources.create_endpoint(resources.address());
+
+    auto send_encoded_obj = std::make_unique<codable::EncodedObjectProto>();
+
+    uint32_t send_data = 42;
+
+    // Add some data to the stored object
+    send_encoded_obj->add_eager_descriptor({&send_data, sizeof(uint32_t), memory::memory_kind::host});
+
+    // Get the serialized data
+    auto serialized_data = send_encoded_obj->to_bytes(memory::malloc_memory_resource::instance());
+
+    auto receive_request = resources.am_recv_async(ep);
+
+    auto send_request = resources.am_send_async(ep, serialized_data);
+
+    while (!send_request->isCompleted() || !receive_request->isCompleted())
+    {
+        resources.progress();
+    }
+
+    auto recv_encoded_proto = codable::EncodedObjectProto::from_bytes({receive_request->getRecvBuffer()->data(),
+                                                                       receive_request->getRecvBuffer()->getSize(),
+                                                                       mrc::memory::memory_kind::host});
+
+    EXPECT_EQ(*send_encoded_obj, *recv_encoded_proto);
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
