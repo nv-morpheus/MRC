@@ -16,7 +16,6 @@ dependencies:
 - cuda-nvcc
 - cuda-nvml-dev=12.0
 - cuda-nvrtc-dev=12.0
-- cuda-python=12.0.2
 - cuda-tools=12.0
 - cuda-version=12.0
 - cxx-compiler
@@ -27,9 +26,9 @@ dependencies:
 - gtest=1.13
 - gxx=11.2
 - include-what-you-use=0.20
-- libgrpc>=1.59.3,<1.60.0a0
+- libgrpc
 - libhwloc=2.9.2
-- librmm=23.10
+- librmm=23.12
 - ninja=1.10
 - nlohmann_json=3.9
 - numactl-libs-cos7-x86_64
@@ -39,7 +38,6 @@ dependencies:
 - pytest
 - pytest-asyncio
 - pytest-timeout
-- python=3.10
 - scikit-build>=0.17
 - ucx=1.15
 name: ci_cuda-120_arch-x86_64
