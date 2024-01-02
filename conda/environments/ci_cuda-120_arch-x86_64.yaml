@@ -3,22 +3,22 @@
 channels:
 - conda-forge
 - rapidsai
-- nvidia/label/cuda-11.8.0
+- nvidia/label/cuda-12.0.0
 - nvidia
 - rapidsai-nightly
 dependencies:
 - benchmark=1.6.0
 - boost-cpp=1.82
 - ccache
-- cmake=3.25
+- cmake=3.26.4
 - codecov=2.1
-- cuda-cudart-dev=11.8
+- cuda-cudart-dev=12.0
 - cuda-nvcc
-- cuda-nvml-dev=11.8
-- cuda-nvrtc-dev=11.8
-- cuda-python=11.8.2
-- cuda-tools=11.8
-- cuda-version=11.8
+- cuda-nvml-dev=12.0
+- cuda-nvrtc-dev=12.0
+- cuda-python=12.0.2
+- cuda-tools=12.0
+- cuda-version=12.0
 - cxx-compiler
 - doxygen=1.9.2
 - gcovr=5.0
@@ -27,9 +27,9 @@ dependencies:
 - gtest=1.13
 - gxx=11.2
 - include-what-you-use=0.20
-- libgrpc=1.54.0
+- libgrpc>=1.59.3,<1.60.0a0
 - libhwloc=2.9.2
-- librmm=23.06
+- librmm=23.10
 - ninja=1.10
 - nlohmann_json=3.9
 - numactl-libs-cos7-x86_64
@@ -41,5 +41,5 @@ dependencies:
 - pytest-timeout
 - python=3.10
 - scikit-build>=0.17
-- ucx=1.14
-name: ci_cuda-118_arch-x86_64
+- ucx=1.15
+name: ci_cuda-120_arch-x86_64
