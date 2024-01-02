@@ -17,13 +17,13 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci-conda"
-ARG CUDA_VER=11.8.0
+ARG CUDA_VER=12.0.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=20.04
 ARG PYTHON_VER=3.10
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.10 AS base
+FROM ${FROM_IMAGE}:cuda12.0.0-ubuntu20.04-py3.10 AS base
 
 ARG PROJ_NAME=mrc
 
@@ -35,12 +35,12 @@ RUN --mount=type=cache,target=/var/cache/apt \
     libnuma1 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./conda/environments/all_cuda-118_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml
+COPY ./conda/environments/all_cuda-120_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-120_arch-x86_64.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-120_arch-x86_64.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
