@@ -20,6 +20,8 @@
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
+#include "mrc/codable/encoded_object.hpp"
+#include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/type_traits.hpp"  // IWYU pragma: keep
 #include "mrc/utils/macros.hpp"
 
@@ -38,6 +40,10 @@ class Manager;
 namespace mrc::resources {
 class PartitionResources;
 }  // namespace mrc::resources
+
+namespace mrc::data_plane {
+class DataPlaneResources2;
+}
 
 namespace mrc::runtime {
 
@@ -266,5 +272,84 @@ T Descriptor::await_decode(std::size_t object_idx)
 
     return codable::Decoder<T>(*storage).deserialize(object_idx);
 }
+
+class LocalDescriptor2;
+class RemoteDescriptor2;
+
+class ValueDescriptor
+{
+  private:
+    virtual std::unique_ptr<codable::EncodedObjectWithPayload> encode(
+        std::shared_ptr<memory::memory_block_provider> block_provider) = 0;
+
+    friend LocalDescriptor2;
+};
+
+template <typename T>
+class TypedValueDescriptor : public ValueDescriptor
+{
+  public:
+    const T& value() const
+    {
+        return m_value;
+    }
+
+    static std::unique_ptr<TypedValueDescriptor<T>> create(T&& value)
+    {
+        return std::unique_ptr<TypedValueDescriptor<T>>(new TypedValueDescriptor<T>(std::move(value)));
+    }
+    static std::unique_ptr<TypedValueDescriptor<T>> from_local(std::unique_ptr<LocalDescriptor2> local_descriptor)
+    {
+        T temp;
+
+        // Perform a decode to get the value
+
+        return std::unique_ptr<TypedValueDescriptor<T>>(new TypedValueDescriptor<T>(std::move(temp)));
+    }
+
+  private:
+    TypedValueDescriptor(T&& value) : m_value(std::move(value)) {}
+
+    std::unique_ptr<codable::EncodedObjectWithPayload> encode(
+        std::shared_ptr<memory::memory_block_provider> block_provider) override
+    {
+        return mrc::codable::encode2(m_value, block_provider);
+    }
+
+    T m_value;
+};
+
+// Combines a EncodedObjectProto with a local registered buffers if needed
+class LocalDescriptor2
+{
+  public:
+    codable::EncodedObjectProto& encoded_object() const;
+
+    static std::unique_ptr<LocalDescriptor2> from_value(std::unique_ptr<ValueDescriptor> value_descriptor,
+                                                        std::shared_ptr<memory::memory_block_provider> block_provider);
+
+    static std::unique_ptr<LocalDescriptor2> from_remote(std::unique_ptr<RemoteDescriptor2> remote_descriptor,
+                                                         data_plane::DataPlaneResources2& data_plane_resources);
+
+  private:
+    LocalDescriptor2(std::unique_ptr<codable::EncodedObjectWithPayload> encoded_object,
+                     std::unique_ptr<ValueDescriptor> value_descriptor = nullptr);
+
+    std::unique_ptr<codable::EncodedObjectWithPayload> m_encoded_object;
+
+    std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
+};
+
+class RemoteDescriptor2
+{
+  public:
+    codable::EncodedObjectProto& encoded_object() const;
+
+    static std::unique_ptr<RemoteDescriptor2> from_encoded_object(
+        std::unique_ptr<codable::EncodedObjectProto> encoded_object);
+
+  private:
+    std::unique_ptr<codable::EncodedObjectProto> m_encoded_object;
+};
 
 }  // namespace mrc::runtime

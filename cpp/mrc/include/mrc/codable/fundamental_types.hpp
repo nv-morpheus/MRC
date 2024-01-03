@@ -37,6 +37,13 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
         auto index = encoder.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
+    static void serialize(const T& t, Encoder2<T>& encoder, const EncodingOptions& opts)
+    {
+        // codable::encode2(t, encoder, std::move(opts));
+
+        encoder.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
+    }
+
     static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
     {
         DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
@@ -52,7 +59,24 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
 template <typename T>
 struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
 {
-    static void serialize(const T& str, Encoder<T>& encoder, const EncodingOptions& opts)
+    static void serialize(const std::string& str, Encoder<T>& encoder, const EncodingOptions& opts)
+    {
+        if (opts.force_copy())
+        {
+            auto index = encoder.create_memory_buffer(str.size());
+            encoder.copy_to_buffer(index, {str.data(), str.size(), memory::memory_kind::host});
+        }
+        else
+        {
+            auto idx = encoder.register_memory_view({str.data(), str.size(), memory::memory_kind::host});
+            if (!idx)
+            {
+                encoder.copy_to_eager_descriptor({str.data(), str.size(), memory::memory_kind::host});
+            }
+        }
+    }
+
+    static void serialize(const std::string& str, Encoder2<T>& encoder, const EncodingOptions& opts)
     {
         if (opts.force_copy())
         {

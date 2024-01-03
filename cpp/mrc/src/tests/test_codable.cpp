@@ -76,7 +76,7 @@ class CodableObject
         return {};
     }
 
-    void serialize(Encoder<CodableObject>& /*unused*/) {}
+    void serialize(Encoder<CodableObject>& /*unused*/) const {}
 };
 
 class CodableObjectWithOptions
@@ -91,7 +91,7 @@ class CodableObjectWithOptions
         return {};
     }
 
-    void serialize(Encoder<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) {}
+    void serialize(Encoder<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) const {}
 };
 
 class CodableViaExternalStruct

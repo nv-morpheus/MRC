@@ -18,8 +18,10 @@
 #pragma once
 
 #include "mrc/codable/api.hpp"
+#include "mrc/codable/encoded_object_proto.hpp"
 #include "mrc/codable/storage_forwarder.hpp"
 #include "mrc/codable/type_traits.hpp"
+#include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/utils/sfinae_concept.hpp"
 
 #include <memory>
@@ -65,6 +67,50 @@ struct Decoder final : public StorageForwarder
     }
 
     const IDecodableStorage& m_storage;
+
+    friend T;
+    friend codable_protocol<T>;
+};
+
+template <typename T>
+struct Decoder2 final : public StorageForwarder
+{
+  public:
+    Decoder2(EncodedObjectProto& encoded_object, memory::memory_block_provider& block_provider) :
+      m_encoded_object(encoded_object),
+      m_block_provider(block_provider)
+    {}
+
+    T deserialize(std::size_t object_idx) const
+    {
+        return detail::deserialize<T>(sfinae::full_concept{}, *this, object_idx);
+    }
+
+  protected:
+    void read_into_buffer(const idx_t& idx, memory::buffer_view dst_view) const
+    {
+        // m_encoded_object.read_into_buffer(idx, dst_view);
+    }
+
+    std::size_t buffer_size(const idx_t& idx) const
+    {
+        // return m_storage.buffer_size(idx);
+        return -1;
+    }
+
+    // std::shared_ptr<mrc::memory::memory_resource> host_memory_resource() const
+    // {
+    //     return m_storage.host_memory_resource();
+    // }
+
+    // std::shared_ptr<mrc::memory::memory_resource> device_memory_resource() const
+    // {
+    //     return m_storage.host_memory_resource();
+    // }
+
+  private:
+    EncodedObjectProto& m_encoded_object;
+    memory::memory_block_provider& m_block_provider;
 
     friend T;
     friend codable_protocol<T>;

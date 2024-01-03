@@ -83,7 +83,7 @@ void EncodedObjectProto::pop_context(obj_idx_t object_idx)
     }
 }
 
-void EncodedObjectProto::add_eager_descriptor(memory::const_buffer_view view)
+idx_t EncodedObjectProto::add_eager_descriptor(memory::const_buffer_view view)
 {
     const void* data = view.data();
     size_t bytes     = view.bytes();
@@ -100,15 +100,17 @@ void EncodedObjectProto::add_eager_descriptor(memory::const_buffer_view view)
     auto* eager_descriptor = descriptor->mutable_eager_desc();
 
     eager_descriptor->set_data(data, bytes);
+
+    return this->descriptors_size();
 }
 
-void EncodedObjectProto::add_remote_memory_descriptor(uint64_t instance_id,
-                                                      uintptr_t address,
-                                                      size_t bytes,
-                                                      uintptr_t memory_block_address,
-                                                      size_t memory_block_size,
-                                                      void* remote_key,
-                                                      memory::memory_kind memory_kind)
+idx_t EncodedObjectProto::add_remote_memory_descriptor(uint64_t instance_id,
+                                                       uintptr_t address,
+                                                       size_t bytes,
+                                                       uintptr_t memory_block_address,
+                                                       size_t memory_block_size,
+                                                       void* remote_key,
+                                                       memory::memory_kind memory_kind)
 {
     auto* descriptor = m_proto.add_descriptors();
 
@@ -121,6 +123,8 @@ void EncodedObjectProto::add_remote_memory_descriptor(uint64_t instance_id,
     remote_memory_descriptor->set_memory_block_size(memory_block_size);
     remote_memory_descriptor->set_memory_kind(mrc::codable::encode_memory_type(memory_kind));
     // remote_memory_descriptor->set_remote_key(remote_key);
+
+    return this->descriptors_size();
 }
 
 memory::buffer EncodedObjectProto::to_bytes(std::shared_ptr<memory::memory_resource> mr) const

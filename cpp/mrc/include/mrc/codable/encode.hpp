@@ -19,10 +19,13 @@
 
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/codable_protocol.hpp"
+#include "mrc/codable/encoded_object_proto.hpp"
 #include "mrc/codable/type_traits.hpp"
+#include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/utils/sfinae_concept.hpp"
 
 #include <memory>
+#include <type_traits>
 
 namespace mrc::codable {
 
@@ -84,6 +87,68 @@ class Encoder final
 };
 
 template <typename T>
+class Encoder2 final
+{
+  public:
+    Encoder2(EncodedObjectWithPayload& encoded_object, memory::memory_block_provider& block_provider) :
+      m_encoded_object(encoded_object),
+      m_block_provider(block_provider)
+    {}
+
+    void serialize2(const T& obj, const EncodingOptions& opts = {})
+    {
+        auto parent = m_encoded_object.push_context(typeid(T));
+        detail::serialize2(obj, *this, opts);
+        m_encoded_object.pop_context(parent);
+    }
+
+    template <typename U>
+    Encoder2<U> rebind()
+    {
+        return Encoder2<U>(m_encoded_object, m_block_provider);
+    }
+
+  protected:
+    std::optional<idx_t> register_memory_view(memory::const_buffer_view view, bool force_register = false)
+    {
+        // return m_storage.register_memory_view(std::move(view), force_register);
+        return -1;
+    }
+
+    idx_t copy_to_eager_descriptor(memory::const_buffer_view view)
+    {
+        return m_encoded_object.add_eager_descriptor(view);
+    }
+
+    idx_t add_meta_data(const google::protobuf::Message& meta_data)
+    {
+        // return m_storage.add_meta_data(meta_data);
+        return -1;
+    }
+
+    idx_t create_memory_buffer(std::size_t bytes)
+    {
+        // return m_storage.create_memory_buffer(bytes);
+        return -1;
+    }
+
+    void copy_to_buffer(idx_t buffer_idx, memory::const_buffer_view view)
+    {
+        // m_storage.copy_to_buffer(buffer_idx, std::move(view));
+    }
+
+  private:
+    EncodedObjectWithPayload& m_encoded_object;
+    memory::memory_block_provider& m_block_provider;
+
+    friend T;
+    friend codable_protocol<T>;
+
+    // template <typename U, typename V>
+    // friend void encode2(const U& obj, Encoder2<V>& encoder, EncodingOptions opts);
+};
+
+template <typename T>
 void encode(const T& obj, IEncodableStorage& storage, EncodingOptions opts = {})
 {
     Encoder<T> encoder(storage);
@@ -95,6 +160,37 @@ void encode(const T& obj, IEncodableStorage* storage, EncodingOptions opts = {})
 {
     Encoder<T> encoder(*storage);
     encoder.serialize(obj, std::move(opts));
+}
+
+// This method for nested calls to encode2
+template <typename T, typename U>
+void encode2(const T& obj, Encoder2<U>& encoder, EncodingOptions opts = {})
+{
+    static_assert(is_encodable_v<T>, "Must use an encodable object");
+
+    if constexpr (std::is_same_v<T, U>)
+    {
+        encoder.serialize2(obj, std::move(opts));
+    }
+    else
+    {
+        // Rebind the type
+        encoder.template rebind<T>().serialize2(obj, std::move(opts));
+    }
+}
+
+// This method is used for top level calls to encode
+template <typename T>
+std::unique_ptr<EncodedObjectWithPayload> encode2(const T& obj,
+                                                  std::shared_ptr<memory::memory_block_provider> block_provider,
+                                                  EncodingOptions opts = {})
+{
+    auto encoded_object = std::make_unique<EncodedObjectWithPayload>();
+
+    Encoder2<T> encoder(*encoded_object, *block_provider);
+    encode2(obj, encoder, std::move(opts));
+
+    return encoded_object;
 }
 
 }  // namespace mrc::codable

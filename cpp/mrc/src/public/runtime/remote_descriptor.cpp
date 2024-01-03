@@ -20,6 +20,8 @@
 #include "internal/codable/codable_storage.hpp"
 #include "internal/resources/system_resources.hpp"
 
+#include "mrc/memory/memory_block_provider.hpp"
+
 #include <memory>
 #include <utility>
 
@@ -92,5 +94,43 @@ std::unique_ptr<codable::IDecodableStorage> RemoteDescriptor::release_storage()
 // {
 //     return has_value();
 // }
+
+codable::EncodedObjectProto& LocalDescriptor2::encoded_object() const
+{
+    return *m_encoded_object;
+}
+
+std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_value(
+    std::unique_ptr<ValueDescriptor> value_descriptor,
+    std::shared_ptr<memory::memory_block_provider> block_provider)
+{
+    // Create a wrapper around the memory block provider to track the created memory blocks
+    // auto wrapper = std::make_shared<MemoryBlockProviderWrapper>(block_provider);
+    auto wrapper = block_provider;
+
+    // Serialize the object
+    auto encoded_object = value_descriptor->encode(wrapper);
+
+    return std::unique_ptr<LocalDescriptor2>(
+        new LocalDescriptor2(std::move(encoded_object), std::move(value_descriptor)));
+}
+
+std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<RemoteDescriptor2> remote_descriptor,
+                                                                data_plane::DataPlaneResources2& data_plane_resources)
+{
+    return nullptr;
+}
+
+LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::EncodedObjectWithPayload> encoded_object,
+                                   std::unique_ptr<ValueDescriptor> value_descriptor) :
+  m_encoded_object(std::move(encoded_object)),
+  m_value_descriptor(std::move(value_descriptor))
+{}
+
+std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_encoded_object(
+    std::unique_ptr<codable::EncodedObjectProto> encoded_object)
+{
+    return nullptr;
+}
 
 }  // namespace mrc::runtime

@@ -21,11 +21,11 @@
 
 namespace mrc::sfinae {
 
-#define MRC_AUTO_RETURN_TYPE(Expr, T)                                                                      \
-    decltype(Expr)                                                                                         \
-    {                                                                                                      \
-        static_assert(std::is_same<decltype(Expr), T>::value, #Expr " does not have the return type " #T); \
-        return Expr;                                                                                       \
+#define MRC_AUTO_RETURN_TYPE(Expr, T)                                                                 \
+    decltype(Expr)                                                                                    \
+    {                                                                                                 \
+        static_assert(std::is_same_v<decltype(Expr), T>, #Expr " does not have the return type " #T); \
+        return Expr;                                                                                  \
     }
 
 struct error  // NOLINT(readability-identifier-naming)
