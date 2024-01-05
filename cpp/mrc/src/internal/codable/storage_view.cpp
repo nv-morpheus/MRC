@@ -47,7 +47,8 @@ std::size_t StorageView::type_index_hash_for_object(const obj_idx_t& object_idx)
 StorageView::idx_t StorageView::start_idx_for_object(const obj_idx_t& object_idx) const
 {
     CHECK_LT(object_idx, get_proto().objects_size());
-    return get_proto().objects().at(object_idx).starting_descriptor_idx();
+    // return get_proto().objects().at(object_idx).starting_descriptor_idx();
+    return -1;
 }
 
 std::optional<StorageView::obj_idx_t> StorageView::parent_obj_idx_for_object(const obj_idx_t& object_idx) const

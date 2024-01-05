@@ -170,7 +170,7 @@ CodableStorage::obj_idx_t CodableStorage::push_context(std::type_index type_inde
 
     auto* obj = m_proto.add_objects();
     obj->set_type_index_hash(type_index.hash_code());
-    obj->set_starting_descriptor_idx(descriptor_count());
+    // obj->set_starting_descriptor_idx(descriptor_count());
     obj->set_parent_object_idx(initial_parent_object_idx);
 
     m_parent = object_count();

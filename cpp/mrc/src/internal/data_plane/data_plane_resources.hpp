@@ -53,6 +53,7 @@ class NetworkResources;
 }  // namespace mrc::network
 namespace mrc::ucx {
 class RegistrationCache;
+class RegistrationCache2;
 class UcxResources;
 }  // namespace mrc::ucx
 
@@ -114,6 +115,8 @@ class DataPlaneResources2
 
     std::string address() const;
 
+    ucx::RegistrationCache2& registration_cache() const;
+
     std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address);
 
     // Advances the worker
@@ -151,7 +154,7 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Worker> m_worker;
     std::shared_ptr<ucxx::Address> m_address;
 
-    std::shared_ptr<ucx::RegistrationCache> m_registration_cache;
+    std::shared_ptr<ucx::RegistrationCache2> m_registration_cache;
 
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints;
 };

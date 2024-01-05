@@ -30,6 +30,13 @@ enum MemoryKind
     None = 99;
 }
 
+enum DescriptorKind
+{
+    Default = 0;
+    Eager = 1;
+    Deferred = 2;
+}
+
 message RemoteMemoryDescriptor
 {
     // the memory region must contain the remote buffer specified by the start at remote_address
@@ -78,11 +85,22 @@ message Descriptor
     }
 }
 
+message Payload
+{
+    oneof payload
+    {
+        LocalPayload local = 1;
+        RemotePayload remote = 2;
+    }
+}
+
 message Object
 {
-    int32 starting_descriptor_idx  = 1;
-    int32 parent_object_idx = 2;
-    uint64 type_index_hash = 3;
+    // int32 starting_descriptor_idx  = 1;
+    int32 parent_object_idx = 1;
+    uint64 type_index_hash = 2;
+    repeated uint32 descriptor_idxs = 3;
+    string debug_info = 4;
 }
 
 message EncodedObject
@@ -98,4 +116,72 @@ message RemoteDescriptor
     uint64 object_id = 2;
     uint64 tokens = 3;
     EncodedObject encoded_object = 4;
+}
+
+message DeferredDescriptor
+{
+    uint64 payload_idx = 1; // The matching payload index for the deferred descriptor
+}
+
+// Represents a chunk of memory used to store data. Can either be eager (encoded into the message) or deferred
+// (referenced by a non-owning payload)
+message MemoryDescriptor
+{
+    oneof desc
+    {
+        EagerDescriptor eager_desc    = 1;
+        DeferredDescriptor deferred_desc = 2;
+    }
+}
+
+// Represents a local chunk of data for a DeferredDescriptor. This object is non-owning and only references existing
+// data on the local machine. Converted to a RemotePayload before serialization
+message LocalPayload
+{
+    uint64 address = 1;
+    uint64 bytes = 2;
+    MemoryKind memory_kind = 3;
+}
+
+// Represents a remote chunk of data for a DeferredDescriptor. This object is non-owning and only references existing
+// data on a remote machine. Conversion to a LocalPayload is done after deserialization and performed by UCX
+message RemotePayload
+{
+    // the memory region must contain the remote buffer specified by the start at remote_address
+    // and extending remote_bytes
+    // if the remote buffer is part of a larger memory region, the remote_key should map that entire region
+    // the remote registration cache will associated the remote_key with the entire memory region, thus for
+    // for the pool/slab allocators, we should increase our cache hits and avoid the expensive key upacking
+
+    uint64 instance_id = 1;
+    uint64 address = 2;
+    uint64 bytes = 3;
+    uint64 memory_block_address = 4;
+    uint64 memory_block_size = 5;
+    bytes remote_key = 6;
+    MemoryKind memory_kind = 7;
+    bool should_cache = 8;
+}
+
+message SerializedInfo{
+    repeated Object objects = 1;
+    repeated MemoryDescriptor descriptors = 2;
+    google.protobuf.Any meta_data   = 3;
+}
+
+message LocalSerializedObject
+{
+    SerializedInfo info = 1;
+    repeated LocalPayload payloads  = 2;
+}
+
+message RemoteSerializedObject
+{
+    uint64 instance_id = 1;
+    uint64 object_id = 2;
+    uint64 tokens = 3;
+
+    // Similar to LocalDescriptor, but with RemotePayloads instead of LocalPayloads
+    SerializedInfo info = 4;
+    repeated RemotePayload payloads  = 5;
 }

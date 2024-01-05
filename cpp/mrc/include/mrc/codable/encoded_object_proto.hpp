@@ -21,26 +21,82 @@
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/memory/memory_block.hpp"
+#include "mrc/protos/codable.pb.h"
 
 #include <memory>
+#include <optional>
+#include <stack>
+#include <typeindex>
 
 namespace mrc::codable {
 
-class EncodedObjectProto
+struct SerializedItem
+{
+    int32_t starting_descriptor_idx;
+    int32_t parent_object_idx;
+    uint64_t type_index_hash;
+};
+
+struct SerializedMemoryBlocks
+{
+    memory::const_buffer_view buffer;
+    bool is_eager;
+};
+
+class LocalSerializedWrapper
 {
   public:
-    EncodedObjectProto() = default;
+    LocalSerializedWrapper() = default;
 
-    bool operator==(const EncodedObjectProto& other) const;
+    bool operator==(const LocalSerializedWrapper& other) const;
+
+    mrc::codable::protos::LocalSerializedObject& proto();
+
+    const mrc::codable::protos::LocalSerializedObject& proto() const;
+
+    bool has_current_object() const;
+    void reset_current_object_idx();
+    size_t get_current_object_idx() const;
+    size_t push_current_object_idx(std::type_index type_info);
+    size_t push_current_object_idx(std::type_index type_info) const;
+    void pop_current_object_idx(size_t pushed_object_idx);
+    void pop_current_object_idx(size_t pushed_object_idx) const;
 
     size_t objects_size() const;
     size_t descriptors_size() const;
+    size_t payloads_size() const;
 
-    bool context_acquired() const;
+    protos::Object& get_object(size_t idx);
+    const protos::Object& get_object(size_t idx) const;
 
-    obj_idx_t push_context(std::type_index type_index);
+    size_t get_descriptor_idx(size_t object_idx, size_t desc_offset) const;
 
-    void pop_context(obj_idx_t object_idx);
+    protos::MemoryDescriptor& get_descriptor(size_t desc_idx);
+    const protos::MemoryDescriptor& get_descriptor(size_t desc_idx) const;
+
+    protos::MemoryDescriptor& get_descriptor_from_offset(size_t desc_offset,
+                                                         std::optional<size_t> object_idx = std::nullopt);
+    const protos::MemoryDescriptor& get_descriptor_from_offset(size_t desc_offset,
+                                                               std::optional<size_t> object_idx = std::nullopt) const;
+
+    protos::LocalPayload& get_payload(size_t idx);
+    const protos::LocalPayload& get_payload(size_t idx) const;
+
+    // protos::Object& add_object();
+    size_t add_object(std::type_index type_info);
+
+    protos::MemoryDescriptor& add_descriptor();
+    size_t add_descriptor(memory::const_buffer_view view, DescriptorKind kind);
+
+    // bool context_acquired() const;
+
+    // obj_idx_t push_context(std::type_index type_index);
+
+    // void pop_context(obj_idx_t object_idx);
+
+    // obj_idx_t push_decode_context(std::type_index type_index) const;
+
+    // void pop_decode_context(obj_idx_t object_idx) const;
 
     // Adds an eager descriptor and copies the data into the protobuf
     idx_t add_eager_descriptor(memory::const_buffer_view view);
@@ -54,25 +110,55 @@ class EncodedObjectProto
                                        void* remote_key,
                                        memory::memory_kind memory_kind);
 
+    // /**
+    //  * @brief Hash of std::type_index for the object at idx
+    //  *
+    //  * @param object_idx
+    //  * @return std::type_index
+    //  */
+    // std::size_t type_index_hash_for_object(const obj_idx_t& object_idx) const;
+
+    // /**
+    //  * @brief Starting index of object at idx
+    //  *
+    //  * @param object_idx
+    //  * @return idx_t
+    //  */
+    // idx_t start_idx_for_object(const obj_idx_t& object_idx) const;
+
+    // /**
+    //  * @brief Parent for object at idx
+    //  *
+    //  * @return std::optional<obj_idx_t> - if nullopt, then the object is a top-level object; otherwise, it is a child
+    //  * object with a parent object at the returned value
+    //  */
+    // std::optional<obj_idx_t> parent_obj_idx_for_object(const obj_idx_t& object_idx) const;
+
+    const mrc::codable::protos::SerializedInfo& info() const;
+
+    mrc::codable::protos::SerializedInfo& mutable_info();
+
+    const ::google::protobuf::RepeatedPtrField<::mrc::codable::protos::LocalPayload>& payloads() const;
+
     memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
 
     memory::buffer_view to_bytes(memory::buffer_view buffer) const;
 
-    static std::unique_ptr<EncodedObjectProto> from_bytes(memory::const_buffer_view view);
+    static std::unique_ptr<LocalSerializedWrapper> from_bytes(memory::const_buffer_view view);
 
   private:
-    mrc::codable::protos::EncodedObject m_proto;
+    mrc::codable::protos::LocalSerializedObject m_proto;
 
-    bool m_context_acquired{false};
-    mutable std::mutex m_mutex;
+    // std::vector<SerializedItem> m_objects;
+    // std::vector<SerializedMemoryBlocks> m_descriptors;
 
-    std::optional<obj_idx_t> m_parent{std::nullopt};
-};
+    // bool m_context_acquired{false};
+    // mutable std::mutex m_mutex;
 
-class EncodedObjectWithPayload : public EncodedObjectProto
-{
-  private:
-    std::vector<memory::memory_block> m_blocks;
+    mutable size_t m_object_counter;  // Tracks the number of times "push_current_object_idx" has been called
+    mutable std::stack<size_t> m_object_idx_stack;
+
+    // mutable std::optional<size_t> m_current_obj_idx{std::nullopt};
 };
 
 }  // namespace mrc::codable

@@ -41,6 +41,7 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/fundamental_types.hpp"
+#include "mrc/codable/type_traits.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
@@ -88,11 +89,11 @@ class TestNetwork : public ::testing::Test
 
 namespace mrc::codable {
 template <typename T>
-struct codable_protocol<std::vector<T>, std::enable_if_t<!std::is_fundamental_v<T>>>
+struct codable_protocol<std::vector<T>>
 {
     static void serialize(const std::vector<T>& obj,
                           mrc::codable::Encoder<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts = {})
+                          const mrc::codable::EncodingOptions& opts)
     {
         // First put in the size
         mrc::codable::encode2(obj.size(), encoder, opts);
@@ -106,7 +107,7 @@ struct codable_protocol<std::vector<T>, std::enable_if_t<!std::is_fundamental_v<
 
     static void serialize(const std::vector<T>& obj,
                           mrc::codable::Encoder2<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts = {})
+                          const mrc::codable::EncodingOptions& opts)
     {
         // First put in the size
         mrc::codable::encode2(obj.size(), encoder, opts);
@@ -114,7 +115,8 @@ struct codable_protocol<std::vector<T>, std::enable_if_t<!std::is_fundamental_v<
         if constexpr (std::is_fundamental_v<T>)
         {
             // Since these are fundamental types, just encode in a single memory block
-            encoder.register_memory_view({obj.data(), obj.size() * sizeof(T), memory::memory_kind::host});
+            encoder.write_descriptor({obj.data(), obj.size() * sizeof(T), memory::memory_kind::host},
+                                     DescriptorKind::Deferred);
         }
         else
         {
@@ -126,15 +128,35 @@ struct codable_protocol<std::vector<T>, std::enable_if_t<!std::is_fundamental_v<
         }
     }
 
-    //     static TransferObject
-    //     decode(IDecodableStorage& storage)
-    // {
-    //     TransferObject obj;
-    //     storage.decode(obj.m_name, "name");
-    //     storage.decode(obj.m_value, "value");
-    //     storage.decode(obj.m_data, "data");
-    //     return obj;
-    // }
+    static std::vector<T> deserialize(const Decoder<std::vector<T>>& decoder, std::size_t object_idx)
+    {
+        DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+
+        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
+
+        auto object = std::vector<T>(count);
+
+        auto idx   = decoder.start_idx_for_object(object_idx);
+        auto bytes = decoder.buffer_size(idx);
+
+        decoder.copy_from_buffer(idx, {object.data(), count * sizeof(T), memory::memory_kind::host});
+
+        return object;
+    }
+
+    static std::vector<T> deserialize(const Decoder2<std::vector<T>>& decoder, std::size_t object_idx)
+    {
+        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
+        // decoder.type_index_hash_for_object(object_idx));
+
+        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
+
+        auto object = std::vector<T>(count);
+
+        decoder.read_descriptor(0, {object.data(), count * sizeof(T), memory::memory_kind::host});
+
+        return object;
+    }
 };
 
 // template <typename T>
@@ -203,15 +225,25 @@ class TransferObject
     {
         mrc::codable::encode2(m_name, encoder, opts);
         mrc::codable::encode2(m_value, encoder, opts);
-        // mrc::codable::encode2(m_data, encoder, opts);
+        mrc::codable::encode2(m_data, encoder, opts);
     }
 
-    static TransferObject decode(mrc::codable::Decoder2<TransferObject>& decoder)
+    static TransferObject deserialize(const mrc::codable::Decoder<TransferObject>& decoder, std::size_t object_idx)
     {
         TransferObject obj;
-        // mrc::codable::decode2(decoder, obj.m_name);
         // mrc::codable::decode2(decoder, obj.m_value);
         // mrc::codable::decode2(decoder, obj.m_data);
+        return obj;
+    }
+
+    static TransferObject deserialize(const mrc::codable::Decoder2<TransferObject>& decoder, size_t object_idx)
+    {
+        TransferObject obj;
+
+        obj.m_name  = mrc::codable::decode2<std::string, TransferObject>(decoder, object_idx);
+        obj.m_value = mrc::codable::decode2<int, TransferObject>(decoder, object_idx);
+        obj.m_data  = mrc::codable::decode2<std::vector<u_int8_t>, TransferObject>(decoder, object_idx);
+
         return obj;
     }
 
@@ -551,7 +583,7 @@ TEST_F(TestNetwork, TransferStorageObject)
 
     auto ep = resources.create_endpoint(resources.address());
 
-    auto send_encoded_obj = std::make_unique<codable::EncodedObjectProto>();
+    auto send_encoded_obj = std::make_unique<codable::LocalSerializedWrapper>();
 
     uint32_t send_data = 42;
 
@@ -570,9 +602,9 @@ TEST_F(TestNetwork, TransferStorageObject)
         resources.progress();
     }
 
-    auto recv_encoded_proto = codable::EncodedObjectProto::from_bytes({receive_request->getRecvBuffer()->data(),
-                                                                       receive_request->getRecvBuffer()->getSize(),
-                                                                       mrc::memory::memory_kind::host});
+    auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
+                                                                           receive_request->getRecvBuffer()->getSize(),
+                                                                           mrc::memory::memory_kind::host});
 
     EXPECT_EQ(*send_encoded_obj, *recv_encoded_proto);
 }
@@ -602,16 +634,43 @@ TEST_F(TestNetwork, TransferEncodedObjectViaEncode)
         resources.progress();
     }
 
-    auto recv_encoded_proto = codable::EncodedObjectProto::from_bytes({receive_request->getRecvBuffer()->data(),
-                                                                       receive_request->getRecvBuffer()->getSize(),
-                                                                       mrc::memory::memory_kind::host});
+    auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
+                                                                           receive_request->getRecvBuffer()->getSize(),
+                                                                           mrc::memory::memory_kind::host});
 
     EXPECT_EQ(*send_encoded_obj, *recv_encoded_proto);
 }
 
+TEST_F(TestNetwork, LocalDescriptorRoundTrip)
+{
+    data_plane::DataPlaneResources2 resources;
+
+    auto ep = resources.create_endpoint(resources.address());
+
+    auto block_provider = std::make_shared<memory::memory_block_provider>();
+
+    TransferObject send_data = {"test", 42, {1, 2, 3, 4, 5}};
+
+    auto send_data_copy = send_data;
+
+    // Create a value descriptor
+    auto send_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::create(std::move(send_data_copy));
+
+    // Convert to a local descriptor
+    auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(send_value_descriptor),
+                                                                       block_provider);
+
+    auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(
+        std::move(send_local_descriptor));
+
+    auto recv_data = recv_value_descriptor->value();
+
+    EXPECT_EQ(send_data, recv_data);
+}
+
 TEST_F(TestNetwork, TransferFullDescriptors)
 {
-    static_assert(codable::is_member_encodable_v<TransferObject>);
+    static_assert(codable::is_static_decodable_v<TransferObject>);
 
     data_plane::DataPlaneResources2 resources;
 
@@ -629,6 +688,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     // Convert to a local descriptor
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
 
+    // Convert the local memory blocks into remote memory blocks
+    auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor), resources);
+
     // Get the serialized data
     auto serialized_data = send_local_descriptor->encoded_object().to_bytes(memory::malloc_memory_resource::instance());
 
@@ -641,9 +703,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
         resources.progress();
     }
 
-    auto recv_encoded_proto = codable::EncodedObjectProto::from_bytes({receive_request->getRecvBuffer()->data(),
-                                                                       receive_request->getRecvBuffer()->getSize(),
-                                                                       mrc::memory::memory_kind::host});
+    auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
+                                                                           receive_request->getRecvBuffer()->getSize(),
+                                                                           mrc::memory::memory_kind::host});
 
     // Create a remote descriptor from the received data
     auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_encoded_object(std::move(recv_encoded_proto));

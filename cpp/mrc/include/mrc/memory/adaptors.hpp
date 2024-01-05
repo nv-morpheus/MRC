@@ -20,11 +20,14 @@
 #include "mrc/memory/resources/memory_resource.hpp"
 
 #include <glog/logging.h>
-#include <rmm/cuda_stream_view.hpp>
-#include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <cstddef>  // for size_t
+#include <memory>
 #include <type_traits>
+
+namespace rmm::mr {
+class device_memory_resource;
+}
 
 namespace mrc::memory {
 
@@ -58,20 +61,11 @@ class rmm_adaptor : public memory_resource
     virtual rmm::mr::device_memory_resource& rmm_memory_resource() = 0;
 
   private:
-    void* do_allocate(std::size_t bytes) final
-    {
-        return rmm_memory_resource().allocate(bytes, rmm::cuda_stream_per_thread);
-    }
+    void* do_allocate(std::size_t bytes) final;
 
-    void do_deallocate(void* ptr, std::size_t bytes) final
-    {
-        rmm_memory_resource().deallocate(ptr, bytes, rmm::cuda_stream_per_thread);
-    }
+    void do_deallocate(void* ptr, std::size_t bytes) final;
 
-    memory_kind do_kind() const final
-    {
-        return memory_kind::device;
-    }
+    memory_kind do_kind() const final;
 };
 
 template <typename PointerT>

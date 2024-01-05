@@ -138,7 +138,7 @@ DataPlaneResources2::DataPlaneResources2()
     m_address = m_worker->getAddress();
 
     DVLOG(10) << "initialize the registration cache for this context";
-    // m_registration_cache = std::make_shared<ucx::RegistrationCache>(m_context);
+    m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -159,6 +159,11 @@ ucxx::Worker& DataPlaneResources2::worker() const
 std::string DataPlaneResources2::address() const
 {
     return m_address->getString();
+}
+
+ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
+{
+    return *m_registration_cache;
 }
 
 std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address)

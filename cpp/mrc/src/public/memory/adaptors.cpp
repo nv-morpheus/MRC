@@ -15,20 +15,26 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "mrc/memory/adaptors.hpp"
 
-#include <cstdint>
+#include <rmm/cuda_stream_view.hpp>
+#include <rmm/mr/device/device_memory_resource.hpp>
 
-namespace mrc::codable {
+namespace mrc::memory {
 
-using idx_t     = int;
-using obj_idx_t = int;
-
-enum class DescriptorKind : uint8_t
+void* rmm_adaptor::do_allocate(std::size_t bytes)
 {
-    Default,   // Leave it up to the implementation
-    Eager,     // Prefer eager
-    Deferred,  // Prefer deferred
-};
+    return rmm_memory_resource().allocate(bytes, rmm::cuda_stream_per_thread);
+}
 
-}  // namespace mrc::codable
+void rmm_adaptor::do_deallocate(void* ptr, std::size_t bytes)
+{
+    rmm_memory_resource().deallocate(ptr, bytes, rmm::cuda_stream_per_thread);
+}
+
+memory_kind rmm_adaptor::do_kind() const
+{
+    return memory_kind::device;
+}
+
+}  // namespace mrc::memory

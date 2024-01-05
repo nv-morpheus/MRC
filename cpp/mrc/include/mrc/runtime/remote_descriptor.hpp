@@ -279,7 +279,7 @@ class RemoteDescriptor2;
 class ValueDescriptor
 {
   private:
-    virtual std::unique_ptr<codable::EncodedObjectWithPayload> encode(
+    virtual std::unique_ptr<codable::LocalSerializedWrapper> encode(
         std::shared_ptr<memory::memory_block_provider> block_provider) = 0;
 
     friend LocalDescriptor2;
@@ -298,19 +298,12 @@ class TypedValueDescriptor : public ValueDescriptor
     {
         return std::unique_ptr<TypedValueDescriptor<T>>(new TypedValueDescriptor<T>(std::move(value)));
     }
-    static std::unique_ptr<TypedValueDescriptor<T>> from_local(std::unique_ptr<LocalDescriptor2> local_descriptor)
-    {
-        T temp;
-
-        // Perform a decode to get the value
-
-        return std::unique_ptr<TypedValueDescriptor<T>>(new TypedValueDescriptor<T>(std::move(temp)));
-    }
+    static std::unique_ptr<TypedValueDescriptor<T>> from_local(std::unique_ptr<LocalDescriptor2> local_descriptor);
 
   private:
     TypedValueDescriptor(T&& value) : m_value(std::move(value)) {}
 
-    std::unique_ptr<codable::EncodedObjectWithPayload> encode(
+    std::unique_ptr<codable::LocalSerializedWrapper> encode(
         std::shared_ptr<memory::memory_block_provider> block_provider) override
     {
         return mrc::codable::encode2(m_value, block_provider);
@@ -323,7 +316,7 @@ class TypedValueDescriptor : public ValueDescriptor
 class LocalDescriptor2
 {
   public:
-    codable::EncodedObjectProto& encoded_object() const;
+    codable::LocalSerializedWrapper& encoded_object() const;
 
     static std::unique_ptr<LocalDescriptor2> from_value(std::unique_ptr<ValueDescriptor> value_descriptor,
                                                         std::shared_ptr<memory::memory_block_provider> block_provider);
@@ -332,10 +325,10 @@ class LocalDescriptor2
                                                          data_plane::DataPlaneResources2& data_plane_resources);
 
   private:
-    LocalDescriptor2(std::unique_ptr<codable::EncodedObjectWithPayload> encoded_object,
+    LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
                      std::unique_ptr<ValueDescriptor> value_descriptor = nullptr);
 
-    std::unique_ptr<codable::EncodedObjectWithPayload> m_encoded_object;
+    std::unique_ptr<codable::LocalSerializedWrapper> m_encoded_object;
 
     std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
 };
@@ -343,13 +336,30 @@ class LocalDescriptor2
 class RemoteDescriptor2
 {
   public:
-    codable::EncodedObjectProto& encoded_object() const;
+    codable::LocalSerializedWrapper& encoded_object() const;
+
+    static std::unique_ptr<RemoteDescriptor2> from_local(std::unique_ptr<LocalDescriptor2> local_desc,
+                                                         data_plane::DataPlaneResources2& data_plane_resources);
 
     static std::unique_ptr<RemoteDescriptor2> from_encoded_object(
-        std::unique_ptr<codable::EncodedObjectProto> encoded_object);
+        std::unique_ptr<codable::LocalSerializedWrapper> encoded_object);
 
   private:
-    std::unique_ptr<codable::EncodedObjectProto> m_encoded_object;
+    RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
+
+    std::unique_ptr<codable::protos::RemoteSerializedObject> m_serialized_object;
 };
+
+template <typename T>
+std::unique_ptr<TypedValueDescriptor<T>> TypedValueDescriptor<T>::from_local(
+    std::unique_ptr<LocalDescriptor2> local_descriptor)
+{
+    // Reset the counter
+    local_descriptor->encoded_object().reset_current_object_idx();
+
+    // Perform a decode to get the value
+    return std::unique_ptr<TypedValueDescriptor<T>>(
+        new TypedValueDescriptor<T>(mrc::codable::decode2<T>(local_descriptor->encoded_object())));
+}
 
 }  // namespace mrc::runtime

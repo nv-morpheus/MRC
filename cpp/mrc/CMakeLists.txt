@@ -107,6 +107,7 @@ add_library(libmrc
   src/internal/ucx/endpoint.cpp
   src/internal/ucx/memory_block.cpp
   src/internal/ucx/receive_manager.cpp
+  src/internal/ucx/registration_cache.cpp
   src/internal/ucx/ucx_resources.cpp
   src/internal/ucx/worker.cpp
   src/internal/utils/collision_detector.cpp
@@ -118,6 +119,8 @@ add_library(libmrc
   src/public/benchmarking/tracer.cpp
   src/public/benchmarking/util.cpp
   src/public/channel/channel.cpp
+  src/public/codable/decode.cpp
+  src/public/codable/encode.cpp
   src/public/codable/encoded_object.cpp
   src/public/codable/memory.cpp
   src/public/core/addresses.cpp
@@ -137,6 +140,7 @@ add_library(libmrc
   src/public/edge/edge_builder.cpp
   src/public/exceptions/exception_catcher.cpp
   src/public/manifold/manifold.cpp
+  src/public/memory/adaptors.cpp
   src/public/memory/buffer_view.cpp
   src/public/memory/codable/buffer.cpp
   src/public/metrics/counter.cpp
@@ -210,6 +214,7 @@ target_include_directories(libmrc
 target_compile_definitions(libmrc
   PUBLIC
     $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
+    $<$<CONFIG:DEBUG>:-DDEBUG> # Add DEBUG macro in debug mode (better than NDEBUG)
 )
 
 if (MRC_ENABLE_CODECOV)

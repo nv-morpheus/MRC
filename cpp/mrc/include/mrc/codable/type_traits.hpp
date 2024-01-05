@@ -111,7 +111,11 @@ struct is_member_encodable : std::false_type
 {};
 
 template <typename T, typename = void>
-struct is_decodable : std::false_type
+struct is_protocol_decodable : std::false_type
+{};
+
+template <typename T, typename = void>
+struct is_static_decodable : std::false_type
 {};
 
 template <typename T>
@@ -153,15 +157,15 @@ template <typename T>
 inline constexpr bool is_member_encodable_v = is_member_encodable<T>::value;  // NOLINT
 
 template <typename T>
-struct is_decodable<T,
-                    std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
-                                                        std::declval<const Decoder<T>&>(),
-                                                        std::declval<std::size_t>())),
-                                                    T>>> : std::true_type
+struct is_protocol_decodable<T,
+                             std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
+                                                                 std::declval<const Decoder<T>&>(),
+                                                                 std::declval<std::size_t>())),
+                                                             T>>> : std::true_type
 {};
 
 template <typename T>
-struct is_decodable<
+struct is_static_decodable<
     T,
     std::enable_if_t<
         std::is_same_v<decltype(T::deserialize(std::declval<const Decoder<T>&>(), std::declval<std::size_t>())), T>>>
@@ -169,8 +173,26 @@ struct is_decodable<
 {};
 
 template <typename T>
+inline constexpr bool is_protocol_decodable_v = is_protocol_decodable<T>::value;  // NOLINT
+
+template <typename T>
+inline constexpr bool is_static_decodable_v = is_static_decodable<T>::value;  // NOLINT
+
+// template <typename T>
+// concept is_static_decodable = requires(T) {
+//     {
+//         T::deserialize(std::declval<Decoder<T>&>(), std::declval<std::size_t>())
+//     } -> std::same_as<T>;
+// };
+
+template <typename T>
 struct is_encodable
   : std::conditional_t<(is_protocol_encodable_v<T> || is_member_encodable_v<T>), std::true_type, std::false_type>
+{};
+
+template <typename T>
+struct is_decodable
+  : std::conditional_t<(is_protocol_decodable_v<T> || is_static_decodable_v<T>), std::true_type, std::false_type>
 {};
 
 template <typename T>
@@ -194,6 +216,12 @@ template <typename T>
 concept member_encodable = is_member_encodable_v<T>;
 
 template <typename T>
+concept protocol_decodable = is_protocol_decodable_v<T>;
+
+template <typename T>
+concept static_decodable = is_static_decodable_v<T>;
+
+template <typename T>
 concept encodable = is_encodable_v<T>;
 
 template <typename T>
@@ -213,6 +241,18 @@ template <member_encodable T>
 auto serialize2(const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
 {
     return obj.serialize(enc, opts);
+};
+
+template <protocol_decodable T>
+auto deserialize2(const Decoder2<T>& decoder, size_t object_idx)
+{
+    return codable_protocol<T>::deserialize(decoder, object_idx);
+};
+
+template <static_decodable T>
+auto deserialize2(const Decoder2<T>& decoder, size_t object_idx)
+{
+    return T::deserialize(decoder, object_idx);
 };
 
 }  // namespace detail
