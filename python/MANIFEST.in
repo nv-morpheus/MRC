@@ -1,3 +1,7 @@
 include versioneer.py
 include mrc/_version.py
-recursive-include mrc *.so py.typed *.pyi
+recursive-include mrc py.typed *.pyi
+recursive-include mrc/_pymrc/tests *.so
+recursive-include mrc/benchmarking *.so
+recursive-include mrc/core *.so
+recursive-include mrc/tests *.so
