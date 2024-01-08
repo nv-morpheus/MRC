@@ -15,7 +15,7 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "dep")
 
-if (VERBOSE)
+if(VERBOSE)
   morpheus_utils_print_config()
 endif()
 
@@ -65,16 +65,9 @@ find_path(CUB_INCLUDE_DIRS "cub/cub.cuh"
   REQUIRE
 )
 
-# grpc-repo
+# grpc
 # =========
-rapids_find_package(gRPC REQUIRED
-  GLOBAL_TARGETS
-  gRPC::address_sorting gRPC::gpr gRPC::grpc gRPC::grpc_unsecure gRPC::grpc++ gRPC::grpc++_alts gRPC::grpc++_error_details gRPC::grpc++_reflection
-  gRPC::grpc++_unsecure gRPC::grpc_plugin_support gRPC::grpcpp_channelz gRPC::upb gRPC::grpc_cpp_plugin gRPC::grpc_csharp_plugin gRPC::grpc_node_plugin
-  gRPC::grpc_objective_c_plugin gRPC::grpc_php_plugin gRPC::grpc_python_plugin gRPC::grpc_ruby_plugin
-  BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-  INSTALL_EXPORT_SET ${PROJECT_NAME}-exports
-)
+morpheus_utils_configure_grpc()
 
 # RxCpp
 # =====
