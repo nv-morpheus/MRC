@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -212,7 +212,7 @@ include(GNUInstallDirs)
 install(
   TARGETS libmrc
   DESTINATION ${lib_dir}
-  EXPORT ${PROJECT_NAME}-core-exports
+  EXPORT ${PROJECT_NAME}-exports
   COMPONENT Core
 )
 
@@ -250,7 +250,7 @@ set(rapids_project_version_compat SameMinorVersion)
 # Need to explicitly set VERSION ${PROJECT_VERSION} here since rapids_cmake gets
 # confused with the `RAPIDS_VERSION` variable we use
 rapids_export(INSTALL ${PROJECT_NAME}
-  EXPORT_SET ${PROJECT_NAME}-core-exports
+  EXPORT_SET ${PROJECT_NAME}-exports
   GLOBAL_TARGETS libmrc
   VERSION ${PROJECT_VERSION}
   NAMESPACE mrc::
@@ -261,7 +261,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
 # ##################################################################################################
 # - build export ----------------------------------------------------------------------------------
 rapids_export(BUILD ${PROJECT_NAME}
-  EXPORT_SET ${PROJECT_NAME}-core-exports
+  EXPORT_SET ${PROJECT_NAME}-exports
   GLOBAL_TARGETS libmrc
   VERSION ${PROJECT_VERSION}
   LANGUAGES C CXX CUDA
