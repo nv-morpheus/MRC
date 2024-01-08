@@ -63,6 +63,26 @@ DataPlaneResources::~DataPlaneResources()
     Service::call_in_destructor();
 }
 
+void DataPlaneResources2::set_instance_id(uint64_t instance_id)
+{
+    m_instance_id = instance_id;
+}
+
+bool DataPlaneResources2::has_instance_id() const
+{
+    return m_instance_id.has_value();
+}
+
+uint64_t DataPlaneResources2::get_instance_id() const
+{
+    if (!this->has_instance_id())
+    {
+        throw std::runtime_error("Instance ID not set");
+    }
+
+    return m_instance_id.value();
+}
+
 Client& DataPlaneResources::client()
 {
     return *m_client;
@@ -166,15 +186,27 @@ ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
     return *m_registration_cache;
 }
 
-std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address)
+std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address,
+                                                                     uint64_t instance_id)
 {
     auto address_obj = ucxx::createAddressFromString(address);
 
     auto endpoint = m_worker->createEndpointFromWorkerAddress(address_obj);
 
-    m_endpoints[address] = endpoint;
+    m_endpoints_by_address[address] = endpoint;
+    m_endpoints_by_id[instance_id]  = endpoint;
 
     return endpoint;
+}
+
+std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::find_endpoint(const std::string& address) const
+{
+    return m_endpoints_by_address.at(address);
+}
+
+std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::find_endpoint(uint64_t instance_id) const
+{
+    return m_endpoints_by_id.at(instance_id);
 }
 
 bool DataPlaneResources2::progress()
@@ -186,6 +218,81 @@ bool DataPlaneResources2::progress()
 bool DataPlaneResources2::flush()
 {
     return m_worker->progress();
+}
+
+void DataPlaneResources2::wait_requests(const std::vector<std::shared_ptr<ucxx::Request>>& requests)
+{
+    auto remainingRequests = requests;
+    while (!remainingRequests.empty())
+    {
+        auto updatedRequests = std::exchange(remainingRequests, decltype(remainingRequests)());
+        for (auto const& r : updatedRequests)
+        {
+            this->progress();
+
+            if (!r->isCompleted())
+            {
+                remainingRequests.push_back(r);
+            }
+            else
+            {
+                r->checkError();
+            }
+        }
+    }
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      memory::const_buffer_view buffer_view,
+                                                                      uintptr_t remote_addr,
+                                                                      ucp_rkey_h rkey)
+{
+    return this->memory_send_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, rkey);
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      const void* addr,
+                                                                      std::size_t bytes,
+                                                                      uintptr_t remote_addr,
+                                                                      ucp_rkey_h rkey)
+{
+    // Const cast away because UCXX only accepts void*
+    auto request = endpoint->memPut(const_cast<void*>(addr), bytes, remote_addr, rkey);
+
+    return request;
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      memory::buffer_view buffer_view,
+                                                                      uintptr_t remote_addr,
+                                                                      const void* packed_rkey_data)
+{
+    return this->memory_recv_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, packed_rkey_data);
+}
+
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                      void* addr,
+                                                                      std::size_t bytes,
+                                                                      uintptr_t remote_addr,
+                                                                      const void* packed_rkey_data)
+{
+    ucp_rkey_h rkey;
+
+    // Unpack the key
+    auto rc = ucp_ep_rkey_unpack(endpoint->getHandle(), packed_rkey_data, &rkey);
+    CHECK_EQ(rc, UCS_OK);
+
+    // Const cast away because UCXX only accepts void*
+    auto request = endpoint->memGet(addr,
+                                    bytes,
+                                    remote_addr,
+                                    rkey,
+                                    false,
+                                    [rkey](ucs_status_t status, std::shared_ptr<void> user_data) {
+                                        ucp_rkey_destroy(rkey);
+                                    });
+
+    return request;
 }
 
 std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,

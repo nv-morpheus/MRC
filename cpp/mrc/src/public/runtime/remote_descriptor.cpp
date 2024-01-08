@@ -19,13 +19,22 @@
 
 #include "internal/codable/codable_storage.hpp"
 #include "internal/data_plane/data_plane_resources.hpp"
+#include "internal/memory/host_resources.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "mrc/codable/encoded_object_proto.hpp"
+#include "mrc/memory/buffer.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
+#include "mrc/memory/resources/memory_resource.hpp"
 #include "mrc/protos/codable.pb.h"
 
+#include <ucp/api/ucp.h>
+#include <ucxx/api.h>
+
+#include <cstdint>
 #include <memory>
 #include <utility>
 
@@ -122,7 +131,50 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_value(
 std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<RemoteDescriptor2> remote_descriptor,
                                                                 data_plane::DataPlaneResources2& data_plane_resources)
 {
-    return nullptr;
+    auto local_obj = std::make_unique<codable::LocalSerializedWrapper>();
+
+    auto mr = memory::malloc_memory_resource::instance();
+
+    std::vector<std::shared_ptr<ucxx::Request>> requests;
+
+    // Transfer the info object
+    local_obj->proto().set_allocated_info(remote_descriptor->encoded_object().release_info());
+
+    // Loop over all remote payloads and convert them to local payloads
+    for (const auto& remote_payload : remote_descriptor->encoded_object().payloads())
+    {
+        // Find the endpoint for this endpoint ID
+        auto ep = data_plane_resources.find_endpoint(remote_payload.instance_id());
+
+        // Allocate the memory needed for this
+        auto buffer = memory::buffer(remote_payload.bytes(), mr);
+
+        // now issue the request
+        requests.push_back(data_plane_resources.memory_recv_async(ep,
+                                                                  buffer,
+                                                                  remote_payload.address(),
+                                                                  remote_payload.remote_key().data()));
+
+        auto* local_payload = local_obj->proto().add_payloads();
+
+        // auto ucx_block = data_plane_resources.registration_cache().lookup(remote_payload.address());
+
+        // if (!ucx_block.has_value())
+        // {
+        //     // Need to register the memory
+        //     ucx_block = data_plane_resources.registration_cache().add_block(local_payload->address(),
+        //                                                                     local_payload->bytes());
+        // }
+
+        local_payload->set_address(reinterpret_cast<uintptr_t>(buffer.data()));
+        local_payload->set_bytes(buffer.bytes());
+        local_payload->set_memory_kind(remote_payload.memory_kind());
+    }
+
+    // Now, we need to wait for all requests to be complete
+    data_plane_resources.wait_requests(requests);
+
+    return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }
 
 LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
@@ -134,6 +186,31 @@ LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapp
 RemoteDescriptor2::RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
   m_serialized_object(std::move(encoded_object))
 {}
+
+codable::protos::RemoteSerializedObject& RemoteDescriptor2::encoded_object() const
+{
+    return *m_serialized_object;
+}
+
+memory::buffer RemoteDescriptor2::to_bytes(std::shared_ptr<memory::memory_resource> mr) const
+{
+    // Allocate enough bytes to hold the encoded object
+    auto buffer = memory::buffer(m_serialized_object->ByteSizeLong(), mr);
+
+    this->to_bytes(buffer);
+
+    return buffer;
+}
+
+memory::buffer_view RemoteDescriptor2::to_bytes(memory::buffer_view buffer) const
+{
+    if (!m_serialized_object->SerializeToArray(buffer.data(), buffer.bytes()))
+    {
+        LOG(FATAL) << "Failed to serialize EncodedObjectProto to bytes";
+    }
+
+    return buffer;
+}
 
 std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr<LocalDescriptor2> local_desc,
                                                                  data_plane::DataPlaneResources2& data_plane_resources)
@@ -151,9 +228,16 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr
 
         auto ucx_block = data_plane_resources.registration_cache().lookup(local_payload.address());
 
+        if (!ucx_block.has_value())
+        {
+            // Need to register the memory
+            ucx_block = data_plane_resources.registration_cache().add_block(local_payload.address(),
+                                                                            local_payload.bytes());
+        }
+
         bool should_cache = false;  // Not sure what to set this
 
-        remote_payload->set_instance_id(0);
+        remote_payload->set_instance_id(data_plane_resources.get_instance_id());
         remote_payload->set_address(local_payload.address());
         remote_payload->set_bytes(local_payload.bytes());
         remote_payload->set_memory_block_address(reinterpret_cast<std::uint64_t>(ucx_block->data()));
@@ -166,10 +250,16 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr
     return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(std::move(remote_object)));
 }
 
-std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_encoded_object(
-    std::unique_ptr<codable::LocalSerializedWrapper> encoded_object)
+std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_bytes(memory::const_buffer_view view)
 {
-    return nullptr;
+    auto encoded_obj_proto = std::make_unique<codable::protos::RemoteSerializedObject>();
+
+    if (!encoded_obj_proto->ParseFromArray(view.data(), view.bytes()))
+    {
+        LOG(FATAL) << "Failed to parse EncodedObjectProto from bytes";
+    }
+
+    return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(std::move(encoded_obj_proto)));
 }
 
 }  // namespace mrc::runtime

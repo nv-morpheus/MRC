@@ -132,7 +132,9 @@ class RegistrationCache2 final
      * @param addr
      * @param bytes
      */
-    void add_block(const void* addr, std::size_t bytes);
+    const ucx::MemoryBlock& add_block(const void* addr, std::size_t bytes);
+
+    const ucx::MemoryBlock& add_block(uintptr_t addr, std::size_t bytes);
 
     /**
      * @brief Deregister a contiguous block of memory from the ucx context and remove the cache entry
@@ -142,6 +144,8 @@ class RegistrationCache2 final
      * @return std::size_t
      */
     std::size_t drop_block(const void* addr, std::size_t bytes);
+
+    std::size_t drop_block(uintptr_t addr, std::size_t bytes);
 
     /**
      * @brief Look up the memory registration details for a given address.

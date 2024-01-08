@@ -336,13 +336,16 @@ class LocalDescriptor2
 class RemoteDescriptor2
 {
   public:
-    codable::LocalSerializedWrapper& encoded_object() const;
+    codable::protos::RemoteSerializedObject& encoded_object() const;
+
+    memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
+
+    memory::buffer_view to_bytes(memory::buffer_view buffer) const;
 
     static std::unique_ptr<RemoteDescriptor2> from_local(std::unique_ptr<LocalDescriptor2> local_desc,
                                                          data_plane::DataPlaneResources2& data_plane_resources);
 
-    static std::unique_ptr<RemoteDescriptor2> from_encoded_object(
-        std::unique_ptr<codable::LocalSerializedWrapper> encoded_object);
+    static std::unique_ptr<RemoteDescriptor2> from_bytes(memory::const_buffer_view view);
 
   private:
     RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);

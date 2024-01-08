@@ -85,7 +85,43 @@ using namespace mrc;
 using namespace mrc::memory::literals;
 
 class TestNetwork : public ::testing::Test
-{};
+{
+  protected:
+    void SetUp() override
+    {
+        m_resources = std::make_unique<data_plane::DataPlaneResources2>();
+
+        m_resources->set_instance_id(42);
+
+        m_loopback_endpoint = m_resources->create_endpoint(m_resources->address(), m_resources->get_instance_id());
+    }
+
+    void TearDown() override
+    {
+        m_resources.reset();
+    }
+
+    void wait_requests(const std::vector<std::shared_ptr<ucxx::Request>>& requests)
+    {
+        auto remainingRequests = requests;
+        while (!remainingRequests.empty())
+        {
+            auto updatedRequests = std::exchange(remainingRequests, decltype(remainingRequests)());
+            for (auto const& r : updatedRequests)
+            {
+                m_resources->progress();
+
+                if (!r->isCompleted())
+                    remainingRequests.push_back(r);
+                else
+                    r->checkError();
+            }
+        }
+    }
+
+    std::unique_ptr<data_plane::DataPlaneResources2> m_resources;
+    std::shared_ptr<ucxx::Endpoint> m_loopback_endpoint;
+};
 
 namespace mrc::codable {
 template <typename T>
@@ -533,21 +569,20 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
 
 TEST_F(TestNetwork, SimpleTaggedMessage)
 {
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     uint32_t send_data = 42;
     uint32_t recv_data = 0;
 
-    auto receive_request =
-        resources.tagged_recv_async(ep, &recv_data, sizeof(uint32_t), 1, data_plane::TagMasks::AnyMsg);
+    auto receive_request = m_resources->tagged_recv_async(m_loopback_endpoint,
+                                                          &recv_data,
+                                                          sizeof(uint32_t),
+                                                          1,
+                                                          data_plane::TagMasks::AnyMsg);
 
-    auto send_request = resources.tagged_send_async(ep, &send_data, sizeof(uint32_t), 1);
+    auto send_request = m_resources->tagged_send_async(m_loopback_endpoint, &send_data, sizeof(uint32_t), 1);
 
     while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources.progress();
+        m_resources->progress();
     }
 
     EXPECT_EQ(send_data, recv_data);
@@ -555,20 +590,17 @@ TEST_F(TestNetwork, SimpleTaggedMessage)
 
 TEST_F(TestNetwork, SimpleActiveMessage)
 {
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     uint32_t send_data = 42;
     uint32_t recv_data = 0;
 
-    auto receive_request = resources.am_recv_async(ep);
+    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
-    auto send_request = resources.am_send_async(ep, &send_data, sizeof(uint32_t), UCS_MEMORY_TYPE_HOST);
+    auto send_request =
+        m_resources->am_send_async(m_loopback_endpoint, &send_data, sizeof(uint32_t), UCS_MEMORY_TYPE_HOST);
 
     while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources.progress();
+        m_resources->progress();
     }
 
     // Now copy the data into the recv_data variable
@@ -579,10 +611,6 @@ TEST_F(TestNetwork, SimpleActiveMessage)
 
 TEST_F(TestNetwork, TransferStorageObject)
 {
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     auto send_encoded_obj = std::make_unique<codable::LocalSerializedWrapper>();
 
     uint32_t send_data = 42;
@@ -593,13 +621,13 @@ TEST_F(TestNetwork, TransferStorageObject)
     // Get the serialized data
     auto serialized_data = send_encoded_obj->to_bytes(memory::malloc_memory_resource::instance());
 
-    auto receive_request = resources.am_recv_async(ep);
+    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
-    auto send_request = resources.am_send_async(ep, serialized_data);
+    auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
 
     while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources.progress();
+        m_resources->progress();
     }
 
     auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
@@ -611,10 +639,6 @@ TEST_F(TestNetwork, TransferStorageObject)
 
 TEST_F(TestNetwork, TransferEncodedObjectViaEncode)
 {
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
     uint32_t send_data = 42;
@@ -625,13 +649,13 @@ TEST_F(TestNetwork, TransferEncodedObjectViaEncode)
     // Get the serialized data
     auto serialized_data = send_encoded_obj->to_bytes(memory::malloc_memory_resource::instance());
 
-    auto receive_request = resources.am_recv_async(ep);
+    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
-    auto send_request = resources.am_send_async(ep, serialized_data);
+    auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
 
     while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources.progress();
+        m_resources->progress();
     }
 
     auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
@@ -643,10 +667,6 @@ TEST_F(TestNetwork, TransferEncodedObjectViaEncode)
 
 TEST_F(TestNetwork, LocalDescriptorRoundTrip)
 {
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
     TransferObject send_data = {"test", 42, {1, 2, 3, 4, 5}};
@@ -672,13 +692,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 {
     static_assert(codable::is_static_decodable_v<TransferObject>);
 
-    data_plane::DataPlaneResources2 resources;
-
-    auto ep = resources.create_endpoint(resources.address());
-
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
-    TransferObject send_data = {"test", 42, {1, 2, 3, 4, 5}};
+    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
 
     auto send_data_copy = send_data;
 
@@ -689,29 +705,29 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
 
     // Convert the local memory blocks into remote memory blocks
-    auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor), resources);
+    auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
+                                                                         *m_resources);
 
     // Get the serialized data
-    auto serialized_data = send_local_descriptor->encoded_object().to_bytes(memory::malloc_memory_resource::instance());
+    auto serialized_data = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
 
-    auto receive_request = resources.am_recv_async(ep);
+    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
-    auto send_request = resources.am_send_async(ep, serialized_data);
+    auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
 
     while (!send_request->isCompleted() || !receive_request->isCompleted())
     {
-        resources.progress();
+        m_resources->progress();
     }
 
-    auto recv_encoded_proto = codable::LocalSerializedWrapper::from_bytes({receive_request->getRecvBuffer()->data(),
-                                                                           receive_request->getRecvBuffer()->getSize(),
-                                                                           mrc::memory::memory_kind::host});
-
     // Create a remote descriptor from the received data
-    auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_encoded_object(std::move(recv_encoded_proto));
+    auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
+                                                                          receive_request->getRecvBuffer()->getSize(),
+                                                                          mrc::memory::memory_kind::host});
 
     // Convert to a local descriptor
-    auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor), resources);
+    auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor),
+                                                                        *m_resources);
 
     // Convert back into the value descriptor
     auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(

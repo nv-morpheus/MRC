@@ -144,6 +144,8 @@ add_custom_target(${PROJECT_NAME}_style_checks
   COMMENT "Building dependencies for style checks"
 )
 
+morpheus_utils_compiler_set_defaults(MRC_USE_CLANG_TIDY)
+
 # Configure all dependencies
 include(dependencies)
 
@@ -159,7 +161,6 @@ add_subdirectory(protos)
 
 # ###################################
 # - Post dependencies setup --------
-morpheus_utils_compiler_set_defaults(MRC_USE_CLANG_TIDY)
 
 # Setup code coverage components
 include(environment/init_coverage)
@@ -188,7 +189,7 @@ if (MRC_ENABLE_DEBUG_INFO)
   morpheus_utils_print_target_properties(
       TARGETS
         libmrc
-        pymrc
+        ucxx
       WRITE_TO_FILE
   )
 

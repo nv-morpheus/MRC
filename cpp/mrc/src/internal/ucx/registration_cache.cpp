@@ -17,6 +17,7 @@
 
 #include "internal/ucx/registration_cache.hpp"
 
+#include <ucp/api/ucp.h>
 #include <ucxx/api.h>
 
 namespace mrc::ucx {
@@ -26,12 +27,17 @@ RegistrationCache2::RegistrationCache2(std::shared_ptr<ucxx::Context> context) :
     CHECK(m_context);
 }
 
-void RegistrationCache2::add_block(const void* addr, std::size_t bytes)
+const ucx::MemoryBlock& RegistrationCache2::add_block(const void* addr, std::size_t bytes)
 {
     DCHECK(addr && bytes);
     auto [lkey, rkey, rkey_size] = this->register_memory_with_rkey(addr, bytes);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    m_blocks.add_block({addr, bytes, lkey, rkey, rkey_size});
+    return m_blocks.add_block({addr, bytes, lkey, rkey, rkey_size});
+}
+
+const ucx::MemoryBlock& RegistrationCache2::add_block(uintptr_t addr, std::size_t bytes)
+{
+    return this->add_block(reinterpret_cast<const void*>(addr), bytes);
 }
 
 std::size_t RegistrationCache2::drop_block(const void* addr, std::size_t bytes)
@@ -42,6 +48,11 @@ std::size_t RegistrationCache2::drop_block(const void* addr, std::size_t bytes)
     this->unregister_memory(block->local_handle(), block->remote_handle());
     m_blocks.drop_block(addr);
     return bytes;
+}
+
+std::size_t RegistrationCache2::drop_block(uintptr_t addr, std::size_t bytes)
+{
+    return drop_block(reinterpret_cast<const void*>(addr), bytes);
 }
 
 std::optional<ucx::MemoryBlock> RegistrationCache2::lookup(const void* addr) const noexcept

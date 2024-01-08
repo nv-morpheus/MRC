@@ -27,12 +27,16 @@
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
-#include <ucs/memory/memory_type.h>
+#include <ucp/api/ucp_def.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+
+// using ucp_rkey_h        = struct ucp_rkey*;
+// using ucs_memory_type_t = enum ucs_memory_type;
 
 namespace ucxx {
 class Context;
@@ -109,6 +113,10 @@ class DataPlaneResources2
     DataPlaneResources2();
     ~DataPlaneResources2();
 
+    void set_instance_id(uint64_t instance_id);
+    bool has_instance_id() const;
+    uint64_t get_instance_id() const;
+
     ucxx::Context& context() const;
 
     ucxx::Worker& worker() const;
@@ -117,13 +125,41 @@ class DataPlaneResources2
 
     ucx::RegistrationCache2& registration_cache() const;
 
-    std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address);
+    std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address, uint64_t instance_id);
+
+    std::shared_ptr<ucxx::Endpoint> find_endpoint(const std::string& address) const;
+    std::shared_ptr<ucxx::Endpoint> find_endpoint(uint64_t instance_id) const;
 
     // Advances the worker
     bool progress();
 
     // Flushes the worker
     bool flush();
+
+    // Wait for the requests to complete
+    void wait_requests(const std::vector<std::shared_ptr<ucxx::Request>>& requests);
+
+    std::shared_ptr<ucxx::Request> memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     memory::const_buffer_view buffer_view,
+                                                     uintptr_t remote_addr,
+                                                     ucp_rkey_h rkey);
+
+    std::shared_ptr<ucxx::Request> memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     const void* addr,
+                                                     std::size_t bytes,
+                                                     uintptr_t remote_addr,
+                                                     ucp_rkey_h rkey);
+
+    std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     memory::buffer_view buffer_view,
+                                                     uintptr_t remote_addr,
+                                                     const void* packed_rkey_data);
+
+    std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                     void* addr,
+                                                     std::size_t bytes,
+                                                     uintptr_t remote_addr,
+                                                     const void* packed_rkey_data);
 
     std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::const_buffer_view buffer_view,
@@ -150,13 +186,16 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
   private:
+    std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
+
     std::shared_ptr<ucxx::Context> m_context;
     std::shared_ptr<ucxx::Worker> m_worker;
     std::shared_ptr<ucxx::Address> m_address;
 
     std::shared_ptr<ucx::RegistrationCache2> m_registration_cache;
 
-    std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints;
+    std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
+    std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 };
 
 }  // namespace mrc::data_plane
