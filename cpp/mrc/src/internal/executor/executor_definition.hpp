@@ -57,7 +57,7 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
 
     static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
 
-    void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
+    pipeline::PipelineMapping& register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
     void start() override;
     void stop() override;
     void join() override;
@@ -73,7 +73,8 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     // std::unique_ptr<resources::Manager> m_resources_manager;
     std::vector<std::shared_ptr<pipeline::PipelineManager>> m_pipeline_managers;
 
-    std::vector<std::shared_ptr<pipeline::PipelineDefinition>> m_registered_pipeline_defs;
+    std::vector<std::pair<pipeline::PipelineMapping, std::shared_ptr<pipeline::PipelineDefinition>>>
+        m_registered_pipeline_defs;
 
     std::unique_ptr<node::LambdaSinkComponent<const protos::ControlPlaneState>> m_update_sink;
 

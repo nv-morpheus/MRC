@@ -19,6 +19,7 @@
 
 #include "mrc/utils/macros.hpp"
 
+#include <map>
 #include <memory>
 
 namespace mrc {
@@ -31,6 +32,41 @@ class IPipeline;
 namespace mrc::pipeline {
 class ISystem;
 
+class SegmentMapping
+{
+  public:
+    SegmentMapping(std::string segment_name);
+
+    bool is_enabled() const;
+
+    void set_enabled(bool is_enabled);
+
+  private:
+    std::string m_segment_name;
+
+    bool m_is_enabled{true};
+};
+
+class PipelineMapping
+{
+  public:
+    PipelineMapping(std::shared_ptr<IPipeline> pipeline);
+
+    // Disable copy construction to avoid accidental copies. There should only be one instance per pipeline. Equal copy
+    // is ok
+    PipelineMapping(const PipelineMapping&) = delete;
+    PipelineMapping(PipelineMapping&&)      = default;
+
+    PipelineMapping& operator=(const PipelineMapping&) = default;
+    PipelineMapping& operator=(PipelineMapping&&)      = default;
+
+    SegmentMapping& get_segment(const std::string& segment_name);
+    const SegmentMapping& get_segment(const std::string& segment_name) const;
+
+  private:
+    std::map<std::string, SegmentMapping> m_segment_mappings;
+};
+
 class IExecutor
 {
   public:
@@ -38,10 +74,10 @@ class IExecutor
 
     DELETE_COPYABILITY(IExecutor);
 
-    virtual void register_pipeline(std::shared_ptr<IPipeline> pipeline) = 0;
-    virtual void start()                                                = 0;
-    virtual void stop()                                                 = 0;
-    virtual void join()                                                 = 0;
+    virtual PipelineMapping& register_pipeline(std::shared_ptr<IPipeline> pipeline) = 0;
+    virtual void start()                                                            = 0;
+    virtual void stop()                                                             = 0;
+    virtual void join()                                                             = 0;
 
   protected:
     IExecutor() = default;
@@ -52,24 +88,24 @@ class IExecutor
 namespace mrc {
 
 // For backwards compatibility, make utility implementation which holds onto a unique_ptr
-class Executor : public pipeline::IExecutor
+class Executor
 {
   public:
     Executor();
     Executor(std::shared_ptr<Options> options);
-    ~Executor() override;
+    ~Executor();
 
-    void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
-    void start() override;
-    void stop() override;
-    void join() override;
+    pipeline::PipelineMapping& register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline);
+    void start();
+    void stop();
+    void join();
 
   private:
-    std::unique_ptr<IExecutor> m_impl;
+    std::unique_ptr<pipeline::IExecutor> m_impl;
 };
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options);
+std::unique_ptr<pipeline::IExecutor> make_executor_impl(std::shared_ptr<Options> options);
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system);
+std::unique_ptr<pipeline::IExecutor> make_executor_impl(std::unique_ptr<pipeline::ISystem> system);
 
 }  // namespace mrc

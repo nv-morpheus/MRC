@@ -64,6 +64,7 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     mutable Mutex m_port_mutex;
     std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_incoming_port_channels;
+    std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_outgoing_port_channels;
 };
 
 class DataPlaneManager : public AsyncService, public InternalRuntimeProvider

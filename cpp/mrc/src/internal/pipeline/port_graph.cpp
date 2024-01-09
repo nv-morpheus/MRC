@@ -27,7 +27,7 @@ namespace mrc::pipeline {
 
 PortGraph::PortGraph(const PipelineDefinition& pipeline)
 {
-    for (const auto& [seg_id, seg_definition] : pipeline.segments())
+    for (const auto& [seg_id, seg_definition] : pipeline.segment_defs())
     {
         auto seg_name = seg_definition->name();
 

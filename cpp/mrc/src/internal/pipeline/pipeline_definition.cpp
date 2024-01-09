@@ -149,6 +149,23 @@ std::shared_ptr<const ISegment> PipelineDefinition::make_segment(const std::stri
     return this->register_segment(std::move(segdef));
 }
 
+std::vector<std::shared_ptr<const ISegment>> PipelineDefinition::segments() const
+{
+    std::vector<std::shared_ptr<const ISegment>> segments;
+
+    for (const auto& [id, segment] : m_segments)
+    {
+        segments.push_back(segment);
+    }
+
+    return segments;
+}
+
+const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& PipelineDefinition::segment_defs() const
+{
+    return m_segments;
+}
+
 std::shared_ptr<const ManifoldDefinition> PipelineDefinition::find_manifold(const std::string& manifold_name) const
 {
     auto search = m_manifolds.find(manifold_name);
@@ -161,11 +178,6 @@ std::shared_ptr<const segment::SegmentDefinition> PipelineDefinition::find_segme
     auto search = m_segments.find(segment_id);
     CHECK(search != m_segments.end());
     return search->second;
-}
-
-const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& PipelineDefinition::segments() const
-{
-    return m_segments;
 }
 
 }  // namespace mrc::pipeline

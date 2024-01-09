@@ -2,7 +2,7 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
-import { IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
+import { IManifoldDefinition, IManifoldInstance, ISegmentInstance } from "@mrc/common/entities";
 import {
    ResourceActualStatus,
    resourceActualStatusToNumber,
@@ -22,11 +22,11 @@ import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { AppDispatch, RootState, AppGetState } from "@mrc/server/store/store";
 import { yield_immediate } from "@mrc/common/utils";
 
-function filterMappingByLocality(mapping: { [key: number]: boolean }, isLocal: boolean) : [string, boolean][] {
+function filterMappingByLocality(mapping: { [key: number]: boolean }, isLocal: boolean): [string, boolean][] {
    // Ugh Object.entries & Object.keys both cast to string
-   return Object.entries(mapping).filter(([_, segmentLocal]) => segmentLocal===isLocal);
+   return Object.entries(mapping).filter(([_, segmentLocal]) => segmentLocal === isLocal);
 }
-function getNumLocal(mapping : { [key: string]: boolean }) : number {
+function getNumLocal(mapping: { [key: string]: boolean }): number {
    // Counts the number of local segments in either an input or output mapping
    return filterMappingByLocality(mapping, true).length;
 }
@@ -116,7 +116,9 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
 
-         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input
+            ? found.requestedInputSegments
+            : found.requestedOutputSegments;
 
          // Check to make sure this hasnt been added already
          if (action.payload.segment.address in requestedMap) {
@@ -124,7 +126,6 @@ export const manifoldInstancesSlice = createSlice({
          }
 
          requestedMap[action.payload.segment.address] = action.payload.is_local;
-
       },
       detachRequestedSegment: (
          state,
@@ -140,7 +141,9 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
 
-         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input
+            ? found.requestedInputSegments
+            : found.requestedOutputSegments;
 
          // Check to make sure its already added
          if (!(action.payload.segment.address in requestedMap)) {
@@ -163,8 +166,12 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
 
-         const requestedMap: { [key: string]: boolean } = action.payload.is_input ? found.requestedInputSegments : found.requestedOutputSegments;
-         const actualMap: { [key: string]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
+         const requestedMap: { [key: string]: boolean } = action.payload.is_input
+            ? found.requestedInputSegments
+            : found.requestedOutputSegments;
+         const actualMap: { [key: string]: boolean } = action.payload.is_input
+            ? found.actualInputSegments
+            : found.actualOutputSegments;
 
          const isLocal = requestedMap[action.payload.segment.address];
          if (isLocal === undefined) {
@@ -188,14 +195,15 @@ export const manifoldInstancesSlice = createSlice({
             throw new Error(`Manifold Instance with ID: ${action.payload.manifold.id} not found`);
          }
 
-         const actualMap: { [key: number]: boolean } = action.payload.is_input ? found.actualInputSegments : found.actualOutputSegments;
+         const actualMap: { [key: number]: boolean } = action.payload.is_input
+            ? found.actualInputSegments
+            : found.actualOutputSegments;
 
          if (!(action.payload.segment.address in actualMap)) {
             throw new Error("Segment not attached to manifold");
          }
 
          delete actualMap[action.payload.segment.address];
-
 
          const numRequestedInputs: number = Object.keys(found.requestedInputSegments).length;
          const numActualInputs: number = Object.keys(found.actualInputSegments).length;
@@ -235,43 +243,68 @@ export const manifoldInstancesSlice = createSlice({
    },
 });
 
+function determineManifoldSegmentMapping(state: RootState, manifold_def: IManifoldDefinition) {
+   const active_input_segs = Object.entries(manifold_def.inputSegmentIds)
+      .map(([segmentName]) => {
+         // Find all segments that match this name and definition pair
+         const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(state, segmentName, manifold_def.parentId);
+
+         // Find only the segment which are active
+         return matchingSegments.filter(
+            (s) =>
+               resourceActualStatusToNumber(s.state.actualStatus) >=
+                  resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
+               resourceActualStatusToNumber(s.state.actualStatus) <
+                  resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
+         );
+      })
+      .reduce((acc, val) => acc.concat(val), []);
+
+   const active_output_segs = Object.entries(manifold_def.outputSegmentIds)
+      .map(([segmentName]) => {
+         // Find all segments that match this name and definition pair
+         const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(state, segmentName, manifold_def.parentId);
+
+         // Find only the segment which are active
+         return matchingSegments.filter(
+            (s) =>
+               resourceActualStatusToNumber(s.state.actualStatus) >=
+                  resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
+               resourceActualStatusToNumber(s.state.actualStatus) <
+                  resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
+         );
+      })
+      .reduce((acc, val) => acc.concat(val), []);
+
+   const mapping = {
+      input: active_input_segs,
+      output: active_output_segs,
+   };
+
+   // We must have at least one input and output to map any segments
+   if (mapping.input.length === 0 || mapping.output.length === 0) {
+      mapping.input = [];
+      mapping.output = [];
+   }
+
+   return mapping;
+}
+
 function syncSegmentNameForManifold(
    dispatch: AppDispatch,
    state: RootState,
    manifold: IManifoldInstance,
-   segmentName: string,
+   segmentMapping: { input: ISegmentInstance[]; output: ISegmentInstance[] },
    isInput: boolean
 ) {
-   // Find all segments that match this name and definition pair
-   const matchingSegments = segmentInstancesSelectByNameAndPipelineDef(
-      state,
-      segmentName,
-      manifold.pipelineDefinitionId
-   );
-
-   // Find only the segment
-   const activeSegmentIds = matchingSegments
-      .filter(
-         (s) =>
-            resourceActualStatusToNumber(s.state.actualStatus) >=
-            resourceActualStatusToNumber(ResourceActualStatus.Actual_Created) &&
-            resourceActualStatusToNumber(s.state.actualStatus) <
-            resourceActualStatusToNumber(ResourceActualStatus.Actual_Completed)
-      )
-      .map((s) => s.id);
-
    const currentSegmentIds = Object.keys(isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments);
 
+   const activeSegments = isInput ? segmentMapping.input : segmentMapping.output;
+
    // Determine any that need to be added
-   const toAdd = activeSegmentIds.filter((s) => !currentSegmentIds.includes(s));
+   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.id));
 
-   toAdd.forEach((segId) => {
-      const seg = segmentInstancesSelectById(state, segId);
-
-      if (!seg) {
-         throw new Error(`Could not find segment with ID: ${segId}`);
-      }
-
+   toAdd.forEach((seg) => {
       // Figure out if this is local
       const isLocal = manifold.pipelineInstanceId === seg.pipelineInstanceId;
 
@@ -287,7 +320,7 @@ function syncSegmentNameForManifold(
    });
 
    // Determine any that need to be removed
-   const toRemove = currentSegmentIds.filter((s) => !activeSegmentIds.includes(s));
+   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.id).includes(s));
 
    toRemove.forEach((segId) => {
       const seg = segmentInstancesSelectById(state, segId);
@@ -297,11 +330,13 @@ function syncSegmentNameForManifold(
       }
 
       // Dispatch the attach action
-      dispatch(manifoldInstancesSlice.actions.detachRequestedSegment({
-         is_input: isInput,
-         manifold: manifold,
-         segment: seg,
-      }));
+      dispatch(
+         manifoldInstancesSlice.actions.detachRequestedSegment({
+            is_input: isInput,
+            manifold: manifold,
+            segment: seg,
+         })
+      );
    });
 }
 
@@ -320,11 +355,13 @@ function ensureOneLocal(dispatch: AppDispatch, state: RootState, manifold: IMani
             throw new Error(`Could not find segment with ID: ${segId}`);
          }
 
-         dispatch(manifoldInstancesSlice.actions.detachRequestedSegment({
-            is_input: !isInput,
-            manifold: manifold,
-            segment: seg,
-         }));
+         dispatch(
+            manifoldInstancesSlice.actions.detachRequestedSegment({
+               is_input: !isInput,
+               manifold: manifold,
+               segment: seg,
+            })
+         );
 
          numDetached++;
       });
@@ -358,22 +395,19 @@ export function manifoldInstancesSyncSegments(manifoldId: string) {
 
       const manifold_def = pipeline_def.manifolds[found.portName];
 
-      // For each egress, sync all segments
-      Object.entries(manifold_def.outputSegmentIds).forEach(([segmentName]) => {
-         syncSegmentNameForManifold(dispatch, state, found, segmentName, false);
-      });
+      // Determine the list of segments that should be attached to this manifold
+      const segment_mapping = determineManifoldSegmentMapping(state, manifold_def);
 
-      // For each ingress, sync all segments
-      Object.entries(manifold_def.inputSegmentIds).forEach(([segmentName]) => {
-         syncSegmentNameForManifold(dispatch, state, found, segmentName, true);
-      });
+      // Sync the input and output assignments with the mapping
+      syncSegmentNameForManifold(dispatch, state, found, segment_mapping, true);
+      syncSegmentNameForManifold(dispatch, state, found, segment_mapping, false);
 
       // Update the stage, and determine if we should detach any remote segments if we don't have a corresponding local
       // segment. Specifically if a manifold doesn't contain any local inputs, then all of the remote outputs should be
       // detached and if a manifold doesn't have any local outputs then all remote inputs should be detached.
       state = getState();
       // Ensure that we have at least one local input and one local output
-      let manifold = manifoldInstancesSelectById(state, manifoldId);
+      const manifold = manifoldInstancesSelectById(state, manifoldId);
       if (!manifold) {
          throw new Error(`Manifold Instance with ID: ${manifoldId} not found`);
       }
@@ -390,19 +424,26 @@ function manifoldInstanceUpdateActualSegment(
    manifold: IManifoldInstance,
    isInput: boolean,
    segmentId: string,
-   isLocal: boolean) {
+   isLocal: boolean
+) {
    const segment = segmentInstancesSelectById(state, segmentId);
    if (!segment) {
       throw new Error(`Could not find segment with ID: ${segmentId}`);
    }
 
-   const requestedMapping: { [key: string]: boolean } = isInput ? manifold.requestedInputSegments : manifold.requestedOutputSegments;
-   const actualMapping: { [key: string]: boolean } = isInput ? manifold.actualInputSegments : manifold.actualOutputSegments;
+   const requestedMapping: { [key: string]: boolean } = isInput
+      ? manifold.requestedInputSegments
+      : manifold.requestedOutputSegments;
+   const actualMapping: { [key: string]: boolean } = isInput
+      ? manifold.actualInputSegments
+      : manifold.actualOutputSegments;
 
    // figure out if we are adding or removing
    if (segment.address in requestedMapping) {
       // segment exists in requested, and the client added it to the actual
-      dispatch(manifoldInstancesSlice.actions.attachActualSegment({ manifold: manifold, is_input: isInput, segment: segment }));
+      dispatch(
+         manifoldInstancesSlice.actions.attachActualSegment({ manifold: manifold, is_input: isInput, segment: segment })
+      );
 
       // Increment the ref count of the segment [{"type": "ManifoldInstance", "id": "id"}]
       dispatch(segmentInstanceIncRefCount({ segment: segment }));
@@ -411,7 +452,13 @@ function manifoldInstanceUpdateActualSegment(
       //   1) Server asked the client to remove the segment and they did in which, and now we need to remove it from the actual
       //   2) Client is sending us an invalid segmentId
       if (segment.address in actualMapping) {
-         dispatch(manifoldInstancesSlice.actions.detachActualSegment({ manifold: manifold, is_input: isInput, segment: segment }));
+         dispatch(
+            manifoldInstancesSlice.actions.detachActualSegment({
+               manifold: manifold,
+               is_input: isInput,
+               segment: segment,
+            })
+         );
          dispatch(segmentInstanceDecRefCount({ segment: segment }));
       } else {
          throw new Error(`Actual segment ${segmentId} does not match an attached segment`);
@@ -422,7 +469,8 @@ function manifoldInstanceUpdateActualSegment(
 export function manifoldInstancesUpdateActualSegments(
    manifoldInstanceId: string,
    actualInputSegments: { [key: string]: boolean },
-   actualOutputSegments: { [key: string]: boolean }) {
+   actualOutputSegments: { [key: string]: boolean }
+) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       const state = getState();
       const manifold = manifoldInstancesSelectById(state, manifoldInstanceId);
@@ -430,10 +478,18 @@ export function manifoldInstancesUpdateActualSegments(
          throw new Error(`Could not find manifold with ID: ${manifoldInstanceId}`);
       }
 
-      const actualInputToAdd = Object.entries(actualInputSegments).filter(([segmentId]) => !(segmentId in manifold.actualInputSegments));
-      const actualOutputToAdd = Object.entries(actualOutputSegments).filter(([segmentId]) => !(segmentId in manifold.actualOutputSegments));
-      const actualInputToRemove = Object.entries(manifold.actualInputSegments).filter(([segmentId]) => !(segmentId in actualInputSegments));
-      const actualOutputToRemove = Object.entries(manifold.actualOutputSegments).filter(([segmentId]) => !(segmentId in actualOutputSegments));
+      const actualInputToAdd = Object.entries(actualInputSegments).filter(
+         ([segmentId]) => !(segmentId in manifold.actualInputSegments)
+      );
+      const actualOutputToAdd = Object.entries(actualOutputSegments).filter(
+         ([segmentId]) => !(segmentId in manifold.actualOutputSegments)
+      );
+      const actualInputToRemove = Object.entries(manifold.actualInputSegments).filter(
+         ([segmentId]) => !(segmentId in actualInputSegments)
+      );
+      const actualOutputToRemove = Object.entries(manifold.actualOutputSegments).filter(
+         ([segmentId]) => !(segmentId in actualOutputSegments)
+      );
 
       // perform any adds
       actualInputToAdd.forEach(([segmentId, isLocal]) => {
@@ -452,7 +508,6 @@ export function manifoldInstancesUpdateActualSegments(
       actualOutputToRemove.forEach(([segmentId, isLocal]) => {
          manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
       });
-
    };
 }
 

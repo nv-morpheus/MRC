@@ -287,6 +287,9 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
          if (seg_map.byPolicy) {
             if (seg_map.byPolicy.value == SegmentMappingPolicies.OnePerWorker) {
                workerIds = workers.map((x) => x.id);
+            } else if (seg_map.byPolicy.value == SegmentMappingPolicies.Disabled) {
+               // If its disabled, do not assign any workers
+               workerIds = [];
             } else {
                throw new Error(`Unsupported policy: ${seg_map.byPolicy.value}`);
             }

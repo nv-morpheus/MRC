@@ -202,11 +202,22 @@ void Client::do_service_start(std::stop_token stop_token)
     });
 
     // response handler - optionally add concurrency here
-    auto response_handler = std::make_unique<node::RxSink<event_t>>([](event_t event) {
-        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
-        if (promise != nullptr)
+    auto response_handler = std::make_unique<node::RxSink<event_t>>([this](event_t event) {
+        auto event_tag = event.msg.tag();
+
+        if (event_tag != 0)
         {
-            promise->set_value(std::move(event.msg));
+            // Lock to prevent multiple threads
+            std::unique_lock<decltype(m_mutex)> lock(m_mutex);
+
+            // Find the promise associated with the event tag
+            auto promise = m_pending_events.extract(event_tag);
+
+            // Unlock to allow other threads to continue as soon as possible
+            lock.unlock();
+
+            // Finally, set the value
+            promise.mapped().set_value(std::move(event.msg));
         }
     });
 

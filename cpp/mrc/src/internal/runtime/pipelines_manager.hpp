@@ -20,6 +20,7 @@
 #include "internal/runtime/runtime_provider.hpp"
 
 #include "mrc/core/async_service.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/types.hpp"
 
 #include <cstdint>
@@ -51,7 +52,8 @@ class PipelinesManager : public AsyncService, public InternalRuntimeProvider
     PipelinesManager(IInternalRuntimeProvider& runtime);
     ~PipelinesManager() override;
 
-    void register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs);
+    void register_defs(
+        std::vector<std::pair<pipeline::PipelineMapping, std::shared_ptr<pipeline::PipelineDefinition>>>& pipeline_defs);
 
     pipeline::PipelineDefinition& get_definition(uint64_t definition_id);
 

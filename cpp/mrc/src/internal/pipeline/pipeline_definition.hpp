@@ -19,6 +19,7 @@
 
 #include "internal/utils/collision_detector.hpp"
 
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/initializers.hpp"
 #include "mrc/types.hpp"
@@ -62,9 +63,11 @@ class PipelineDefinition : public IPipeline
                                                  segment::EgressPortsBase egress_ports,
                                                  segment::segment_initializer_fn_t segment_initializer) override;
 
+    std::vector<std::shared_ptr<const ISegment>> segments() const override;
+
     // static std::shared_ptr<PipelineDefinition> unwrap(IPipeline& pipeline);
 
-    const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& segments() const;
+    const std::map<SegmentID, std::shared_ptr<const segment::SegmentDefinition>>& segment_defs() const;
 
     std::shared_ptr<const ManifoldDefinition> find_manifold(const std::string& manifold_name) const;
     std::shared_ptr<const segment::SegmentDefinition> find_segment(SegmentID segment_id) const;

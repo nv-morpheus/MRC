@@ -303,6 +303,9 @@ export function resourceActualStatusToNumber(object: ResourceActualStatus): numb
 }
 
 export enum SegmentMappingPolicies {
+  /** Disabled - Do not run this segment for the specified machine ID */
+  Disabled = "Disabled",
+  /** OnePerWorker - Run one instance of this segment per worker on the specified machine ID */
   OnePerWorker = "OnePerWorker",
   UNRECOGNIZED = "UNRECOGNIZED",
 }
@@ -310,6 +313,9 @@ export enum SegmentMappingPolicies {
 export function segmentMappingPoliciesFromJSON(object: any): SegmentMappingPolicies {
   switch (object) {
     case 0:
+    case "Disabled":
+      return SegmentMappingPolicies.Disabled;
+    case 1:
     case "OnePerWorker":
       return SegmentMappingPolicies.OnePerWorker;
     case -1:
@@ -321,6 +327,8 @@ export function segmentMappingPoliciesFromJSON(object: any): SegmentMappingPolic
 
 export function segmentMappingPoliciesToJSON(object: SegmentMappingPolicies): string {
   switch (object) {
+    case SegmentMappingPolicies.Disabled:
+      return "Disabled";
     case SegmentMappingPolicies.OnePerWorker:
       return "OnePerWorker";
     case SegmentMappingPolicies.UNRECOGNIZED:
@@ -331,8 +339,10 @@ export function segmentMappingPoliciesToJSON(object: SegmentMappingPolicies): st
 
 export function segmentMappingPoliciesToNumber(object: SegmentMappingPolicies): number {
   switch (object) {
-    case SegmentMappingPolicies.OnePerWorker:
+    case SegmentMappingPolicies.Disabled:
       return 0;
+    case SegmentMappingPolicies.OnePerWorker:
+      return 1;
     case SegmentMappingPolicies.UNRECOGNIZED:
     default:
       return -1;
@@ -2194,14 +2204,14 @@ export const PipelineMapping_SegmentMapping = {
 messageTypeRegistry.set(PipelineMapping_SegmentMapping.$type, PipelineMapping_SegmentMapping);
 
 function createBasePipelineMapping_SegmentMapping_ByPolicy(): PipelineMapping_SegmentMapping_ByPolicy {
-  return { $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy", value: SegmentMappingPolicies.OnePerWorker };
+  return { $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy", value: SegmentMappingPolicies.Disabled };
 }
 
 export const PipelineMapping_SegmentMapping_ByPolicy = {
   $type: "mrc.protos.PipelineMapping.SegmentMapping.ByPolicy" as const,
 
   encode(message: PipelineMapping_SegmentMapping_ByPolicy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.value !== SegmentMappingPolicies.OnePerWorker) {
+    if (message.value !== SegmentMappingPolicies.Disabled) {
       writer.uint32(8).int32(segmentMappingPoliciesToNumber(message.value));
     }
     return writer;
@@ -2233,7 +2243,7 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
   fromJSON(object: any): PipelineMapping_SegmentMapping_ByPolicy {
     return {
       $type: PipelineMapping_SegmentMapping_ByPolicy.$type,
-      value: isSet(object.value) ? segmentMappingPoliciesFromJSON(object.value) : SegmentMappingPolicies.OnePerWorker,
+      value: isSet(object.value) ? segmentMappingPoliciesFromJSON(object.value) : SegmentMappingPolicies.Disabled,
     };
   },
 
@@ -2249,7 +2259,7 @@ export const PipelineMapping_SegmentMapping_ByPolicy = {
 
   fromPartial(object: DeepPartial<PipelineMapping_SegmentMapping_ByPolicy>): PipelineMapping_SegmentMapping_ByPolicy {
     const message = createBasePipelineMapping_SegmentMapping_ByPolicy();
-    message.value = object.value ?? SegmentMappingPolicies.OnePerWorker;
+    message.value = object.value ?? SegmentMappingPolicies.Disabled;
     return message;
   },
 };

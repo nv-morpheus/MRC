@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/manifold/manifold.hpp"
@@ -10,10 +11,9 @@
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/node/writable_entrypoint.hpp"
-#include "mrc/runnable/context.hpp"
-#include "mrc/runnable/runnable.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <memory>
 #include <mutex>
@@ -23,14 +23,24 @@
 namespace mrc::manifold {
 
 template <typename T>
-class ManifoldTagger2 : public ManifoldTaggerBase2, public node::RouterBase<InstanceID, T>
+class ManifoldTagger2 : public ManifoldTaggerBase2,
+                        // Mimic a RxSink Base
+                        public node::ReadableWritableSink<T>,
+                        // Channel to hold data until we have downstream connections
+                        public node::SinkChannelOwner<T>,
+                        // Half of a router node to write to multiple outputs
+                        public node::RouterWritableAcceptor<InstanceID, T>
 {
   public:
     using key_t            = InstanceID;
     using input_message_t  = T;
     using output_message_t = std::pair<SegmentAddress, T>;
 
-    ManifoldTagger2() {}
+    ManifoldTagger2()
+    {
+        // Set the default channel
+        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>(4));
+    }
 
     void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) override
     {
@@ -54,10 +64,10 @@ class ManifoldTagger2 : public ManifoldTaggerBase2, public node::RouterBase<Inst
     }
 
   protected:
-    channel::Status on_next(input_message_t&& data) override
+    channel::Status on_next(input_message_t&& data)
     {
         // Get a read only lock
-        std::shared_lock lock(m_output_mutex);
+        // std::shared_lock lock(m_output_mutex);
 
         // Figure out which port to send this to
         auto port = this->get_next_tag();
@@ -68,15 +78,20 @@ class ManifoldTagger2 : public ManifoldTaggerBase2, public node::RouterBase<Inst
     }
 
   private:
-    // void drop_outputs() override
-    // {
-    //     this->drop_all_sources();
-    // }
+    channel::Status process_one_message() override
+    {
+        T data;
 
-    // edge::IWritableAcceptorBase& get_output(SegmentAddress address) const override
-    // {
-    //     return *this->get_source(address);
-    // }
+        // Now pull from the queue. Dont wait for any time if there isnt a message
+        auto status = this->get_readable_edge()->await_read_for(data, channel::duration_t::zero());
+
+        if (status == channel::Status::success)
+        {
+            return this->on_next(std::move(data));
+        }
+
+        return status;
+    }
 };
 
 // template <typename T>

@@ -55,11 +55,13 @@ void PromiseWrapper::set_value(bool val)
 
 bool PromiseWrapper::get_future()
 {
+    auto tmp_prefix = this->to_string();
+
     auto future = this->promise.get_future();
 
     auto value = future.get();
 
-    VLOG(20) << this->to_string() << "#4 got future with value " << value;
+    VLOG(20) << tmp_prefix << "#4 got future with value " << value;
 
     return value;
 }

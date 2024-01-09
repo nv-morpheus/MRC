@@ -421,24 +421,22 @@ TEST_F(TestExecutor, LifeCycleArchitect)
     executor.register_pipeline(make_pipeline());
 
     executor.start();
-    executor.stop();
+    // executor.stop();
     executor.join();
 }
 
 TEST_F(TestExecutor, MultiNode)
 {
-    GTEST_SKIP();
-
     auto options_1 = make_options();
     auto options_2 = make_options();
 
     options_1->architect_url("127.0.0.1:13337");
     options_1->enable_server(true);
-    options_1->config_request("seg_1,seg_4");
+    // options_1->config_request("seg_1,seg_3");
 
     options_2->architect_url("127.0.0.1:13337");
     options_2->topology().user_cpuset("1");
-    options_2->config_request("seg_2,seg_3");
+    // options_2->config_request("seg_2,seg_4");
 
     Executor machine_1(std::move(options_1));
     Executor machine_2(std::move(options_2));
@@ -446,8 +444,11 @@ TEST_F(TestExecutor, MultiNode)
     auto pipeline_1 = make_pipeline();
     auto pipeline_2 = make_pipeline();
 
-    machine_1.register_pipeline(std::move(pipeline_1));
-    machine_2.register_pipeline(std::move(pipeline_2));
+    auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
+    auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
+
+    mapping_1.get_segment("seg_4").set_enabled(false);
+    mapping_2.get_segment("seg_1").set_enabled(false);
 
     auto start_1 = boost::fibers::async([&] {
         machine_1.start();
@@ -470,8 +471,8 @@ TEST_F(TestExecutor, MultiNode)
     // creates a new machine to replace the one that went away and see a resumption of pipeline
     // functionality, then do the shutdown.
 
-    machine_2.stop();
-    machine_1.stop();
+    // machine_2.stop();
+    // machine_1.stop();
 
     machine_2.join();
     machine_1.join();

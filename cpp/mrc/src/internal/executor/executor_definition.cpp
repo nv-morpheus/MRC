@@ -25,6 +25,7 @@
 #include "internal/system/system.hpp"
 
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/pipeline/executor.hpp"
 
 #include <glog/logging.h>
 
@@ -33,6 +34,7 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 
 namespace mrc::executor {
@@ -98,9 +100,12 @@ std::shared_ptr<ExecutorDefinition> ExecutorDefinition::unwrap(std::shared_ptr<p
     return full_object;
 }
 
-void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
+pipeline::PipelineMapping& ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
 {
     CHECK(pipeline) << "Must pass a non-null pipeline pointer to register_pipeline";
+
+    // Build the mapping before unwrapping
+    auto mapping = pipeline::PipelineMapping(pipeline);
 
     auto full_pipeline = pipeline::PipelineDefinition::unwrap(std::move(pipeline));
 
@@ -110,8 +115,9 @@ void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> 
     }
 
     // m_pipeline_manager = std::make_unique<pipeline::Manager>(pipeline, *m_resources_manager);
+    auto& pipe = m_registered_pipeline_defs.emplace_back(std::move(mapping), std::move(full_pipeline));
 
-    m_registered_pipeline_defs.emplace_back(std::move(full_pipeline));
+    return pipe.first;
 }
 
 void ExecutorDefinition::start()

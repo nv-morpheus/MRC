@@ -26,6 +26,7 @@
 #include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 #include "mrc/core/utils.hpp"
+#include "mrc/pipeline/executor.hpp"
 #include "mrc/protos/architect.pb.h"
 #include "mrc/protos/architect_state.pb.h"
 #include "mrc/segment/ports.hpp"
@@ -55,18 +56,21 @@ PipelinesManager::~PipelinesManager()
     AsyncService::call_in_destructor();
 }
 
-void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::PipelineDefinition>> pipeline_defs)
+void PipelinesManager::register_defs(
+    std::vector<std::pair<pipeline::PipelineMapping, std::shared_ptr<pipeline::PipelineDefinition>>>& pipeline_defs)
 {
     // Now loop over all and register with the control plane
-    for (const auto& pipeline : pipeline_defs)
+    for (auto& pipeline_pair : pipeline_defs)
     {
+        auto& [pipeline_mapping, pipeline] = pipeline_pair;
+
         protos::PipelineRegisterConfigRequest request;
         protos::PipelineAddMappingRequest mapping_request;
 
         auto* config  = request.mutable_config();
         auto* mapping = mapping_request.mutable_mapping();
 
-        for (const auto& [segment_id, segment] : pipeline->segments())
+        for (const auto& [segment_id, segment] : pipeline->segment_defs())
         {
             protos::PipelineConfiguration_SegmentConfiguration seg_config;
 
@@ -116,7 +120,14 @@ void PipelinesManager::register_defs(std::vector<std::shared_ptr<pipeline::Pipel
 
             seg_mapping.set_segment_name(segment->name());
 
-            seg_mapping.mutable_by_policy()->set_value(::mrc::protos::SegmentMappingPolicies::OnePerWorker);
+            if (pipeline_mapping.get_segment(segment->name()).is_enabled())
+            {
+                seg_mapping.mutable_by_policy()->set_value(::mrc::protos::SegmentMappingPolicies::OnePerWorker);
+            }
+            else
+            {
+                seg_mapping.mutable_by_policy()->set_value(::mrc::protos::SegmentMappingPolicies::Disabled);
+            }
 
             mapping->mutable_segments()->emplace(segment->name(), std::move(seg_mapping));
         }

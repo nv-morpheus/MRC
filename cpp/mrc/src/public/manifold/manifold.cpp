@@ -17,8 +17,11 @@
 
 #include "mrc/manifold/manifold.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/core/utils.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/runnable/launch_control.hpp"
+#include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/ranges.hpp"
 
@@ -37,10 +40,15 @@ namespace mrc::manifold {
 //     ManifoldNodeBase::add_output(address, output_sink);
 // }
 
-// SegmentAddress ManifoldTaggerBase::get_next_tag()
-// {
-//     return this->current_policy().get_next_tag();
-// }
+InstanceID ManifoldTaggerBase2::get_next_tag()
+{
+    return m_current_policy.get_next_tag();
+}
+
+bool ManifoldTaggerBase2::has_connections() const
+{
+    return m_current_policy.has_connections();
+}
 
 // void ManifoldTaggerBase::do_update_policy(const ManifoldPolicy& policy)
 // {
@@ -56,27 +64,94 @@ namespace mrc::manifold {
 
 void ManifoldTaggerBase2::update_policy(ManifoldPolicy&& policy)
 {
-    // Get exclusive access to the lock to prevent modification
-    std::unique_lock lock(m_output_mutex);
+    boost::fibers::packaged_task<void()> update_task([this, policy = std::move(policy)]() {
+        auto next_keys = extract_keys(policy.outputs);
 
-    auto next_keys = extract_keys(policy.outputs);
+        auto [to_add, to_remove] = compare_difference(this->writable_edge_keys(),
+                                                      std::vector<InstanceID>{next_keys.begin(), next_keys.end()});
 
-    auto [to_add, to_remove] = compare_difference(this->writable_edge_keys(),
-                                                  std::vector<InstanceID>{next_keys.begin(), next_keys.end()});
+        for (const auto& key : to_remove)
+        {
+            this->release_writable_edge(key);
+        }
 
-    for (const auto& key : to_remove)
+        for (const auto& key : to_add)
+        {
+            const auto& output = policy.outputs.at(key);
+
+            this->add_output(key, output.is_local, output.edge);
+        }
+
+        // Set a flag to indicate if we have at least one local input connection and one (local or remote) output
+        // connection
+        m_has_local_input = policy.local_input_count() > 0 && !policy.outputs.empty();
+
+        m_current_policy = std::move(policy);
+    });
+
+    auto update_future = update_task.get_future();
+
+    CHECK_EQ(m_updates.await_write(std::move(update_task)), channel::Status::success);
+
+    // Before continuing, wait for the update to be processed
+    update_future.get();
+}
+
+void ManifoldTaggerBase2::run(runnable::Context& ctx)
+{
+    std::uint64_t backoff = 128;
+
+    while (this->state() == State::Run)
     {
-        this->release_writable_edge(key);
+        // if we are rank 0, check for updates
+        if (ctx.rank() == 0)
+        {
+            channel::Status update_status;
+            boost::fibers::packaged_task<void()> next_update;
+
+            while ((update_status = m_updates.try_read(next_update)) == channel::Status::success)
+            {
+                // Run the next update
+                next_update();
+            }
+        }
+
+        // Barrier to sync threads
+        ctx.barrier();
+
+        // Default is timeout for when we dont have connections
+        channel::Status status = channel::Status::timeout;
+
+        if (m_has_local_input)
+        {
+            // Try and process a message. Use the return value to alter the pace
+            status = this->process_one_message();
+        }
+
+        if (status == channel::Status::success)
+        {
+            backoff = 1;
+        }
+        else if (status == channel::Status::timeout)
+        {
+            // If there are no pending updates, sleep
+            if (backoff < 1024)
+            {
+                backoff = (backoff << 1);
+            }
+            boost::this_fiber::sleep_for(std::chrono::microseconds(backoff));
+        }
+        else if (status == channel::Status::closed)
+        {
+            // Drop all downstream connections
+            // TODO(MDD): Release all connections
+        }
+        else
+        {
+            // Should not happen
+            throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Unexpected channel status in manifold: " << status));
+        }
     }
-
-    for (const auto& key : to_add)
-    {
-        auto& output = policy.outputs.at(key);
-
-        this->add_output(key, output.is_local, output.edge);
-    }
-
-    m_current_policy = std::move(policy);
 }
 
 ManifoldBase::ManifoldBase(runnable::IRunnableResources& resources,
@@ -94,24 +169,20 @@ const PortName& ManifoldBase::port_name() const
 
 void ManifoldBase::start()
 {
-    // runnable::LaunchOptions launch_options;
-    // launch_options.engine_factory_name = "main";
-    // launch_options.pe_count            = 1;
-    // launch_options.engines_per_pe      = 1;  // TODO(MDD): Restore to 8 after testing
+    runnable::LaunchOptions launch_options;
+    launch_options.engine_factory_name = "main";
+    launch_options.pe_count            = 1;
+    launch_options.engines_per_pe      = 1;  // TODO(MDD): Restore to 8 after testing
 
-    // m_tagger_runner =
-    //     this->runnable().launch_control().prepare_launcher(launch_options, std::move(m_tagger_node))->ignition();
-    // m_untagger_runner =
-    //     this->runnable().launch_control().prepare_launcher(launch_options, std::move(m_untagger_node))->ignition();
+    m_router_runner =
+        this->runnable().launch_control().prepare_launcher(launch_options, std::move(m_router_node))->ignition();
 }
 
 void ManifoldBase::join()
 {
-    // CHECK(m_tagger_runner) << "Must call start() before join()";
-    // CHECK(m_untagger_runner) << "Must call start() before join()";
+    CHECK(m_router_runner) << "Must call start() before join()";
 
-    // m_tagger_runner->await_join();
-    // m_untagger_runner->await_join();
+    m_router_runner->await_join();
 }
 
 const std::string& ManifoldBase::info() const
@@ -152,7 +223,8 @@ void ManifoldBase::add_local_output(const SegmentAddress& address, edge::IWritab
 
 edge::IWritableProviderBase& ManifoldBase::get_input_sink() const
 {
-    return *m_router_node;
+    // Ugly, wish there was a better way
+    return const_cast<edge::IWritableProviderBase&>(m_router_runner->runnable_as<edge::IWritableProviderBase>());
 }
 
 void ManifoldBase::update_policy(ManifoldPolicy&& policy)
@@ -164,7 +236,8 @@ void ManifoldBase::update_policy(ManifoldPolicy&& policy)
     // // Now update the nodes
     // tagger.update_policy(policy);
 
-    m_router_node->update_policy(std::move(policy));
+    const_cast<ManifoldTaggerBase2&>(m_router_runner->runnable_as<ManifoldTaggerBase2>())
+        .update_policy(std::move(policy));
 }
 
 void ManifoldBase::update_inputs()

@@ -17,9 +17,14 @@
 
 #pragma once
 
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/runnable/context.hpp"
+#include "mrc/runnable/runnable.hpp"
 #include "mrc/runnable/runnable_resources.hpp"
+#include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
 #include <atomic>
@@ -104,25 +109,33 @@ namespace mrc::manifold {
 // };
 
 class ManifoldTaggerBase2 : public virtual edge::IWritableProviderBase,
-                            public virtual edge::IMultiWritableAcceptorBase<InstanceID>
+                            public virtual edge::IMultiWritableAcceptorBase<InstanceID>,
+                            // We need a runnable thread to avoid processing when we do not have any outputs
+                            public runnable::RunnableWithContext<runnable::Context>
 {
   public:
   protected:
     // Mutex used to protect the output from being updated while in use
     std::shared_mutex m_output_mutex;
 
-    InstanceID get_next_tag()
-    {
-        return m_current_policy.get_next_tag();
-    }
+    InstanceID get_next_tag();
+
+    bool has_connections() const;
 
   private:
     void update_policy(ManifoldPolicy&& policy);
 
     virtual void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) = 0;
 
+    virtual channel::Status process_one_message() = 0;
+
+    void run(runnable::Context& ctx) final;
+
     std::atomic_size_t m_msg_counter{0};
     ManifoldPolicy m_current_policy;
+    bool m_has_local_input{false};
+
+    channel::BufferedChannel<boost::fibers::packaged_task<void()>> m_updates;
 
     friend class ManifoldBase;
 };
@@ -220,6 +233,7 @@ class ManifoldBase : public Interface, public runnable::RunnableResourcesProvide
     std::string m_info;
 
     std::unique_ptr<ManifoldTaggerBase2> m_router_node;
+    std::unique_ptr<runnable::Runner> m_router_runner;
 };
 
 // template <typename T>

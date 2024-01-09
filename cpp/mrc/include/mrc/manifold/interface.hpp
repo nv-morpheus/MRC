@@ -111,11 +111,14 @@ class ManifoldPolicy
         auto keys = extract_keys(this->outputs);
 
         m_output_addresses = std::vector<SegmentAddress>(keys.begin(), keys.end());
+
+        m_has_connections = !this->inputs.empty() && !this->outputs.empty();
     }
 
     ManifoldPolicy(const ManifoldPolicy& other) :
       inputs(other.inputs),
       outputs(other.outputs),
+      m_has_connections(other.m_has_connections),
       m_msg_counter(other.m_msg_counter.load()),
       m_output_addresses(other.m_output_addresses)
     {}
@@ -123,6 +126,7 @@ class ManifoldPolicy
     ManifoldPolicy(ManifoldPolicy&& other) :
       inputs(other.inputs),
       outputs(other.outputs),
+      m_has_connections(other.m_has_connections),
       m_msg_counter(0),
       m_output_addresses(std::move(other.m_output_addresses))
     {
@@ -138,6 +142,7 @@ class ManifoldPolicy
 
         inputs             = other.inputs;
         outputs            = other.outputs;
+        m_has_connections  = other.m_has_connections;
         m_msg_counter      = other.m_msg_counter.load();
         m_output_addresses = other.m_output_addresses;
 
@@ -153,10 +158,42 @@ class ManifoldPolicy
 
         inputs             = std::move(other.inputs);
         outputs            = std::move(other.outputs);
+        m_has_connections  = std::move(other.m_has_connections);
         m_msg_counter      = other.m_msg_counter.exchange(0);
         m_output_addresses = std::move(other.m_output_addresses);
 
         return *this;
+    }
+
+    bool has_connections() const
+    {
+        return m_has_connections;
+    }
+
+    size_t local_input_count() const
+    {
+        size_t count = 0;
+        for (const auto& input : inputs)
+        {
+            if (input.is_local)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    size_t local_output_count() const
+    {
+        size_t count = 0;
+        for (const auto& output : outputs)
+        {
+            if (output.second.is_local)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     std::vector<ManifoldPolicyInputInfo> inputs;
@@ -168,6 +205,7 @@ class ManifoldPolicy
     }
 
   private:
+    bool m_has_connections{false};
     std::atomic_size_t m_msg_counter{0};
     std::vector<SegmentAddress> m_output_addresses;
 };

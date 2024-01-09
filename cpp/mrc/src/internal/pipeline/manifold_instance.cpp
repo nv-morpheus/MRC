@@ -173,12 +173,11 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         }
         else
         {
-            // auto remote_edge = this->runtime().data_plane().get_input_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_incoming_port_channel(seg_id);
 
-            // manifold_inputs.emplace_back(seg_id, false, 1, remote_edge.get());
+            input_port_nodes[seg_id] = remote_edge;
 
-            // Get an edge from the data plane for this particular, remote segment
-            throw std::runtime_error("Not implemented: on_running_state_updated(!is_remote)");
+            manifold_inputs.emplace_back(seg_id, false, 1, nullptr);
         }
     }
 
@@ -190,7 +189,7 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
             // Gets the same queue that the data plane uses to send data to the manifold
             auto remote_edge = this->runtime().data_plane().get_incoming_port_channel(seg_id);
 
-            input_port_nodes[seg_id] = remote_edge;
+            output_port_nodes[seg_id] = remote_edge;
 
             manifold_outputs.emplace(seg_id, manifold::ManifoldPolicyOutputInfo(seg_id, true, 1, remote_edge.get()));
         }

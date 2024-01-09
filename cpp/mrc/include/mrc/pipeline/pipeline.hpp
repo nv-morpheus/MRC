@@ -130,6 +130,8 @@ class IPipeline
                                                          segment::EgressPortsBase egress_ports,
                                                          segment::segment_initializer_fn_t segment_initializer) = 0;
 
+    virtual std::vector<std::shared_ptr<const ISegment>> segments() const = 0;
+
   protected:
     IPipeline() = default;
 };

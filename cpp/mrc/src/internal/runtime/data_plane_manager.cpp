@@ -81,7 +81,24 @@ std::shared_ptr<node::Queue<std::unique_ptr<Descriptor>>> DataPlaneSystemManager
 std::shared_ptr<edge::IWritableProvider<std::unique_ptr<Descriptor>>> DataPlaneSystemManager::get_outgoing_port_channel(
     InstanceID port_address) const
 {
-    throw exceptions::MrcRuntimeError("Not implemented (get_outgoing_port_channel)");
+    std::unique_lock lock(m_port_mutex);
+
+    if (m_outgoing_port_channels.contains(port_address))
+    {
+        // Now check that its alive otherwise we fall through
+        if (auto port = m_outgoing_port_channels.at(port_address).lock())
+        {
+            return port;
+        }
+    }
+
+    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
+
+    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<Descriptor>>>();
+
+    mutable_this->m_outgoing_port_channels[port_address] = port_channel;
+
+    return port_channel;
 }
 
 void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)

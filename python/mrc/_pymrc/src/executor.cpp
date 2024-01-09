@@ -231,7 +231,7 @@ Executor::Executor(std::shared_ptr<Options> options)
     // Must release the GIL while we create the executor
     pybind11::gil_scoped_release nogil;
 
-    m_exec = mrc::make_executor(std::move(system));
+    m_exec = mrc::make_executor_impl(std::move(system));
 }
 
 Executor::~Executor()
