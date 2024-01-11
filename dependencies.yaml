@@ -50,24 +50,24 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - boost-cpp>=1.82
+          - boost-cpp=1.84
           - ccache
           - cmake=3.26.4
           - cuda-nvcc
           - cxx-compiler
-          - glog>=0.6
-          - gtest>=1.13
+          - glog=0.6
+          - gtest=1.14
           - gxx=11.2
           - libgrpc
-          - libhwloc>=2.9.2
+          - libhwloc=2.9.3
           - librmm=23.12
-          - ninja>=1.10
+          - ninja=1.11
           - nlohmann_json=3.9
           - numactl-libs-cos7-x86_64
-          - pkg-config>=0.29
+          - pkg-config=0.29
           - pybind11-stubgen=0.10
-          - scikit-build>=0.17
-          - ucx>=1.15
+          - scikit-build=0.17
+          - ucx=1.15
 
   checks:
     common:
@@ -109,27 +109,27 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - benchmark>=1.6.0
+          - benchmark=1.8.3
 
   ci:
     common:
       - output_types: [conda]
         packages:
-          - codecov>=2.1
-          - gcovr>=5.0
+          - codecov=2.1
+          - gcovr=5.2
           - pre-commit
 
   examples:
     common:
       - output_types: [conda]
         packages:
-          - numpy>=1.21
+          - numpy=1.24
 
   documentation:
     common:
       - output_types: [conda]
         packages:
-          - doxygen>=1.9.2
+          - doxygen=1.10.0
           - python-graphviz
 
   cudatoolkit:
