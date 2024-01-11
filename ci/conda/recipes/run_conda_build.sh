@@ -99,7 +99,7 @@ if hasArg quick; then
 fi
 
 # And default channels
-CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia/label/cuda-12.0.0" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
+CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia/label/cuda-12.1.0" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
 
 # Set GIT_VERSION to set the project version inside of meta.yaml
 export GIT_VERSION="$(get_version)"

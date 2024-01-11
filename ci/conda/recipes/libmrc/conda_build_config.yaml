@@ -23,7 +23,7 @@ cuda_compiler:
   - cuda-nvcc
 
 cuda_compiler_version:
-  - 12.0
+  - 12.1
 
 python:
   - 3.8
@@ -32,9 +32,9 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -2
-  - 23.02
   - 23.04
   - 23.06
+  - 23.12
 
 # Multiple versions of abseil are required to satisfy the solver for some
 # environments. RAPIDS 22.06 only works with gRPC 1.45 and 22.08 only works with
