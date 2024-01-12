@@ -34,7 +34,7 @@ python:
 rapids_version: # Keep around compatibility with current version -2
   - 23.04
   - 23.06
-  - 23.12
+  - 24.02
 
 # Multiple versions of abseil are required to satisfy the solver for some
 # environments. RAPIDS 22.06 only works with gRPC 1.45 and 22.08 only works with

@@ -36,7 +36,7 @@ dependencies:
 - libclang=16
 - libgrpc
 - libhwloc=2.9.3
-- librmm=23.12
+- librmm=24.02
 - llvmdev=16
 - ninja=1.11
 - nlohmann_json=3.9
