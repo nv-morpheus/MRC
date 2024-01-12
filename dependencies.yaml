@@ -15,6 +15,7 @@ files:
       - ci
       - examples
       - documentation
+      - python
       - cudatoolkit
 
   ci:
@@ -29,6 +30,7 @@ files:
       - benchmarking
       - ci
       - documentation
+      - python
       - cudatoolkit
 
   checks:
@@ -131,6 +133,12 @@ dependencies:
         packages:
           - doxygen=1.10.0
           - python-graphviz
+
+  python:
+    common:
+      - output_types: [conda]
+        packages:
+          - python=3.10
 
   cudatoolkit:
     specific:

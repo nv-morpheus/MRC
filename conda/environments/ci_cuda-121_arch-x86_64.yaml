@@ -38,6 +38,7 @@ dependencies:
 - pytest-asyncio
 - pytest-timeout
 - python-graphviz
+- python=3.10
 - scikit-build=0.17
 - ucx=1.15
 name: ci_cuda-121_arch-x86_64
