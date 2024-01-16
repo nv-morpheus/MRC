@@ -35,7 +35,7 @@ dependencies:
 - libclang-cpp=16
 - libclang=16
 - libgrpc=1.59
-- libhwloc=2.9.3
+- libhwloc=2.9.2
 - librmm=24.02
 - llvmdev=16
 - ninja=1.11

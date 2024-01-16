@@ -61,7 +61,7 @@ dependencies:
           - gtest=1.14
           - gxx=11.2
           - libgrpc=1.59
-          - libhwloc=2.9.3
+          - libhwloc=2.9.2
           - librmm=24.02
           - ninja=1.11
           - nlohmann_json=3.9
