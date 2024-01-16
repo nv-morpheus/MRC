@@ -26,8 +26,6 @@ cuda_compiler_version:
   - 12.1
 
 python:
-  - 3.8
-  - 3.10
   - 3.10
 
 # Setup the dependencies to build with multiple versions of RAPIDS
@@ -42,31 +40,21 @@ rapids_version: # Keep around compatibility with current version -2
 # together to avoid impossible combinations
 libabseil:
   - 20230125.0
-  - 20230125.0
-  - 20230125.0
 
 libgrpc:
   - 1.51
-  - 1.51
   - 1.54
+  - 1.59
 
 ucx:
-  - 1.13
-  - 1.14
   - 1.14
 
 libprotobuf:
   - 3.21
-  - 3.21
-  - 3.21
 
 zip_keys:
-  - python
   - rapids_version
-  - libabseil
   - libgrpc
-  - ucx
-  - libprotobuf
 
 # The following mimic what is available in the pinning feedstock:
 # https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml

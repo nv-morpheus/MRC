@@ -60,7 +60,7 @@ dependencies:
           - glog=0.6
           - gtest=1.14
           - gxx=11.2
-          - libgrpc
+          - libgrpc=1.59
           - libhwloc=2.9.3
           - librmm=24.02
           - ninja=1.11

@@ -34,7 +34,7 @@ dependencies:
 - include-what-you-use=0.20
 - libclang-cpp=16
 - libclang=16
-- libgrpc
+- libgrpc=1.59
 - libhwloc=2.9.3
 - librmm=24.02
 - llvmdev=16

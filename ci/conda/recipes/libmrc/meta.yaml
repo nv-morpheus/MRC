@@ -42,7 +42,7 @@ requirements:
     - {{ compiler("cxx") }}
     - autoconf >=2.69
     - ccache
-    - cmake >=3.24
+    - cmake = 3.26.4
     - cuda-cudart-dev # Needed by CMake to compile a test application
     - libtool
     - ninja
@@ -54,22 +54,22 @@ requirements:
     - boost-cpp
     - cuda-cudart-dev
     - cuda-nvml-dev
-    - doxygen 1.9.2.*
+    - doxygen 1.10.0
     - flatbuffers 2.0.*
     - gflags
     - glog
     - gmock 1.13.*
     - libgrpc
-    - gtest 1.13.*
+    - gtest 1.14
     - libabseil
-    - libhwloc 2.9.2
+    - libhwloc 2.9.3
     - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json 3.9.1
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen 0.10
     - python {{ python }}
-    - scikit-build >=0.17
+    - scikit-build =0.17
     - ucx
     # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
     - cudatoolkit {{ cuda_version }}.*
@@ -88,9 +88,9 @@ outputs:
         - {{ compiler("c") }}
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
-        - cmake >=3.24
+        - cmake = 3.26.4
         - numactl-libs-cos7-x86_64
-        - sysroot_linux-64 2.17
+        - sysroot_linux-64 = 2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
@@ -101,7 +101,7 @@ outputs:
         - libhwloc 2.9.2
         - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
-        - nlohmann_json 3.9.*
+        - nlohmann_json 3.9.1
         - ucx
         # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
         - cudatoolkit {{ cuda_version }}.*
