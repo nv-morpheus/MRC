@@ -15,7 +15,7 @@ dependencies:
 - clang=16
 - clangdev=16
 - clangxx=16
-- cmake=3.26.4
+- cmake=3.27
 - codecov=2.1
 - cuda-cudart-dev=12.1
 - cuda-nvcc

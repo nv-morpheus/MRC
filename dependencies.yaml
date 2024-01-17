@@ -54,7 +54,7 @@ dependencies:
         packages:
           - boost-cpp=1.84
           - ccache
-          - cmake=3.26.4
+          - cmake=3.27
           - cuda-nvcc
           - cxx-compiler
           - glog=0.6
@@ -70,7 +70,7 @@ dependencies:
           - pybind11-stubgen=0.10
           - scikit-build=0.17
           - ucx=1.15
-          - libxml2=2.11.6 # pin to prevent libhwloc round-trip serialization bug
+          - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc
 
   checks:
     common:
