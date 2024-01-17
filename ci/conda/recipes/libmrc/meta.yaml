@@ -58,7 +58,6 @@ requirements:
     - flatbuffers 2.0.*
     - gflags
     - glog
-    - gmock 1.13.*
     - libgrpc
     - gtest 1.14
     - libabseil
