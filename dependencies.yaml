@@ -70,6 +70,7 @@ dependencies:
           - pybind11-stubgen=0.10
           - scikit-build=0.17
           - ucx=1.15
+          - libxml2=2.11.6 # pin to prevent libhwloc round-trip serialization bug
 
   checks:
     common:
