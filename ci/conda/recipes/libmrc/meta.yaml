@@ -16,6 +16,8 @@
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
 {% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
 {% set py_version = environ.get('CONDA_PY', '3.10') %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '12.1').split('.')[:2]) %}
+{% set cuda_major = cuda_version.split('.')[0] %}
 
 package:
   name: libmrc-split
@@ -42,6 +44,7 @@ requirements:
     - ccache
     - cmake =3.27
     - cuda-cudart-dev # Needed by CMake to compile a test application
+    - cuda-nvcc
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -52,16 +55,14 @@ requirements:
     - boost-cpp
     - cuda-cudart-dev
     - cuda-nvml-dev
-    - cuda-nvrtc-dev
-    - cuda-tools
-    - cuda-version =12.1
+    - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
     - flatbuffers 2.0.*
     - gflags
     - glog
+    - libgrpc
     - gtest 1.14
     - libabseil
-    - libgrpc
     - libhwloc 2.9.3
     - libprotobuf
     - librmm {{ rapids_version }}
@@ -92,11 +93,10 @@ outputs:
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
-        - cuda-cudart # Needed to allow pin_compatible to work
-        - cuda-version =12.1
+        - cuda-version # Needed to allow pin_compatible to work
         - glog
-        - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
         - libgrpc
+        - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
         - libhwloc 2.9.2
         - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
@@ -104,9 +104,10 @@ outputs:
         - ucx
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
-        - {{ pin_compatible('cuda-cudart', min_pin='x.x', max_pin='x') }}
+        - {{ pin_compatible('cuda-version', min_pin='x.x', max_pin='x') }}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
+        - cuda-cudart
         - boost-cpp # Needed to use pin_run_as_build
     test:
       script: test_libmrc.sh
