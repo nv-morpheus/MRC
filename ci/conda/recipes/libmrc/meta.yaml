@@ -16,8 +16,6 @@
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
 {% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
 {% set py_version = environ.get('CONDA_PY', '3.10') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '12.1').split('.')[:2]) %}
-{% set cuda_major = cuda_version.split('.')[0] %}
 
 package:
   name: libmrc-split
@@ -54,13 +52,16 @@ requirements:
     - boost-cpp
     - cuda-cudart-dev
     - cuda-nvml-dev
+    - cuda-nvrtc-dev
+    - cuda-tools
+    - cuda-version =12.1
     - doxygen 1.10.0
     - flatbuffers 2.0.*
     - gflags
     - glog
-    - libgrpc
     - gtest 1.14
     - libabseil
+    - libgrpc
     - libhwloc 2.9.3
     - libprotobuf
     - librmm {{ rapids_version }}
@@ -92,9 +93,10 @@ outputs:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
         - cuda-cudart # Needed to allow pin_compatible to work
+        - cuda-version =12.1
         - glog
-        - libgrpc
         - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
+        - libgrpc
         - libhwloc 2.9.2
         - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
