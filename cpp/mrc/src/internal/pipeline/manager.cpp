@@ -44,7 +44,7 @@ namespace mrc::pipeline {
 PipelineManager::PipelineManager(runtime::Runtime& runtime,
                                  std::shared_ptr<PipelineDefinition> pipeline,
                                  uint64_t instance_id) :
-								 Service("pipeline::Manager"),
+  Service("pipeline::Manager"),
   m_runtime(runtime),
   m_pipeline(std::move(pipeline)),
   m_instance_id(instance_id)

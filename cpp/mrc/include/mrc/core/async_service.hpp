@@ -119,14 +119,14 @@ class AsyncService : public virtual runnable::IRunnableResourcesProvider
     void mark_started();
 
     template <typename T>
-    requires std::derived_from<T, AsyncService>
+        requires std::derived_from<T, AsyncService>
     void child_service_start(std::unique_ptr<T>&& child, bool await_live = false)
     {
         return this->child_service_start_impl(std::unique_ptr<AsyncService>(std::move(child)), await_live);
     }
 
     template <typename T>
-    requires std::derived_from<T, AsyncService>
+        requires std::derived_from<T, AsyncService>
     void child_service_start(std::shared_ptr<T> child, bool await_live = false)
     {
         return this->child_service_start_impl(std::shared_ptr<AsyncService>(std::move(child)), await_live);
