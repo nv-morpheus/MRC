@@ -45,7 +45,7 @@ requirements:
     - cmake =3.27
     - cuda-cudart-dev # Needed by CMake to compile a test application
     - cuda-nvcc
-    - cuda-nvrtc
+    - cuda-nvrtc-dev
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
