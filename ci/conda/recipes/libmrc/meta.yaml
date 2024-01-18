@@ -70,8 +70,6 @@ requirements:
     - python {{ python }}
     - scikit-build =0.17
     - ucx
-    # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
-    - cudatoolkit {{ cuda_version }}.*
 
 outputs:
   - name: libmrc
@@ -102,17 +100,12 @@ outputs:
         - librmm {{ rapids_version }}
         - nlohmann_json 3.9.1
         - ucx
-        # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
-        - cudatoolkit {{ cuda_version }}.*
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('cuda-cudart', min_pin='x.x', max_pin='x') }}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - boost-cpp # Needed to use pin_run_as_build
-      run_constrained:
-        # Since we dont explicitly require this but other packages might, constrain the versions
-        - {{ pin_compatible('cudatoolkit', min_pin='x.x', max_pin='x') }}
     test:
       script: test_libmrc.sh
       files:
