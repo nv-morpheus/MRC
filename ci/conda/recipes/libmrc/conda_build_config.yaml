@@ -40,7 +40,8 @@ rapids_version: # Keep around compatibility with current version -2
 # together to avoid impossible combinations
 libabseil:
   - 20230125.0
-
+  - 20230125.0
+  - 20230802.1
 libgrpc:
   - 1.51
   - 1.54
@@ -54,6 +55,7 @@ libprotobuf:
 
 zip_keys:
   - rapids_version
+  - libabseil
   - libgrpc
 
 # The following mimic what is available in the pinning feedstock:
