@@ -21,6 +21,8 @@
 #include <boost/fiber/operations.hpp>
 #include <boost/fiber/policy.hpp>
 
+#include <memory>
+
 static void boost_fibers_create_single_task_and_sync_post(benchmark::State& state)
 {
     // warmup
