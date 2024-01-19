@@ -3,7 +3,7 @@
 channels:
 - conda-forge
 - rapidsai
-- nvidia/label/cuda-12.1.0
+- nvidia/label/cuda-12.1.1
 - nvidia
 - rapidsai-nightly
 dependencies:

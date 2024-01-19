@@ -17,13 +17,13 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci-conda"
-ARG CUDA_VER=12.1.0
+ARG CUDA_VER=12.1.1
 ARG LINUX_DISTRO=ubuntu
-ARG LINUX_VER=20.04
+ARG LINUX_VER=22.04
 ARG PYTHON_VER=3.10
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda12.1.0-ubuntu20.04-py3.10 AS base
+FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
 
 ARG PROJ_NAME=mrc
 ARG USERNAME=morpheus
