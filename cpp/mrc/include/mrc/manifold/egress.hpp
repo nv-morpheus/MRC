@@ -35,6 +35,7 @@ struct EgressDelegate
 {
     virtual ~EgressDelegate()                                                                        = default;
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void shutdown(){};
 };
 
 template <typename T>

@@ -33,6 +33,7 @@ struct IngressDelegate
 {
     virtual ~IngressDelegate()                                                                       = default;
     virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void shutdown(){};
 };
 
 template <typename T>
