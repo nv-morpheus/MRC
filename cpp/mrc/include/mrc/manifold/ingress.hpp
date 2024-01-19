@@ -23,6 +23,8 @@
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 
+#include <glog/logging.h>
+
 #include <memory>
 
 namespace mrc::manifold {
@@ -51,6 +53,13 @@ class TypedIngress : public IngressDelegate
 template <typename T>
 class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
 {
+  public:
+    void shutdown() final
+    {
+        DVLOG(10) << "Releasing edges from manifold ingress";
+        node::SourceProperties<T>::release_edge_connection();
+    }
+
   protected:
     void do_add_input(const SegmentAddress& address, edge::IWritableAcceptor<T>* source) final
     {

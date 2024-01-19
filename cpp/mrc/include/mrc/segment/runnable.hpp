@@ -41,6 +41,12 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     Runnable(ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {}
 
+    void destroy() final
+    {
+        DVLOG(10) << "Destroying runnable " << this->type_name();
+        m_node.reset();
+    }
+
     Runnable(std::unique_ptr<NodeT> node) : m_node(std::move(node))
     {
         CHECK(m_node);

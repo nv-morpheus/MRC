@@ -37,6 +37,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>  // for std::stringstream
 #include <stdexcept>
 #include <type_traits>
 #include <typeindex>
@@ -58,12 +59,30 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
-                          "dependent connections are still active";
+            LOG(FATAL) << "EdgeHolder(" << this << ") "
+                       << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+                          "dependent connections are still active\n"
+                       << this->connection_info();
         }
     }
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_owned_edge=" << m_owned_edge.lock() << "\tm_owned_edge_lifetime=" << m_owned_edge_lifetime
+           << "\tm_connected_edge=" << m_connected_edge;
+
+        bool is_connected = false;
+        if (m_connected_edge)
+        {
+            is_connected = m_connected_edge->is_connected();
+        }
+
+        ss << "\tis_connected=" << is_connected << "\tcheck_active_connection=" << this->check_active_connection(false);
+        return ss.str();
+    }
+
     bool check_active_connection(bool do_throw = true) const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
@@ -155,6 +174,13 @@ class EdgeHolder
         m_connected_edge.reset();
     }
 
+    void disconnect()
+    {
+        m_connected_edge.reset();
+        m_owned_edge_lifetime.reset();
+        m_owned_edge.reset();
+    }
+
     const std::shared_ptr<Edge<T>>& get_connected_edge() const
     {
         return m_connected_edge;
@@ -204,6 +230,17 @@ class MultiEdgeHolder
     virtual ~MultiEdgeHolder() = default;
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_edges.size()=" << m_edges.size();
+        for (const auto& [key, edge_pair] : m_edges)
+        {
+            ss << "\n\tkey=" << key << "\t" << edge_pair.connection_info();
+        }
+        return ss.str();
+    }
+
     void init_owned_edge(KeyT key, std::shared_ptr<Edge<T>> edge)
     {
         auto& edge_pair = this->get_edge_pair(key, true);

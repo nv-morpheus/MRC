@@ -33,7 +33,11 @@ class Queue : public WritableProvider<T>, public ReadableProvider<T>
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
-    ~Queue() override = default;
+    ~Queue() override
+    {
+        SinkProperties<T>::release_edge_connection();
+        SourceProperties<T>::release_edge_connection();
+    };
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {

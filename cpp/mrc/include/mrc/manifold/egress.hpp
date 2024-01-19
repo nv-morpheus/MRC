@@ -55,6 +55,13 @@ class TypedEgress : public EgressDelegate
 template <typename T>
 class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
 {
+  public:
+    void shutdown() final
+    {
+        DVLOG(10) << "Releasing edges from manifold egress";
+        node::Router<SegmentAddress, T>::release_edge_connections();
+    }
+
   protected:
     SegmentAddress determine_key_for_value(const T& t) override
     {

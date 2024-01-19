@@ -59,6 +59,17 @@ class CompositeManifold : public Manifold
         mrc::make_edge(*m_ingress, *m_egress);
     }
 
+    ~CompositeManifold() override
+    {
+        shutdown();
+    };
+
+    void shutdown() final
+    {
+        m_ingress->shutdown();
+        m_egress->shutdown();
+    }
+
   protected:
     IngressT& ingress()
     {

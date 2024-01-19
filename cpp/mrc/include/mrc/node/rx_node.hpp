@@ -68,13 +68,14 @@ class RxNode : public RxSinkBase<InputT>,
 
     void make_stream(stream_fn_t fn);
 
+    void on_shutdown_critical_section() final;
+
   private:
     // the following method(s) are moved to private from their original scopes to prevent access from deriving classes
     using RxSinkBase<InputT>::observable;
     using RxSourceBase<OutputT>::observer;
 
     void do_subscribe(rxcpp::composite_subscription& subscription) final;
-    void on_shutdown_critical_section() final;
 
     void on_stop(const rxcpp::subscription& subscription) override;
     void on_kill(const rxcpp::subscription& subscription) final;
