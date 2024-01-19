@@ -52,7 +52,6 @@ export CMAKE_GENERATOR="Ninja"
 export CMAKE_C_COMPILER_LAUNCHER="ccache"
 export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 export CMAKE_CUDA_COMPILER_LAUNCHER="ccache"
-export CMAKE_CUDA_COMPILER="$(which nvcc)"
 
 # Avoid confirmation messages during the conda build
 export CONDA_ALWAYS_YES=true
