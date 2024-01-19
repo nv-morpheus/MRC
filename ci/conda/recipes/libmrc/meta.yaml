@@ -54,8 +54,8 @@ requirements:
   host:
     # Libraries necessary to build. Keep sorted!
     - boost-cpp
-    - cuda-cudart-dev
-    - cuda-nvml-dev
+    - cuda-cudart-dev {{ cuda_version }}.*
+    - cuda-nvml-dev {{ cuda_version }}.*
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
     - flatbuffers 2.0.*
