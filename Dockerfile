@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.3
 
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,29 +26,39 @@ ARG PYTHON_VER=3.10
 FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.10 AS base
 
 ARG PROJ_NAME=mrc
+ARG USERNAME=morpheus
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
 SHELL ["/bin/bash",  "-c"]
 
 RUN --mount=type=cache,target=/var/cache/apt \
     apt update &&\
     apt install --no-install-recommends -y \
-    libnuma1 && \
+    libnuma1 \
+    sudo && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./ci/conda/environments/* /opt/mrc/conda/environments/
+# create a user inside the container
+RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+    usermod --shell /bin/bash $USERNAME && \
+    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
+
+COPY ./conda/environments/all_cuda-118_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
+    sudo -g conda -u $USERNAME \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/dev_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/clang_env.yml && \
-    /opt/conda/bin/mamba env update -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/ci_env.yml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
 RUN /opt/conda/bin/conda init --system &&\
     sed -i 's/xterm-color)/xterm-color|*-256color)/g' ~/.bashrc &&\
-    echo "conda activate ${PROJ_NAME}" >> ~/.bashrc
+    echo "conda activate ${PROJ_NAME}" >> ~/.bashrc && \
+    cp /root/.bashrc /home/$USERNAME/.bashrc
 
 # disable sscache wrappers around compilers
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=
@@ -78,7 +88,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
     less \
     openssh-client \
     psmisc \
-    sudo \
     vim-tiny \
     && \
     rm -rf /var/lib/apt/lists/*
@@ -92,17 +101,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && \
     apt-get install --no-install-recommends -y dotnet-sdk-6.0 &&\
     rm -rf /var/lib/apt/lists/*
-
-# create a user inside the container
-ARG USERNAME=morpheus
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
-    usermod --shell /bin/bash $USERNAME && \
-    echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME && \
-    cp /root/.bashrc /home/$USERNAME/.bashrc
 
 USER $USERNAME
 

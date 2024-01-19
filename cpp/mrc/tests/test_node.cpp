@@ -40,7 +40,6 @@
 #include <chrono>
 #include <cstddef>
 #include <exception>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <set>

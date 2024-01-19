@@ -43,6 +43,13 @@ permissions:
   statuses: none
 
 jobs:
+  pr-builder:
+    needs:
+      - checks
+      - prepare
+      - ci_pipe
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
@@ -58,11 +65,22 @@ jobs:
       is_main_branch: ${{ github.ref_name == 'main' }}
       is_dev_branch: ${{ startsWith(github.ref_name, 'branch-') }}
       has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
+      has_skip_ci_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'skip-ci') || false }}
       pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
+
+  checks:
+    needs: [prepare]
+    if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
+    secrets: inherit
+    uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
+    with:
+      enable_check_generated_files: false
+
   ci_pipe:
     name: CI Pipeline
     needs: [prepare]
     uses: ./.github/workflows/ci_pipe.yml
+    if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
     with:
       # Run checks for any PR branch
       run_check: ${{ fromJSON(needs.prepare.outputs.is_pr) }}

@@ -15,8 +15,9 @@
 
 import dataclasses
 
-import mrc
 from mrc.core import operators as ops
+
+import mrc
 
 
 @dataclasses.dataclass

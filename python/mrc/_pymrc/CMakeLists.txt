@@ -1,5 +1,5 @@
 # =============================================================================
-# Copyright (c) 2020-2023, NVIDIA CORPORATION.
+# Copyright (c) 2020-2024, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +18,7 @@ find_package(prometheus-cpp REQUIRED)
 
 # Keep all source files sorted!!!
 add_library(pymrc
+  src/coro.cpp
   src/executor.cpp
   src/logging.cpp
   src/module_registry.cpp
@@ -72,7 +73,7 @@ rapids_cmake_install_lib_dir(lib_dir)
 install(
   TARGETS pymrc
   DESTINATION ${lib_dir}
-  EXPORT ${PROJECT_NAME}-core-exports
+  EXPORT ${PROJECT_NAME}-exports
   COMPONENT Python
 )
 

@@ -20,15 +20,12 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/modules/module_registry_util.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <map>
-#include <memory>
 #include <sstream>
 #include <vector>
 

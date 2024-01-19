@@ -79,7 +79,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 23.11.00
+  VERSION 24.03.00
   LANGUAGES C CXX
 )
 

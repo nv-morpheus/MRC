@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,6 +61,7 @@ env:
   GH_TOKEN: "${{ github.token }}"
   GIT_COMMIT: "${{ github.sha }}"
   MRC_ROOT: "${{ github.workspace }}/mrc"
+  RAPIDS_CONDA_RETRY_MAX: "5"
   WORKSPACE: "${{ github.workspace }}/mrc"
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
 

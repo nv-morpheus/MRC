@@ -15,9 +15,11 @@
 
 # Keep all source files sorted!!!
 add_executable(test_mrc
+  coroutines/test_async_generator.cpp
   coroutines/test_event.cpp
   coroutines/test_latch.cpp
   coroutines/test_ring_buffer.cpp
+  coroutines/test_task_container.cpp
   coroutines/test_task.cpp
   modules/test_mirror_tap_module.cpp
   modules/test_mirror_tap_orchestrator.cpp

@@ -27,7 +27,6 @@
 #include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 
-#include <cstdint>
 #include <sstream>
 #include <utility>
 

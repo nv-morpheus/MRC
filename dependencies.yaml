@@ -6,46 +6,133 @@ files:
       cuda: ["11.8"]
       arch: [x86_64]
     includes:
-      - empty
-      - build_cpp
+      - build
+      - checks
+      - developer_productivity
+      - code_style
+      - testing
+      - benchmarking
+      - ci
+      - examples
+      - documentation
       - cudatoolkit
 
+  ci:
+    output: conda
+    matrix:
+      cuda: ["11.8"]
+      arch: [x86_64]
+    includes:
+      - build
+      - code_style
+      - testing
+      - benchmarking
+      - ci
+      - documentation
+      - cudatoolkit
+
+  checks:
+    output: none
+    includes:
+      - checks
+
+
 channels:
+  - conda-forge
   - rapidsai
   - nvidia/label/cuda-11.8.0
   - nvidia
   - rapidsai-nightly
-  - conda-forge
 
 dependencies:
 
-  empty:
-    common:
-      - output_types: [conda]
-        packages:
-          - cxx-compiler
-
-  build_cpp:
+  build:
     common:
       - output_types: [conda]
         packages:
           - boost-cpp=1.82
           - ccache
-          - cmake=3.24
+          - cmake=3.25
           - cuda-nvcc
           - cxx-compiler
           - glog=0.6
+          - gtest=1.13
           - gxx=11.2
           - libgrpc=1.54.0
           - libhwloc=2.9.2
           - librmm=23.06
           - ninja=1.10
-          - ucx=1.14
           - nlohmann_json=3.9
-          - gtest=1.13
-          - scikit-build>=0.17
+          - numactl-libs-cos7-x86_64
+          - pkg-config=0.29
           - pybind11-stubgen=0.10
           - python=3.10
+          - scikit-build>=0.17
+          - ucx=1.14
+
+  checks:
+    common:
+      - output_types: [conda]
+        packages:
+          - pre-commit
+
+  developer_productivity:
+    common:
+      - output_types: [conda]
+        packages:
+          - bash-completion
+          - clang-tools=16
+          - clang=16
+          - clangdev=16
+          - clangxx=16
+          - flake8
+          - gdb
+          - libclang-cpp=16
+          - libclang=16
+          - llvmdev=16
+          - yapf
+
+  code_style:
+    common:
+      - output_types: [conda]
+        packages:
+          - include-what-you-use=0.20
+
+  testing:
+    common:
+      - output_types: [conda]
+        packages:
+          - pytest
+          - pytest-timeout
+          - pytest-asyncio
+
+  benchmarking:
+    common:
+      - output_types: [conda]
+        packages:
+          - benchmark=1.6.0
+
+  ci:
+    common:
+      - output_types: [conda]
+        packages:
+          - codecov=2.1
+          - gcovr=5.0
+          - pre-commit
+
+  examples:
+    common:
+      - output_types: [conda]
+        packages:
+          - numpy>=1.21
+
+  documentation:
+    common:
+      - output_types: [conda]
+        packages:
+          - doxygen=1.9.2
+          - graphviz=3.0
+
   cudatoolkit:
     specific:
       - output_types: [conda]
@@ -54,7 +141,8 @@ dependencies:
               cuda: "11.8"
             packages:
               - cuda-cudart-dev=11.8
-              - cuda-nvrtc-dev=11.8
-              - cuda-version=11.8
               - cuda-nvml-dev=11.8
+              - cuda-nvrtc-dev=11.8
+              - cuda-python=11.8.2
               - cuda-tools=11.8
+              - cuda-version=11.8
