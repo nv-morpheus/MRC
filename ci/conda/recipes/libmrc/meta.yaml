@@ -43,9 +43,9 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake =3.27
-    - cuda-cudart-dev # Needed by CMake to compile a test application
-    - cuda-nvcc
-    - cuda-nvrtc-dev
+    - cuda-cudart-dev {{ cuda_version }}.* # Needed by CMake to compile a test application
+    - cuda-nvcc {{ cuda_version }}.*
+    - cuda-nvrtc-dev {{ cuda_version }}.*
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64

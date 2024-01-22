@@ -98,6 +98,7 @@ if hasArg quick; then
    CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 24.02}")
 fi
 
+CONDA_ARGS_ARRAY+=("--keep-old-work")
 # And default channels
 CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia/label/cuda-12.1.1" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
 
