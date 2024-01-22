@@ -197,6 +197,40 @@ TEST_F(TestPipeline, SegmentInitErrorHandling)
     EXPECT_THROW(exec.join(), std::runtime_error);
 }
 
+TEST_F(TestPipeline, SegmentInitErrorHandlingNoSource)
+{
+    // Test to reproduce issue #360
+    auto pipeline = mrc::make_pipeline();
+
+    auto seg = pipeline->make_segment("seg_1", [](segment::IBuilder& seg) {
+        auto internal1 = seg.make_node<float, float>("internal1", rxcpp::operators::map([](float f) {
+                                                         return f * 2.1F;
+                                                     }));
+
+        auto internal2 = seg.make_node<float, float>("internal2", rxcpp::operators::map([](float f) {
+                                                         return f * 2.2F;
+                                                     }));
+
+        seg.make_edge(internal1, internal2);
+
+        throw std::runtime_error("Error in initializer");
+
+        auto source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+            FAIL() << "This should not be called";
+        });
+
+        seg.make_edge(source, internal1);
+    });
+
+    Executor exec(std::move(m_options));
+
+    exec.register_pipeline(std::move(pipeline));
+
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
+}
+
 TEST_F(TestPipeline, SegmentInitErrorHandlingFirstSeg)
 {
     // Test to reproduce issue #360
