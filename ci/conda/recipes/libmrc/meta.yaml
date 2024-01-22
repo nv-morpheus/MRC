@@ -57,6 +57,8 @@ requirements:
     - cuda-cudart-dev {{ cuda_version }}.*
     - cuda-nvml-dev {{ cuda_version }}.*
     - cuda-version {{ cuda_version }}.*
+    - cuda-cudart-dev # Needed by CMake to compile a test application
+    - cuda-nvrtc-dev # Needed by CMake to compile a test application
     - doxygen 1.10.0
     - flatbuffers 2.0.*
     - gflags
@@ -94,9 +96,6 @@ outputs:
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp
-        - cuda-cudart-dev # Needed by CMake to compile a test application
-        - cuda-nvcc
-        - cuda-nvrtc-dev
         - cuda-version # Needed to allow pin_compatible to work
         - glog
         - libgrpc
