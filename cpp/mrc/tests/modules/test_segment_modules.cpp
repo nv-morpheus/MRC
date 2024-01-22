@@ -258,18 +258,18 @@ TEST_F(TestSegmentModules, ModuleInitError)
         builder.make_edge(source2, simple_mod->input_port("input2"));
 
         auto sink1 = builder.make_sink<std::string>("sink1", [](std::string input) {
-            VLOG(20) << "Sinking " << input << std::endl;
+            VLOG(20) << "Sinking " << input;
         });
 
         builder.make_edge(simple_mod->output_port("output1"), sink1);
 
         auto sink2 = builder.make_sink<std::string>("sink2", [](std::string input) {
-            VLOG(20) << "Sinking " << input << std::endl;
+            VLOG(20) << "Sinking " << input;
         });
 
         builder.make_edge(simple_mod->output_port("output2"), sink2);
 
-        VLOG(10) << "***************\nThrowing\n**********" << std::flush << std::endl;
+        VLOG(10) << "Throwing";
         throw std::runtime_error("Test exception");
     };
 
