@@ -43,9 +43,6 @@ requirements:
     - autoconf >=2.69
     - ccache
     - cmake =3.27
-    - cuda-cudart-dev {{ cuda_version }}.* # Needed by CMake to compile a test application
-    - cuda-nvcc {{ cuda_version }}.*
-    - cuda-nvrtc-dev {{ cuda_version }}.*
     - libtool
     - ninja
     - numactl-libs-cos7-x86_64
@@ -56,9 +53,8 @@ requirements:
     - boost-cpp
     - cuda-cudart-dev {{ cuda_version }}.*
     - cuda-nvml-dev {{ cuda_version }}.*
+    - cuda-nvrtc-dev {{ cuda_version }}.*
     - cuda-version {{ cuda_version }}.*
-    - cuda-cudart-dev # Needed by CMake to compile a test application
-    - cuda-nvrtc-dev # Needed by CMake to compile a test application
     - doxygen 1.10.0
     - flatbuffers 2.0.*
     - gflags
