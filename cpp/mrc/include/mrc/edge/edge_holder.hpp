@@ -23,7 +23,6 @@
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
 #include "mrc/edge/forward.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/string_utils.hpp"
 
@@ -52,6 +51,7 @@ class EdgeHolder
 {
   public:
     EdgeHolder() = default;
+
     virtual ~EdgeHolder()
     {
         // Drop any edge connections before this object goes out of scope. This should execute any disconnectors
@@ -59,10 +59,17 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "EdgeHolder(" << this << ") "
-                       << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
-                          "dependent connections are still active\n"
-                       << this->connection_info();
+            std::stringstream msg;
+            msg << "EdgeHolder(" << this << ") "
+                << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+                   "dependent connections are still active\n"
+                << this->connection_info();
+
+#if defined(NDEBUG)
+            LOG(ERROR) << msg.str();
+#else
+            LOG(FATAL) << msg.str();
+#endif
         }
     }
 
