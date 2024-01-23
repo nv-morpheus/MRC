@@ -100,7 +100,7 @@ fi
 
 CONDA_ARGS_ARRAY+=("--keep-old-work")
 # And default channels
-CONDA_ARGS_ARRAY+=("-c" "conda-forge" "-c" "rapidsai" "-c" "nvidia/label/cuda-12.1.1" "-c" "nvidia" "-c" "rapidsai-nightly")
+CONDA_ARGS_ARRAY+=("-c" "conda-forge" "-c" "rapidsai-nightly" "-c" "nvidia")
 
 # Set GIT_VERSION to set the project version inside of meta.yaml
 export GIT_VERSION="$(get_version)"
