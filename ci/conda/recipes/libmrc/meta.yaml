@@ -66,7 +66,7 @@ requirements:
     # - libprotobuf
     - librmm {{ rapids_version }}
     - nlohmann_json =3.9
-    - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
+    # - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen =0.10
     - python {{ python }}
     - scikit-build =0.17
@@ -96,18 +96,18 @@ outputs:
         - glog =0.6
         - libgrpc =1.59
         # - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
-        - libhwloc 2.9.2
+        - libhwloc =2.9.2
         # - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
         - librmm {{ rapids_version }}
-        - nlohmann_json 3.9
-        - ucx
+        - nlohmann_json =3.9
+        - ucx =1.15
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - {{ pin_compatible('cuda-version', min_pin='x.x', max_pin='x') }}
         - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
         - {{ pin_compatible('ucx', max_pin='x.x')}}
         - cuda-cudart
-        - boost-cpp # Needed to use pin_run_as_build
+        - boost-cpp =1.84 # Needed to use pin_run_as_build
     test:
       script: test_libmrc.sh
       files:
