@@ -60,6 +60,7 @@ dependencies:
           - gxx=11.2
           - libgrpc=1.54.0
           - libhwloc=2.9.2
+          - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc
           - librmm=23.06
           - ninja=1.10
           - nlohmann_json=3.9
@@ -91,6 +92,9 @@ dependencies:
           - libclang=16
           - llvmdev=16
           - yapf
+          - pip
+          - pip:
+              - rapids-dependency-file-generator
 
   code_style:
     common:
