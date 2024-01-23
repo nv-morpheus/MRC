@@ -135,20 +135,20 @@ outputs:
         - {{ pin_subpackage('libmrc', exact=True) }}
         - rmm {{ rapids_version }}.* # This is not necessary but required until this is fixed: https://github.com/mamba-org/boa/issues/232
         - python
-    # test:
-    #   imports:
-    #     - mrc
-    #   script: test_mrc.sh
-    #   source_files:
-    #     # Copy the pytest source files
-    #     - python/pytest.ini
-    #     - python/setup.cfg
-    #     - python/tests/*
-    #   requires:
-    #     - numpy
-    #     - nvtx
-    #     - pytest
-    #     - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
+    test:
+      imports:
+        - mrc
+      script: test_mrc.sh
+      source_files:
+        # Copy the pytest source files
+        - python/pytest.ini
+        - python/setup.cfg
+        - python/tests/*
+      requires:
+        - numpy
+        - nvtx
+        - pytest
+        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
   home: https://github.com/nv-morpheus/MRC
