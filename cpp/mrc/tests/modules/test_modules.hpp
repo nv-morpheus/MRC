@@ -24,22 +24,20 @@
 #include "mrc/options/options.hpp"
 #include "mrc/options/topology.hpp"
 #include "mrc/pipeline/pipeline.hpp"
-#include "mrc/pipeline/segment.hpp"
-#include "mrc/segment/builder.hpp"
-#include "mrc/segment/egress_ports.hpp"
-#include "mrc/segment/ingress_ports.hpp"
+#include "mrc/segment/builder.hpp"   // IWYU pragma: keep
+#include "mrc/utils/type_utils.hpp"  // for type_name
 
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
+#include <rxcpp/rx.hpp>  // for subscriber, map
+
+#include <array>
+#include <cassert>
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
-#include <vector>
-
+#include <utility>  // for move
 // IWYU pragma: no_include "gtest/gtest_pred_impl.h"
-
-namespace mrc::segment {
-struct ObjectProperties;
-}
 
 namespace mrc {
 

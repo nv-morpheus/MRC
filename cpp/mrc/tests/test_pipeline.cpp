@@ -17,6 +17,7 @@
 
 #include "test_mrc.hpp"  // IWYU pragma: associated
 
+#include "mrc/node/rx_node.hpp"  // for RxNode
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"

@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include "test_modules.hpp"
+#include "../test_mrc.hpp"   // for EXPECT_DEATH_OR_THROW
+#include "test_modules.hpp"  // IWYU pragma: associated
 
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
