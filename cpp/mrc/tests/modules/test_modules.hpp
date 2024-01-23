@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -177,11 +177,12 @@ std::string MultiSinkModule<DataTypeT, SinkCountV>::module_type_name() const
     return std::string(::mrc::type_name<type_t>());
 }
 
-using TestMirrorTapModule    = TestModules;  // NOLINT
-using TestMirrorTapUtil      = TestModules;  // NOLINT
-using TestModuleRegistry     = TestModules;  // NOLINT
-using TestModuleUtil         = TestModules;  // NOLINT
-using TestSegmentModules     = TestModules;  // NOLINT
-using TestStreamBufferModule = TestModules;  // NOLINT
+using TestMirrorTapModule         = TestModules;  // NOLINT
+using TestMirrorTapUtil           = TestModules;  // NOLINT
+using TestModuleRegistry          = TestModules;  // NOLINT
+using TestModuleUtil              = TestModules;  // NOLINT
+using TestSegmentModules          = TestModules;  // NOLINT
+using TestStreamBufferModule      = TestModules;  // NOLINT
+using TestSegmentModulesDeathTest = TestModules;  // NOLINT
 
 }  // namespace mrc

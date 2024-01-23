@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,14 @@ namespace mrc {
     #define SKIP_IF_CODE_COV() GTEST_SKIP() << "Skipping test when code coverage is enabled";
 #else
     #define SKIP_IF_CODE_COV()
+#endif
+
+// Similar to EXPECT_DEBUG_DEATH, this macro is used when a given statement is expected to abort in debug mode,
+// but throw an exception in release
+#ifdef NDEBUG
+    #define EXPECT_DEATH_OR_THROW(statement, regex, exception) EXPECT_THROW(statement, exception);
+#else
+    #define EXPECT_DEATH_OR_THROW(statement, regex, exception) EXPECT_DEATH(statement, regex);
 #endif
 
 // class that records when it's moved/copied

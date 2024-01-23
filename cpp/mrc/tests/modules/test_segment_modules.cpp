@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -218,7 +218,7 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
     EXPECT_EQ(packets_3, 4);
 }
 
-TEST_F(TestSegmentModules, ModuleInitError)
+TEST_F(TestSegmentModulesDeathTest, ModuleInitError)
 {
     using namespace modules;
 
@@ -273,16 +273,21 @@ TEST_F(TestSegmentModules, ModuleInitError)
         throw std::runtime_error("Test exception");
     };
 
-    m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
+    EXPECT_DEATH_OR_THROW(
+        {
+            m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
 
-    auto options = std::make_shared<Options>();
-    options->topology().user_cpuset("0-1");
-    options->topology().restrict_gpus(true);
+            auto options = std::make_shared<Options>();
+            options->topology().user_cpuset("0-1");
+            options->topology().restrict_gpus(true);
 
-    Executor executor(options);
-    executor.register_pipeline(std::move(m_pipeline));
-    executor.start();
-    EXPECT_THROW(executor.join(), std::runtime_error);
+            Executor executor(options);
+            executor.register_pipeline(std::move(m_pipeline));
+            executor.start();
+            EXPECT_THROW(executor.join(), std::runtime_error);
+        },
+        "A node was destructed which still had dependent connections.*",
+        std::runtime_error);
 }
 
 TEST_F(TestSegmentModules, ModuleAsSourceTest)
