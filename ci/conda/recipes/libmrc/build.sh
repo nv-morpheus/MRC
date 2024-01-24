@@ -90,7 +90,7 @@ echo "which python: $(which python)"
 git submodule update --init --recursive
 
 # Run configure
-cmake --trace -B ${BUILD_DIR} \
+cmake --trace-expand -B ${BUILD_DIR} \
    ${CMAKE_ARGS} \
    --log-level=verbose \
    .
