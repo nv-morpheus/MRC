@@ -89,10 +89,10 @@ echo "which python: $(which python)"
 git submodule update --init --recursive
 
 # Run configure
-cmake --trace-expand -B ${BUILD_DIR} \
+cmake -B ${BUILD_DIR} \
    ${CMAKE_ARGS} \
    --log-level=verbose \
    .
 
 # Build the components
-cmake --trace --build ${BUILD_DIR} -j${PARALLEL_LEVEL:-$(nproc)}
+cmake --build ${BUILD_DIR} -j${PARALLEL_LEVEL:-$(nproc)}
