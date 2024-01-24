@@ -96,4 +96,4 @@ cmake -B ${BUILD_DIR} \
    .
 
 # Build the components
-cmake --build ${BUILD_DIR} -j${PARALLEL_LEVEL:-$(nproc)}
+cmake --trace --build ${BUILD_DIR} -j${PARALLEL_LEVEL:-$(nproc)}
