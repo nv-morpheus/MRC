@@ -43,5 +43,4 @@ dependencies:
 - python=3.10
 - scikit-build>=0.17
 - ucx=1.14
-name: ci_cuda-118_arch-x86_64_py-310
-
+name: ci_cuda-118_arch-x86_64
