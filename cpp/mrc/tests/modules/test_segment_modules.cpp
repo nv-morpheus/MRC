@@ -278,14 +278,12 @@ TEST_F(TestSegmentModulesDeathTest, ModuleInitError)
         {
             m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
 
-            auto options = std::make_shared<Options>();
-            options->topology().user_cpuset("0-1");
-            options->topology().restrict_gpus(true);
+            auto options = m_resources->make_options();
 
-            Executor executor(options);
+            Executor executor(std::move(options));
             executor.register_pipeline(std::move(m_pipeline));
             executor.start();
-            EXPECT_THROW(executor.join(), std::runtime_error);
+            executor.join();
         },
         "A node was destructed which still had dependent connections.*",
         std::runtime_error);
