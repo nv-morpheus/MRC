@@ -17,13 +17,13 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci-conda"
-ARG CUDA_VER=11.8.0
+ARG CUDA_VER=12.1.1
 ARG LINUX_DISTRO=ubuntu
-ARG LINUX_VER=20.04
+ARG LINUX_VER=22.04
 ARG PYTHON_VER=3.10
 
 # ============= base ===================
-FROM ${FROM_IMAGE}:cuda11.8.0-ubuntu20.04-py3.10 AS base
+FROM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
 
 ARG PROJ_NAME=mrc
 ARG USERNAME=morpheus
@@ -45,13 +45,13 @@ RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
-COPY ./conda/environments/all_cuda-118_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml
+COPY ./conda/environments/all_cuda-121_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-121_arch-x86_64.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
     sudo -g conda -u $USERNAME \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-118_arch-x86_64.yaml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-121_arch-x86_64.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
