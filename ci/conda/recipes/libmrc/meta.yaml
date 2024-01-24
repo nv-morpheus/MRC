@@ -96,8 +96,8 @@ outputs:
         - ucx =1.15
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
-        - {{ pin_compatible('cuda-version', min_pin='x.x', max_pin='x') }}
-        - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
+        - cuda-version {{ cuda_version }}.*
+        - nlohmann_json =3.9
         - ucx =1.15
         - cuda-cudart
         - boost-cpp =1.84
