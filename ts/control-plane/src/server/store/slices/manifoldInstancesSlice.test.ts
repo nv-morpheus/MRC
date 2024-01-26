@@ -89,7 +89,7 @@ describe("Single", () => {
          expect(m.actualInputSegments).toEqual(manifolds_map[m.portName].actualInputSegments);
          expect(m.actualOutputSegments).toEqual(manifolds_map[m.portName].actualOutputSegments);
          expect(m.id).toEqual(manifolds_map[m.portName].id);
-         expect(m.machineId).toEqual(manifolds_map[m.portName].machineId);
+         expect(m.connectionId).toEqual(manifolds_map[m.portName].connectionId);
          expect(m.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(m.pipelineInstanceId).toEqual(pipeline.id);
          expect(m.portName).toEqual(manifolds_map[m.portName].portName);

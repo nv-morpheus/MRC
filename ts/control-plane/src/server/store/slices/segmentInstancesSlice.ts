@@ -24,6 +24,7 @@ import {
 import { createWatcher, ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
 import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
+import { ManifoldInstanceState } from "@mrc/common/models/manifold_instance";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -124,9 +125,7 @@ export const segmentInstancesSlice = createSlice({
             // This handles the second situation.
             found.state.requestedStatus = ResourceRequestedStatus.Requested_Stopped;
          }
-
       },
-
    },
    extraReducers: (builder) => {
       builder.addCase(connectionsRemove, (state, action) => {
@@ -172,30 +171,34 @@ export function segmentInstancesAddMany(instances: ISegmentInstance[]) {
 export function segmentInstancesRequestStop(segmentInstanceId: string) {
    return (dispatch: AppDispatch, getState: AppGetState) => {
       // In the future we will have more than just manifolds that depend on segments, see comment in `incRefCount`
-      let state = getState();
+      const state = getState();
       const found = segmentInstancesSelectById(state, segmentInstanceId);
       if (!found) {
          throw new Error(`Segment Instance with ID: ${segmentInstanceId} not found`);
       }
 
-      dispatch(segmentInstancesSlice.actions.updateResourceActualState({
-         resource: found,
-         status: ResourceActualStatus.Actual_Stopping
-      }));
-
-      if (found.state.refCount == 0) { 
-          // Segment has no dependees OK to stop now
-         dispatch(segmentInstancesSlice.actions.updateResourceRequestedState({
+      dispatch(
+         segmentInstancesSlice.actions.updateResourceActualState({
             resource: found,
-            status: ResourceRequestedStatus.Requested_Stopped
-         }));
+            status: ResourceActualStatus.Actual_Stopping,
+         })
+      );
+
+      if (found.state.refCount == 0) {
+         // Segment has no dependees OK to stop now
+         dispatch(
+            segmentInstancesSlice.actions.updateResourceRequestedState({
+               resource: found,
+               status: ResourceRequestedStatus.Requested_Stopped,
+            })
+         );
       } else {
          Object.values(state.manifoldInstances.entities).forEach((m) => {
-            if (m!== undefined) {
-               if (found.address in (m?.requestedInputSegments ?? {})) {
-                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: true, segment: found}));
-               } else if (found.address in (m?.requestedOutputSegments ?? {})) {
-                  dispatch(manifoldInstancesDetachRequestedSegment({manifold: m, is_input: false, segment: found}));
+            if (m !== undefined) {
+               if (found.segmentAddress in (m?.requestedInputSegments ?? {})) {
+                  dispatch(manifoldInstancesDetachRequestedSegment({ manifold: m, is_input: true, segment: found }));
+               } else if (found.segmentAddress in (m?.requestedOutputSegments ?? {})) {
+                  dispatch(manifoldInstancesDetachRequestedSegment({ manifold: m, is_input: false, segment: found }));
                }
             }
          });
@@ -243,7 +246,6 @@ export function segmentInstancesDestroy(instance: ISegmentInstance) {
    };
 }
 
-
 type SegmentInstancesStateType = ReturnType<typeof segmentInstancesSlice.getInitialState>;
 
 export const {
@@ -267,8 +269,8 @@ export const {
 } = segmentInstancesAdapter.getSelectors((state: RootState) => state.segmentInstances);
 
 const selectByWorkerId = createSelector(
-   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, worker_id: string) => worker_id],
-   (segmentInstances, worker_id) => segmentInstances.filter((x) => x.workerId === worker_id)
+   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, connectionId: string) => connectionId],
+   (segmentInstances, connectionId) => segmentInstances.filter((x) => x.connectionId === connectionId)
 );
 
 export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: string) =>
@@ -342,24 +344,8 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
       // See if the manifold already exists
       if (manifold_idx === -1) {
          // Dispatch a new manifold
-         return listenerApi.dispatch(
-            manifoldInstancesAdd({
-               id: generateId(),
-               actualInputSegments: {},
-               actualOutputSegments: {},
-               machineId: pipeline_instance.machineId,
-               pipelineDefinitionId: pipeline_def.id,
-               pipelineInstanceId: pipeline_instance.id,
-               portName: port_name,
-               requestedInputSegments: {},
-               requestedOutputSegments: {},
-               state: {
-                  refCount: 0,
-                  requestedStatus: ResourceRequestedStatus.Requested_Created,
-                  actualStatus: ResourceActualStatus.Actual_Unknown,
-               },
-            })
-         ).payload;
+         return listenerApi.dispatch(manifoldInstancesAdd(new ManifoldInstanceState(pipeline_instance, port_name)))
+            .payload;
       } else {
          return running_manifolds[manifold_idx];
       }
@@ -475,10 +461,11 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
 
 export function segmentInstancesConfigureSlice() {
    createWatcher(
-      "SegmentInstances",  // resourceTypeString
+      "SegmentInstances", // resourceTypeString
       segmentInstancesAdd, //  actionCreator
-      segmentInstancesSelectById,  // getResourceInstance
-      async (instance, listenerApi) => { // onCreated
+      segmentInstancesSelectById, // getResourceInstance
+      async (instance, listenerApi) => {
+         // onCreated
          // Create any missing manifolds
          const manifolds = syncManifolds(listenerApi, instance);
 
@@ -486,10 +473,12 @@ export function segmentInstancesConfigureSlice() {
       },
       async (instance) => {}, // onRunning
       async (instance) => {}, // onCompleted
-      async (instance, listenerApi) => {  // onStopped
+      async (instance, listenerApi) => {
+         // onStopped
          const manifolds = syncManifolds(listenerApi, instance);
       },
-      async (instance, listenerApi) => { // onDestroyed
+      async (instance, listenerApi) => {
+         // onDestroyed
          listenerApi.dispatch(segmentInstancesRemove(instance));
       }
    );

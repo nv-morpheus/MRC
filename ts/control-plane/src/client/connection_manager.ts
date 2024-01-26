@@ -38,7 +38,7 @@ export class ConnectionManager {
    private _abort_controller: AbortController = new AbortController();
    private _send_events: AsyncSink<Event> | null = null;
    private _receive_events$: Observable<Event> | null = null;
-   private _machineId: string | null = null;
+   private _connectionId: string | null = null;
 
    private _state_updates: Array<ControlPlaneState> = [];
    private _message_history: Array<Event> = [];
@@ -64,8 +64,8 @@ export class ConnectionManager {
       return this._isCreated;
    }
 
-   get machineId() {
-      return this._machineId ?? throwExpression("Must register first");
+   get connectionId() {
+      return this._connectionId ?? throwExpression("Must register first");
    }
 
    public getClientState() {
@@ -155,7 +155,7 @@ export class ConnectionManager {
          (event) => event.event === EventType.ClientEventStreamConnected
       );
 
-      this._machineId = connected_response.machineId;
+      this._connectionId = connected_response.machineId;
 
       this._isCreated = true;
    }

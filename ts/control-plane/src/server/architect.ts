@@ -84,6 +84,7 @@ import {
    pipelineDefinitionsCreateOrUpdate,
    pipelineDefinitionsSetMapping,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
+import { PipelineInstanceState } from "@mrc/common/models/pipeline_instance";
 
 interface IncomingData {
    msg: Event;
@@ -409,8 +410,9 @@ class Architect implements ArchitectServiceImplementation {
                const workers: IWorker[] = payload.ucxWorkerAddresses.map((value): IWorker => {
                   return {
                      id: generateId(),
-                     machineId: event.machineId,
-                     workerAddress: value,
+                     connectionId: event.machineId,
+                     partitionAddress: 0,
+                     ucxAddress: value,
                      state: {
                         requestedStatus: ResourceRequestedStatus.Requested_Initialized,
                         actualStatus: ResourceActualStatus.Actual_Unknown,
@@ -493,9 +495,9 @@ class Architect implements ArchitectServiceImplementation {
                   throw new Error("`mapping` cannot be undefined");
                }
 
-               if (payload.mapping.machineId == "0") {
-                  payload.mapping.machineId = event.machineId;
-               } else if (payload.mapping.machineId != event.machineId) {
+               if (payload.mapping.connectionId == "0") {
+                  payload.mapping.connectionId = event.machineId;
+               } else if (payload.mapping.connectionId != event.machineId) {
                   throw new Error("Incorrect machineId");
                }
 
@@ -507,16 +509,16 @@ class Architect implements ArchitectServiceImplementation {
                   })
                );
 
-               const pipeline_id = generateId();
+               const connection = connectionsSelectById(this._store.getState(), payload.mapping.connectionId);
+
+               if (!connection) {
+                  throw new Error(`Could not find connection with ID: ${payload.mapping.connectionId}`);
+               }
+
+               const pipeline = new PipelineInstanceState(connection, payload.definitionId);
 
                // Create a pipeline instance with this mapping (Should be moved elsewhere eventually)
-               this._store.dispatch(
-                  pipelineInstancesAdd({
-                     id: pipeline_id,
-                     definitionId: payload.definitionId,
-                     machineId: payload.mapping.machineId,
-                  })
-               );
+               this._store.dispatch(pipelineInstancesAdd(pipeline));
 
                // // Add a pipeline assignment to the machine
                // const addedInstances = this._store.dispatch(
@@ -529,7 +531,7 @@ class Architect implements ArchitectServiceImplementation {
                yield unaryResponse(
                   event,
                   PipelineAddMappingResponse.create({
-                     pipelineInstanceId: pipeline_id,
+                     pipelineInstanceId: pipeline.id,
                   })
                );
 

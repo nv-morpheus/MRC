@@ -44,19 +44,23 @@ class ManifoldTagger2 : public ManifoldTaggerBase2,
 
     void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) override
     {
-        // Make a converting edge to convert from T -> ResidentDescriptor<T>/CodableDescriptor<T> -> Descriptor
-        std::shared_ptr<edge::WritableEdgeHandle> intermediate_edge;
+        std::shared_ptr<edge::WritableEdgeHandle> intermediate_edge =
+            edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ValueDescriptor>>(
+                output_sink->get_writable_edge_handle());
 
-        if (is_local)
-        {
-            intermediate_edge = edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ResidentDescriptor<T>>>(
-                output_sink->get_writable_edge_handle());
-        }
-        else
-        {
-            intermediate_edge = edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::CodedDescriptor<T>>>(
-                output_sink->get_writable_edge_handle());
-        }
+        // if (is_local)
+        // {
+        //     intermediate_edge =
+        //     edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ResidentDescriptor<T>>>(
+        //         output_sink->get_writable_edge_handle());
+        // }
+        // else
+        // {
+        //     // Its remote, so convert from
+
+        //     intermediate_edge = edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::CodedDescriptor<T>>>(
+        //         output_sink->get_writable_edge_handle());
+        // }
 
         // Now set it as the writable edge for this address. This will do the final conversion from T ->
         // ResidentDescriptor<T>/CodableDescriptor<T>

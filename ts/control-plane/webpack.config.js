@@ -15,7 +15,7 @@ module.exports = {
    },
    mode: NODE_ENV,
    target: "node",
-   devtool: "inline-source-map",
+   devtool: "source-map",
    output: {
       path: path.resolve(__dirname, "build"),
       filename: "[name].bundle.js",

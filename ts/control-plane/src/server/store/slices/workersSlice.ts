@@ -81,7 +81,7 @@ export const workersSlice = createSlice({
       });
       builder.addCase(segmentInstancesAdd, (state, action) => {
          // For each, update the worker with the new running instance
-         const found = workersAdapter.getOne(state, action.payload.workerId);
+         const found = workersAdapter.getOne(state, action.payload.connectionId);
 
          if (!found) {
             throw new Error("No matching worker ID found");
@@ -90,7 +90,7 @@ export const workersSlice = createSlice({
          found.assignedSegmentIds.push(action.payload.id);
       });
       builder.addCase(segmentInstancesRemove, (state, action) => {
-         const found = workersAdapter.getOne(state, action.payload.workerId);
+         const found = workersAdapter.getOne(state, action.payload.connectionId);
 
          if (found) {
             const index = found.assignedSegmentIds.findIndex((x) => x === action.payload.id);
@@ -136,9 +136,9 @@ export const {
 const selectByMachineId = createSelector(
    [
       (state: WorkersStateType) => workersAdapter.getAll(state),
-      (state: WorkersStateType, machine_id: string) => machine_id,
+      (state: WorkersStateType, connectionId: string) => connectionId,
    ],
-   (workers, machine_id) => workers.filter((w) => w.machineId === machine_id)
+   (workers, connectionId) => workers.filter((w) => w.connectionId === connectionId)
 );
 
 export const workersSelectByMachineId = (state: RootState, machine_id: string) =>

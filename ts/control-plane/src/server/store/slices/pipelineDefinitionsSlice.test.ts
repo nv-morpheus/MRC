@@ -151,7 +151,7 @@ describe("Single", () => {
          store.dispatch(
             pipelineDefinitionsSetMapping({
                definition_id: pipeline_def.id,
-               mapping: pipeline_mappings[workers[0].machineId],
+               mapping: pipeline_mappings[workers[0].connectionId],
             })
          );
       });
@@ -161,7 +161,7 @@ describe("Single", () => {
 
          expectDefined(found);
 
-         expect(found?.mappings).toHaveProperty(workers[0].machineId);
+         expect(found?.mappings).toHaveProperty(workers[0].connectionId);
       });
 
       test("Delete Worker", () => {
@@ -171,7 +171,7 @@ describe("Single", () => {
 
          expectDefined(found);
 
-         expect(found?.mappings).not.toHaveProperty(workers[0].machineId);
+         expect(found?.mappings).not.toHaveProperty(workers[0].connectionId);
       });
    });
 

@@ -25,7 +25,7 @@ const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
 
 function workerAdded(state: ConnectionsStateType, worker: IWorker) {
    // Handle synchronizing a new added worker
-   const found_connection = connectionsAdapter.getOne(state, worker.machineId);
+   const found_connection = connectionsAdapter.getOne(state, worker.connectionId);
 
    if (found_connection) {
       found_connection.workerIds.push(worker.id);
@@ -115,7 +115,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(workersRemove, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
 
          if (foundConnection) {
             const index = foundConnection.workerIds.findIndex((x) => x === action.payload.id);
@@ -129,7 +129,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineInstancesAdd, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
 
          if (foundConnection) {
             foundConnection.assignedPipelineIds.push(action.payload.id);
@@ -139,7 +139,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineInstancesRemove, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.machineId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
 
          if (foundConnection) {
             const index = foundConnection.assignedPipelineIds.findIndex((x) => x === action.payload.id);
@@ -153,7 +153,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineDefinitionsSetMapping, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.mapping.machineId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.mapping.connectionId);
 
          if (foundConnection) {
             foundConnection.mappedPipelineDefinitions.push(action.payload.definition_id);

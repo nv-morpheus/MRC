@@ -10,8 +10,19 @@ import {
    ISegmentMapping,
    IWorker,
 } from "@mrc/common/entities";
+import { ManifoldInstanceState } from "@mrc/common/models/manifold_instance";
+import { PipelineInstanceState } from "@mrc/common/models/pipeline_instance";
+import { SegmentInstanceState } from "@mrc/common/models/segment_instance";
 import { PipelineDefinitionWrapper } from "@mrc/common/pipelineDefinition";
-import { generateId, generateSegmentHash, hashProtoMessage, stringToBytes } from "@mrc/common/utils";
+import {
+   generateId,
+   generatePartitionAddress,
+   generatePipelineAddress,
+   generateSegmentAddress,
+   generateSegmentHash,
+   hashProtoMessage,
+   stringToBytes,
+} from "@mrc/common/utils";
 import {
    ManifoldOptions_Policy,
    PipelineConfiguration,
@@ -38,10 +49,13 @@ export const connection: IConnection = {
    },
 };
 
+const workerId = generateId();
+
 export const worker: IWorker = {
-   id: generateId(),
-   machineId: connection.id,
-   workerAddress: stringToBytes("-----"),
+   id: workerId,
+   connectionId: connection.id,
+   partitionAddress: generatePartitionAddress(Number(workerId)),
+   ucxAddress: stringToBytes("-----"),
    state: {
       ...default_resource_state,
    },
@@ -82,7 +96,7 @@ export const pipeline_mappings = Object.fromEntries(
       return [
          c.id,
          {
-            machineId: c.id,
+            connectionId: c.id,
             segments: Object.fromEntries(
                Object.entries(pipeline_config.segments).map(([seg_name]) => {
                   return [seg_name, { segmentName: seg_name, byWorker: { workerIds: [worker.id] } } as ISegmentMapping];
@@ -135,56 +149,16 @@ export const pipeline_def: IPipelineDefinition = PipelineDefinitionWrapper.from(
 //    ),
 // };
 
-export const pipeline: IPipelineInstance = {
-   id: generateId(),
-   definitionId: pipeline_def.id,
-   machineId: connection.id,
-   state: {
-      ...default_resource_state,
-   },
-   segmentIds: [],
-   manifoldIds: [],
-};
+export const pipeline: IPipelineInstance = new PipelineInstanceState(connection, pipeline_def.id);
 
 export const segments: ISegmentInstance[] = Object.entries(pipeline_def.segments).map(([seg_name, seg_def]) => {
-   const address = generateSegmentHash(seg_name, worker.id);
-
-   return {
-      id: address.toString(),
-      pipelineDefinitionId: seg_def.parentId,
-      pipelineInstanceId: pipeline.id,
-      name: seg_name,
-      address: address,
-      workerId: worker.id,
-      pipelineId: pipeline.id,
-      state: {
-         ...default_resource_state,
-      },
-      egressManifoldInstanceIds: [],
-      ingressManifoldInstanceIds: [],
-   } as ISegmentInstance;
+   return new SegmentInstanceState(pipeline, seg_name);
 });
 
 export const segments_map = Object.fromEntries(segments.map((s) => [s.name, s]));
 
 export const manifolds: IManifoldInstance[] = Object.entries(pipeline_def.manifolds).map(([man_name, man_def]) => {
-   const address = generateSegmentHash(man_name, worker.id);
-
-   return {
-      id: address.toString(),
-      pipelineDefinitionId: man_def.parentId,
-      pipelineInstanceId: pipeline.id,
-      portName: man_name,
-      machineId: connection.id,
-      requestedInputSegments: {},
-      actualInputSegments: {},
-      requestedOutputSegments: {},
-      actualOutputSegments: {},
-      pipelineId: pipeline.id,
-      state: {
-         ...default_resource_state,
-      },
-   } as IManifoldInstance;
+   return new ManifoldInstanceState(pipeline, man_name);
 });
 
 export const manifolds_map = Object.fromEntries(manifolds.map((s) => [s.portName, s]));

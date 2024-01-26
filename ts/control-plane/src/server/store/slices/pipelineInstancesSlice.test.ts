@@ -96,7 +96,7 @@ describe("Single", () => {
 
       expect(found[0]).toHaveProperty("id", pipeline.id);
       expect(found[0]).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(found[0]).toHaveProperty("machineId", pipeline.machineId);
+      expect(found[0]).toHaveProperty("connectionId", pipeline.connectionId);
       expect(found[0]).toHaveProperty("segmentIds", []);
    });
 
@@ -105,7 +105,7 @@ describe("Single", () => {
 
       expect(found).toHaveProperty("id", pipeline.id);
       expect(found).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(found).toHaveProperty("machineId", pipeline.machineId);
+      expect(found).toHaveProperty("connectionId", pipeline.connectionId);
       expect(found).toHaveProperty("segmentIds", []);
    });
 
@@ -139,7 +139,7 @@ describe("Single", () => {
          store.dispatch(
             pipelineInstancesRemove({
                ...pipeline,
-               machineId: "1",
+               connectionId: "1",
             })
          )
       );

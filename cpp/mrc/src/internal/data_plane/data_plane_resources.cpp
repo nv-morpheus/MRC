@@ -199,6 +199,11 @@ std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::
     return endpoint;
 }
 
+bool DataPlaneResources2::has_endpoint(const std::string& address) const
+{
+    return m_endpoints_by_address.contains(address);
+}
+
 std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::find_endpoint(const std::string& address) const
 {
     return m_endpoints_by_address.at(address);

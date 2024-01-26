@@ -61,9 +61,9 @@ describe("Single", () => {
 
       expect(found[0].id).toEqual(worker.id);
       expect(found[0].assignedSegmentIds).toEqual([]);
-      expect(found[0].machineId).toEqual(connection.id);
+      expect(found[0].connectionId).toEqual(connection.id);
       expect(found[0].state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
-      expect(found[0].workerAddress).toEqual(worker.workerAddress);
+      expect(found[0].partitionAddress).toEqual(worker.partitionAddress);
    });
 
    test("Select One", () => {
@@ -73,9 +73,9 @@ describe("Single", () => {
 
       expect(found?.id).toEqual(worker.id);
       expect(found?.assignedSegmentIds).toEqual([]);
-      expect(found?.machineId).toEqual(connection.id);
+      expect(found?.connectionId).toEqual(connection.id);
       expect(found?.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
-      expect(found?.workerAddress).toEqual(worker.workerAddress);
+      expect(found?.partitionAddress).toEqual(worker.partitionAddress);
    });
 
    test("Total", () => {

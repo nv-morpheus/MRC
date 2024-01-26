@@ -20,13 +20,21 @@
 #include "internal/control_plane/state/root_state.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/core/async_service.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/node/generic_sink.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <stop_token>
+
+namespace ucxx {
+class Endpoint;
+}
 
 namespace mrc::codable {
 class EncodedStorage;
@@ -51,6 +59,18 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
     DataPlaneSystemManager(IInternalRuntimeProvider& runtime);
     ~DataPlaneSystemManager() override;
 
+    // This is what each ingress object will connect to in order to pull the next message
+    std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> get_readable_ingress_channel(
+        InstanceID port_address) const;
+
+    // This is what local and remote egress objects will connect to in order to push the next message to a local ingress
+    std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> get_writable_ingress_channel(
+        InstanceID port_address) const;
+
+    // This is what each egress object will connect to in order to push messages to remote ingress objects
+    std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> get_writable_egress_channel(
+        InstanceID port_address) const;
+
     std::shared_ptr<node::Queue<std::unique_ptr<Descriptor>>> get_incoming_port_channel(InstanceID port_address) const;
     std::shared_ptr<edge::IWritableProvider<std::unique_ptr<Descriptor>>> get_outgoing_port_channel(
         InstanceID port_address) const;
@@ -60,9 +80,19 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     void process_state_update(const control_plane::state::ControlPlaneState& state);
 
+    channel::Status send_descriptor(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                    std::unique_ptr<ValueDescriptor>&& descriptor);
+
     // control_plane::state::ControlPlaneState m_previous_state;
 
     mutable Mutex m_port_mutex;
+
+    std::unique_ptr<data_plane::DataPlaneResources2> m_resources;
+
+    std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>>> m_ingress_port_channels;
+    std::map<InstanceID, std::weak_ptr<node::LambdaSinkComponent<std::unique_ptr<ValueDescriptor>>>>
+        m_egress_port_channels;
+
     std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_incoming_port_channels;
     std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_outgoing_port_channels;
 };

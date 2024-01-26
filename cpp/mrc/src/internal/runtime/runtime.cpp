@@ -159,6 +159,8 @@ void Runtime::do_service_start(std::stop_token stop_token)
     // Now create the system data plane client object
     m_data_plane_manager = std::make_shared<DataPlaneSystemManager>(*this);
 
+    this->child_service_start(m_data_plane_manager, true);
+
     // Create the connection manager to handle state updates
     m_connection_manager = std::make_shared<ConnectionManager>(*this, m_control_plane_client->machine_id());
 

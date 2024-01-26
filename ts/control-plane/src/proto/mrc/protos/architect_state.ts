@@ -380,17 +380,23 @@ export interface Connection {
 
 export interface Worker {
   $type: "mrc.protos.Worker";
+  /** The generated PartitionID for this instance */
   id: string;
-  /** Serialized worker address */
-  workerAddress: Uint8Array;
-  /** Parent machine this worker belongs to */
-  machineId: string;
+  /** The PartitionAddress of this worker. 16 bit unused + 16 bit PartitionID */
+  partitionAddress: number;
+  /** Serialized UCX worker address */
+  ucxAddress: Uint8Array;
   /** Current state of the worker */
   state:
     | ResourceState
     | undefined;
   /** The segment instances that are assigned to this worker */
   assignedSegmentIds: string[];
+  /**
+   * TODO(MDD): Remove when removing partitions
+   * The connection ID associated with this instance
+   */
+  connectionId: string;
 }
 
 export interface PipelineConfiguration {
@@ -437,7 +443,7 @@ export interface PipelineConfiguration_ManifoldsEntry {
 
 export interface PipelineMapping {
   $type: "mrc.protos.PipelineMapping";
-  machineId: string;
+  connectionId: string;
   segments: { [key: string]: PipelineMapping_SegmentMapping };
 }
 
@@ -573,11 +579,14 @@ export interface PipelineDefinition_ManifoldsEntry {
 
 export interface PipelineInstance {
   $type: "mrc.protos.PipelineInstance";
+  /** Generated ID of the instance */
   id: string;
+  /** The parent PartitionID this belongs to */
+  partitionId: string;
+  /** The PipelineAddress of this instance. 16 bit PartitionID + 16 bit PipelineID. */
+  pipelineAddress: number;
   /** Deinition this belongs to */
   definitionId: string;
-  /** The machine this instance is running on */
-  machineId: string;
   /** The current state of this resource */
   state:
     | ResourceState
@@ -586,6 +595,11 @@ export interface PipelineInstance {
   segmentIds: string[];
   /** Running Manifold Instance IDs */
   manifoldIds: string[];
+  /**
+   * TODO(MDD): Remove when removing partitions
+   * The connection ID associated with this instance
+   */
+  connectionId: string;
 }
 
 /**
@@ -603,17 +617,18 @@ export interface SegmentDefinition {
 
 export interface SegmentInstance {
   $type: "mrc.protos.SegmentInstance";
+  /** Generated ID of the instance */
   id: string;
+  /** The parent PartitionID this belongs to */
+  partitionId: string;
+  /** The parent PipelineID this belongs to */
+  pipelineInstanceId: string;
+  /** 16 bit unused + 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID */
+  segmentAddress: string;
   /** Pipeline Deinition this belongs to */
   pipelineDefinitionId: string;
   /** Segment name (Lookup segment config from pipeline def ID and name) */
   name: string;
-  /** The encoded address of this instance */
-  address: number;
-  /** The worker/partition that this belongs to */
-  workerId: string;
-  /** The running pipeline instance id */
-  pipelineInstanceId: string;
   /** The current state of this resource */
   state:
     | ResourceState
@@ -622,54 +637,67 @@ export interface SegmentInstance {
   egressManifoldInstanceIds: string[];
   /** Local running manifold instance IDs for ingress ports */
   ingressManifoldInstanceIds: string[];
+  /**
+   * TODO(MDD): Remove when removing partitions
+   * The connection ID associated with this instance
+   */
+  connectionId: string;
 }
 
 export interface ManifoldInstance {
   $type: "mrc.protos.ManifoldInstance";
+  /** Generated ID of the instance */
   id: string;
+  /** The parent PartitionID this belongs to */
+  partitionId: string;
+  /** The parent PipelineID this belongs to */
+  pipelineInstanceId: string;
+  /** The ManifoldAddress of this instance. 16 bit empty + 16 bit PartitionID + 16 bit PipelineID + 16 bit ManifoldID. Top 16 bits area always empty */
+  manifoldAddress: string;
   /** Pipeline Deinition this belongs to */
   pipelineDefinitionId: string;
   /** Port name (Lookup manifold config from pipeline def ID and name) */
   portName: string;
-  /** The machine this instance is running on */
-  machineId: string;
-  /** The running pipeline instance id */
-  pipelineInstanceId: string;
   /** The current state of this resource */
   state:
     | ResourceState
     | undefined;
   /** The requested input connections. True = Local, False = Remote */
-  requestedInputSegments: { [key: number]: boolean };
+  requestedInputSegments: { [key: string]: boolean };
   /** The requested output connections. True = Local, False = Remote */
-  requestedOutputSegments: { [key: number]: boolean };
+  requestedOutputSegments: { [key: string]: boolean };
   /** The actual input connections. True = Local, False = Remote */
-  actualInputSegments: { [key: number]: boolean };
+  actualInputSegments: { [key: string]: boolean };
   /** The actual output connections. True = Local, False = Remote */
-  actualOutputSegments: { [key: number]: boolean };
+  actualOutputSegments: { [key: string]: boolean };
+  /**
+   * TODO(MDD): Remove when removing partitions
+   * The connection ID associated with this instance
+   */
+  connectionId: string;
 }
 
 export interface ManifoldInstance_RequestedInputSegmentsEntry {
   $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
 export interface ManifoldInstance_RequestedOutputSegmentsEntry {
   $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
 export interface ManifoldInstance_ActualInputSegmentsEntry {
   $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
 export interface ManifoldInstance_ActualOutputSegmentsEntry {
   $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
@@ -1336,10 +1364,11 @@ function createBaseWorker(): Worker {
   return {
     $type: "mrc.protos.Worker",
     id: "0",
-    workerAddress: new Uint8Array(0),
-    machineId: "0",
+    partitionAddress: 0,
+    ucxAddress: new Uint8Array(0),
     state: undefined,
     assignedSegmentIds: [],
+    connectionId: "0",
   };
 }
 
@@ -1350,11 +1379,11 @@ export const Worker = {
     if (message.id !== "0") {
       writer.uint32(8).uint64(message.id);
     }
-    if (message.workerAddress.length !== 0) {
-      writer.uint32(18).bytes(message.workerAddress);
+    if (message.partitionAddress !== 0) {
+      writer.uint32(16).uint32(message.partitionAddress);
     }
-    if (message.machineId !== "0") {
-      writer.uint32(24).uint64(message.machineId);
+    if (message.ucxAddress.length !== 0) {
+      writer.uint32(26).bytes(message.ucxAddress);
     }
     if (message.state !== undefined) {
       ResourceState.encode(message.state, writer.uint32(34).fork()).ldelim();
@@ -1364,6 +1393,9 @@ export const Worker = {
       writer.uint64(v);
     }
     writer.ldelim();
+    if (message.connectionId !== "0") {
+      writer.uint32(48).uint64(message.connectionId);
+    }
     return writer;
   },
 
@@ -1382,18 +1414,18 @@ export const Worker = {
           message.id = longToString(reader.uint64() as Long);
           continue;
         case 2:
-          if (tag !== 18) {
+          if (tag !== 16) {
             break;
           }
 
-          message.workerAddress = reader.bytes();
+          message.partitionAddress = reader.uint32();
           continue;
         case 3:
-          if (tag !== 24) {
+          if (tag !== 26) {
             break;
           }
 
-          message.machineId = longToString(reader.uint64() as Long);
+          message.ucxAddress = reader.bytes();
           continue;
         case 4:
           if (tag !== 34) {
@@ -1419,6 +1451,13 @@ export const Worker = {
           }
 
           break;
+        case 6:
+          if (tag !== 48) {
+            break;
+          }
+
+          message.connectionId = longToString(reader.uint64() as Long);
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1432,29 +1471,29 @@ export const Worker = {
     return {
       $type: Worker.$type,
       id: isSet(object.id) ? String(object.id) : "0",
-      workerAddress: isSet(object.workerAddress) ? bytesFromBase64(object.workerAddress) : new Uint8Array(0),
-      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      partitionAddress: isSet(object.partitionAddress) ? Number(object.partitionAddress) : 0,
+      ucxAddress: isSet(object.ucxAddress) ? bytesFromBase64(object.ucxAddress) : new Uint8Array(0),
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       assignedSegmentIds: Array.isArray(object?.assignedSegmentIds)
         ? object.assignedSegmentIds.map((e: any) => String(e))
         : [],
+      connectionId: isSet(object.connectionId) ? String(object.connectionId) : "0",
     };
   },
 
   toJSON(message: Worker): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
-    message.workerAddress !== undefined &&
-      (obj.workerAddress = base64FromBytes(
-        message.workerAddress !== undefined ? message.workerAddress : new Uint8Array(0),
-      ));
-    message.machineId !== undefined && (obj.machineId = message.machineId);
+    message.partitionAddress !== undefined && (obj.partitionAddress = Math.round(message.partitionAddress));
+    message.ucxAddress !== undefined &&
+      (obj.ucxAddress = base64FromBytes(message.ucxAddress !== undefined ? message.ucxAddress : new Uint8Array(0)));
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     if (message.assignedSegmentIds) {
       obj.assignedSegmentIds = message.assignedSegmentIds.map((e) => e);
     } else {
       obj.assignedSegmentIds = [];
     }
+    message.connectionId !== undefined && (obj.connectionId = message.connectionId);
     return obj;
   },
 
@@ -1465,12 +1504,13 @@ export const Worker = {
   fromPartial(object: DeepPartial<Worker>): Worker {
     const message = createBaseWorker();
     message.id = object.id ?? "0";
-    message.workerAddress = object.workerAddress ?? new Uint8Array(0);
-    message.machineId = object.machineId ?? "0";
+    message.partitionAddress = object.partitionAddress ?? 0;
+    message.ucxAddress = object.ucxAddress ?? new Uint8Array(0);
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
     message.assignedSegmentIds = object.assignedSegmentIds?.map((e) => e) || [];
+    message.connectionId = object.connectionId ?? "0";
     return message;
   },
 };
@@ -2000,15 +2040,15 @@ export const PipelineConfiguration_ManifoldsEntry = {
 messageTypeRegistry.set(PipelineConfiguration_ManifoldsEntry.$type, PipelineConfiguration_ManifoldsEntry);
 
 function createBasePipelineMapping(): PipelineMapping {
-  return { $type: "mrc.protos.PipelineMapping", machineId: "0", segments: {} };
+  return { $type: "mrc.protos.PipelineMapping", connectionId: "0", segments: {} };
 }
 
 export const PipelineMapping = {
   $type: "mrc.protos.PipelineMapping" as const,
 
   encode(message: PipelineMapping, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.machineId !== "0") {
-      writer.uint32(8).uint64(message.machineId);
+    if (message.connectionId !== "0") {
+      writer.uint32(8).uint64(message.connectionId);
     }
     Object.entries(message.segments).forEach(([key, value]) => {
       PipelineMapping_SegmentsEntry.encode({
@@ -2032,7 +2072,7 @@ export const PipelineMapping = {
             break;
           }
 
-          message.machineId = longToString(reader.uint64() as Long);
+          message.connectionId = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 18) {
@@ -2056,7 +2096,7 @@ export const PipelineMapping = {
   fromJSON(object: any): PipelineMapping {
     return {
       $type: PipelineMapping.$type,
-      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
+      connectionId: isSet(object.connectionId) ? String(object.connectionId) : "0",
       segments: isObject(object.segments)
         ? Object.entries(object.segments).reduce<{ [key: string]: PipelineMapping_SegmentMapping }>(
           (acc, [key, value]) => {
@@ -2071,7 +2111,7 @@ export const PipelineMapping = {
 
   toJSON(message: PipelineMapping): unknown {
     const obj: any = {};
-    message.machineId !== undefined && (obj.machineId = message.machineId);
+    message.connectionId !== undefined && (obj.connectionId = message.connectionId);
     obj.segments = {};
     if (message.segments) {
       Object.entries(message.segments).forEach(([k, v]) => {
@@ -2087,7 +2127,7 @@ export const PipelineMapping = {
 
   fromPartial(object: DeepPartial<PipelineMapping>): PipelineMapping {
     const message = createBasePipelineMapping();
-    message.machineId = object.machineId ?? "0";
+    message.connectionId = object.connectionId ?? "0";
     message.segments = Object.entries(object.segments ?? {}).reduce<{ [key: string]: PipelineMapping_SegmentMapping }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
@@ -3683,11 +3723,13 @@ function createBasePipelineInstance(): PipelineInstance {
   return {
     $type: "mrc.protos.PipelineInstance",
     id: "0",
+    partitionId: "0",
+    pipelineAddress: 0,
     definitionId: "0",
-    machineId: "0",
     state: undefined,
     segmentIds: [],
     manifoldIds: [],
+    connectionId: "0",
   };
 }
 
@@ -3698,25 +3740,31 @@ export const PipelineInstance = {
     if (message.id !== "0") {
       writer.uint32(8).uint64(message.id);
     }
-    if (message.definitionId !== "0") {
-      writer.uint32(16).int64(message.definitionId);
+    if (message.partitionId !== "0") {
+      writer.uint32(16).uint64(message.partitionId);
     }
-    if (message.machineId !== "0") {
-      writer.uint32(24).uint64(message.machineId);
+    if (message.pipelineAddress !== 0) {
+      writer.uint32(24).uint32(message.pipelineAddress);
+    }
+    if (message.definitionId !== "0") {
+      writer.uint32(32).int64(message.definitionId);
     }
     if (message.state !== undefined) {
-      ResourceState.encode(message.state, writer.uint32(34).fork()).ldelim();
+      ResourceState.encode(message.state, writer.uint32(42).fork()).ldelim();
     }
-    writer.uint32(42).fork();
+    writer.uint32(50).fork();
     for (const v of message.segmentIds) {
       writer.uint64(v);
     }
     writer.ldelim();
-    writer.uint32(50).fork();
+    writer.uint32(58).fork();
     for (const v of message.manifoldIds) {
       writer.uint64(v);
     }
     writer.ldelim();
+    if (message.connectionId !== "0") {
+      writer.uint32(64).uint64(message.connectionId);
+    }
     return writer;
   },
 
@@ -3739,30 +3787,37 @@ export const PipelineInstance = {
             break;
           }
 
-          message.definitionId = longToString(reader.int64() as Long);
+          message.partitionId = longToString(reader.uint64() as Long);
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.machineId = longToString(reader.uint64() as Long);
+          message.pipelineAddress = reader.uint32();
           continue;
         case 4:
-          if (tag !== 34) {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.definitionId = longToString(reader.int64() as Long);
+          continue;
+        case 5:
+          if (tag !== 42) {
             break;
           }
 
           message.state = ResourceState.decode(reader, reader.uint32());
           continue;
-        case 5:
-          if (tag === 40) {
+        case 6:
+          if (tag === 48) {
             message.segmentIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 42) {
+          if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.segmentIds.push(longToString(reader.uint64() as Long));
@@ -3772,14 +3827,14 @@ export const PipelineInstance = {
           }
 
           break;
-        case 6:
-          if (tag === 48) {
+        case 7:
+          if (tag === 56) {
             message.manifoldIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 50) {
+          if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.manifoldIds.push(longToString(reader.uint64() as Long));
@@ -3789,6 +3844,13 @@ export const PipelineInstance = {
           }
 
           break;
+        case 8:
+          if (tag !== 64) {
+            break;
+          }
+
+          message.connectionId = longToString(reader.uint64() as Long);
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -3802,19 +3864,22 @@ export const PipelineInstance = {
     return {
       $type: PipelineInstance.$type,
       id: isSet(object.id) ? String(object.id) : "0",
+      partitionId: isSet(object.partitionId) ? String(object.partitionId) : "0",
+      pipelineAddress: isSet(object.pipelineAddress) ? Number(object.pipelineAddress) : 0,
       definitionId: isSet(object.definitionId) ? String(object.definitionId) : "0",
-      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       segmentIds: Array.isArray(object?.segmentIds) ? object.segmentIds.map((e: any) => String(e)) : [],
       manifoldIds: Array.isArray(object?.manifoldIds) ? object.manifoldIds.map((e: any) => String(e)) : [],
+      connectionId: isSet(object.connectionId) ? String(object.connectionId) : "0",
     };
   },
 
   toJSON(message: PipelineInstance): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
+    message.partitionId !== undefined && (obj.partitionId = message.partitionId);
+    message.pipelineAddress !== undefined && (obj.pipelineAddress = Math.round(message.pipelineAddress));
     message.definitionId !== undefined && (obj.definitionId = message.definitionId);
-    message.machineId !== undefined && (obj.machineId = message.machineId);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     if (message.segmentIds) {
       obj.segmentIds = message.segmentIds.map((e) => e);
@@ -3826,6 +3891,7 @@ export const PipelineInstance = {
     } else {
       obj.manifoldIds = [];
     }
+    message.connectionId !== undefined && (obj.connectionId = message.connectionId);
     return obj;
   },
 
@@ -3836,13 +3902,15 @@ export const PipelineInstance = {
   fromPartial(object: DeepPartial<PipelineInstance>): PipelineInstance {
     const message = createBasePipelineInstance();
     message.id = object.id ?? "0";
+    message.partitionId = object.partitionId ?? "0";
+    message.pipelineAddress = object.pipelineAddress ?? 0;
     message.definitionId = object.definitionId ?? "0";
-    message.machineId = object.machineId ?? "0";
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
     message.segmentIds = object.segmentIds?.map((e) => e) || [];
     message.manifoldIds = object.manifoldIds?.map((e) => e) || [];
+    message.connectionId = object.connectionId ?? "0";
     return message;
   },
 };
@@ -3945,14 +4013,15 @@ function createBaseSegmentInstance(): SegmentInstance {
   return {
     $type: "mrc.protos.SegmentInstance",
     id: "0",
+    partitionId: "0",
+    pipelineInstanceId: "0",
+    segmentAddress: "0",
     pipelineDefinitionId: "0",
     name: "",
-    address: 0,
-    workerId: "0",
-    pipelineInstanceId: "0",
     state: undefined,
     egressManifoldInstanceIds: [],
     ingressManifoldInstanceIds: [],
+    connectionId: "0",
   };
 }
 
@@ -3963,20 +4032,20 @@ export const SegmentInstance = {
     if (message.id !== "0") {
       writer.uint32(8).uint64(message.id);
     }
-    if (message.pipelineDefinitionId !== "0") {
-      writer.uint32(16).int64(message.pipelineDefinitionId);
-    }
-    if (message.name !== "") {
-      writer.uint32(26).string(message.name);
-    }
-    if (message.address !== 0) {
-      writer.uint32(32).uint32(message.address);
-    }
-    if (message.workerId !== "0") {
-      writer.uint32(40).uint64(message.workerId);
+    if (message.partitionId !== "0") {
+      writer.uint32(16).uint64(message.partitionId);
     }
     if (message.pipelineInstanceId !== "0") {
-      writer.uint32(48).uint64(message.pipelineInstanceId);
+      writer.uint32(24).uint64(message.pipelineInstanceId);
+    }
+    if (message.segmentAddress !== "0") {
+      writer.uint32(32).uint64(message.segmentAddress);
+    }
+    if (message.pipelineDefinitionId !== "0") {
+      writer.uint32(40).int64(message.pipelineDefinitionId);
+    }
+    if (message.name !== "") {
+      writer.uint32(50).string(message.name);
     }
     if (message.state !== undefined) {
       ResourceState.encode(message.state, writer.uint32(58).fork()).ldelim();
@@ -3991,6 +4060,9 @@ export const SegmentInstance = {
       writer.uint64(v);
     }
     writer.ldelim();
+    if (message.connectionId !== "0") {
+      writer.uint32(80).uint64(message.connectionId);
+    }
     return writer;
   },
 
@@ -4013,35 +4085,35 @@ export const SegmentInstance = {
             break;
           }
 
-          message.pipelineDefinitionId = longToString(reader.int64() as Long);
+          message.partitionId = longToString(reader.uint64() as Long);
           continue;
         case 3:
-          if (tag !== 26) {
+          if (tag !== 24) {
             break;
           }
 
-          message.name = reader.string();
+          message.pipelineInstanceId = longToString(reader.uint64() as Long);
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.address = reader.uint32();
+          message.segmentAddress = longToString(reader.uint64() as Long);
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.workerId = longToString(reader.uint64() as Long);
+          message.pipelineDefinitionId = longToString(reader.int64() as Long);
           continue;
         case 6:
-          if (tag !== 48) {
+          if (tag !== 50) {
             break;
           }
 
-          message.pipelineInstanceId = longToString(reader.uint64() as Long);
+          message.name = reader.string();
           continue;
         case 7:
           if (tag !== 58) {
@@ -4084,6 +4156,13 @@ export const SegmentInstance = {
           }
 
           break;
+        case 10:
+          if (tag !== 80) {
+            break;
+          }
+
+          message.connectionId = longToString(reader.uint64() as Long);
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4097,11 +4176,11 @@ export const SegmentInstance = {
     return {
       $type: SegmentInstance.$type,
       id: isSet(object.id) ? String(object.id) : "0",
+      partitionId: isSet(object.partitionId) ? String(object.partitionId) : "0",
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+      segmentAddress: isSet(object.segmentAddress) ? String(object.segmentAddress) : "0",
       pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
       name: isSet(object.name) ? String(object.name) : "",
-      address: isSet(object.address) ? Number(object.address) : 0,
-      workerId: isSet(object.workerId) ? String(object.workerId) : "0",
-      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       egressManifoldInstanceIds: Array.isArray(object?.egressManifoldInstanceIds)
         ? object.egressManifoldInstanceIds.map((e: any) => String(e))
@@ -4109,17 +4188,18 @@ export const SegmentInstance = {
       ingressManifoldInstanceIds: Array.isArray(object?.ingressManifoldInstanceIds)
         ? object.ingressManifoldInstanceIds.map((e: any) => String(e))
         : [],
+      connectionId: isSet(object.connectionId) ? String(object.connectionId) : "0",
     };
   },
 
   toJSON(message: SegmentInstance): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
+    message.partitionId !== undefined && (obj.partitionId = message.partitionId);
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    message.segmentAddress !== undefined && (obj.segmentAddress = message.segmentAddress);
     message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
     message.name !== undefined && (obj.name = message.name);
-    message.address !== undefined && (obj.address = Math.round(message.address));
-    message.workerId !== undefined && (obj.workerId = message.workerId);
-    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     if (message.egressManifoldInstanceIds) {
       obj.egressManifoldInstanceIds = message.egressManifoldInstanceIds.map((e) => e);
@@ -4131,6 +4211,7 @@ export const SegmentInstance = {
     } else {
       obj.ingressManifoldInstanceIds = [];
     }
+    message.connectionId !== undefined && (obj.connectionId = message.connectionId);
     return obj;
   },
 
@@ -4141,16 +4222,17 @@ export const SegmentInstance = {
   fromPartial(object: DeepPartial<SegmentInstance>): SegmentInstance {
     const message = createBaseSegmentInstance();
     message.id = object.id ?? "0";
+    message.partitionId = object.partitionId ?? "0";
+    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    message.segmentAddress = object.segmentAddress ?? "0";
     message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
     message.name = object.name ?? "";
-    message.address = object.address ?? 0;
-    message.workerId = object.workerId ?? "0";
-    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
     message.egressManifoldInstanceIds = object.egressManifoldInstanceIds?.map((e) => e) || [];
     message.ingressManifoldInstanceIds = object.ingressManifoldInstanceIds?.map((e) => e) || [];
+    message.connectionId = object.connectionId ?? "0";
     return message;
   },
 };
@@ -4161,15 +4243,17 @@ function createBaseManifoldInstance(): ManifoldInstance {
   return {
     $type: "mrc.protos.ManifoldInstance",
     id: "0",
+    partitionId: "0",
+    pipelineInstanceId: "0",
+    manifoldAddress: "0",
     pipelineDefinitionId: "0",
     portName: "",
-    machineId: "0",
-    pipelineInstanceId: "0",
     state: undefined,
     requestedInputSegments: {},
     requestedOutputSegments: {},
     actualInputSegments: {},
     actualOutputSegments: {},
+    connectionId: "0",
   };
 }
 
@@ -4180,49 +4264,55 @@ export const ManifoldInstance = {
     if (message.id !== "0") {
       writer.uint32(8).uint64(message.id);
     }
-    if (message.pipelineDefinitionId !== "0") {
-      writer.uint32(16).int64(message.pipelineDefinitionId);
-    }
-    if (message.portName !== "") {
-      writer.uint32(26).string(message.portName);
-    }
-    if (message.machineId !== "0") {
-      writer.uint32(32).uint64(message.machineId);
+    if (message.partitionId !== "0") {
+      writer.uint32(16).uint64(message.partitionId);
     }
     if (message.pipelineInstanceId !== "0") {
-      writer.uint32(40).uint64(message.pipelineInstanceId);
+      writer.uint32(24).uint64(message.pipelineInstanceId);
+    }
+    if (message.manifoldAddress !== "0") {
+      writer.uint32(32).uint64(message.manifoldAddress);
+    }
+    if (message.pipelineDefinitionId !== "0") {
+      writer.uint32(40).int64(message.pipelineDefinitionId);
+    }
+    if (message.portName !== "") {
+      writer.uint32(50).string(message.portName);
     }
     if (message.state !== undefined) {
-      ResourceState.encode(message.state, writer.uint32(50).fork()).ldelim();
+      ResourceState.encode(message.state, writer.uint32(58).fork()).ldelim();
     }
     Object.entries(message.requestedInputSegments).forEach(([key, value]) => {
       ManifoldInstance_RequestedInputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(58).fork()).ldelim();
+      }, writer.uint32(66).fork()).ldelim();
     });
     Object.entries(message.requestedOutputSegments).forEach(([key, value]) => {
       ManifoldInstance_RequestedOutputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(66).fork()).ldelim();
+      }, writer.uint32(74).fork()).ldelim();
     });
     Object.entries(message.actualInputSegments).forEach(([key, value]) => {
       ManifoldInstance_ActualInputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(74).fork()).ldelim();
+      }, writer.uint32(82).fork()).ldelim();
     });
     Object.entries(message.actualOutputSegments).forEach(([key, value]) => {
       ManifoldInstance_ActualOutputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(82).fork()).ldelim();
+      }, writer.uint32(90).fork()).ldelim();
     });
+    if (message.connectionId !== "0") {
+      writer.uint32(96).uint64(message.connectionId);
+    }
     return writer;
   },
 
@@ -4245,54 +4335,51 @@ export const ManifoldInstance = {
             break;
           }
 
-          message.pipelineDefinitionId = longToString(reader.int64() as Long);
+          message.partitionId = longToString(reader.uint64() as Long);
           continue;
         case 3:
-          if (tag !== 26) {
+          if (tag !== 24) {
             break;
           }
 
-          message.portName = reader.string();
+          message.pipelineInstanceId = longToString(reader.uint64() as Long);
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.machineId = longToString(reader.uint64() as Long);
+          message.manifoldAddress = longToString(reader.uint64() as Long);
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.pipelineInstanceId = longToString(reader.uint64() as Long);
+          message.pipelineDefinitionId = longToString(reader.int64() as Long);
           continue;
         case 6:
           if (tag !== 50) {
             break;
           }
 
-          message.state = ResourceState.decode(reader, reader.uint32());
+          message.portName = reader.string();
           continue;
         case 7:
           if (tag !== 58) {
             break;
           }
 
-          const entry7 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
-          if (entry7.value !== undefined) {
-            message.requestedInputSegments[entry7.key] = entry7.value;
-          }
+          message.state = ResourceState.decode(reader, reader.uint32());
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          const entry8 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
+          const entry8 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry8.value !== undefined) {
-            message.requestedOutputSegments[entry8.key] = entry8.value;
+            message.requestedInputSegments[entry8.key] = entry8.value;
           }
           continue;
         case 9:
@@ -4300,9 +4387,9 @@ export const ManifoldInstance = {
             break;
           }
 
-          const entry9 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
+          const entry9 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry9.value !== undefined) {
-            message.actualInputSegments[entry9.key] = entry9.value;
+            message.requestedOutputSegments[entry9.key] = entry9.value;
           }
           continue;
         case 10:
@@ -4310,10 +4397,27 @@ export const ManifoldInstance = {
             break;
           }
 
-          const entry10 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
+          const entry10 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry10.value !== undefined) {
-            message.actualOutputSegments[entry10.key] = entry10.value;
+            message.actualInputSegments[entry10.key] = entry10.value;
           }
+          continue;
+        case 11:
+          if (tag !== 90) {
+            break;
+          }
+
+          const entry11 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
+          if (entry11.value !== undefined) {
+            message.actualOutputSegments[entry11.key] = entry11.value;
+          }
+          continue;
+        case 12:
+          if (tag !== 96) {
+            break;
+          }
+
+          message.connectionId = longToString(reader.uint64() as Long);
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -4328,45 +4432,48 @@ export const ManifoldInstance = {
     return {
       $type: ManifoldInstance.$type,
       id: isSet(object.id) ? String(object.id) : "0",
+      partitionId: isSet(object.partitionId) ? String(object.partitionId) : "0",
+      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+      manifoldAddress: isSet(object.manifoldAddress) ? String(object.manifoldAddress) : "0",
       pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
       portName: isSet(object.portName) ? String(object.portName) : "",
-      machineId: isSet(object.machineId) ? String(object.machineId) : "0",
-      pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       requestedInputSegments: isObject(object.requestedInputSegments)
-        ? Object.entries(object.requestedInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.requestedInputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
       requestedOutputSegments: isObject(object.requestedOutputSegments)
-        ? Object.entries(object.requestedOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.requestedOutputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
       actualInputSegments: isObject(object.actualInputSegments)
-        ? Object.entries(object.actualInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.actualInputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
       actualOutputSegments: isObject(object.actualOutputSegments)
-        ? Object.entries(object.actualOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.actualOutputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
+      connectionId: isSet(object.connectionId) ? String(object.connectionId) : "0",
     };
   },
 
   toJSON(message: ManifoldInstance): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
+    message.partitionId !== undefined && (obj.partitionId = message.partitionId);
+    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    message.manifoldAddress !== undefined && (obj.manifoldAddress = message.manifoldAddress);
     message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
     message.portName !== undefined && (obj.portName = message.portName);
-    message.machineId !== undefined && (obj.machineId = message.machineId);
-    message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     obj.requestedInputSegments = {};
     if (message.requestedInputSegments) {
@@ -4392,6 +4499,7 @@ export const ManifoldInstance = {
         obj.actualOutputSegments[k] = v;
       });
     }
+    message.connectionId !== undefined && (obj.connectionId = message.connectionId);
     return obj;
   },
 
@@ -4402,47 +4510,49 @@ export const ManifoldInstance = {
   fromPartial(object: DeepPartial<ManifoldInstance>): ManifoldInstance {
     const message = createBaseManifoldInstance();
     message.id = object.id ?? "0";
+    message.partitionId = object.partitionId ?? "0";
+    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    message.manifoldAddress = object.manifoldAddress ?? "0";
     message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
     message.portName = object.portName ?? "";
-    message.machineId = object.machineId ?? "0";
-    message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
     message.requestedInputSegments = Object.entries(object.requestedInputSegments ?? {}).reduce<
-      { [key: number]: boolean }
+      { [key: string]: boolean }
     >((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[Number(key)] = Boolean(value);
+        acc[key] = Boolean(value);
       }
       return acc;
     }, {});
     message.requestedOutputSegments = Object.entries(object.requestedOutputSegments ?? {}).reduce<
-      { [key: number]: boolean }
+      { [key: string]: boolean }
     >((acc, [key, value]) => {
       if (value !== undefined) {
-        acc[Number(key)] = Boolean(value);
+        acc[key] = Boolean(value);
       }
       return acc;
     }, {});
-    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: string]: boolean }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
-          acc[Number(key)] = Boolean(value);
+          acc[key] = Boolean(value);
         }
         return acc;
       },
       {},
     );
-    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: string]: boolean }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
-          acc[Number(key)] = Boolean(value);
+          acc[key] = Boolean(value);
         }
         return acc;
       },
       {},
     );
+    message.connectionId = object.connectionId ?? "0";
     return message;
   },
 };
@@ -4450,15 +4560,15 @@ export const ManifoldInstance = {
 messageTypeRegistry.set(ManifoldInstance.$type, ManifoldInstance);
 
 function createBaseManifoldInstance_RequestedInputSegmentsEntry(): ManifoldInstance_RequestedInputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry", key: 0, value: false };
+  return { $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry", key: "0", value: false };
 }
 
 export const ManifoldInstance_RequestedInputSegmentsEntry = {
   $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry" as const,
 
   encode(message: ManifoldInstance_RequestedInputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -4478,7 +4588,7 @@ export const ManifoldInstance_RequestedInputSegmentsEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -4499,14 +4609,14 @@ export const ManifoldInstance_RequestedInputSegmentsEntry = {
   fromJSON(object: any): ManifoldInstance_RequestedInputSegmentsEntry {
     return {
       $type: ManifoldInstance_RequestedInputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldInstance_RequestedInputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -4521,7 +4631,7 @@ export const ManifoldInstance_RequestedInputSegmentsEntry = {
     object: DeepPartial<ManifoldInstance_RequestedInputSegmentsEntry>,
   ): ManifoldInstance_RequestedInputSegmentsEntry {
     const message = createBaseManifoldInstance_RequestedInputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },
@@ -4533,15 +4643,15 @@ messageTypeRegistry.set(
 );
 
 function createBaseManifoldInstance_RequestedOutputSegmentsEntry(): ManifoldInstance_RequestedOutputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry", key: 0, value: false };
+  return { $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry", key: "0", value: false };
 }
 
 export const ManifoldInstance_RequestedOutputSegmentsEntry = {
   $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry" as const,
 
   encode(message: ManifoldInstance_RequestedOutputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -4561,7 +4671,7 @@ export const ManifoldInstance_RequestedOutputSegmentsEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -4582,14 +4692,14 @@ export const ManifoldInstance_RequestedOutputSegmentsEntry = {
   fromJSON(object: any): ManifoldInstance_RequestedOutputSegmentsEntry {
     return {
       $type: ManifoldInstance_RequestedOutputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldInstance_RequestedOutputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -4604,7 +4714,7 @@ export const ManifoldInstance_RequestedOutputSegmentsEntry = {
     object: DeepPartial<ManifoldInstance_RequestedOutputSegmentsEntry>,
   ): ManifoldInstance_RequestedOutputSegmentsEntry {
     const message = createBaseManifoldInstance_RequestedOutputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },
@@ -4616,15 +4726,15 @@ messageTypeRegistry.set(
 );
 
 function createBaseManifoldInstance_ActualInputSegmentsEntry(): ManifoldInstance_ActualInputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry", key: 0, value: false };
+  return { $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry", key: "0", value: false };
 }
 
 export const ManifoldInstance_ActualInputSegmentsEntry = {
   $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry" as const,
 
   encode(message: ManifoldInstance_ActualInputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -4644,7 +4754,7 @@ export const ManifoldInstance_ActualInputSegmentsEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -4665,14 +4775,14 @@ export const ManifoldInstance_ActualInputSegmentsEntry = {
   fromJSON(object: any): ManifoldInstance_ActualInputSegmentsEntry {
     return {
       $type: ManifoldInstance_ActualInputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldInstance_ActualInputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -4685,7 +4795,7 @@ export const ManifoldInstance_ActualInputSegmentsEntry = {
     object: DeepPartial<ManifoldInstance_ActualInputSegmentsEntry>,
   ): ManifoldInstance_ActualInputSegmentsEntry {
     const message = createBaseManifoldInstance_ActualInputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },
@@ -4694,15 +4804,15 @@ export const ManifoldInstance_ActualInputSegmentsEntry = {
 messageTypeRegistry.set(ManifoldInstance_ActualInputSegmentsEntry.$type, ManifoldInstance_ActualInputSegmentsEntry);
 
 function createBaseManifoldInstance_ActualOutputSegmentsEntry(): ManifoldInstance_ActualOutputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry", key: 0, value: false };
+  return { $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry", key: "0", value: false };
 }
 
 export const ManifoldInstance_ActualOutputSegmentsEntry = {
   $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry" as const,
 
   encode(message: ManifoldInstance_ActualOutputSegmentsEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -4722,7 +4832,7 @@ export const ManifoldInstance_ActualOutputSegmentsEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -4743,14 +4853,14 @@ export const ManifoldInstance_ActualOutputSegmentsEntry = {
   fromJSON(object: any): ManifoldInstance_ActualOutputSegmentsEntry {
     return {
       $type: ManifoldInstance_ActualOutputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldInstance_ActualOutputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -4763,7 +4873,7 @@ export const ManifoldInstance_ActualOutputSegmentsEntry = {
     object: DeepPartial<ManifoldInstance_ActualOutputSegmentsEntry>,
   ): ManifoldInstance_ActualOutputSegmentsEntry {
     const message = createBaseManifoldInstance_ActualOutputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },

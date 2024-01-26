@@ -78,6 +78,33 @@ using ResourceGroupID = std::size_t;
 
 using Tags = std::vector<SegmentAddress>;  // NOLINT
 
+// The following lists ID types which are used in MRC. Each ID represents a unique instance in the system. Most of these
+// IDs are assigned by the control plane when the instances are created
+// All types are 16 bit because they are assigned in increasing order by the control plane and to allow IDs to be
+// combined up to 4x for the addresses
+
+using PartitionID2 = std::uint16_t;  // 16 bit assigned ID for each worker/machine/partition/connection
+using PipelineID2  = std::uint16_t;  // 16 bit assigned ID for each pipelineInstance/pipeline
+using SegmentID2   = std::uint16_t;  // 16 bit assigned ID for each segmentInstance/segment
+using ManifoldID2  = std::uint16_t;  // 16 bit assigned ID for each manifoldInstance/manifold
+using PortID2      = std::uint16_t;  // 16 bit name hash for each port
+
+// The following lists Address types which are used in MRC. Each address represents a unique instance in the system but
+// also contains information about the parent resources which the instance belongs to. Combining IDs goes from Parent
+// (High bits) -> Child (Low bits). Minimum size for addresses is 32 bits to interface with gRPC better. Unused bits
+// should always be 0.
+
+// 16 bit unused + 16 bit PartitionID
+using PartitionAddress2 = std::uint32_t;
+// 16 bit PartitionID + 16 bit PipelineID
+using PipelineAddress2 = std::uint32_t;
+// 16 bit unused + 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID
+using SegmentAddress2 = std::uint64_t;
+// 16 bit empty + 16 bit PartitionID + 16 bit PipelineID + 16 bit ManifoldID.
+using ManifoldAddress2 = std::uint64_t;
+// 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID + 16 bit PortID
+using PortAddress2 = std::uint64_t;
+
 // NOLINTEND(readability-identifier-naming)
 
 }  // namespace mrc

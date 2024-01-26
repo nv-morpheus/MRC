@@ -14,7 +14,7 @@ import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { AppListenerAPI } from "@mrc/server/store/listener_middleware";
-import { generateId, generateSegmentHash } from "@mrc/common/utils";
+import { generateId, generateSegmentAddress, generateSegmentHash } from "@mrc/common/utils";
 import { workersSelectByMachineId } from "@mrc/server/store/slices/workersSlice";
 import {
    manifoldInstancesAdd,
@@ -27,6 +27,8 @@ import {
    segmentInstancesRemove,
    segmentInstancesSelectById,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
+import { ManifoldInstanceState } from "@mrc/common/models/manifold_instance";
+import { SegmentInstanceState } from "@mrc/common/models/segment_instance";
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,
@@ -47,20 +49,12 @@ export const pipelineInstancesSlice = createSlice({
    name: "pipelineInstances",
    initialState: pipelineInstancesAdapter.getInitialState(),
    reducers: {
-      add: (state, action: PayloadAction<Pick<IPipelineInstance, "id" | "definitionId" | "machineId">>) => {
+      add: (state, action: PayloadAction<IPipelineInstance>) => {
          if (pipelineInstancesAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Pipeline Instance with ID: ${action.payload.id} already exists`);
          }
-         pipelineInstancesAdapter.addOne(state, {
-            ...action.payload,
-            segmentIds: [],
-            manifoldIds: [],
-            state: {
-               requestedStatus: ResourceRequestedStatus.Requested_Created,
-               actualStatus: ResourceActualStatus.Actual_Unknown,
-               refCount: 0,
-            },
-         });
+
+         pipelineInstancesAdapter.addOne(state, action.payload);
       },
       remove: (state, action: PayloadAction<IPipelineInstance>) => {
          const found = pipelineInstancesAdapter.getOne(state, action.payload.id);
@@ -182,12 +176,12 @@ export const {
 } = pipelineInstancesAdapter.getSelectors((state: RootState) => state.pipelineInstances);
 
 const selectByMachineId = createSelector(
-   [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, machine_id: string) => machine_id],
-   (pipelineInstances, machine_id) => pipelineInstances.filter((p) => p.machineId === machine_id)
+   [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, connectionId: string) => connectionId],
+   (pipelineInstances, connectionId) => pipelineInstances.filter((p) => p.connectionId === connectionId)
 );
 
-export const pipelineInstancesSelectByMachineId = (state: RootState, machine_id: string) =>
-   selectByMachineId(state.pipelineInstances, machine_id);
+export const pipelineInstancesSelectByMachineId = (state: RootState, connectionId: string) =>
+   selectByMachineId(state.pipelineInstances, connectionId);
 
 async function manifoldsFromInstance(
    listenerApi: AppListenerAPI,
@@ -203,22 +197,7 @@ async function manifoldsFromInstance(
    }
 
    const manifolds = Object.entries(pipeline_def.manifolds).map(([manifold_name, manifold_def]) => {
-      return {
-         id: generateId(),
-         actualInputSegments: {},
-         actualOutputSegments: {},
-         machineId: pipelineInstance.machineId,
-         pipelineDefinitionId: pipeline_def.id,
-         pipelineInstanceId: pipelineInstance.id,
-         portName: manifold_name,
-         requestedInputSegments: {},
-         requestedOutputSegments: {},
-         state: {
-            refCount: 0,
-            requestedStatus: ResourceRequestedStatus.Requested_Created,
-            actualStatus: ResourceActualStatus.Actual_Unknown,
-         },
-      } as IManifoldInstance;
+      return new ManifoldInstanceState(pipelineInstance, manifold_name);
    });
 
    // For each one, make a fork to track progress
@@ -268,16 +247,16 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
    }
 
    // Get the mapping for this machine ID
-   if (!(pipelineInstance.machineId in pipeline_def.mappings)) {
+   if (!(pipelineInstance.connectionId in pipeline_def.mappings)) {
       throw new Error(
-         `Could not find Mapping for Machine: ${pipelineInstance.machineId}, for Pipeline Definition: ${pipelineInstance.definitionId}`
+         `Could not find Mapping for Machine: ${pipelineInstance.connectionId}, for Pipeline Definition: ${pipelineInstance.definitionId}`
       );
    }
 
    // Get the workers for this machine
-   const workers = workersSelectByMachineId(state, pipelineInstance.machineId);
+   const workers = workersSelectByMachineId(state, pipelineInstance.connectionId);
 
-   const mapping = pipeline_def.mappings[pipelineInstance.machineId];
+   const mapping = pipeline_def.mappings[pipelineInstance.connectionId];
 
    // Now determine the segment instances that should be created
    const seg_to_workers = Object.fromEntries(
@@ -307,21 +286,7 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
    const segments = Object.entries(seg_to_workers).flatMap(([seg_name, seg_assignment]) => {
       // For each assignment, create a segment instance
       return seg_assignment.map((wid) => {
-         const address = generateSegmentHash(seg_name, wid);
-
-         return {
-            id: address.toString(),
-            pipelineDefinitionId: pipeline_def.id,
-            pipelineInstanceId: pipelineInstance.id,
-            name: seg_name,
-            address: address,
-            workerId: wid,
-            state: {
-               refCount: 0,
-               requestedStatus: ResourceRequestedStatus.Requested_Created,
-               actualStatus: ResourceActualStatus.Actual_Unknown,
-            },
-         } as ISegmentInstance;
+         return new SegmentInstanceState(pipelineInstance, seg_name);
       });
    });
 

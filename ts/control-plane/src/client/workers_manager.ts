@@ -11,7 +11,7 @@ import { ConnectionManager } from "@mrc/client/connection_manager";
 import { ResourceActualStatus } from "@mrc/proto/mrc/protos/architect_state";
 import { SegmentManager } from "./segment_manager";
 
-export class WorkerClientInstance { 
+export class WorkerClientInstance {
    constructor(public readonly workersManager: WorkersManager, public readonly workerId: string) {}
 
    get connectionManager() {
@@ -31,15 +31,14 @@ export class WorkerClientInstance {
    get segments() {
       return this.segmentIds.map((segmentId) => new SegmentManager(this, segmentId));
    }
-   
 }
 
-export class WorkersManager { 
+export class WorkersManager {
    private _registerResponse: RegisterWorkersResponse | undefined;
    private _isCreated = false;
    private _isRunning = false;
 
-   constructor(public readonly connectionManager: ConnectionManager, public addresses: string[]) { }
+   constructor(public readonly connectionManager: ConnectionManager, public addresses: string[]) {}
 
    public static create(workerAddresses: string[], client?: MrcTestClient): WorkersManager {
       if (!client) {
@@ -67,7 +66,7 @@ export class WorkersManager {
       return this._isRunning;
    }
 
-   get machineId() {
+   get connectionId() {
       return this._registerResponse?.machineId ?? throwExpression("Must register first");
    }
 

@@ -25,6 +25,7 @@
 
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
+#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
@@ -60,6 +61,11 @@ class RegistrationCache;
 class RegistrationCache2;
 class UcxResources;
 }  // namespace mrc::ucx
+
+namespace mrc::node {
+template <typename T>
+class Queue;
+}  // namespace mrc::node
 
 namespace mrc::data_plane {
 class Client;
@@ -127,6 +133,7 @@ class DataPlaneResources2
 
     std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address, uint64_t instance_id);
 
+    bool has_endpoint(const std::string& address) const;
     std::shared_ptr<ucxx::Endpoint> find_endpoint(const std::string& address) const;
     std::shared_ptr<ucxx::Endpoint> find_endpoint(uint64_t instance_id) const;
 
@@ -196,6 +203,10 @@ class DataPlaneResources2
 
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
+
+    // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
+    // std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>>>
+    // m_inbound_port_channels;
 };
 
 }  // namespace mrc::data_plane

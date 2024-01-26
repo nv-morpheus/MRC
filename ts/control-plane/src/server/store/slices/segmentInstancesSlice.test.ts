@@ -82,12 +82,12 @@ describe("Single", () => {
 
       found.forEach((s) => {
          expect(s.id).toEqual(segments_map[s.name].id);
-         expect(s.address).toEqual(segments_map[s.name].address);
+         expect(s.segmentAddress).toEqual(segments_map[s.name].segmentAddress);
          expect(s.name).toEqual(segments_map[s.name].name);
          expect(s.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(s.pipelineInstanceId).toEqual(pipeline.id);
          expect(s.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
-         expect(s.workerId).toEqual(worker.id);
+         expect(s.connectionId).toEqual(worker.id);
       });
    });
 

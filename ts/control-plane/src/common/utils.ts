@@ -9,6 +9,16 @@ export function generateId(max = 4294967295): string {
    return Math.floor(Math.random() * max).toString();
 }
 
+const resourceIdCounts = new Map<string, number>();
+
+export function generateResourceId(resourceType: string): string {
+   const id = resourceIdCounts.get(resourceType) ?? 0;
+
+   resourceIdCounts.set(resourceType, id + 1);
+
+   return id.toString();
+}
+
 export function yield_(name = "") {
    // console.log(`Yield start. Name: ${name}`);
 
@@ -51,7 +61,7 @@ export function sleep(ms: number, name = "") {
 export function stringToBytes(value: string[]): Uint8Array[];
 export function stringToBytes(value: string): Uint8Array;
 export function stringToBytes(value: string | string[]) {
-   if (value instanceof Array<string>) {
+   if (value instanceof Array) {
       return value.map((s) => new TextEncoder().encode(s));
    }
 
@@ -61,7 +71,7 @@ export function stringToBytes(value: string | string[]) {
 export function bytesToString(value: Uint8Array[]): string[];
 export function bytesToString(value: Uint8Array): string;
 export function bytesToString(value: Uint8Array | Uint8Array[]) {
-   if (value instanceof Array<Uint8Array>) {
+   if (value instanceof Array) {
       return value.map((s) => new TextDecoder().decode(s));
    }
 
@@ -143,6 +153,42 @@ function hashName16(name: string): bigint {
 
    // Only take the last 16 bits
    return BigInt.asUintN(16, hash_u32);
+}
+
+// Generates a 64 bit address from 4 16 bit parts. The parts are shifted into place. Part 1 is the most significant and
+// part 4 is the least significant.
+export function generateAddress64(part1: number, part2: number, part3: number, part4: number): string {
+   const address = (BigInt(part1) << 48n) | (BigInt(part2) << 32n) | (BigInt(part3) << 16n) | BigInt(part4);
+
+   return address.toString();
+}
+
+// Generates a 64 bit address from 2 16 bit parts. The parts are shifted into place. Part 1 is the most significant and
+// part 2 is the least significant.
+export function generateAddress32(part1: number, part2: number): number {
+   const address = (part1 << 16) | part2;
+
+   return address;
+}
+
+export function generatePartitionAddress(partitionId: number): number {
+   return generateAddress32(0, partitionId);
+}
+
+export function generatePipelineAddress(partitionId: number, pipelineId: number): number {
+   return generateAddress32(partitionId, pipelineId);
+}
+
+export function generateSegmentAddress(partitionId: number, pipelineId: number, segmentId: number) {
+   return generateAddress64(0, partitionId, pipelineId, segmentId);
+}
+
+export function generateManifoldAddress(partitionId: number, pipelineId: number, manifoldId: number) {
+   return generateAddress64(0, partitionId, pipelineId, manifoldId);
+}
+
+export function generatePortAddress(partitionId: number, pipelineId: number, segmentId: number, portId: number) {
+   return generateAddress64(partitionId, pipelineId, segmentId, portId);
 }
 
 export function generateSegmentHash(seg_name: string, worker_id: string): number {

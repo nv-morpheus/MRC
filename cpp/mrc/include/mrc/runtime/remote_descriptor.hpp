@@ -23,6 +23,7 @@
 #include "mrc/codable/encoded_object.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/type_traits.hpp"  // IWYU pragma: keep
+#include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <glog/logging.h>
@@ -278,11 +279,22 @@ class RemoteDescriptor2;
 
 class ValueDescriptor
 {
+  public:
+    template <typename T>
+    T release_value() &&;
+
   private:
     virtual std::unique_ptr<codable::LocalSerializedWrapper> encode(
         std::shared_ptr<memory::memory_block_provider> block_provider) = 0;
 
     friend LocalDescriptor2;
+};
+
+struct TaggedDescriptor
+{
+    InstanceID destination;
+    InstanceID source;
+    std::unique_ptr<ValueDescriptor> descriptor;
 };
 
 template <typename T>
@@ -310,7 +322,23 @@ class TypedValueDescriptor : public ValueDescriptor
     }
 
     T m_value;
+
+    friend class ValueDescriptor;
 };
+
+template <typename T>
+T ValueDescriptor::release_value() &&
+{
+    auto typed_descriptor = dynamic_cast<TypedValueDescriptor<T>*>(this);
+
+    if (!typed_descriptor)
+    {
+        LOG(FATAL) << "Cannot release value of type " << typeid(T).name() << " from descriptor of type "
+                   << typeid(*this).name();
+    }
+
+    return std::move(typed_descriptor->m_value);
+}
 
 // Combines a EncodedObjectProto with a local registered buffers if needed
 class LocalDescriptor2

@@ -87,14 +87,14 @@ export class PipelineDefinitionWrapper {
       pipeline_def.manifolds = manifolds;
 
       if (mapping) {
-         if (mapping instanceof Array<IPipelineMapping[]>) {
+         if (mapping instanceof Array) {
             pipeline_def.mappings = Object.fromEntries(
                mapping.map((m) => {
-                  return [m.machineId, m];
+                  return [m.connectionId, m];
                })
             );
          } else {
-            pipeline_def.mappings[mapping.machineId] = mapping;
+            pipeline_def.mappings[mapping.connectionId] = mapping;
          }
       }
 

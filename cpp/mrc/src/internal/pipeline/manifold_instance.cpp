@@ -71,7 +71,7 @@ void ManifoldInstance::register_local_output(SegmentAddress address,
 
     // m_local_output[address] = ingress_port;
 
-    auto incoming_channel = this->runtime().data_plane().get_incoming_port_channel(address);
+    auto incoming_channel = this->runtime().data_plane().get_readable_ingress_channel(address);
 
     // Save the channel to keep it alive
     m_input_port_nodes[address] = incoming_channel;
@@ -159,8 +159,9 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     std::vector<manifold::ManifoldPolicyInputInfo> manifold_inputs;
     std::map<SegmentAddress, manifold::ManifoldPolicyOutputInfo> manifold_outputs;
 
-    std::map<InstanceID, std::shared_ptr<node::Queue<std::unique_ptr<runtime::Descriptor>>>> input_port_nodes;
-    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::Descriptor>>>>
+    std::map<InstanceID, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+        input_port_nodes;
+    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         output_port_nodes;
 
     // First, loop over all requested inputs and hook these up so they are available
@@ -173,7 +174,7 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         }
         else
         {
-            auto remote_edge = this->runtime().data_plane().get_incoming_port_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_readable_ingress_channel(seg_id);
 
             input_port_nodes[seg_id] = remote_edge;
 
@@ -187,7 +188,7 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         if (is_local)
         {
             // Gets the same queue that the data plane uses to send data to the manifold
-            auto remote_edge = this->runtime().data_plane().get_incoming_port_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_writable_ingress_channel(seg_id);
 
             output_port_nodes[seg_id] = remote_edge;
 
@@ -196,7 +197,7 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         else
         {
             // Get an edge from the data plane for this particular, remote segment
-            auto remote_edge = this->runtime().data_plane().get_outgoing_port_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_writable_egress_channel(seg_id);
 
             output_port_nodes[seg_id] = remote_edge;
 

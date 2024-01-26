@@ -17,9 +17,17 @@
 
 #pragma once
 
+#include "internal/control_plane/state/root_state.hpp"
+#include "internal/runtime/resource_manager_base.hpp"
+
+#include "mrc/types.hpp"
+
 #include <rxcpp/rx.hpp>
 
+#include <cstdint>
 #include <exception>
+#include <map>
+#include <memory>
 #include <string>
 
 namespace mrc::edge {
@@ -34,15 +42,6 @@ namespace mrc::runtime {
 class Descriptor;
 class IInternalRuntimeProvider;
 }  // namespace mrc::runtime
-#include "internal/control_plane/state/root_state.hpp"
-#include "internal/runtime/resource_manager_base.hpp"
-
-#include "mrc/types.hpp"
-
-#include <cstdint>
-#include <map>
-#include <memory>
-
 namespace mrc::manifold {
 struct Interface;
 }  // namespace mrc::manifold
@@ -98,8 +97,9 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
     std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
     std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
 
-    std::map<InstanceID, std::shared_ptr<node::Queue<std::unique_ptr<runtime::Descriptor>>>> m_input_port_nodes;
-    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::Descriptor>>>>
+    std::map<InstanceID, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+        m_input_port_nodes;
+    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         m_output_port_nodes;
 
     std::map<SegmentAddress, bool> m_actual_input_segments;

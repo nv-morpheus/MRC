@@ -44,4 +44,23 @@ class Queue : public WritableProvider<T>, public ReadableProvider<T>
     }
 };
 
+// template <typename T>
+// class Queue : public WritableProvider<T>, public ReadableProvider<T>
+// {
+//   public:
+//     Queue()
+//     {
+//         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+//     }
+//     ~Queue() override = default;
+
+//     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
+//     {
+//         edge::EdgeChannel<T> edge_channel(std::move(channel));
+
+//         SinkProperties<T>::init_owned_edge(edge_channel.get_writer());
+//         SourceProperties<T>::init_owned_edge(edge_channel.get_reader());
+//     }
+// };
+
 }  // namespace mrc::node

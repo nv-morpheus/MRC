@@ -16,7 +16,6 @@
  */
 
 #pragma once
-
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/deferred_edge.hpp"
 #include "mrc/edge/edge.hpp"
@@ -482,39 +481,79 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::adapt_readable_edge(std::shared
 // Put make edge in the mrc namespace since it is used so often
 namespace mrc {
 
+/**
+ * @brief Since its not currently possible to dynamically build an error message for `static_assert`, provide all of the
+ * information that would be in the error message about the types as template parameters. This way the value of the
+ * template parameters is still displayed in the error message.
+ *
+ */
+namespace detail {
+template <typename SourceT,
+          typename SinkT,
+          bool IsSourceIWritableAcceptor,
+          bool IsSourceIReadableProvider,
+          bool IsSinkIWritableProvider,
+          bool IsSinkIReadableAcceptor,
+          bool IsSourceIWritableAcceptorBase,
+          bool IsSourceIReadableProviderBase,
+          bool IsSinkIWritableProviderBase,
+          bool IsSinkIReadableAcceptorBase>
+void display_make_edge_error_message()
+{
+    static_assert(!sizeof(SourceT),
+                  "Arguments to make_edge were incorrect. Ensure you are providing either "
+                  "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+}
+}  // namespace detail
+
 template <typename SourceT, typename SinkT>
 void make_edge(SourceT& source, SinkT& sink)
 {
     using source_full_t = SourceT;
     using sink_full_t   = SinkT;
 
-    if constexpr (is_base_of_template<edge::IWritableAcceptor, source_full_t>::value &&
-                  is_base_of_template<edge::IWritableProvider, sink_full_t>::value)
+    constexpr bool IsSourceIWritableAcceptor = is_base_of_template<edge::IWritableAcceptor, source_full_t>::value;
+    constexpr bool IsSourceIReadableProvider = is_base_of_template<edge::IReadableProvider, source_full_t>::value;
+
+    constexpr bool IsSinkIWritableProvider = is_base_of_template<edge::IWritableProvider, sink_full_t>::value;
+    constexpr bool IsSinkIReadableAcceptor = is_base_of_template<edge::IReadableAcceptor, sink_full_t>::value;
+
+    constexpr bool IsSourceIWritableAcceptorBase = std::is_base_of_v<edge::IWritableAcceptorBase, source_full_t>;
+    constexpr bool IsSourceIReadableProviderBase = std::is_base_of_v<edge::IReadableProviderBase, source_full_t>;
+
+    constexpr bool IsSinkIWritableProviderBase = std::is_base_of_v<edge::IWritableProviderBase, sink_full_t>;
+    constexpr bool IsSinkIReadableAcceptorBase = std::is_base_of_v<edge::IReadableAcceptorBase, sink_full_t>;
+
+    if constexpr (IsSourceIWritableAcceptor && IsSinkIWritableProvider)
     {
         // Call the typed version for ingress provider/acceptor
         edge::EdgeBuilder::make_edge_writable(source, sink);
     }
-    else if constexpr (is_base_of_template<edge::IReadableProvider, source_full_t>::value &&
-                       is_base_of_template<edge::IReadableAcceptor, sink_full_t>::value)
+    else if constexpr (IsSourceIReadableProvider && IsSinkIReadableAcceptor)
     {
         // Call the typed version for egress provider/acceptor
         edge::EdgeBuilder::make_edge_readable(source, sink);
     }
-    else if constexpr (std::is_base_of_v<edge::IWritableAcceptorBase, source_full_t> &&
-                       std::is_base_of_v<edge::IWritableProviderBase, sink_full_t>)
+    else if constexpr (IsSourceIWritableAcceptorBase && IsSinkIWritableProviderBase)
     {
         edge::EdgeBuilder::make_edge_writable_typeless(source, sink);
     }
-    else if constexpr (std::is_base_of_v<edge::IReadableProviderBase, source_full_t> &&
-                       std::is_base_of_v<edge::IReadableAcceptorBase, sink_full_t>)
+    else if constexpr (IsSourceIReadableProviderBase && IsSinkIReadableAcceptorBase)
     {
         edge::EdgeBuilder::make_edge_readable_typeless(source, sink);
     }
     else
     {
-        static_assert(!sizeof(source_full_t),
-                      "Arguments to make_edge were incorrect. Ensure you are providing either "
-                      "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        detail::display_make_edge_error_message<source_full_t,
+                                                sink_full_t,
+                                                IsSourceIWritableAcceptor,
+                                                IsSourceIReadableProvider,
+                                                IsSinkIWritableProvider,
+                                                IsSinkIReadableAcceptor,
+                                                IsSourceIWritableAcceptorBase,
+                                                IsSourceIReadableProviderBase,
+                                                IsSinkIWritableProviderBase,
+                                                IsSinkIReadableAcceptorBase>();
     }
 }
 
