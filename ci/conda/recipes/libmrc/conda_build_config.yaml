@@ -23,62 +23,11 @@ cuda_compiler:
   - cuda-nvcc
 
 cuda_compiler_version:
-  - 11.8
+  - 12.1
 
 python:
-  - 3.8
-  - 3.10
   - 3.10
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -2
-  - 23.02
-  - 23.04
-  - 23.06
-
-# Multiple versions of abseil are required to satisfy the solver for some
-# environments. RAPIDS 22.06 only works with gRPC 1.45 and 22.08 only works with
-# 1.46. For each version of gRPC, support 2 abseil versions. Zip all of the keys
-# together to avoid impossible combinations
-libabseil:
-  - 20230125.0
-  - 20230125.0
-  - 20230125.0
-
-libgrpc:
-  - 1.51
-  - 1.51
-  - 1.54
-
-ucx:
-  - 1.13
-  - 1.14
-  - 1.14
-
-libprotobuf:
-  - 3.21
-  - 3.21
-  - 3.21
-
-zip_keys:
-  - python
-  - rapids_version
-  - libabseil
-  - libgrpc
-  - ucx
-  - libprotobuf
-
-# The following mimic what is available in the pinning feedstock:
-# https://github.com/conda-forge/conda-forge-pinning-feedstock/blob/main/recipe/conda_build_config.yaml
-boost:
-  - 1.82
-boost_cpp:
-  - 1.82
-gflags:
-  - 2.2
-glog:
-  - 0.6
-
-pin_run_as_build:
-  boost-cpp:
-    max_pin: x.x
+  - 24.02

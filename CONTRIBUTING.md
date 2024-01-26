@@ -85,7 +85,7 @@ cd $MRC_ROOT
 #### Create MRC Conda environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc --file $MRC_ROOT/conda/environments/all_cuda-118_arch-x86_64.yaml
+conda env create -n mrc --file $MRC_ROOT/conda/environments/all_cuda-121_arch-x86_64.yaml
 conda activate mrc
 ```
 #### Build MRC

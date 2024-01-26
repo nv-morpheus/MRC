@@ -20,7 +20,11 @@ Checks: >
   -modernize-macro-to-enum,
   google-readability-todo
 
-#WarningsAsErrors: '*'
+WarningsAsErrors: >
+  *,
+  -clang-diagnostic-unused-command-line-argument,
+  -clang-diagnostic-ignored-optimization-argument
+
 HeaderFilterRegex: '.*\/include\/mrc\/.*'
 AnalyzeTemporaryDtors: false
 FormatStyle: file

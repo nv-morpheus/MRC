@@ -138,7 +138,7 @@ class ParallelTester
 
     /**
      * @brief Method to call at the parallelization test point by all threads. Can be used in gtest with
-     * `EXPECT_TRUE(parallel_test.wait_for(100ms));` to fail if parallelization isnt met
+     * `EXPECT_TRUE(parallel_test.wait_for(250ms));` to fail if parallelization isnt met
      *
      * @tparam RepT Duration Rep type
      * @tparam PeriodT Duration Period type
