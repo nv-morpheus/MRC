@@ -708,6 +708,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
                                                                          *m_resources);
 
+    // TODO(Peter): Check the memory manager to assert that the remote payloads have been registered with the correct
+    // number of tokens
+
     // Get the serialized data
     auto serialized_data = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
 
@@ -720,6 +723,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
         m_resources->progress();
     }
 
+    // TODO(Peter): After sending, assert that the object's payloads are still alive (as well as the object). May need
+    // to convert the `send_data` object to a shared_ptr and use a weak_ptr to determine lifetime
+
     // Create a remote descriptor from the received data
     auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
                                                                           receive_request->getRecvBuffer()->getSize(),
@@ -728,6 +734,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     // Convert to a local descriptor
     auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor),
                                                                         *m_resources);
+
+    // TODO(Peter): After converting to a local descriptor, check that the remote payload has been released from the
+    // memory manager and that the original `send_data` object has been destroyed
 
     // Convert back into the value descriptor
     auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(

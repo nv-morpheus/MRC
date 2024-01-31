@@ -20,6 +20,7 @@
 #include "internal/codable/codable_storage.hpp"
 #include "internal/data_plane/data_plane_resources.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/resources/system_resources.hpp"
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
@@ -157,15 +158,6 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
 
         auto* local_payload = local_obj->proto().add_payloads();
 
-        // auto ucx_block = data_plane_resources.registration_cache().lookup(remote_payload.address());
-
-        // if (!ucx_block.has_value())
-        // {
-        //     // Need to register the memory
-        //     ucx_block = data_plane_resources.registration_cache().add_block(local_payload->address(),
-        //                                                                     local_payload->bytes());
-        // }
-
         local_payload->set_address(reinterpret_cast<uintptr_t>(buffer.data()));
         local_payload->set_bytes(buffer.bytes());
         local_payload->set_memory_kind(remote_payload.memory_kind());
@@ -173,6 +165,17 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
 
     // Now, we need to wait for all requests to be complete
     data_plane_resources.wait_requests(requests);
+
+    // For the remote descriptor message, send decrement to the remote resources
+    auto ep = data_plane_resources.find_endpoint(remote_descriptor->encoded_object().instance_id());
+
+    // TODO(Peter): Create a decrement object and send it to the remote endpoint to decrement this objects
+    remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
+    dec_message.object_id = remote_descriptor->encoded_object().object_id();
+    dec_message.tokens    = remote_descriptor->encoded_object().tokens();
+
+    auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+                                         /*Decrement message tag*/);
 
     return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }
@@ -246,6 +249,9 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr
         remote_payload->set_remote_key(ucx_block->packed_remote_keys());
         remote_payload->set_should_cache(should_cache);
     }
+
+    // TODO(Peter): Register the created RemoteDescriptor object with the data plane resources memory manager to keep it
+    // alive until any remote payloads are received
 
     return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(std::move(remote_object)));
 }

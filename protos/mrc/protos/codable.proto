@@ -212,6 +212,7 @@ message RemoteSerializedObject
     // Destination of the remote object
     uint64 instance_id = 1;
 
+    // Unique identifier for this object
     uint64 object_id = 2;
 
     // The number of "lifetime" tokens associated with this object. When the number of tokens reaches 0, the object
