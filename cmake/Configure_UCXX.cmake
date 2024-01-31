@@ -22,6 +22,8 @@ function(morpheus_utils_configure_UCXX)
   morpheus_utils_assert_cpm_initialized()
   set(UCXX_VERSION "0.35.00" CACHE STRING "Which version of UCXX to use.")
 
+  # TODO(MDD): Switch back to the official UCXX repo once the following PR is merged:
+  # https://github.com/rapidsai/ucxx/pull/166
   rapids_cpm_find(ucxx ${UCXX_VERSION}
     GLOBAL_TARGETS
       ucxx ucxx::ucxx ucxx::ucxx_python ucx::ucs ucx::ucp
@@ -31,7 +33,7 @@ function(morpheus_utils_configure_UCXX)
       ${PROJECT_NAME}-core-exports
     CPM_ARGS
       GIT_REPOSITORY          https://github.com/rapidsai/ucxx.git
-      GIT_TAG                 v${UCXX_VERSION}
+      GIT_TAG                 pull-request/166
       GIT_SHALLOW             TRUE
       SOURCE_SUBDIR           cpp
       OPTIONS                 "UCXX_ENABLE_RMM ON"

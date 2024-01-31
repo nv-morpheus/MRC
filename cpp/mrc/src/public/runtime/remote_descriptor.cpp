@@ -174,8 +174,8 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     dec_message.object_id = remote_descriptor->encoded_object().object_id();
     dec_message.tokens    = remote_descriptor->encoded_object().tokens();
 
-    auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
-                                         /*Decrement message tag*/);
+    // auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+    //                                      /*Decrement message tag*/);
 
     return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }
