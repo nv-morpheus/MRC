@@ -1,6 +1,6 @@
 import { IPipelineInstance, ISegmentInstance } from "@mrc/common/entities";
 import { ResourceState } from "@mrc/common/models/resource_state";
-import { generateResourceId, generateSegmentAddress } from "@mrc/common/utils";
+import { generateResourceId, generateSegmentAddress, hashName16 } from "@mrc/common/utils";
 
 export class SegmentInstance implements ISegmentInstance {
    private _instance: ISegmentInstance;
@@ -19,6 +19,10 @@ export class SegmentInstance implements ISegmentInstance {
 
    public get pipelineInstanceId(): string {
       return this._instance.pipelineInstanceId;
+   }
+
+   public get nameHash(): number {
+      return this._instance.nameHash;
    }
 
    public get segmentAddress(): string {
@@ -60,9 +64,11 @@ export class SegmentInstance implements ISegmentInstance {
          id: id,
          executorId: pipelineInstance.executorId,
          pipelineInstanceId: pipelineInstance.id,
+         nameHash: hashName16(name),
          segmentAddress: generateSegmentAddress(
             Number(pipelineInstance.executorId),
             Number(pipelineInstance.id),
+            hashName16(name),
             Number(id)
          ),
          pipelineDefinitionId: pipelineInstance.definitionId,

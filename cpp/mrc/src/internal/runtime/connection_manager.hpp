@@ -42,7 +42,7 @@ class WorkerManager;
  * This class does not own the actual resources, that honor is bestowed on the resources::Manager. This class is
  * constructed and owned by the resources::Manager to ensure validity of the references.
  */
-class ConnectionManager : public SystemResourceManager<control_plane::state::Connection>
+class ConnectionManager : public SystemResourceManager<control_plane::state::Executor>
 {
   public:
     ConnectionManager(Runtime& runtime, InstanceID instance_id);
@@ -51,16 +51,15 @@ class ConnectionManager : public SystemResourceManager<control_plane::state::Con
     PipelinesManager& pipelines_manager() const;
 
   private:
-    control_plane::state::Connection filter_resource(
-        const control_plane::state::ControlPlaneState& state) const override;
+    control_plane::state::Executor filter_resource(const control_plane::state::ControlPlaneState& state) const override;
 
-    bool on_created_requested(control_plane::state::Connection& instance, bool needs_local_update) override;
+    bool on_created_requested(control_plane::state::Executor& instance, bool needs_local_update) override;
 
-    void on_completed_requested(control_plane::state::Connection& instance) override;
+    void on_completed_requested(control_plane::state::Executor& instance) override;
 
-    void on_running_state_updated(control_plane::state::Connection& instance) override;
+    void on_running_state_updated(control_plane::state::Executor& instance) override;
 
-    void on_stopped_requested(control_plane::state::Connection& instance) override;
+    void on_stopped_requested(control_plane::state::Executor& instance) override;
 
     Runtime& m_runtime;
 

@@ -83,7 +83,7 @@ enum class SegmentStates : int
     Completed   = 3,
 };
 
-struct Connection;
+struct Executor;
 struct Worker;
 struct PipelineDefinition;
 struct PipelineInstance;
@@ -114,7 +114,7 @@ struct ControlPlaneNormalizedState : public std::enable_shared_from_this<Control
     std::unique_ptr<protos::ControlPlaneState> root_message;
 
     uint64_t nonce;
-    std::map<uint64_t, Connection> connections;
+    std::map<uint64_t, Executor> executors;
     std::map<uint64_t, Worker> workers;
     std::map<uint64_t, PipelineDefinition> pipeline_definitions;
     std::map<uint64_t, PipelineInstance> pipeline_instances;
@@ -128,7 +128,7 @@ struct ControlPlaneState
 {
     ControlPlaneState(std::unique_ptr<protos::ControlPlaneState> message);
 
-    const std::map<uint64_t, Connection>& connections() const;
+    const std::map<uint64_t, Executor>& connections() const;
 
     const std::map<uint64_t, Worker>& workers() const;
 
@@ -190,7 +190,7 @@ struct ResourceTopLevelMessage : public ControlPlaneTopLevelMessage<ProtoT>
     ResourceState m_state;
 };
 
-struct Connection : public ResourceTopLevelMessage<protos::Connection>
+struct Executor : public ResourceTopLevelMessage<protos::Executor>
 {
     using ResourceTopLevelMessage::ResourceTopLevelMessage;
     // Connection(std::shared_ptr<ControlPlaneNormalizedState> state, const protos::Connection& message);
@@ -217,11 +217,11 @@ struct Worker : public ResourceTopLevelMessage<protos::Worker>
 
     uint64_t id() const;
 
-    std::string worker_address() const;
+    std::string ucx_address() const;
 
-    uint64_t machine_id() const;
+    uint64_t executor_id() const;
 
-    const Connection& connection() const;
+    const Executor& executor() const;
 
     std::map<uint64_t, const SegmentInstance&> assigned_segments() const;
 };
@@ -302,7 +302,7 @@ struct PipelineInstance : public ResourceTopLevelMessage<protos::PipelineInstanc
 
     const PipelineDefinition& definition() const;
 
-    uint64_t machine_id() const;
+    uint64_t executor_id() const;
 
     std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> manifolds() const;
     std::map<uint64_t, std::reference_wrapper<const SegmentInstance>> segments() const;
@@ -326,7 +326,7 @@ struct ManifoldInstance : public ResourceTopLevelMessage<protos::ManifoldInstanc
 
     std::string port_name() const;
 
-    uint64_t machine_id() const;
+    uint64_t executor_id() const;
 
     const PipelineInstance& pipeline_instance() const;
 
@@ -353,7 +353,7 @@ struct SegmentInstance : public ResourceTopLevelMessage<protos::SegmentInstance>
 
     std::string name() const;
 
-    uint32_t address() const;
+    uint32_t segment_address() const;
 
     const Worker& worker() const;
 

@@ -219,10 +219,10 @@ void DataPlaneSystemManager::process_state_update(const control_plane::state::Co
     // Ensure that endpoints exist for all workers
     for (const auto& [worker_id, worker] : state.workers())
     {
-        if (!m_resources->has_endpoint(worker.worker_address()))
+        if (!m_resources->has_endpoint(worker.ucx_address()))
         {
             // Create endpoints for all other available workers
-            m_resources->create_endpoint(worker.worker_address(), worker.machine_id());
+            m_resources->create_endpoint(worker.ucx_address(), worker.executor_id());
         }
     }
 }

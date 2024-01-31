@@ -50,6 +50,27 @@ std::uint16_t port_name_hash(const std::string& name);
 extern SegmentAddress segment_address_encode(SegmentID id, SegmentRank rank);
 
 /**
+ * @brief Encodes a SegmentAddress from a ExecutorID, PipelineID, SegmentHash, and SegmentID
+ * @param [in] exeuctor_id The ID of the executor
+ * @param [in] pipeline_id The ID of the pipeline
+ * @param [in] segment_hash The hash of the segment name
+ * @param [in] segment_id The ID of the segment
+ * @returns SegmentAddress
+ **/
+SegmentAddress2 segment_address_encode2(ExecutorID2 exeuctor_id,
+                                        PipelineID2 pipeline_id,
+                                        SegmentHash2 segment_hash,
+                                        SegmentID2 segment_id);
+
+/**
+ * @brief Decodes a SegmentAddress into a tuple of ExecutorID, PipelineID, SegmentHash, and SegmentID
+ *
+ * @param address
+ * @return std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2>
+ */
+std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2> segment_address_decode2(const SegmentAddress2& address);
+
+/**
  * @brief Decodes a SegmentAddress
  * @param [in] segment_address
  * @returns std::tuple<SegmentID, SegmentRank>

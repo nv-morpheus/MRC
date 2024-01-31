@@ -23,6 +23,7 @@
 #include "internal/pipeline/pipeline_instance.hpp"
 #include "internal/segment/segment_definition.hpp"
 
+#include "mrc/core/addresses.hpp"
 #include "mrc/core/async_service.hpp"
 #include "mrc/core/error.hpp"
 #include "mrc/core/utils.hpp"
@@ -75,6 +76,7 @@ void PipelinesManager::register_defs(
             protos::PipelineConfiguration_SegmentConfiguration seg_config;
 
             seg_config.set_name(segment->name());
+            seg_config.set_name_hash(segment_name_hash(segment->name()));
 
             for (const auto& [egress_port_name, egress_port_info] : segment->egress_port_infos())
             {
@@ -87,7 +89,8 @@ void PipelinesManager::register_defs(
                     // Add the manifold
                     protos::PipelineConfiguration_ManifoldConfiguration manifold;
 
-                    manifold.set_name(egress_port_name);
+                    manifold.set_port_name(egress_port_name);
+                    manifold.set_port_hash(segment_name_hash(egress_port_name));
                     manifold.set_type_id(egress_port_info->type_index.hash_code());
                     manifold.set_type_string(type_name(egress_port_info->type_index));
 
@@ -106,7 +109,8 @@ void PipelinesManager::register_defs(
                     // Add the manifold
                     protos::PipelineConfiguration_ManifoldConfiguration manifold;
 
-                    manifold.set_name(ingress_port_name);
+                    manifold.set_port_name(ingress_port_name);
+                    manifold.set_port_hash(segment_name_hash(ingress_port_name));
                     manifold.set_type_id(ingress_port_info->type_index.hash_code());
                     manifold.set_type_string(type_name(ingress_port_info->type_index));
 
@@ -176,7 +180,7 @@ void PipelinesManager::do_service_start(std::stop_token stop_token)
     completed_promise.get_future().get();
 }
 
-void PipelinesManager::sync_state(const control_plane::state::Connection& connection)
+void PipelinesManager::sync_state(const control_plane::state::Executor& connection)
 {
     // Before creating/removing, sync the state of all children
 

@@ -103,7 +103,7 @@ void WorkerManager::on_running_state_updated(control_plane::state::Worker& insta
     if (m_segments_manager->sync_state(instance))
     {
         // See if our stop condition is met. Wait until a pipeline mapping has been applied
-        if (!instance.connection().mapped_pipeline_definitions().empty() && instance.assigned_segments().empty() &&
+        if (!instance.executor().mapped_pipeline_definitions().empty() && instance.assigned_segments().empty() &&
             this->get_local_actual_status() < control_plane::state::ResourceActualStatus::Completed)
         {
             // If all manifolds and segments have been removed, we can mark ourselves as completed

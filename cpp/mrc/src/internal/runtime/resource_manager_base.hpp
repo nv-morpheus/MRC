@@ -51,7 +51,7 @@ class ResourceManagerBase : public AsyncService, public RuntimeProviderT
       RuntimeProviderT(runtime),
       m_id(id)
     {
-        if constexpr (std::is_same_v<ResourceT, control_plane::state::Connection>)
+        if constexpr (std::is_same_v<ResourceT, control_plane::state::Executor>)
         {
             m_resource_type = "Connections";
         }

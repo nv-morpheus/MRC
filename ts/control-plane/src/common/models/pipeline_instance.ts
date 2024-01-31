@@ -1,4 +1,4 @@
-import { IExecutor, IPipelineInstance, IResourceState, IWorker } from "@mrc/common/entities";
+import { IExecutor, IPipelineInstance } from "@mrc/common/entities";
 import { ResourceState } from "@mrc/common/models/resource_state";
 import { generatePipelineAddress, generateResourceId } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";

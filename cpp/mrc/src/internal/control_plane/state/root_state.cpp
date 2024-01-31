@@ -56,9 +56,9 @@ void ControlPlaneNormalizedState::initialize()
     this->nonce = root_message->nonce();
 
     // For each message type, create a wrapper
-    for (const auto& id : root_message->connections().ids())
+    for (const auto& id : root_message->executors().ids())
     {
-        connections.emplace(id, Connection(this->shared_from_this(), root_message->connections().entities().at(id)));
+        executors.emplace(id, Executor(this->shared_from_this(), root_message->executors().entities().at(id)));
     }
 
     for (const auto& id : root_message->workers().ids())
@@ -111,9 +111,9 @@ ControlPlaneState::ControlPlaneState(std::unique_ptr<protos::ControlPlaneState> 
   m_root_state(ControlPlaneNormalizedState::create(std::move(message)))
 {}
 
-const std::map<uint64_t, Connection>& ControlPlaneState::connections() const
+const std::map<uint64_t, Executor>& ControlPlaneState::connections() const
 {
-    return m_root_state->connections;
+    return m_root_state->executors;
 }
 
 const std::map<uint64_t, Worker>& ControlPlaneState::workers() const
@@ -165,17 +165,17 @@ int32_t ResourceState::ref_count() const
 //   m_message(message)
 // {}
 
-uint64_t Connection::id() const
+uint64_t Executor::id() const
 {
     return m_message.id();
 }
 
-std::string Connection::peer_info() const
+std::string Executor::peer_info() const
 {
     return m_message.peer_info();
 }
 
-std::map<uint64_t, const Worker&> Connection::workers() const
+std::map<uint64_t, const Worker&> Executor::workers() const
 {
     std::map<uint64_t, const Worker&> child_objs;
 
@@ -187,7 +187,7 @@ std::map<uint64_t, const Worker&> Connection::workers() const
     return child_objs;
 }
 
-std::map<uint64_t, const PipelineInstance&> Connection::assigned_pipelines() const
+std::map<uint64_t, const PipelineInstance&> Executor::assigned_pipelines() const
 {
     std::map<uint64_t, const PipelineInstance&> child_objs;
 
@@ -199,7 +199,7 @@ std::map<uint64_t, const PipelineInstance&> Connection::assigned_pipelines() con
     return child_objs;
 }
 
-std::map<uint64_t, const PipelineDefinition&> Connection::mapped_pipeline_definitions() const
+std::map<uint64_t, const PipelineDefinition&> Executor::mapped_pipeline_definitions() const
 {
     std::map<uint64_t, const PipelineDefinition&> child_objs;
 
@@ -223,19 +223,19 @@ uint64_t Worker::id() const
     return m_message.id();
 }
 
-std::string Worker::worker_address() const
+std::string Worker::ucx_address() const
 {
-    return m_message.worker_address();
+    return m_message.ucx_address();
 }
 
-uint64_t Worker::machine_id() const
+uint64_t Worker::executor_id() const
 {
-    return m_message.machine_id();
+    return m_message.executor_id();
 }
 
-const Connection& Worker::connection() const
+const Executor& Worker::executor() const
 {
-    return MAP_AT_WITH_CHECK(m_root_state->connections, this->machine_id());
+    return MAP_AT_WITH_CHECK(m_root_state->executors, this->executor_id());
 }
 
 std::map<uint64_t, const SegmentInstance&> Worker::assigned_segments() const
@@ -392,9 +392,9 @@ const PipelineDefinition& PipelineInstance::definition() const
     return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.definition_id());
 }
 
-uint64_t PipelineInstance::machine_id() const
+uint64_t PipelineInstance::executor_id() const
 {
-    return m_message.machine_id();
+    return m_message.executor_id();
 }
 
 std::map<uint64_t, std::reference_wrapper<const ManifoldInstance>> PipelineInstance::manifolds() const
@@ -436,9 +436,9 @@ std::string ManifoldInstance::port_name() const
     return m_message.port_name();
 }
 
-uint64_t ManifoldInstance::machine_id() const
+uint64_t ManifoldInstance::executor_id() const
 {
-    return m_message.machine_id();
+    return m_message.executor_id();
 }
 
 const PipelineInstance& ManifoldInstance::pipeline_instance() const
@@ -493,9 +493,9 @@ std::string SegmentInstance::name() const
     return m_message.name();
 }
 
-uint32_t SegmentInstance::address() const
+uint32_t SegmentInstance::segment_address() const
 {
-    return m_message.address();
+    return m_message.segment_address();
 }
 
 const Worker& SegmentInstance::worker() const

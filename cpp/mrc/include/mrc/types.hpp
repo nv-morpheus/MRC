@@ -83,12 +83,14 @@ using Tags = std::vector<SegmentAddress>;  // NOLINT
 // All types are 16 bit because they are assigned in increasing order by the control plane and to allow IDs to be
 // combined up to 4x for the addresses
 
-using ExecutorID2  = std::uint16_t;  // 16 bit assigned ID for each executor/machine
-using PartitionID2 = std::uint16_t;  // 16 bit assigned ID for each worker/machine/partition/connection
-using PipelineID2  = std::uint16_t;  // 16 bit assigned ID for each pipelineInstance/pipeline
-using SegmentID2   = std::uint16_t;  // 16 bit assigned ID for each segmentInstance/segment
-using ManifoldID2  = std::uint16_t;  // 16 bit assigned ID for each manifoldInstance/manifold
-using PortID2      = std::uint16_t;  // 16 bit name hash for each port
+using ExecutorID2   = std::uint16_t;  // 16 bit assigned ID for each executor/machine
+using PartitionID2  = std::uint16_t;  // 16 bit assigned ID for each worker/machine/partition/connection
+using PipelineID2   = std::uint16_t;  // 16 bit assigned ID for each pipelineInstance/pipeline
+using SegmentHash2  = std::uint16_t;  // 16 bit hash of segment name
+using SegmentID2    = std::uint16_t;  // 16 bit assigned ID for each segmentInstance/segment
+using ManifoldID2   = std::uint16_t;  // 16 bit assigned ID for each manifoldInstance/manifold
+using ManifoldHash2 = std::uint16_t;  // 16 bit hash of the manifold's port name
+using PortID2       = std::uint16_t;  // 16 bit name hash for each port
 
 // The following lists Address types which are used in MRC. Each address represents a unique instance in the system but
 // also contains information about the parent resources which the instance belongs to. Combining IDs goes from Parent
@@ -99,13 +101,13 @@ using PortID2      = std::uint16_t;  // 16 bit name hash for each port
 using ExecutorAddress2 = std::uint32_t;
 // 16 bit unused + 16 bit PartitionID
 using PartitionAddress2 = std::uint32_t;
-// 16 bit PartitionID + 16 bit PipelineID
+// 16 bit ExecutorID + 16 bit PipelineID
 using PipelineAddress2 = std::uint32_t;
-// 16 bit unused + 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID
+// 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentHash + 16 bit SegmentID
 using SegmentAddress2 = std::uint64_t;
-// 16 bit empty + 16 bit PartitionID + 16 bit PipelineID + 16 bit ManifoldID.
+// 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldHash2 + 16 bit ManifoldID
 using ManifoldAddress2 = std::uint64_t;
-// 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID + 16 bit PortID
+// 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentID + 16 bit PortID
 using PortAddress2 = std::uint64_t;
 
 // NOLINTEND(readability-identifier-naming)

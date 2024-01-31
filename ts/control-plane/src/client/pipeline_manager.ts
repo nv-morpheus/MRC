@@ -11,10 +11,7 @@ import { IPipelineConfiguration, IPipelineMapping, ISegmentMapping } from "@mrc/
 import { MrcTestClient } from "@mrc/client/client";
 import { WorkersManager } from "@mrc/client/workers_manager";
 import {
-   Ack,
    EventType,
-   ManifoldUpdateActualAssignmentsRequest,
-   ManifoldUpdateActualAssignmentsResponse,
    PipelineAddMappingRequest,
    PipelineAddMappingResponse,
    PipelineRegisterConfigRequest,
@@ -133,39 +130,16 @@ export class PipelineManager {
       }
 
       //  Update the PipelineInstance state to assign segment instances
-      const pipeline_instance_state = await this.connectionManager.update_resource_status(
-         this.pipelineInstanceId,
-         "PipelineInstances",
-         ResourceActualStatus.Actual_Created
-      );
 
       const manifoldIds =
          this.connectionManager.getClientState().pipelineInstances!.entities[this.pipelineInstanceId].manifoldIds;
 
       // For each manifold, set it to created
-      const manifolds = await Promise.all(
-         manifoldIds.map(async (s) => {
-            return await this.connectionManager.update_resource_status(
-               s,
-               "ManifoldInstances",
-               ResourceActualStatus.Actual_Created
-            )!;
-         })
-      );
 
       const segmentIds =
          this.connectionManager.getClientState().pipelineInstances!.entities[this.pipelineInstanceId].segmentIds;
 
       // For each segment, set it to created
-      const segments = await Promise.all(
-         segmentIds.map(async (s) => {
-            return await this.connectionManager.update_resource_status(
-               s,
-               "SegmentInstances",
-               ResourceActualStatus.Actual_Created
-            )!;
-         })
-      );
    }
 
    public async ensureResourcesCreated() {

@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace mrc::control_plane::state {
-struct Connection;
+struct Executor;
 struct PipelineInstance;
 }  // namespace mrc::control_plane::state
 namespace mrc::pipeline {
@@ -62,7 +62,7 @@ class PipelinesManager : public AsyncService, public InternalRuntimeProvider
   private:
     void do_service_start(std::stop_token stop_token) override;
 
-    void sync_state(const control_plane::state::Connection& connection);
+    void sync_state(const control_plane::state::Executor& connection);
 
     void create_pipeline(const control_plane::state::PipelineInstance& instance);
     void erase_pipeline(InstanceID pipeline_id);

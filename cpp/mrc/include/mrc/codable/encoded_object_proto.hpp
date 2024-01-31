@@ -88,16 +88,6 @@ class LocalSerializedWrapper
     protos::MemoryDescriptor& add_descriptor();
     size_t add_descriptor(memory::const_buffer_view view, DescriptorKind kind);
 
-    // bool context_acquired() const;
-
-    // obj_idx_t push_context(std::type_index type_index);
-
-    // void pop_context(obj_idx_t object_idx);
-
-    // obj_idx_t push_decode_context(std::type_index type_index) const;
-
-    // void pop_decode_context(obj_idx_t object_idx) const;
-
     // Adds an eager descriptor and copies the data into the protobuf
     idx_t add_eager_descriptor(memory::const_buffer_view view);
 
@@ -109,30 +99,6 @@ class LocalSerializedWrapper
                                        size_t memory_block_size,
                                        void* remote_key,
                                        memory::memory_kind memory_kind);
-
-    // /**
-    //  * @brief Hash of std::type_index for the object at idx
-    //  *
-    //  * @param object_idx
-    //  * @return std::type_index
-    //  */
-    // std::size_t type_index_hash_for_object(const obj_idx_t& object_idx) const;
-
-    // /**
-    //  * @brief Starting index of object at idx
-    //  *
-    //  * @param object_idx
-    //  * @return idx_t
-    //  */
-    // idx_t start_idx_for_object(const obj_idx_t& object_idx) const;
-
-    // /**
-    //  * @brief Parent for object at idx
-    //  *
-    //  * @return std::optional<obj_idx_t> - if nullopt, then the object is a top-level object; otherwise, it is a child
-    //  * object with a parent object at the returned value
-    //  */
-    // std::optional<obj_idx_t> parent_obj_idx_for_object(const obj_idx_t& object_idx) const;
 
     const mrc::codable::protos::SerializedInfo& info() const;
 
@@ -149,16 +115,8 @@ class LocalSerializedWrapper
   private:
     mrc::codable::protos::LocalSerializedObject m_proto;
 
-    // std::vector<SerializedItem> m_objects;
-    // std::vector<SerializedMemoryBlocks> m_descriptors;
-
-    // bool m_context_acquired{false};
-    // mutable std::mutex m_mutex;
-
     mutable size_t m_object_counter;  // Tracks the number of times "push_current_object_idx" has been called
     mutable std::stack<size_t> m_object_idx_stack;
-
-    // mutable std::optional<size_t> m_current_obj_idx{std::nullopt};
 };
 
 }  // namespace mrc::codable

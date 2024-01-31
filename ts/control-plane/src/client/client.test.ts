@@ -8,6 +8,7 @@ import { ConnectionManager } from "@mrc/client/connection_manager";
 import { PipelineManager } from "@mrc/client/pipeline_manager";
 import { WorkersManager } from "@mrc/client/workers_manager";
 import { IPipelineConfiguration } from "@mrc/common/entities";
+import { hashName16 } from "@mrc/common/utils";
 import { PingRequest } from "@mrc/proto/mrc/protos/architect";
 import {
    ManifoldOptions_Policy,
@@ -529,11 +530,13 @@ describe("Pipeline", () => {
          segments: {
             my_seg1: {
                name: "my_seg",
+               nameHash: hashName16("my_seg"),
                egressPorts: [],
                ingressPorts: [],
             },
             my_seg2: {
                name: "my_seg2",
+               nameHash: hashName16("my_seg2"),
                egressPorts: [],
                ingressPorts: [],
             },
@@ -572,16 +575,19 @@ describe("Pipeline", () => {
                egressPorts: ["port1"],
                ingressPorts: [],
                name: "my_seg",
+               nameHash: hashName16("my_seg"),
             },
             my_seg2: {
                egressPorts: [],
                ingressPorts: ["port1"],
                name: "my_seg2",
+               nameHash: hashName16("my_seg2"),
             },
          },
          manifolds: {
             port1: {
-               name: "port1",
+               portName: "port1",
+               portHash: hashName16("port1"),
                typeId: 0,
                typeString: "int",
             },
@@ -732,16 +738,19 @@ describe("Manifold", () => {
             ingressPorts: [],
             egressPorts: ["port1"],
             name: "my_seg1",
+            nameHash: hashName16("my_seg1"),
          },
          my_seg2: {
             ingressPorts: ["port1"],
             egressPorts: [],
             name: "my_seg2",
+            nameHash: hashName16("my_seg2"),
          },
       },
       manifolds: {
          port1: {
-            name: "port1",
+            portName: "port1",
+            portHash: hashName16("port1"),
             typeId: 1234,
             typeString: "int",
             options: {

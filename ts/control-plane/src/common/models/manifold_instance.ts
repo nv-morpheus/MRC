@@ -1,6 +1,6 @@
-import { IManifoldInstance, IPipelineInstance, IResourceState } from "@mrc/common/entities";
+import { IManifoldInstance, IPipelineInstance } from "@mrc/common/entities";
 import { ResourceState } from "@mrc/common/models/resource_state";
-import { generateManifoldAddress, generateResourceId } from "@mrc/common/utils";
+import { generateManifoldAddress, generateResourceId, hashName16 } from "@mrc/common/utils";
 import { ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
 
 export class ManifoldInstance implements IManifoldInstance {
@@ -20,6 +20,10 @@ export class ManifoldInstance implements IManifoldInstance {
 
    public get pipelineInstanceId(): string {
       return this._interface.pipelineInstanceId;
+   }
+
+   public get portHash() {
+      return this._interface.portHash;
    }
 
    public get manifoldAddress(): string {
@@ -65,9 +69,11 @@ export class ManifoldInstance implements IManifoldInstance {
          id: id,
          executorId: pipelineInstance.executorId,
          pipelineInstanceId: pipelineInstance.id,
+         portHash: hashName16(portName),
          manifoldAddress: generateManifoldAddress(
             Number(pipelineInstance.executorId),
             Number(pipelineInstance.id),
+            Number(hashName16(portName)),
             Number(id)
          ),
          pipelineDefinitionId: pipelineInstance.definitionId,

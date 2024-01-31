@@ -428,6 +428,8 @@ export interface PipelineConfiguration_SegmentConfiguration {
   $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration";
   /** Name of the segment */
   name: string;
+  /** Hashed name of the segment. Only the lower 16 bits are used */
+  nameHash: number;
   /** Ingress ports for this segment */
   ingressPorts: string[];
   /** Egress ports for this segment */
@@ -439,7 +441,9 @@ export interface PipelineConfiguration_SegmentConfiguration {
 export interface PipelineConfiguration_ManifoldConfiguration {
   $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration";
   /** Name of the manifold */
-  name: string;
+  portName: string;
+  /** Hashed name of the port. Only the lower 16 bits are used */
+  portHash: number;
   /** TypeID for this manifold */
   typeId: number;
   /** Friendly type string */
@@ -532,6 +536,8 @@ export interface PipelineDefinition_SegmentDefinition {
   parentId: string;
   /** Name of the segment */
   name: string;
+  /** Hashed name of the segment. Only the lower 16 bits are used */
+  nameHash: number;
   /** Manifold definition IDs for attached ingress ports. Manifold Name/ID pair for cross referencing */
   ingressManifoldIds: { [key: string]: string };
   /** Manifold definition IDs for attached egress ports. Manifold Name/ID pair for cross referencing */
@@ -564,6 +570,8 @@ export interface PipelineDefinition_ManifoldDefinition {
   parentId: string;
   /** Port name for matching ingress/egress nodes */
   portName: string;
+  /** Hashed name of the port. Only the lower 16 bits are used */
+  portHash: number;
   /** Segment definition IDs for attached input segments. Segment Name/ID pair for cross referencing */
   inputSegmentIds: { [key: string]: string };
   /** Segment definition IDs for attached egress segments. Segment Name/ID pair for cross referencing */
@@ -647,7 +655,9 @@ export interface SegmentInstance {
   executorId: string;
   /** The parent PipelineID this belongs to */
   pipelineInstanceId: string;
-  /** 16 bit unused + 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentID */
+  /** The hash of the segment name. Only the lower 16 bits are used. Matches the config */
+  nameHash: number;
+  /** 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentHash + 16 bit SegmentID */
   segmentAddress: string;
   /** Pipeline Deinition this belongs to */
   pipelineDefinitionId: string;
@@ -676,7 +686,9 @@ export interface ManifoldInstance {
   executorId: string;
   /** The parent PipelineID this belongs to */
   pipelineInstanceId: string;
-  /** The ManifoldAddress of this instance. 16 bit empty + 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldID. Top 16 bits area always empty */
+  /** The hash of the port name. Only the lower 16 bits are used. Matches the config */
+  portHash: number;
+  /** The ManifoldAddress of this instance. 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldHash2 + 16 bit ManifoldID */
   manifoldAddress: string;
   /** Pipeline Deinition this belongs to */
   pipelineDefinitionId: string;
@@ -1731,6 +1743,7 @@ function createBasePipelineConfiguration_SegmentConfiguration(): PipelineConfigu
   return {
     $type: "mrc.protos.PipelineConfiguration.SegmentConfiguration",
     name: "",
+    nameHash: 0,
     ingressPorts: [],
     egressPorts: [],
     options: undefined,
@@ -1744,14 +1757,17 @@ export const PipelineConfiguration_SegmentConfiguration = {
     if (message.name !== "") {
       writer.uint32(10).string(message.name);
     }
-    for (const v of message.ingressPorts) {
-      writer.uint32(18).string(v!);
+    if (message.nameHash !== 0) {
+      writer.uint32(16).uint32(message.nameHash);
     }
-    for (const v of message.egressPorts) {
+    for (const v of message.ingressPorts) {
       writer.uint32(26).string(v!);
     }
+    for (const v of message.egressPorts) {
+      writer.uint32(34).string(v!);
+    }
     if (message.options !== undefined) {
-      SegmentOptions.encode(message.options, writer.uint32(34).fork()).ldelim();
+      SegmentOptions.encode(message.options, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -1771,21 +1787,28 @@ export const PipelineConfiguration_SegmentConfiguration = {
           message.name = reader.string();
           continue;
         case 2:
-          if (tag !== 18) {
+          if (tag !== 16) {
             break;
           }
 
-          message.ingressPorts.push(reader.string());
+          message.nameHash = reader.uint32();
           continue;
         case 3:
           if (tag !== 26) {
             break;
           }
 
-          message.egressPorts.push(reader.string());
+          message.ingressPorts.push(reader.string());
           continue;
         case 4:
           if (tag !== 34) {
+            break;
+          }
+
+          message.egressPorts.push(reader.string());
+          continue;
+        case 5:
+          if (tag !== 42) {
             break;
           }
 
@@ -1804,6 +1827,7 @@ export const PipelineConfiguration_SegmentConfiguration = {
     return {
       $type: PipelineConfiguration_SegmentConfiguration.$type,
       name: isSet(object.name) ? String(object.name) : "",
+      nameHash: isSet(object.nameHash) ? Number(object.nameHash) : 0,
       ingressPorts: Array.isArray(object?.ingressPorts) ? object.ingressPorts.map((e: any) => String(e)) : [],
       egressPorts: Array.isArray(object?.egressPorts) ? object.egressPorts.map((e: any) => String(e)) : [],
       options: isSet(object.options) ? SegmentOptions.fromJSON(object.options) : undefined,
@@ -1813,6 +1837,7 @@ export const PipelineConfiguration_SegmentConfiguration = {
   toJSON(message: PipelineConfiguration_SegmentConfiguration): unknown {
     const obj: any = {};
     message.name !== undefined && (obj.name = message.name);
+    message.nameHash !== undefined && (obj.nameHash = Math.round(message.nameHash));
     if (message.ingressPorts) {
       obj.ingressPorts = message.ingressPorts.map((e) => e);
     } else {
@@ -1837,6 +1862,7 @@ export const PipelineConfiguration_SegmentConfiguration = {
   ): PipelineConfiguration_SegmentConfiguration {
     const message = createBasePipelineConfiguration_SegmentConfiguration();
     message.name = object.name ?? "";
+    message.nameHash = object.nameHash ?? 0;
     message.ingressPorts = object.ingressPorts?.map((e) => e) || [];
     message.egressPorts = object.egressPorts?.map((e) => e) || [];
     message.options = (object.options !== undefined && object.options !== null)
@@ -1851,7 +1877,8 @@ messageTypeRegistry.set(PipelineConfiguration_SegmentConfiguration.$type, Pipeli
 function createBasePipelineConfiguration_ManifoldConfiguration(): PipelineConfiguration_ManifoldConfiguration {
   return {
     $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration",
-    name: "",
+    portName: "",
+    portHash: 0,
     typeId: 0,
     typeString: "",
     options: undefined,
@@ -1862,17 +1889,20 @@ export const PipelineConfiguration_ManifoldConfiguration = {
   $type: "mrc.protos.PipelineConfiguration.ManifoldConfiguration" as const,
 
   encode(message: PipelineConfiguration_ManifoldConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.name !== "") {
-      writer.uint32(10).string(message.name);
+    if (message.portName !== "") {
+      writer.uint32(10).string(message.portName);
+    }
+    if (message.portHash !== 0) {
+      writer.uint32(16).uint32(message.portHash);
     }
     if (message.typeId !== 0) {
-      writer.uint32(16).uint32(message.typeId);
+      writer.uint32(24).uint32(message.typeId);
     }
     if (message.typeString !== "") {
-      writer.uint32(26).string(message.typeString);
+      writer.uint32(34).string(message.typeString);
     }
     if (message.options !== undefined) {
-      ManifoldOptions.encode(message.options, writer.uint32(34).fork()).ldelim();
+      ManifoldOptions.encode(message.options, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -1889,24 +1919,31 @@ export const PipelineConfiguration_ManifoldConfiguration = {
             break;
           }
 
-          message.name = reader.string();
+          message.portName = reader.string();
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.typeId = reader.uint32();
+          message.portHash = reader.uint32();
           continue;
         case 3:
-          if (tag !== 26) {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.typeId = reader.uint32();
+          continue;
+        case 4:
+          if (tag !== 34) {
             break;
           }
 
           message.typeString = reader.string();
           continue;
-        case 4:
-          if (tag !== 34) {
+        case 5:
+          if (tag !== 42) {
             break;
           }
 
@@ -1924,7 +1961,8 @@ export const PipelineConfiguration_ManifoldConfiguration = {
   fromJSON(object: any): PipelineConfiguration_ManifoldConfiguration {
     return {
       $type: PipelineConfiguration_ManifoldConfiguration.$type,
-      name: isSet(object.name) ? String(object.name) : "",
+      portName: isSet(object.portName) ? String(object.portName) : "",
+      portHash: isSet(object.portHash) ? Number(object.portHash) : 0,
       typeId: isSet(object.typeId) ? Number(object.typeId) : 0,
       typeString: isSet(object.typeString) ? String(object.typeString) : "",
       options: isSet(object.options) ? ManifoldOptions.fromJSON(object.options) : undefined,
@@ -1933,7 +1971,8 @@ export const PipelineConfiguration_ManifoldConfiguration = {
 
   toJSON(message: PipelineConfiguration_ManifoldConfiguration): unknown {
     const obj: any = {};
-    message.name !== undefined && (obj.name = message.name);
+    message.portName !== undefined && (obj.portName = message.portName);
+    message.portHash !== undefined && (obj.portHash = Math.round(message.portHash));
     message.typeId !== undefined && (obj.typeId = Math.round(message.typeId));
     message.typeString !== undefined && (obj.typeString = message.typeString);
     message.options !== undefined &&
@@ -1949,7 +1988,8 @@ export const PipelineConfiguration_ManifoldConfiguration = {
     object: DeepPartial<PipelineConfiguration_ManifoldConfiguration>,
   ): PipelineConfiguration_ManifoldConfiguration {
     const message = createBasePipelineConfiguration_ManifoldConfiguration();
-    message.name = object.name ?? "";
+    message.portName = object.portName ?? "";
+    message.portHash = object.portHash ?? 0;
     message.typeId = object.typeId ?? 0;
     message.typeString = object.typeString ?? "";
     message.options = (object.options !== undefined && object.options !== null)
@@ -2885,6 +2925,7 @@ function createBasePipelineDefinition_SegmentDefinition(): PipelineDefinition_Se
     id: "0",
     parentId: "0",
     name: "",
+    nameHash: 0,
     ingressManifoldIds: {},
     egressManifoldIds: {},
     options: undefined,
@@ -2905,24 +2946,27 @@ export const PipelineDefinition_SegmentDefinition = {
     if (message.name !== "") {
       writer.uint32(26).string(message.name);
     }
+    if (message.nameHash !== 0) {
+      writer.uint32(32).uint32(message.nameHash);
+    }
     Object.entries(message.ingressManifoldIds).forEach(([key, value]) => {
       PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry.encode({
         $type: "mrc.protos.PipelineDefinition.SegmentDefinition.IngressManifoldIdsEntry",
         key: key as any,
         value,
-      }, writer.uint32(34).fork()).ldelim();
+      }, writer.uint32(42).fork()).ldelim();
     });
     Object.entries(message.egressManifoldIds).forEach(([key, value]) => {
       PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry.encode({
         $type: "mrc.protos.PipelineDefinition.SegmentDefinition.EgressManifoldIdsEntry",
         key: key as any,
         value,
-      }, writer.uint32(42).fork()).ldelim();
+      }, writer.uint32(50).fork()).ldelim();
     });
     if (message.options !== undefined) {
-      SegmentOptions.encode(message.options, writer.uint32(50).fork()).ldelim();
+      SegmentOptions.encode(message.options, writer.uint32(58).fork()).ldelim();
     }
-    writer.uint32(58).fork();
+    writer.uint32(66).fork();
     for (const v of message.instanceIds) {
       writer.uint64(v);
     }
@@ -2959,23 +3003,20 @@ export const PipelineDefinition_SegmentDefinition = {
           message.name = reader.string();
           continue;
         case 4:
-          if (tag !== 34) {
+          if (tag !== 32) {
             break;
           }
 
-          const entry4 = PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry.decode(reader, reader.uint32());
-          if (entry4.value !== undefined) {
-            message.ingressManifoldIds[entry4.key] = entry4.value;
-          }
+          message.nameHash = reader.uint32();
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          const entry5 = PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry.decode(reader, reader.uint32());
+          const entry5 = PipelineDefinition_SegmentDefinition_IngressManifoldIdsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
-            message.egressManifoldIds[entry5.key] = entry5.value;
+            message.ingressManifoldIds[entry5.key] = entry5.value;
           }
           continue;
         case 6:
@@ -2983,16 +3024,26 @@ export const PipelineDefinition_SegmentDefinition = {
             break;
           }
 
-          message.options = SegmentOptions.decode(reader, reader.uint32());
+          const entry6 = PipelineDefinition_SegmentDefinition_EgressManifoldIdsEntry.decode(reader, reader.uint32());
+          if (entry6.value !== undefined) {
+            message.egressManifoldIds[entry6.key] = entry6.value;
+          }
           continue;
         case 7:
-          if (tag === 56) {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.options = SegmentOptions.decode(reader, reader.uint32());
+          continue;
+        case 8:
+          if (tag === 64) {
             message.instanceIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 58) {
+          if (tag === 66) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
@@ -3017,6 +3068,7 @@ export const PipelineDefinition_SegmentDefinition = {
       id: isSet(object.id) ? String(object.id) : "0",
       parentId: isSet(object.parentId) ? String(object.parentId) : "0",
       name: isSet(object.name) ? String(object.name) : "",
+      nameHash: isSet(object.nameHash) ? Number(object.nameHash) : 0,
       ingressManifoldIds: isObject(object.ingressManifoldIds)
         ? Object.entries(object.ingressManifoldIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
           acc[key] = String(value);
@@ -3039,6 +3091,7 @@ export const PipelineDefinition_SegmentDefinition = {
     message.id !== undefined && (obj.id = message.id);
     message.parentId !== undefined && (obj.parentId = message.parentId);
     message.name !== undefined && (obj.name = message.name);
+    message.nameHash !== undefined && (obj.nameHash = Math.round(message.nameHash));
     obj.ingressManifoldIds = {};
     if (message.ingressManifoldIds) {
       Object.entries(message.ingressManifoldIds).forEach(([k, v]) => {
@@ -3070,6 +3123,7 @@ export const PipelineDefinition_SegmentDefinition = {
     message.id = object.id ?? "0";
     message.parentId = object.parentId ?? "0";
     message.name = object.name ?? "";
+    message.nameHash = object.nameHash ?? 0;
     message.ingressManifoldIds = Object.entries(object.ingressManifoldIds ?? {}).reduce<{ [key: string]: string }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
@@ -3279,6 +3333,7 @@ function createBasePipelineDefinition_ManifoldDefinition(): PipelineDefinition_M
     id: "0",
     parentId: "0",
     portName: "",
+    portHash: 0,
     inputSegmentIds: {},
     outputSegmentIds: {},
     options: undefined,
@@ -3299,24 +3354,27 @@ export const PipelineDefinition_ManifoldDefinition = {
     if (message.portName !== "") {
       writer.uint32(26).string(message.portName);
     }
+    if (message.portHash !== 0) {
+      writer.uint32(32).uint32(message.portHash);
+    }
     Object.entries(message.inputSegmentIds).forEach(([key, value]) => {
       PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.encode({
         $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.InputSegmentIdsEntry",
         key: key as any,
         value,
-      }, writer.uint32(34).fork()).ldelim();
+      }, writer.uint32(42).fork()).ldelim();
     });
     Object.entries(message.outputSegmentIds).forEach(([key, value]) => {
       PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.encode({
         $type: "mrc.protos.PipelineDefinition.ManifoldDefinition.OutputSegmentIdsEntry",
         key: key as any,
         value,
-      }, writer.uint32(42).fork()).ldelim();
+      }, writer.uint32(50).fork()).ldelim();
     });
     if (message.options !== undefined) {
-      ManifoldOptions.encode(message.options, writer.uint32(50).fork()).ldelim();
+      ManifoldOptions.encode(message.options, writer.uint32(58).fork()).ldelim();
     }
-    writer.uint32(58).fork();
+    writer.uint32(66).fork();
     for (const v of message.instanceIds) {
       writer.uint64(v);
     }
@@ -3353,23 +3411,20 @@ export const PipelineDefinition_ManifoldDefinition = {
           message.portName = reader.string();
           continue;
         case 4:
-          if (tag !== 34) {
+          if (tag !== 32) {
             break;
           }
 
-          const entry4 = PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.decode(reader, reader.uint32());
-          if (entry4.value !== undefined) {
-            message.inputSegmentIds[entry4.key] = entry4.value;
-          }
+          message.portHash = reader.uint32();
           continue;
         case 5:
           if (tag !== 42) {
             break;
           }
 
-          const entry5 = PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.decode(reader, reader.uint32());
+          const entry5 = PipelineDefinition_ManifoldDefinition_InputSegmentIdsEntry.decode(reader, reader.uint32());
           if (entry5.value !== undefined) {
-            message.outputSegmentIds[entry5.key] = entry5.value;
+            message.inputSegmentIds[entry5.key] = entry5.value;
           }
           continue;
         case 6:
@@ -3377,16 +3432,26 @@ export const PipelineDefinition_ManifoldDefinition = {
             break;
           }
 
-          message.options = ManifoldOptions.decode(reader, reader.uint32());
+          const entry6 = PipelineDefinition_ManifoldDefinition_OutputSegmentIdsEntry.decode(reader, reader.uint32());
+          if (entry6.value !== undefined) {
+            message.outputSegmentIds[entry6.key] = entry6.value;
+          }
           continue;
         case 7:
-          if (tag === 56) {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.options = ManifoldOptions.decode(reader, reader.uint32());
+          continue;
+        case 8:
+          if (tag === 64) {
             message.instanceIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 58) {
+          if (tag === 66) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.instanceIds.push(longToString(reader.uint64() as Long));
@@ -3411,6 +3476,7 @@ export const PipelineDefinition_ManifoldDefinition = {
       id: isSet(object.id) ? String(object.id) : "0",
       parentId: isSet(object.parentId) ? String(object.parentId) : "0",
       portName: isSet(object.portName) ? String(object.portName) : "",
+      portHash: isSet(object.portHash) ? Number(object.portHash) : 0,
       inputSegmentIds: isObject(object.inputSegmentIds)
         ? Object.entries(object.inputSegmentIds).reduce<{ [key: string]: string }>((acc, [key, value]) => {
           acc[key] = String(value);
@@ -3433,6 +3499,7 @@ export const PipelineDefinition_ManifoldDefinition = {
     message.id !== undefined && (obj.id = message.id);
     message.parentId !== undefined && (obj.parentId = message.parentId);
     message.portName !== undefined && (obj.portName = message.portName);
+    message.portHash !== undefined && (obj.portHash = Math.round(message.portHash));
     obj.inputSegmentIds = {};
     if (message.inputSegmentIds) {
       Object.entries(message.inputSegmentIds).forEach(([k, v]) => {
@@ -3464,6 +3531,7 @@ export const PipelineDefinition_ManifoldDefinition = {
     message.id = object.id ?? "0";
     message.parentId = object.parentId ?? "0";
     message.portName = object.portName ?? "";
+    message.portHash = object.portHash ?? 0;
     message.inputSegmentIds = Object.entries(object.inputSegmentIds ?? {}).reduce<{ [key: string]: string }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
@@ -4182,6 +4250,7 @@ function createBaseSegmentInstance(): SegmentInstance {
     id: "0",
     executorId: "0",
     pipelineInstanceId: "0",
+    nameHash: 0,
     segmentAddress: "0",
     pipelineDefinitionId: "0",
     name: "",
@@ -4205,30 +4274,33 @@ export const SegmentInstance = {
     if (message.pipelineInstanceId !== "0") {
       writer.uint32(24).uint64(message.pipelineInstanceId);
     }
+    if (message.nameHash !== 0) {
+      writer.uint32(32).uint32(message.nameHash);
+    }
     if (message.segmentAddress !== "0") {
-      writer.uint32(32).uint64(message.segmentAddress);
+      writer.uint32(40).uint64(message.segmentAddress);
     }
     if (message.pipelineDefinitionId !== "0") {
-      writer.uint32(40).int64(message.pipelineDefinitionId);
+      writer.uint32(48).int64(message.pipelineDefinitionId);
     }
     if (message.name !== "") {
-      writer.uint32(50).string(message.name);
+      writer.uint32(58).string(message.name);
     }
     if (message.state !== undefined) {
-      ResourceState.encode(message.state, writer.uint32(58).fork()).ldelim();
+      ResourceState.encode(message.state, writer.uint32(66).fork()).ldelim();
     }
-    writer.uint32(66).fork();
+    writer.uint32(74).fork();
     for (const v of message.egressManifoldInstanceIds) {
       writer.uint64(v);
     }
     writer.ldelim();
-    writer.uint32(74).fork();
+    writer.uint32(82).fork();
     for (const v of message.ingressManifoldInstanceIds) {
       writer.uint64(v);
     }
     writer.ldelim();
     if (message.workerId !== "0") {
-      writer.uint32(80).uint64(message.workerId);
+      writer.uint32(88).uint64(message.workerId);
     }
     return writer;
   },
@@ -4266,37 +4338,44 @@ export const SegmentInstance = {
             break;
           }
 
-          message.segmentAddress = longToString(reader.uint64() as Long);
+          message.nameHash = reader.uint32();
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.pipelineDefinitionId = longToString(reader.int64() as Long);
+          message.segmentAddress = longToString(reader.uint64() as Long);
           continue;
         case 6:
-          if (tag !== 50) {
+          if (tag !== 48) {
             break;
           }
 
-          message.name = reader.string();
+          message.pipelineDefinitionId = longToString(reader.int64() as Long);
           continue;
         case 7:
           if (tag !== 58) {
             break;
           }
 
-          message.state = ResourceState.decode(reader, reader.uint32());
+          message.name = reader.string();
           continue;
         case 8:
-          if (tag === 64) {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.state = ResourceState.decode(reader, reader.uint32());
+          continue;
+        case 9:
+          if (tag === 72) {
             message.egressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 66) {
+          if (tag === 74) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.egressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
@@ -4306,14 +4385,14 @@ export const SegmentInstance = {
           }
 
           break;
-        case 9:
-          if (tag === 72) {
+        case 10:
+          if (tag === 80) {
             message.ingressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
 
             continue;
           }
 
-          if (tag === 74) {
+          if (tag === 82) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
               message.ingressManifoldInstanceIds.push(longToString(reader.uint64() as Long));
@@ -4323,8 +4402,8 @@ export const SegmentInstance = {
           }
 
           break;
-        case 10:
-          if (tag !== 80) {
+        case 11:
+          if (tag !== 88) {
             break;
           }
 
@@ -4345,6 +4424,7 @@ export const SegmentInstance = {
       id: isSet(object.id) ? String(object.id) : "0",
       executorId: isSet(object.executorId) ? String(object.executorId) : "0",
       pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+      nameHash: isSet(object.nameHash) ? Number(object.nameHash) : 0,
       segmentAddress: isSet(object.segmentAddress) ? String(object.segmentAddress) : "0",
       pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
       name: isSet(object.name) ? String(object.name) : "",
@@ -4364,6 +4444,7 @@ export const SegmentInstance = {
     message.id !== undefined && (obj.id = message.id);
     message.executorId !== undefined && (obj.executorId = message.executorId);
     message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    message.nameHash !== undefined && (obj.nameHash = Math.round(message.nameHash));
     message.segmentAddress !== undefined && (obj.segmentAddress = message.segmentAddress);
     message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
     message.name !== undefined && (obj.name = message.name);
@@ -4391,6 +4472,7 @@ export const SegmentInstance = {
     message.id = object.id ?? "0";
     message.executorId = object.executorId ?? "0";
     message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    message.nameHash = object.nameHash ?? 0;
     message.segmentAddress = object.segmentAddress ?? "0";
     message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
     message.name = object.name ?? "";
@@ -4412,6 +4494,7 @@ function createBaseManifoldInstance(): ManifoldInstance {
     id: "0",
     executorId: "0",
     pipelineInstanceId: "0",
+    portHash: 0,
     manifoldAddress: "0",
     pipelineDefinitionId: "0",
     portName: "",
@@ -4436,45 +4519,48 @@ export const ManifoldInstance = {
     if (message.pipelineInstanceId !== "0") {
       writer.uint32(24).uint64(message.pipelineInstanceId);
     }
+    if (message.portHash !== 0) {
+      writer.uint32(32).uint32(message.portHash);
+    }
     if (message.manifoldAddress !== "0") {
-      writer.uint32(32).uint64(message.manifoldAddress);
+      writer.uint32(40).uint64(message.manifoldAddress);
     }
     if (message.pipelineDefinitionId !== "0") {
-      writer.uint32(40).int64(message.pipelineDefinitionId);
+      writer.uint32(48).int64(message.pipelineDefinitionId);
     }
     if (message.portName !== "") {
-      writer.uint32(50).string(message.portName);
+      writer.uint32(58).string(message.portName);
     }
     if (message.state !== undefined) {
-      ResourceState.encode(message.state, writer.uint32(58).fork()).ldelim();
+      ResourceState.encode(message.state, writer.uint32(66).fork()).ldelim();
     }
     Object.entries(message.requestedInputSegments).forEach(([key, value]) => {
       ManifoldInstance_RequestedInputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.RequestedInputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(66).fork()).ldelim();
+      }, writer.uint32(74).fork()).ldelim();
     });
     Object.entries(message.requestedOutputSegments).forEach(([key, value]) => {
       ManifoldInstance_RequestedOutputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.RequestedOutputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(74).fork()).ldelim();
+      }, writer.uint32(82).fork()).ldelim();
     });
     Object.entries(message.actualInputSegments).forEach(([key, value]) => {
       ManifoldInstance_ActualInputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.ActualInputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(82).fork()).ldelim();
+      }, writer.uint32(90).fork()).ldelim();
     });
     Object.entries(message.actualOutputSegments).forEach(([key, value]) => {
       ManifoldInstance_ActualOutputSegmentsEntry.encode({
         $type: "mrc.protos.ManifoldInstance.ActualOutputSegmentsEntry",
         key: key as any,
         value,
-      }, writer.uint32(90).fork()).ldelim();
+      }, writer.uint32(98).fork()).ldelim();
     });
     return writer;
   },
@@ -4512,47 +4598,44 @@ export const ManifoldInstance = {
             break;
           }
 
-          message.manifoldAddress = longToString(reader.uint64() as Long);
+          message.portHash = reader.uint32();
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.pipelineDefinitionId = longToString(reader.int64() as Long);
+          message.manifoldAddress = longToString(reader.uint64() as Long);
           continue;
         case 6:
-          if (tag !== 50) {
+          if (tag !== 48) {
             break;
           }
 
-          message.portName = reader.string();
+          message.pipelineDefinitionId = longToString(reader.int64() as Long);
           continue;
         case 7:
           if (tag !== 58) {
             break;
           }
 
-          message.state = ResourceState.decode(reader, reader.uint32());
+          message.portName = reader.string();
           continue;
         case 8:
           if (tag !== 66) {
             break;
           }
 
-          const entry8 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
-          if (entry8.value !== undefined) {
-            message.requestedInputSegments[entry8.key] = entry8.value;
-          }
+          message.state = ResourceState.decode(reader, reader.uint32());
           continue;
         case 9:
           if (tag !== 74) {
             break;
           }
 
-          const entry9 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
+          const entry9 = ManifoldInstance_RequestedInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry9.value !== undefined) {
-            message.requestedOutputSegments[entry9.key] = entry9.value;
+            message.requestedInputSegments[entry9.key] = entry9.value;
           }
           continue;
         case 10:
@@ -4560,9 +4643,9 @@ export const ManifoldInstance = {
             break;
           }
 
-          const entry10 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
+          const entry10 = ManifoldInstance_RequestedOutputSegmentsEntry.decode(reader, reader.uint32());
           if (entry10.value !== undefined) {
-            message.actualInputSegments[entry10.key] = entry10.value;
+            message.requestedOutputSegments[entry10.key] = entry10.value;
           }
           continue;
         case 11:
@@ -4570,9 +4653,19 @@ export const ManifoldInstance = {
             break;
           }
 
-          const entry11 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
+          const entry11 = ManifoldInstance_ActualInputSegmentsEntry.decode(reader, reader.uint32());
           if (entry11.value !== undefined) {
-            message.actualOutputSegments[entry11.key] = entry11.value;
+            message.actualInputSegments[entry11.key] = entry11.value;
+          }
+          continue;
+        case 12:
+          if (tag !== 98) {
+            break;
+          }
+
+          const entry12 = ManifoldInstance_ActualOutputSegmentsEntry.decode(reader, reader.uint32());
+          if (entry12.value !== undefined) {
+            message.actualOutputSegments[entry12.key] = entry12.value;
           }
           continue;
       }
@@ -4590,6 +4683,7 @@ export const ManifoldInstance = {
       id: isSet(object.id) ? String(object.id) : "0",
       executorId: isSet(object.executorId) ? String(object.executorId) : "0",
       pipelineInstanceId: isSet(object.pipelineInstanceId) ? String(object.pipelineInstanceId) : "0",
+      portHash: isSet(object.portHash) ? Number(object.portHash) : 0,
       manifoldAddress: isSet(object.manifoldAddress) ? String(object.manifoldAddress) : "0",
       pipelineDefinitionId: isSet(object.pipelineDefinitionId) ? String(object.pipelineDefinitionId) : "0",
       portName: isSet(object.portName) ? String(object.portName) : "",
@@ -4626,6 +4720,7 @@ export const ManifoldInstance = {
     message.id !== undefined && (obj.id = message.id);
     message.executorId !== undefined && (obj.executorId = message.executorId);
     message.pipelineInstanceId !== undefined && (obj.pipelineInstanceId = message.pipelineInstanceId);
+    message.portHash !== undefined && (obj.portHash = Math.round(message.portHash));
     message.manifoldAddress !== undefined && (obj.manifoldAddress = message.manifoldAddress);
     message.pipelineDefinitionId !== undefined && (obj.pipelineDefinitionId = message.pipelineDefinitionId);
     message.portName !== undefined && (obj.portName = message.portName);
@@ -4666,6 +4761,7 @@ export const ManifoldInstance = {
     message.id = object.id ?? "0";
     message.executorId = object.executorId ?? "0";
     message.pipelineInstanceId = object.pipelineInstanceId ?? "0";
+    message.portHash = object.portHash ?? 0;
     message.manifoldAddress = object.manifoldAddress ?? "0";
     message.pipelineDefinitionId = object.pipelineDefinitionId ?? "0";
     message.portName = object.portName ?? "";

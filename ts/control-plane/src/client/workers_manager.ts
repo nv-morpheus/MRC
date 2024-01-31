@@ -4,7 +4,7 @@ import "ix/add/asynciterable-operators/finalize";
 import "ix/add/asynciterable-operators/last";
 
 import { stringToBytes, throwExpression } from "@mrc/common/utils";
-import { Ack, EventType, RegisterWorkersRequest, RegisterWorkersResponse } from "@mrc/proto/mrc/protos/architect";
+import { EventType, RegisterWorkersRequest, RegisterWorkersResponse } from "@mrc/proto/mrc/protos/architect";
 
 import { MrcTestClient } from "@mrc/client/client";
 import { ConnectionManager } from "@mrc/client/connection_manager";

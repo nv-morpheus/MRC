@@ -137,7 +137,7 @@ export function packEventResponse(incoming_event: Event, data: UnknownMessage): 
    });
 }
 
-function hashName16(name: string): bigint {
+export function hashName16(name: string) {
    // Implement the fnvla algorighm: https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
    const hash_32_offset = 2_166_136_261n; // 0x811C9DC5
    const hash_32_prime = 16_777_619n; // 0x01000193
@@ -152,7 +152,7 @@ function hashName16(name: string): bigint {
    }
 
    // Only take the last 16 bits
-   return BigInt.asUintN(16, hash_u32);
+   return Number(BigInt.asUintN(16, hash_u32));
 }
 
 // Generates a 64 bit address from 4 16 bit parts. The parts are shifted into place. Part 1 is the most significant and
@@ -179,25 +179,25 @@ export function generatePartitionAddress(partitionId: number): number {
    return generateAddress32(0, partitionId);
 }
 
-export function generatePipelineAddress(partitionId: number, pipelineId: number): number {
-   return generateAddress32(partitionId, pipelineId);
+export function generatePipelineAddress(executorId: number, pipelineId: number): number {
+   return generateAddress32(executorId, pipelineId);
 }
 
-export function generateSegmentAddress(partitionId: number, pipelineId: number, segmentId: number) {
-   return generateAddress64(0, partitionId, pipelineId, segmentId);
+export function generateSegmentAddress(executorId: number, pipelineId: number, segmentHash: number, segmentId: number) {
+   return generateAddress64(executorId, pipelineId, segmentHash, segmentId);
 }
 
-export function generateManifoldAddress(partitionId: number, pipelineId: number, manifoldId: number) {
-   return generateAddress64(0, partitionId, pipelineId, manifoldId);
+export function generateManifoldAddress(executorId: number, pipelineId: number, portHash: number, manifoldId: number) {
+   return generateAddress64(executorId, pipelineId, portHash, manifoldId);
 }
 
-export function generatePortAddress(partitionId: number, pipelineId: number, segmentId: number, portId: number) {
-   return generateAddress64(partitionId, pipelineId, segmentId, portId);
+export function generatePortAddress(executorId: number, pipelineId: number, segmentId: number, portId: number) {
+   return generateAddress64(executorId, pipelineId, segmentId, portId);
 }
 
 export function generateSegmentHash(seg_name: string, worker_id: string): number {
-   const name_hash = hashName16(seg_name);
-   const worker_hash = hashName16(worker_id);
+   const name_hash = BigInt(hashName16(seg_name));
+   const worker_hash = BigInt(hashName16(worker_id));
 
    // Shift the name over 16
    return Number((name_hash << 16n) | worker_hash);

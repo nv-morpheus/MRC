@@ -49,7 +49,7 @@ PipelinesManager& ConnectionManager::pipelines_manager() const
     return *m_pipelines_manager;
 }
 
-control_plane::state::Connection ConnectionManager::filter_resource(
+control_plane::state::Executor ConnectionManager::filter_resource(
     const control_plane::state::ControlPlaneState& state) const
 {
     if (!state.connections().contains(this->id()))
@@ -59,7 +59,7 @@ control_plane::state::Connection ConnectionManager::filter_resource(
     return state.connections().at(this->id());
 }
 
-bool ConnectionManager::on_created_requested(control_plane::state::Connection& instance, bool needs_local_update)
+bool ConnectionManager::on_created_requested(control_plane::state::Executor& instance, bool needs_local_update)
 {
     if (needs_local_update)
     {
@@ -119,7 +119,7 @@ bool ConnectionManager::on_created_requested(control_plane::state::Connection& i
     return true;
 }
 
-void ConnectionManager::on_completed_requested(control_plane::state::Connection& instance)
+void ConnectionManager::on_completed_requested(control_plane::state::Executor& instance)
 {
     LOG(INFO) << "Connection on_completed_requested";
     // // Activate our worker
@@ -131,7 +131,7 @@ void ConnectionManager::on_completed_requested(control_plane::state::Connection&
     // this->runtime().control_plane().await_unary<protos::Ack>(protos::ClientUnaryActivateStream, std::move(resp));
 }
 
-void ConnectionManager::on_running_state_updated(control_plane::state::Connection& instance)
+void ConnectionManager::on_running_state_updated(control_plane::state::Executor& instance)
 {
     m_pipelines_manager->sync_state(instance);
 
@@ -145,7 +145,7 @@ void ConnectionManager::on_running_state_updated(control_plane::state::Connectio
     }
 }
 
-void ConnectionManager::on_stopped_requested(control_plane::state::Connection& instance)
+void ConnectionManager::on_stopped_requested(control_plane::state::Executor& instance)
 {
     this->service_stop();
 }

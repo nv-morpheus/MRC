@@ -164,7 +164,7 @@ describe("Single", () => {
 
          const manifolds = manifoldInstancesSelectByPipelineId(store.getState(), pipeline.id);
 
-         // Update all manifold states as well
+         // Update all manifold states as well to automatically generate segment instances
          for (const m of manifolds) {
             await store.dispatch(
                resourceUpdateActualState("ManifoldInstances", m.id, ResourceActualStatus.Actual_Created)
@@ -175,9 +175,9 @@ describe("Single", () => {
       test("Contains Instance", () => {
          const found = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
-         segmentInstancesSelectByPipelineId(store.getState(), pipeline.id).forEach((s) =>
-            expect(found!.segmentIds).toContain(s.id)
-         );
+         segmentInstancesSelectByPipelineId(store.getState(), pipeline.id).forEach((s) => {
+            expect(found!.segmentIds).toContain(s.id);
+         });
       });
 
       test("Remove Segment", () => {

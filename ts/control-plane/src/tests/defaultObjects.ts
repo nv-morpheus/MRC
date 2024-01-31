@@ -22,6 +22,7 @@ import {
    generateSegmentAddress,
    generateSegmentHash,
    hashProtoMessage,
+   hashName16,
    stringToBytes,
 } from "@mrc/common/utils";
 import {
@@ -58,18 +59,21 @@ export const pipeline_config: IPipelineConfiguration = {
    segments: {
       seg1: {
          name: "seg1",
+         nameHash: hashName16("seg1"),
          egressPorts: ["int_port"],
          ingressPorts: [],
       },
       seg2: {
          name: "seg2",
+         nameHash: hashName16("seg2"),
          egressPorts: [],
          ingressPorts: ["int_port"],
       },
    },
    manifolds: {
       int_port: {
-         name: "int_port",
+         portName: "int_port",
+         portHash: hashName16("int_port"),
          typeId: 0,
          typeString: "int",
          options: {

@@ -192,14 +192,15 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
     // Get a reference to the pipeline we are creating the segment in
     auto& pipeline_def = this->runtime().pipelines_manager().get_definition(instance_state.pipeline_definition().id());
 
-    auto [id, rank] = segment_address_decode(instance_state.address());
-    auto definition = pipeline_def.find_segment(id);
+    auto [executor_id, pipeline_id, segment_hash, segment_id] = segment_address_decode2(
+        instance_state.segment_address());
+    auto definition = pipeline_def.find_segment(segment_hash);
 
     auto [added_iterator, did_add] = m_instances.emplace(
-        instance_state.address(),
+        instance_state.segment_address(),
         std::make_shared<segment::SegmentInstance>(*this,
                                                    definition,
-                                                   instance_state.address(),
+                                                   instance_state.segment_address(),
                                                    instance_state.pipeline_instance().id()));
 
     // Now start as a child service

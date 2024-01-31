@@ -63,9 +63,14 @@ message PackedDescriptor
     MemoryKind memory_kind = 4;
 }
 
+// Represents a chunk of data which is encoded into the message.
 message EagerDescriptor
 {
+    // The bytes of the descriptor
     bytes data = 1;
+
+    // The type of data. i.e. Host, Pinned, Shared, Device, Managed
+    // Should be used to determine the destination of the bytes once deserialized
     MemoryKind memory_kind = 2;
 }
 
@@ -118,6 +123,8 @@ message RemoteDescriptor
     EncodedObject encoded_object = 4;
 }
 
+// A deferred descriptor is a reference to a payload which is not encoded in the message. Instead, the payload is
+// stored in a separate memory location and referenced by the payload_idx
 message DeferredDescriptor
 {
     uint64 payload_idx = 1; // The matching payload index for the deferred descriptor
@@ -138,8 +145,13 @@ message MemoryDescriptor
 // data on the local machine. Converted to a RemotePayload before serialization
 message LocalPayload
 {
+    // The uintptr address of the start point of the payload
     uint64 address = 1;
+
+    // Number of bytes of the payload
     uint64 bytes = 2;
+
+    // The type of data. i.e. Host, Pinned, Shared, Device, Managed
     MemoryKind memory_kind = 3;
 }
 
@@ -153,13 +165,27 @@ message RemotePayload
     // the remote registration cache will associated the remote_key with the entire memory region, thus for
     // for the pool/slab allocators, we should increase our cache hits and avoid the expensive key upacking
 
+    // The instance_id is used to identify the destination remote machine
     uint64 instance_id = 1;
+
+    // The uintptr address of the start point of the payload
     uint64 address = 2;
+
+    // Number of bytes of the payload
     uint64 bytes = 3;
+
+    // The uintptr address of the memory block registered with UCX
     uint64 memory_block_address = 4;
+
+    // The size of the memory block registered with UCX
     uint64 memory_block_size = 5;
+
+    // The UCX hkey for the remote memory region
     bytes remote_key = 6;
+
+    // The type of data. i.e. Host, Pinned, Shared, Device, Managed
     MemoryKind memory_kind = 7;
+
     bool should_cache = 8;
 }
 
@@ -169,19 +195,33 @@ message SerializedInfo{
     google.protobuf.Any meta_data   = 3;
 }
 
+// This object combines the object serialization info with the local payload information. Should only be used to
+// represent an object which currently resides in memory
 message LocalSerializedObject
 {
+    // Information about the object serialization. i.e. the number of internal objects, types of objects, and any
+    // metadata
     SerializedInfo info = 1;
+
+    // The payload stored on local machines associated with this object
     repeated LocalPayload payloads  = 2;
 }
 
 message RemoteSerializedObject
 {
+    // Destination of the remote object
     uint64 instance_id = 1;
+
     uint64 object_id = 2;
+
+    // The number of "lifetime" tokens associated with this object. When the number of tokens reaches 0, the object
+    // is deleted
     uint64 tokens = 3;
 
-    // Similar to LocalDescriptor, but with RemotePayloads instead of LocalPayloads
+    // Information about the object serialization. i.e. the number of internal objects, types of objects, and any
+    // metadata
     SerializedInfo info = 4;
+
+    // The payload stored on remote machines associated with this object
     repeated RemotePayload payloads  = 5;
 }
