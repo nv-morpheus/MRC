@@ -11,9 +11,10 @@ import {
 } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import {
    segmentInstancesRemove,
+   segmentInstancesSelectByPipelineId,
    segmentInstancesUpdateResourceActualState,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import { connection, pipeline, pipeline_def, segments, worker, pipeline_mappings } from "@mrc/tests/defaultObjects";
+import { executor, pipeline, pipeline_def, segments, worker, pipeline_mappings } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import { resourceUpdateActualState } from "@mrc/server/store/slices/resourceActions";
@@ -50,7 +51,7 @@ describe("Empty", () => {
    });
 
    test("Before Definition", () => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       assert.throws(() => {
          store.dispatch(pipelineInstancesAdd(pipeline));
@@ -60,14 +61,14 @@ describe("Empty", () => {
 
 describe("Single", () => {
    beforeEach(async () => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(pipelineDefinitionsAdd(pipeline_def));
 
       store.dispatch(
          pipelineDefinitionsSetMapping({
             definition_id: pipeline_def.id,
-            mapping: pipeline_mappings[connection.id],
+            mapping: pipeline_mappings[executor.id],
          })
       );
 
@@ -96,7 +97,7 @@ describe("Single", () => {
 
       expect(found[0]).toHaveProperty("id", pipeline.id);
       expect(found[0]).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(found[0]).toHaveProperty("connectionId", pipeline.connectionId);
+      expect(found[0]).toHaveProperty("executorId", pipeline.executorId);
       expect(found[0]).toHaveProperty("segmentIds", []);
    });
 
@@ -105,7 +106,7 @@ describe("Single", () => {
 
       expect(found).toHaveProperty("id", pipeline.id);
       expect(found).toHaveProperty("definitionId", pipeline.definitionId);
-      expect(found).toHaveProperty("connectionId", pipeline.connectionId);
+      expect(found).toHaveProperty("executorId", pipeline.executorId);
       expect(found).toHaveProperty("segmentIds", []);
    });
 
@@ -139,14 +140,14 @@ describe("Single", () => {
          store.dispatch(
             pipelineInstancesRemove({
                ...pipeline,
-               connectionId: "1",
+               executorId: "1",
             })
          )
       );
    });
 
    test("Drop Connection", async () => {
-      await store.dispatch(connectionsDropOne({ id: connection.id }));
+      await store.dispatch(connectionsDropOne({ id: executor.id }));
 
       expect(pipelineInstancesSelectAll(store.getState())).toHaveLength(0);
    });
@@ -174,20 +175,24 @@ describe("Single", () => {
       test("Contains Instance", () => {
          const found = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
-         segments.forEach((s) => expect(found!.segmentIds).toContain(s.id));
+         segmentInstancesSelectByPipelineId(store.getState(), pipeline.id).forEach((s) =>
+            expect(found!.segmentIds).toContain(s.id)
+         );
       });
 
       test("Remove Segment", () => {
-         segments.forEach((s) =>
+         const found_segments = segmentInstancesSelectByPipelineId(store.getState(), pipeline.id);
+
+         found_segments.forEach((s) =>
             store.dispatch(
                segmentInstancesUpdateResourceActualState({ resource: s, status: ResourceActualStatus.Actual_Destroyed })
             )
          );
-         segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
+         found_segments.forEach((s) => store.dispatch(segmentInstancesRemove(s)));
 
          const found = pipelineInstancesSelectById(store.getState(), pipeline.id);
 
-         segments.forEach((s) => expect(found?.segmentIds).not.toContain(s.id));
+         found_segments.forEach((s) => expect(found?.segmentIds).not.toContain(s.id));
 
          // Then remove the pipeline
          store.dispatch(pipelineInstancesRemove(pipeline));

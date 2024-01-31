@@ -90,11 +90,11 @@ export class PipelineDefinitionWrapper {
          if (mapping instanceof Array) {
             pipeline_def.mappings = Object.fromEntries(
                mapping.map((m) => {
-                  return [m.connectionId, m];
+                  return [m.executorId, m];
                })
             );
          } else {
-            pipeline_def.mappings[mapping.connectionId] = mapping;
+            pipeline_def.mappings[mapping.executorId] = mapping;
          }
       }
 

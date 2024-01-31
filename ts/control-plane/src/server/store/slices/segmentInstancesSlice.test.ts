@@ -14,7 +14,7 @@ import {
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { workersAdd } from "@mrc/server/store/slices/workersSlice";
 import { RootStore, setupStore } from "@mrc/server/store/store";
-import { connection, pipeline, pipeline_def, segments, segments_map, worker } from "@mrc/tests/defaultObjects";
+import { executor, pipeline, pipeline_def, segments, segments_map, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 let store: RootStore;
@@ -44,7 +44,7 @@ describe("Empty", () => {
    });
 
    test("Before Worker", () => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       assert.throws(() => {
          store.dispatch(segmentInstancesAdd(segments[0]));
@@ -52,7 +52,7 @@ describe("Empty", () => {
    });
 
    test("Before Pipeline", () => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(workersAdd(worker));
 
@@ -64,7 +64,7 @@ describe("Empty", () => {
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(workersAdd(worker));
 
@@ -87,7 +87,7 @@ describe("Single", () => {
          expect(s.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(s.pipelineInstanceId).toEqual(pipeline.id);
          expect(s.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
-         expect(s.connectionId).toEqual(worker.id);
+         expect(s.executorId).toEqual(worker.executorId);
       });
    });
 
@@ -169,7 +169,7 @@ describe("Single", () => {
    });
 
    test("Drop Connection", async () => {
-      await store.dispatch(connectionsDropOne({ id: connection.id }));
+      await store.dispatch(connectionsDropOne({ id: executor.id }));
 
       expect(segmentInstancesSelectAll(store.getState())).toHaveLength(0);
    });

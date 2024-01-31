@@ -27,8 +27,8 @@ import {
    segmentInstancesRemove,
    segmentInstancesSelectById,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
-import { ManifoldInstanceState } from "@mrc/common/models/manifold_instance";
-import { SegmentInstanceState } from "@mrc/common/models/segment_instance";
+import { ManifoldInstance } from "@mrc/common/models/manifold_instance";
+import { SegmentInstance } from "@mrc/common/models/segment_instance";
 
 const pipelineInstancesAdapter = createWrappedEntityAdapter<IPipelineInstance>({
    selectId: (w) => w.id,
@@ -176,8 +176,8 @@ export const {
 } = pipelineInstancesAdapter.getSelectors((state: RootState) => state.pipelineInstances);
 
 const selectByMachineId = createSelector(
-   [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, connectionId: string) => connectionId],
-   (pipelineInstances, connectionId) => pipelineInstances.filter((p) => p.connectionId === connectionId)
+   [pipelineInstancesAdapter.getAll, (state: PipelineInstancesStateType, executorId: string) => executorId],
+   (pipelineInstances, executorId) => pipelineInstances.filter((p) => p.executorId === executorId)
 );
 
 export const pipelineInstancesSelectByMachineId = (state: RootState, connectionId: string) =>
@@ -197,7 +197,7 @@ async function manifoldsFromInstance(
    }
 
    const manifolds = Object.entries(pipeline_def.manifolds).map(([manifold_name, manifold_def]) => {
-      return new ManifoldInstanceState(pipelineInstance, manifold_name);
+      return ManifoldInstance.create(pipelineInstance, manifold_name);
    });
 
    // For each one, make a fork to track progress
@@ -205,7 +205,7 @@ async function manifoldsFromInstance(
       manifolds.map(async (m) => {
          const result = await listenerApi.fork(async () => {
             // Create the manifold
-            listenerApi.dispatch(manifoldInstancesAdd(m));
+            listenerApi.dispatch(manifoldInstancesAdd(m.get_interface()));
 
             // Wait for it to be reported as created
             await listenerApi.condition((_, currentState) => {
@@ -247,16 +247,16 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
    }
 
    // Get the mapping for this machine ID
-   if (!(pipelineInstance.connectionId in pipeline_def.mappings)) {
+   if (!(pipelineInstance.executorId in pipeline_def.mappings)) {
       throw new Error(
-         `Could not find Mapping for Machine: ${pipelineInstance.connectionId}, for Pipeline Definition: ${pipelineInstance.definitionId}`
+         `Could not find Mapping for Machine: ${pipelineInstance.executorId}, for Pipeline Definition: ${pipelineInstance.definitionId}`
       );
    }
 
    // Get the workers for this machine
-   const workers = workersSelectByMachineId(state, pipelineInstance.connectionId);
+   const workers = workersSelectByMachineId(state, pipelineInstance.executorId);
 
-   const mapping = pipeline_def.mappings[pipelineInstance.connectionId];
+   const mapping = pipeline_def.mappings[pipelineInstance.executorId];
 
    // Now determine the segment instances that should be created
    const seg_to_workers = Object.fromEntries(
@@ -286,7 +286,7 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
    const segments = Object.entries(seg_to_workers).flatMap(([seg_name, seg_assignment]) => {
       // For each assignment, create a segment instance
       return seg_assignment.map((wid) => {
-         return new SegmentInstanceState(pipelineInstance, seg_name);
+         return SegmentInstance.create(pipelineInstance, seg_name, wid);
       });
    });
 
@@ -295,7 +295,7 @@ async function segmentsFromInstance(listenerApi: AppListenerAPI, pipelineInstanc
       segments.map(async (s) => {
          const result = await listenerApi.fork(async () => {
             // Create the manifold
-            listenerApi.dispatch(segmentInstancesAdd(s));
+            listenerApi.dispatch(segmentInstancesAdd(s.get_interface()));
 
             // Wait for it to be reported as created
             await listenerApi.condition((_, currentState) => {

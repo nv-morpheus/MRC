@@ -1,5 +1,5 @@
 import {
-   Connection,
+   Executor,
    EgressPort,
    IngressPort,
    ManifoldInstance,
@@ -28,7 +28,7 @@ export interface IResourceInstance {
    state: IResourceState;
 }
 
-export type IConnection = Omit<Connection, "$type" | "state"> & IResourceInstance;
+export type IExecutor = Omit<Executor, "$type" | "state"> & IResourceInstance;
 
 export type IWorker = Omit<Worker, "$type" | "state"> & IResourceInstance;
 
@@ -85,7 +85,7 @@ export type ISegmentInstance = Omit<SegmentInstance, "$type" | "state"> & IResou
 
 export type IManifoldInstance = Omit<ManifoldInstance, "$type" | "state"> & IResourceInstance;
 
-export type ResourceStateTypes = IConnection | IWorker | IPipelineInstance | ISegmentInstance | IManifoldInstance;
+export type ResourceStateTypes = IExecutor | IWorker | IPipelineInstance | ISegmentInstance | IManifoldInstance;
 export type ResourceStateTypeStrings =
    | "Connections"
    | "Workers"

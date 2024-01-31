@@ -1,4 +1,4 @@
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 
 import { IWorker } from "@mrc/common/entities";
 import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
@@ -81,7 +81,7 @@ export const workersSlice = createSlice({
       });
       builder.addCase(segmentInstancesAdd, (state, action) => {
          // For each, update the worker with the new running instance
-         const found = workersAdapter.getOne(state, action.payload.connectionId);
+         const found = workersAdapter.getOne(state, action.payload.workerId);
 
          if (!found) {
             throw new Error("No matching worker ID found");
@@ -90,7 +90,7 @@ export const workersSlice = createSlice({
          found.assignedSegmentIds.push(action.payload.id);
       });
       builder.addCase(segmentInstancesRemove, (state, action) => {
-         const found = workersAdapter.getOne(state, action.payload.connectionId);
+         const found = workersAdapter.getOne(state, action.payload.workerId);
 
          if (found) {
             const index = found.assignedSegmentIds.findIndex((x) => x === action.payload.id);
@@ -136,9 +136,9 @@ export const {
 const selectByMachineId = createSelector(
    [
       (state: WorkersStateType) => workersAdapter.getAll(state),
-      (state: WorkersStateType, connectionId: string) => connectionId,
+      (state: WorkersStateType, executorId: string) => executorId,
    ],
-   (workers, connectionId) => workers.filter((w) => w.connectionId === connectionId)
+   (workers, executorId) => workers.filter((w) => w.executorId === executorId)
 );
 
 export const workersSelectByMachineId = (state: RootState, machine_id: string) =>

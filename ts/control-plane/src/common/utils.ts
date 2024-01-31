@@ -171,6 +171,10 @@ export function generateAddress32(part1: number, part2: number): number {
    return address;
 }
 
+export function generateExecutorAddress(executorId: number): number {
+   return generateAddress32(0, executorId);
+}
+
 export function generatePartitionAddress(partitionId: number): number {
    return generateAddress32(0, partitionId);
 }

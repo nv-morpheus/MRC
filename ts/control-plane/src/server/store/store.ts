@@ -21,7 +21,7 @@ import { workersConfigureSlice } from "@mrc/server/store/slices/workersSlice";
 // Create the root reducer separately so we can extract the RootState type
 const slicesReducer = combineReducers({
    system: systemConfigureSlice(),
-   connections: connectionsConfigureSlice(),
+   executors: connectionsConfigureSlice(),
    workers: workersConfigureSlice(),
    pipelineDefinitions: pipelineDefinitionsConfigureSlice(),
    pipelineInstances: pipelineInstancesConfigureSlice(),

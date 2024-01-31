@@ -116,13 +116,13 @@ export const pipelineDefinitionsSlice = createSlice({
          const mapping = action.payload.mapping;
 
          // Check to make sure we dont already have a matching mapping
-         if (mapping.connectionId in found.mappings) {
+         if (mapping.executorId in found.mappings) {
             throw new Error(
-               `PipelineDefinition with ID: ${action.payload.definition_id}, already contains a mapping for machine ID: ${mapping.connectionId}`
+               `PipelineDefinition with ID: ${action.payload.definition_id}, already contains a mapping for machine ID: ${mapping.executorId}`
             );
          }
 
-         found.mappings[action.payload.mapping.connectionId] = action.payload.mapping;
+         found.mappings[action.payload.mapping.executorId] = action.payload.mapping;
       },
    },
    extraReducers: (builder) => {
@@ -131,8 +131,8 @@ export const pipelineDefinitionsSlice = createSlice({
 
          // Delete all mappings for this worker
          allDefinitions.forEach((d) => {
-            if (action.payload.connectionId in d.mappings) {
-               delete d.mappings[action.payload.connectionId];
+            if (action.payload.executorId in d.mappings) {
+               delete d.mappings[action.payload.executorId];
             }
          });
       });

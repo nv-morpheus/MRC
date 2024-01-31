@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { segmentInstancesDestroy, segmentInstancesSelectByIds } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { systemStartRequest, systemStopRequest } from "@mrc/server/store/slices/systemSlice";
-import { IConnection, IWorker } from "@mrc/common/entities";
+import { IExecutor, IWorker } from "@mrc/common/entities";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
 import {
    manifoldInstancesDestroy,
@@ -19,13 +19,13 @@ import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
 import { pipelineDefinitionsSetMapping } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 
-const connectionsAdapter = createWrappedEntityAdapter<IConnection>({
+const connectionsAdapter = createWrappedEntityAdapter<IExecutor>({
    selectId: (x) => x.id,
 });
 
 function workerAdded(state: ConnectionsStateType, worker: IWorker) {
    // Handle synchronizing a new added worker
-   const found_connection = connectionsAdapter.getOne(state, worker.connectionId);
+   const found_connection = connectionsAdapter.getOne(state, worker.executorId);
 
    if (found_connection) {
       found_connection.workerIds.push(worker.id);
@@ -38,7 +38,7 @@ export const connectionsSlice = createSlice({
    name: "connections",
    initialState: connectionsAdapter.getInitialState(),
    reducers: {
-      add: (state, action: PayloadAction<IConnection>) => {
+      add: (state, action: PayloadAction<IExecutor>) => {
          if (connectionsAdapter.getOne(state, action.payload.id)) {
             throw new Error(`Connection with ID: ${action.payload.id} already exists`);
          }
@@ -53,7 +53,7 @@ export const connectionsSlice = createSlice({
             },
          });
       },
-      remove: (state, action: PayloadAction<IConnection>) => {
+      remove: (state, action: PayloadAction<IExecutor>) => {
          const found = connectionsAdapter.getOne(state, action.payload.id);
 
          if (!found) {
@@ -84,7 +84,7 @@ export const connectionsSlice = createSlice({
       },
       updateResourceRequestedState: (
          state,
-         action: PayloadAction<{ resource: IConnection; status: ResourceRequestedStatus }>
+         action: PayloadAction<{ resource: IExecutor; status: ResourceRequestedStatus }>
       ) => {
          const found = connectionsAdapter.getOne(state, action.payload.resource.id);
 
@@ -97,7 +97,7 @@ export const connectionsSlice = createSlice({
       },
       updateResourceActualState: (
          state,
-         action: PayloadAction<{ resource: IConnection; status: ResourceActualStatus }>
+         action: PayloadAction<{ resource: IExecutor; status: ResourceActualStatus }>
       ) => {
          const found = connectionsAdapter.getOne(state, action.payload.resource.id);
 
@@ -115,7 +115,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(workersRemove, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.executorId);
 
          if (foundConnection) {
             const index = foundConnection.workerIds.findIndex((x) => x === action.payload.id);
@@ -129,7 +129,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineInstancesAdd, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.executorId);
 
          if (foundConnection) {
             foundConnection.assignedPipelineIds.push(action.payload.id);
@@ -139,7 +139,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineInstancesRemove, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.connectionId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.executorId);
 
          if (foundConnection) {
             const index = foundConnection.assignedPipelineIds.findIndex((x) => x === action.payload.id);
@@ -153,7 +153,7 @@ export const connectionsSlice = createSlice({
       });
       builder.addCase(pipelineDefinitionsSetMapping, (state, action) => {
          // Handle removing a worker
-         const foundConnection = connectionsAdapter.getOne(state, action.payload.mapping.connectionId);
+         const foundConnection = connectionsAdapter.getOne(state, action.payload.mapping.executorId);
 
          if (foundConnection) {
             foundConnection.mappedPipelineDefinitions.push(action.payload.definition_id);
@@ -164,7 +164,7 @@ export const connectionsSlice = createSlice({
    },
 });
 
-export function connectionsDropOne(payload: Pick<IConnection, "id">) {
+export function connectionsDropOne(payload: Pick<IExecutor, "id">) {
    return async (dispatch: AppDispatch, getState: AppGetState) => {
       // Get the state once and use that to make sure we are consistent
       const state_snapshot = getState();
@@ -238,7 +238,7 @@ export const {
    selectEntities: connectionsSelectEntities,
    selectIds: connectionsSelectIds,
    selectTotal: connectionsSelectTotal,
-} = connectionsAdapter.getSelectors((state: RootState) => state.connections);
+} = connectionsAdapter.getSelectors((state: RootState) => state.executors);
 
 export function connectionsConfigureSlice() {
    createWatcher(

@@ -7,8 +7,8 @@ import { throwExpression } from "@mrc/common/utils";
 
 import { MrcTestClient } from "@mrc/client/client";
 import {
-   Connection,
    ControlPlaneState,
+   Executor,
    ManifoldInstance,
    PipelineInstance,
    ResourceActualStatus,
@@ -179,7 +179,7 @@ export class ConnectionManager {
       return await unpack_unary_event<ResponseT>(this._response_stream$, this._send_events, message);
    }
 
-   public getResource(id: string, resource_type: "Connections"): Connection | null;
+   public getResource(id: string, resource_type: "Connections"): Executor | null;
    public getResource(id: string, resource_type: "Workers"): Worker | null;
    public getResource(id: string, resource_type: "PipelineInstances"): PipelineInstance | null;
    public getResource(id: string, resource_type: "SegmentInstances"): SegmentInstance | null;
@@ -187,11 +187,11 @@ export class ConnectionManager {
    public getResource(
       id: string,
       resource_type: ResourceStateTypeStrings
-   ): Connection | Worker | PipelineInstance | SegmentInstance | ManifoldInstance | null {
+   ): Executor | Worker | PipelineInstance | SegmentInstance | ManifoldInstance | null {
       // Now return the correct instance from the updated state
       const state = this.getClientState();
       if (resource_type === "Connections") {
-         const entities = state.connections!.entities;
+         const entities = state.executors!.entities;
 
          if (!(id in entities)) {
             return null;
@@ -239,7 +239,7 @@ export class ConnectionManager {
       id: string,
       resource_type: "Connections",
       status: ResourceActualStatus
-   ): Promise<Connection | null>;
+   ): Promise<Executor | null>;
    public async update_resource_status(
       id: string,
       resource_type: "Workers",

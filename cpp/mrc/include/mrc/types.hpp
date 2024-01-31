@@ -83,6 +83,7 @@ using Tags = std::vector<SegmentAddress>;  // NOLINT
 // All types are 16 bit because they are assigned in increasing order by the control plane and to allow IDs to be
 // combined up to 4x for the addresses
 
+using ExecutorID2  = std::uint16_t;  // 16 bit assigned ID for each executor/machine
 using PartitionID2 = std::uint16_t;  // 16 bit assigned ID for each worker/machine/partition/connection
 using PipelineID2  = std::uint16_t;  // 16 bit assigned ID for each pipelineInstance/pipeline
 using SegmentID2   = std::uint16_t;  // 16 bit assigned ID for each segmentInstance/segment
@@ -94,6 +95,8 @@ using PortID2      = std::uint16_t;  // 16 bit name hash for each port
 // (High bits) -> Child (Low bits). Minimum size for addresses is 32 bits to interface with gRPC better. Unused bits
 // should always be 0.
 
+// 16 bit unused + 16 bit ExecutorID
+using ExecutorAddress2 = std::uint32_t;
 // 16 bit unused + 16 bit PartitionID
 using PartitionAddress2 = std::uint32_t;
 // 16 bit PartitionID + 16 bit PipelineID

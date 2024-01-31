@@ -17,7 +17,7 @@ import {
    workersUpdateResourceActualState,
 } from "@mrc/server/store/slices/workersSlice";
 import { RootStore, setupStore } from "@mrc/server/store/store";
-import { connection, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
+import { executor, pipeline, pipeline_def, segments, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 let store: RootStore;
@@ -49,7 +49,7 @@ describe("Empty", () => {
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(workersAdd(worker));
    });
@@ -61,7 +61,7 @@ describe("Single", () => {
 
       expect(found[0].id).toEqual(worker.id);
       expect(found[0].assignedSegmentIds).toEqual([]);
-      expect(found[0].connectionId).toEqual(connection.id);
+      expect(found[0].executorId).toEqual(executor.id);
       expect(found[0].state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
       expect(found[0].partitionAddress).toEqual(worker.partitionAddress);
    });
@@ -73,7 +73,7 @@ describe("Single", () => {
 
       expect(found?.id).toEqual(worker.id);
       expect(found?.assignedSegmentIds).toEqual([]);
-      expect(found?.connectionId).toEqual(connection.id);
+      expect(found?.executorId).toEqual(executor.id);
       expect(found?.state.actualStatus).toEqual(ResourceActualStatus.Actual_Unknown);
       expect(found?.partitionAddress).toEqual(worker.partitionAddress);
    });
@@ -127,7 +127,7 @@ describe("Single", () => {
    });
 
    test("Connection Dropped", async () => {
-      await store.dispatch(connectionsDropOne({ id: connection.id }));
+      await store.dispatch(connectionsDropOne({ id: executor.id }));
 
       expect(workersSelectAll(store.getState())).toHaveLength(0);
    });

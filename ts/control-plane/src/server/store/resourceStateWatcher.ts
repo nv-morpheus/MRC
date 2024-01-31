@@ -38,23 +38,29 @@ export abstract class ResourceStateWatcher<ResourceT extends IResourceInstance, 
             const monitor_instance = listenerApi.fork(async () => {
                while (true) {
                   // Wait for the next update
-                  const [, current_state] = await listenerApi.take((action, currentState, originalState) => {
-                     const currentInstance = this._getResourceInstance(currentState, instanceId);
-                     const originalInstance = this._getResourceInstance(originalState, instanceId);
+                  const [triggered_action, current_state] = await listenerApi.take(
+                     (action, currentState, originalState) => {
+                        const currentInstance = this._getResourceInstance(currentState, instanceId);
+                        const originalInstance = this._getResourceInstance(originalState, instanceId);
 
-                     // If the object has been removed, dont exit. The entire fork will be cancelled
-                     if (!currentInstance || !originalInstance) {
-                        return false;
+                        // If the object has been removed, dont exit. The entire fork will be cancelled
+                        if (!currentInstance || !originalInstance) {
+                           return false;
+                        }
+
+                        return (
+                           resourceActualStatusToNumber(currentInstance.state.actualStatus) >
+                           resourceActualStatusToNumber(originalInstance.state.actualStatus)
+                        );
                      }
-
-                     return (
-                        resourceActualStatusToNumber(currentInstance.state.actualStatus) >
-                        resourceActualStatusToNumber(originalInstance.state.actualStatus)
-                     );
-                  });
+                  );
 
                   if (!current_state.system.requestRunning) {
-                     console.warn("Updating resource outside of a request will lead to undefined behavior!");
+                     console.warn(
+                        `Updating resource outside of a request will lead to undefined behavior! Action: ${String(
+                           triggered_action.type
+                        )}`
+                     );
                   }
 
                   // Get the status of this instance

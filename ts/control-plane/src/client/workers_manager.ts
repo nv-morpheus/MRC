@@ -66,7 +66,7 @@ export class WorkersManager {
       return this._isRunning;
    }
 
-   get connectionId() {
+   get executorId() {
       return this._registerResponse?.machineId ?? throwExpression("Must register first");
    }
 

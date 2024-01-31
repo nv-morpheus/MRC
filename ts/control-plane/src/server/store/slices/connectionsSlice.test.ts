@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
 import { pipelineDefinitionsAdd } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { pipelineInstancesAdd, pipelineInstancesRemove } from "@mrc/server/store/slices/pipelineInstancesSlice";
-import { connection, pipeline, pipeline_def, worker } from "@mrc/tests/defaultObjects";
+import { executor, pipeline, pipeline_def, worker } from "@mrc/tests/defaultObjects";
 import assert from "assert";
 
 import { ResourceActualStatus, ResourceRequestedStatus } from "@mrc/proto/mrc/protos/architect_state";
@@ -32,13 +32,13 @@ describe("Empty", () => {
    });
 
    test("Remove", () => {
-      assert.throws(() => store.dispatch(connectionsRemove(connection)));
+      assert.throws(() => store.dispatch(connectionsRemove(executor)));
    });
 });
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
    });
 
    test("Select All", () => {
@@ -46,17 +46,17 @@ describe("Single", () => {
 
       expect(allConnections).toHaveLength(1);
 
-      expect(allConnections[0]).toHaveProperty("id", connection.id);
-      expect(allConnections[0]).toHaveProperty("peerInfo", connection.peerInfo);
+      expect(allConnections[0]).toHaveProperty("id", executor.id);
+      expect(allConnections[0]).toHaveProperty("peerInfo", executor.peerInfo);
       expect(allConnections[0]).toHaveProperty("workerIds", []);
       expect(allConnections[0]).toHaveProperty("assignedPipelineIds", []);
    });
 
    test("Select One", () => {
-      const foundConnection = connectionsSelectById(store.getState(), connection.id);
+      const foundConnection = connectionsSelectById(store.getState(), executor.id);
 
-      expect(foundConnection).toHaveProperty("id", connection.id);
-      expect(foundConnection).toHaveProperty("peerInfo", connection.peerInfo);
+      expect(foundConnection).toHaveProperty("id", executor.id);
+      expect(foundConnection).toHaveProperty("peerInfo", executor.peerInfo);
       expect(foundConnection).toHaveProperty("workerIds", []);
       expect(foundConnection).toHaveProperty("assignedPipelineIds", []);
    });
@@ -66,26 +66,11 @@ describe("Single", () => {
    });
 
    test("Add Duplicate", () => {
-      assert.throws(() =>
-         store.dispatch(
-            connectionsAdd({
-               id: connection.id,
-               peerInfo: connection.peerInfo,
-               assignedPipelineIds: [],
-               workerIds: [],
-               mappedPipelineDefinitions: [],
-               state: {
-                  actualStatus: ResourceActualStatus.Actual_Created,
-                  refCount: 0,
-                  requestedStatus: ResourceRequestedStatus.Requested_Completed,
-               },
-            })
-         )
-      );
+      assert.throws(() => store.dispatch(connectionsAdd(executor)));
    });
 
    it("Remove Valid ID", () => {
-      store.dispatch(connectionsRemove(connection));
+      store.dispatch(connectionsRemove(executor));
 
       expect(connectionsSelectAll(store.getState())).toHaveLength(0);
    });
@@ -94,7 +79,7 @@ describe("Single", () => {
       assert.throws(() =>
          store.dispatch(
             connectionsRemove({
-               ...connection,
+               ...executor,
                id: "9999",
             })
          )
@@ -107,7 +92,7 @@ describe("Single", () => {
       });
 
       test("Contains Worker ID", () => {
-         expect(connectionsSelectById(store.getState(), connection.id)?.workerIds).toContain(worker.id);
+         expect(connectionsSelectById(store.getState(), executor.id)?.workerIds).toContain(worker.id);
       });
 
       test("Add Duplicate", () => {
@@ -119,13 +104,13 @@ describe("Single", () => {
       test("Remove Worker ID", () => {
          store.dispatch(workersRemove(worker));
 
-         expect(connectionsSelectById(store.getState(), connection.id)?.workerIds).not.toContain(worker.id);
-         expect(connectionsSelectById(store.getState(), connection.id)?.workerIds).toHaveLength(0);
+         expect(connectionsSelectById(store.getState(), executor.id)?.workerIds).not.toContain(worker.id);
+         expect(connectionsSelectById(store.getState(), executor.id)?.workerIds).toHaveLength(0);
       });
 
       test("Remove Connection First", () => {
          assert.throws(() => {
-            store.dispatch(connectionsRemove(connection));
+            store.dispatch(connectionsRemove(executor));
          });
       });
    });
@@ -138,7 +123,7 @@ describe("Single", () => {
       });
 
       test("Contains Pipeline ID", () => {
-         expect(connectionsSelectById(store.getState(), connection.id)?.assignedPipelineIds).toContain(pipeline.id);
+         expect(connectionsSelectById(store.getState(), executor.id)?.assignedPipelineIds).toContain(pipeline.id);
       });
 
       test("Add Duplicate", () => {
@@ -150,13 +135,13 @@ describe("Single", () => {
       test("Remove Pipeline ID", () => {
          store.dispatch(pipelineInstancesRemove(pipeline));
 
-         expect(connectionsSelectById(store.getState(), connection.id)?.assignedPipelineIds).not.toContain(pipeline.id);
-         expect(connectionsSelectById(store.getState(), connection.id)?.assignedPipelineIds).toHaveLength(0);
+         expect(connectionsSelectById(store.getState(), executor.id)?.assignedPipelineIds).not.toContain(pipeline.id);
+         expect(connectionsSelectById(store.getState(), executor.id)?.assignedPipelineIds).toHaveLength(0);
       });
 
       test("Remove Connection First", () => {
          assert.throws(() => {
-            store.dispatch(connectionsRemove(connection));
+            store.dispatch(connectionsRemove(executor));
          });
       });
    });

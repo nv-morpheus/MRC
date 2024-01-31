@@ -24,7 +24,7 @@ import {
 import { createWatcher, ResourceStateWatcherLambda } from "@mrc/server/store/resourceStateWatcher";
 import { AppDispatch, AppGetState, RootState } from "@mrc/server/store/store";
 import { createWrappedEntityAdapter } from "@mrc/server/utils";
-import { ManifoldInstanceState } from "@mrc/common/models/manifold_instance";
+import { ManifoldInstance } from "@mrc/common/models/manifold_instance";
 
 const segmentInstancesAdapter = createWrappedEntityAdapter<ISegmentInstance>({
    selectId: (w) => w.id,
@@ -269,8 +269,8 @@ export const {
 } = segmentInstancesAdapter.getSelectors((state: RootState) => state.segmentInstances);
 
 const selectByWorkerId = createSelector(
-   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, connectionId: string) => connectionId],
-   (segmentInstances, connectionId) => segmentInstances.filter((x) => x.connectionId === connectionId)
+   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, executorId: string) => executorId],
+   (segmentInstances, executorId) => segmentInstances.filter((x) => x.executorId === executorId)
 );
 
 export const segmentInstancesSelectByWorkerId = (state: RootState, worker_id: string) =>
@@ -344,7 +344,7 @@ export function syncManifolds(listenerApi: AppListenerAPI, instance: ISegmentIns
       // See if the manifold already exists
       if (manifold_idx === -1) {
          // Dispatch a new manifold
-         return listenerApi.dispatch(manifoldInstancesAdd(new ManifoldInstanceState(pipeline_instance, port_name)))
+         return listenerApi.dispatch(manifoldInstancesAdd(ManifoldInstance.create(pipeline_instance, port_name)))
             .payload;
       } else {
          return running_manifolds[manifold_idx];

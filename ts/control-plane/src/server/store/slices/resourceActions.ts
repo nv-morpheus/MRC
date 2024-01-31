@@ -146,7 +146,7 @@ export function resourceUpdateActualState(
 
       if (desiredActualStatusNumber > trueRequestedStatusNumber) {
          throw new Error(
-            `${errorPrefix()} Desired actual state Current actual state, ${status}, beyond the allowed value for the current requested state, ${
+            `${errorPrefix()} Desired actual state '${status}' is beyond the allowed value for the current requested state, ${
                instance.state.requestedStatus
             }`
          );

@@ -85,7 +85,7 @@ export class PipelineManager {
       await this.workersManager.ensureRegistered();
 
       const mapping: IPipelineMapping = {
-         connectionId: this.workersManager.connectionId,
+         executorId: this.workersManager.executorId,
          segments: Object.fromEntries(
             Object.entries(this.config.segments).map(([seg_name]) => {
                return [

@@ -19,7 +19,7 @@ import {
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { workersAdd, workersAddMany, workersRemove } from "@mrc/server/store/slices/workersSlice";
 import {
-   connection,
+   executor,
    pipeline,
    pipeline_config,
    pipeline_def,
@@ -144,14 +144,14 @@ describe("Single", () => {
    describe("With Mapping", () => {
       beforeEach(() => {
          // Add a connection and workers
-         store.dispatch(connectionsAdd(connection));
+         store.dispatch(connectionsAdd(executor));
          store.dispatch(workersAddMany(workers));
 
          // Now add a mapping
          store.dispatch(
             pipelineDefinitionsSetMapping({
                definition_id: pipeline_def.id,
-               mapping: pipeline_mappings[workers[0].connectionId],
+               mapping: pipeline_mappings[workers[0].executorId],
             })
          );
       });
@@ -161,7 +161,7 @@ describe("Single", () => {
 
          expectDefined(found);
 
-         expect(found?.mappings).toHaveProperty(workers[0].connectionId);
+         expect(found?.mappings).toHaveProperty(workers[0].executorId);
       });
 
       test("Delete Worker", () => {
@@ -171,13 +171,13 @@ describe("Single", () => {
 
          expectDefined(found);
 
-         expect(found?.mappings).not.toHaveProperty(workers[0].connectionId);
+         expect(found?.mappings).not.toHaveProperty(workers[0].executorId);
       });
    });
 
    describe("With PipelineInstance", () => {
       beforeEach(() => {
-         store.dispatch(connectionsAdd(connection));
+         store.dispatch(connectionsAdd(executor));
 
          // Now add an instance
          store.dispatch(pipelineInstancesAdd(pipeline));

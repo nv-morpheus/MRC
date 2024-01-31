@@ -93,45 +93,56 @@ message ResourceState {
    int32 ref_count = 4;
 }
 
-message Connection {
+message Executor {
+   // The generated ExecutorID for this instance
    uint64 id = 1;
 
-   // Info about the client (IP/Port)
-   string peer_info = 2;
+   // The ExecutorAddress of this worker. 16 bit unused + 16 bit ExecutorID
+   uint32 executor_address = 2;
 
-   // Workers that belong to this machine
-   repeated uint64 worker_ids = 3;
+   // Info about the client (IP/Port)
+   string peer_info = 3;
+
+   // Serialized UCX worker address
+   bytes ucx_address = 4;
 
    // The pipeline instances that are assigned to this machine
-   repeated uint64 assigned_pipeline_ids = 4;
+   repeated uint64 assigned_pipeline_ids = 5;
 
    // The pipeline definitions that are assigned to this machine
-   repeated uint64 mapped_pipeline_definitions = 5;
+   repeated uint64 mapped_pipeline_definitions = 6;
+
+   // The segment instances that are assigned to this worker
+   repeated uint64 assigned_segment_ids = 7;
 
    // Current state
-   ResourceState state = 6;
+   ResourceState state = 8;
+
+   // TODO(MDD): Remove when removing partitions
+   // Workers that belong to this machine
+   repeated uint64 worker_ids = 9;
 }
 
+// TODO(MDD): Remove when removing partitions
 message Worker {
 
    // The generated PartitionID for this instance
    uint64 id = 1;
 
+   // The executor ID associated with this instance
+   uint64 executor_id = 2;
+
    // The PartitionAddress of this worker. 16 bit unused + 16 bit PartitionID
-   uint32 partition_address = 2;
+   uint32 partition_address = 3;
 
    // Serialized UCX worker address
-   bytes ucx_address = 3;
+   bytes ucx_address = 4;
 
    // Current state of the worker
-   ResourceState state = 4;
+   ResourceState state = 5;
 
    // The segment instances that are assigned to this worker
-   repeated uint64 assigned_segment_ids = 5;
-
-   // TODO(MDD): Remove when removing partitions
-   // The connection ID associated with this instance
-   uint64 connection_id = 6;
+   repeated uint64 assigned_segment_ids = 6;
 }
 
 message PipelineConfiguration{
@@ -171,6 +182,7 @@ enum SegmentMappingPolicies
 {
    Disabled = 0; // Do not run this segment for the specified machine ID
    OnePerWorker = 1; // Run one instance of this segment per worker on the specified machine ID
+   OnePerExecutor = 2; // Run one instance of this segment per executor on the specified machine ID
 }
 
 message PipelineMapping {
@@ -187,6 +199,11 @@ message PipelineMapping {
          repeated uint64 worker_ids = 1;
       }
 
+      message ByExecutor {
+         // The executors to assign this segment to
+         repeated uint64 executor_ids = 1;
+      }
+
       // The segment definition ID
       string segment_name = 1;
 
@@ -196,10 +213,13 @@ message PipelineMapping {
 
          // Manually specified
          ByWorker by_worker = 3;
+
+         // Manually specified
+         ByExecutor by_executor = 4;
       }
   }
 
-   uint64 connection_id = 1;
+   uint64 executor_id = 1;
 
    map<string, SegmentMapping> segments = 2;
 }
@@ -260,7 +280,7 @@ message PipelineDefinition {
    // Object that holds all of the configurable properties
    PipelineConfiguration config = 2;
 
-   // Machine IDs to mappings for all connections
+   // Machine IDs to mappings for all executors
    map<uint64, PipelineMapping> mappings = 3;
 
    // Running Pipeline Instance IDs
@@ -277,10 +297,10 @@ message PipelineInstance {
    // Generated ID of the instance
    uint64 id = 1;
 
-   // The parent PartitionID this belongs to
-   uint64 partition_id = 2;
+   // The parent ExecutorID this belongs to
+   uint64 executor_id = 2;
 
-   // The PipelineAddress of this instance. 16 bit PartitionID + 16 bit PipelineID.
+   // The PipelineAddress of this instance. 16 bit ExecutorID + 16 bit PipelineID.
    uint32 pipeline_address = 3;
 
    // Deinition this belongs to
@@ -294,10 +314,6 @@ message PipelineInstance {
 
    // Running Manifold Instance IDs
    repeated uint64 manifold_ids = 7;
-
-   // TODO(MDD): Remove when removing partitions
-   // The connection ID associated with this instance
-   uint64 connection_id = 8;
 }
 
 message SegmentDefinition {
@@ -332,13 +348,13 @@ message SegmentInstance {
    // Generated ID of the instance
    uint64 id = 1;
 
-   // The parent PartitionID this belongs to
-   uint64 partition_id = 2;
+   // The parent ExecutorID this belongs to
+   uint64 executor_id = 2;
 
    // The parent PipelineID this belongs to
    uint64 pipeline_instance_id = 3;
 
-   // 16 bit unused + 16 bit PartitionID + 16 bit PipelineID + 16 bit SegmentID
+   // 16 bit unused + 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentID
    uint64 segment_address = 4;
 
    // Pipeline Deinition this belongs to
@@ -357,21 +373,21 @@ message SegmentInstance {
    repeated uint64 ingress_manifold_instance_ids = 9;
 
    // TODO(MDD): Remove when removing partitions
-   // The connection ID associated with this instance
-   uint64 connection_id = 10;
+   // The worker ID associated with this instance
+   uint64 worker_id = 10;
 }
 
 message ManifoldInstance {
    // Generated ID of the instance
    uint64 id = 1;
 
-   // The parent PartitionID this belongs to
-   uint64 partition_id = 2;
+   // The parent ExecutorID this belongs to
+   uint64 executor_id = 2;
 
    // The parent PipelineID this belongs to
    uint64 pipeline_instance_id = 3;
 
-   // The ManifoldAddress of this instance. 16 bit empty + 16 bit PartitionID + 16 bit PipelineID + 16 bit ManifoldID. Top 16 bits area always empty
+   // The ManifoldAddress of this instance. 16 bit empty + 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldID. Top 16 bits area always empty
    uint64 manifold_address = 4;
 
    // Pipeline Deinition this belongs to
@@ -383,27 +399,23 @@ message ManifoldInstance {
    // The current state of this resource
    ResourceState state = 7;
 
-   // The requested input connections. True = Local, False = Remote
+   // The requested input segments. True = Local, False = Remote
    map<uint64, bool> requested_input_segments = 8;
 
-   // The requested output connections. True = Local, False = Remote
+   // The requested output segments. True = Local, False = Remote
    map<uint64, bool> requested_output_segments = 9;
 
-   // The actual input connections. True = Local, False = Remote
+   // The actual input segments. True = Local, False = Remote
    map<uint64, bool> actual_input_segments = 10;
 
-   // The actual output connections. True = Local, False = Remote
+   // The actual output segments. True = Local, False = Remote
    map<uint64, bool> actual_output_segments = 11;
-
-   // TODO(MDD): Remove when removing partitions
-   // The connection ID associated with this instance
-   uint64 connection_id = 12;
 }
 
 message ControlPlaneState {
-   message ConnectionsState {
+   message ExecutorsState {
       repeated uint64 ids = 1;
-      map<uint64, Connection> entities = 2;
+      map<uint64, Executor> entities = 2;
    }
 
    message WorkerssState {
@@ -437,7 +449,7 @@ message ControlPlaneState {
    }
 
    uint64 nonce = 1;
-   ConnectionsState connections = 2;
+   ExecutorsState executors = 2;
    WorkerssState workers = 3;
    PipelineDefinitionsState pipeline_definitions = 4;
    PipelineInstancesState pipeline_instances = 5;

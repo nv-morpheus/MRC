@@ -7,7 +7,7 @@ import {
 import { pipelineInstancesAdd } from "@mrc/server/store/slices/pipelineInstancesSlice";
 import { workersAdd } from "@mrc/server/store/slices/workersSlice";
 import {
-   connection,
+   executor,
    manifolds,
    manifolds_map,
    pipeline,
@@ -57,7 +57,7 @@ describe("Empty", () => {
    });
 
    test("Before Pipeline", () => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(workersAdd(worker));
 
@@ -69,7 +69,7 @@ describe("Empty", () => {
 
 describe("Single", () => {
    beforeEach(() => {
-      store.dispatch(connectionsAdd(connection));
+      store.dispatch(connectionsAdd(executor));
 
       store.dispatch(workersAdd(worker));
 
@@ -89,7 +89,7 @@ describe("Single", () => {
          expect(m.actualInputSegments).toEqual(manifolds_map[m.portName].actualInputSegments);
          expect(m.actualOutputSegments).toEqual(manifolds_map[m.portName].actualOutputSegments);
          expect(m.id).toEqual(manifolds_map[m.portName].id);
-         expect(m.connectionId).toEqual(manifolds_map[m.portName].connectionId);
+         expect(m.executorId).toEqual(manifolds_map[m.portName].executorId);
          expect(m.pipelineDefinitionId).toEqual(pipeline_def.id);
          expect(m.pipelineInstanceId).toEqual(pipeline.id);
          expect(m.portName).toEqual(manifolds_map[m.portName].portName);
@@ -177,7 +177,7 @@ describe("Single", () => {
    });
 
    test("Drop Connection", async () => {
-      await store.dispatch(connectionsDropOne({ id: connection.id }));
+      await store.dispatch(connectionsDropOne({ id: executor.id }));
 
       expect(manifoldInstancesSelectAll(store.getState())).toHaveLength(0);
    });

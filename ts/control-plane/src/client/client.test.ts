@@ -485,7 +485,7 @@ describe("Worker", () => {
 
       await manager.register();
 
-      expect(manager.connectionId).toBe(connectionManager.connectionId);
+      expect(manager.executorId).toBe(connectionManager.connectionId);
 
       // Need to do deeper checking here
    });
@@ -559,7 +559,7 @@ describe("Pipeline", () => {
 
       expect(foundPipelineInstance).toBeDefined();
 
-      expect(foundPipelineInstance?.connectionId).toEqual(workersManager.connectionManager.connectionId);
+      expect(foundPipelineInstance?.executorId).toEqual(workersManager.connectionManager.connectionId);
 
       // Should be no segments to start
       expect(foundPipelineInstance?.segmentIds).toHaveLength(0);

@@ -1,5 +1,5 @@
 import { ServerDuplexStream } from "@grpc/grpc-js";
-import { IConnection, IWorker } from "@mrc/common/entities";
+import { IExecutor, IWorker } from "@mrc/common/entities";
 import {
    segmentInstancesRequestStop,
    segmentInstancesSelectById,
@@ -84,7 +84,8 @@ import {
    pipelineDefinitionsCreateOrUpdate,
    pipelineDefinitionsSetMapping,
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
-import { PipelineInstanceState } from "@mrc/common/models/pipeline_instance";
+import { PipelineInstance } from "@mrc/common/models/pipeline_instance";
+import { Executor } from "@mrc/common/models/executor";
 
 interface IncomingData {
    msg: Event;
@@ -235,20 +236,9 @@ class Architect implements ArchitectServiceImplementation {
    ): AsyncIterable<DeepPartial<Event>> {
       console.log(`Event stream created for ${context.peer}`);
 
-      const connection: IConnection = {
-         id: generateId(),
-         peerInfo: context.peer,
-         workerIds: [],
-         assignedPipelineIds: [],
-         mappedPipelineDefinitions: [],
-         state: {
-            actualStatus: ResourceActualStatus.Actual_Created,
-            refCount: 0,
-            requestedStatus: ResourceRequestedStatus.Requested_Completed,
-         },
-      };
+      const executor: IExecutor = Executor.create(context.peer).get_interface();
 
-      context.metadata.set("mrc-machine-id", connection.id.toString());
+      context.metadata.set("mrc-machine-id", executor.id.toString());
 
       const store_update_sink = new AsyncSink<Event>();
 
@@ -278,7 +268,7 @@ class Architect implements ArchitectServiceImplementation {
       });
 
       // Create a new connection
-      this._store.dispatch(connectionsAdd(connection));
+      this._store.dispatch(connectionsAdd(executor));
 
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
@@ -288,7 +278,7 @@ class Architect implements ArchitectServiceImplementation {
          event: EventType.ClientEventStreamConnected,
          message: pack(
             ClientConnectedResponse.create({
-               machineId: connection.id,
+               machineId: executor.id,
             })
          ),
       });
@@ -296,7 +286,7 @@ class Architect implements ArchitectServiceImplementation {
       const event_stream = async function* () {
          try {
             for await (const req of stream) {
-               const request_identifier = `Peer:${connection.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${
+               const request_identifier = `Peer:${executor.peerInfo},Event:${eventTypeToJSON(req.event)},Tag:${
                   req.tag
                }`;
 
@@ -311,7 +301,7 @@ class Architect implements ArchitectServiceImplementation {
                   for await (const event of self.do_handle_event(
                      {
                         msg: req,
-                        machineId: connection.id,
+                        machineId: executor.id,
                      },
                      context
                   )) {
@@ -343,7 +333,7 @@ class Architect implements ArchitectServiceImplementation {
             const error = ensureError(err);
             console.log(`Error occurred in stream. Error: ${error.message}`);
          } finally {
-            console.log(`Event stream closed for ${connection.peerInfo}.`);
+            console.log(`Event stream closed for ${executor.peerInfo}.`);
 
             // Input stream has completed so stop pushing events
             store_unsub();
@@ -361,7 +351,7 @@ class Architect implements ArchitectServiceImplementation {
 
          for await (const out_event of combined_iterable) {
             console.log(
-               `Sending event to ${connection.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${
+               `Sending event to ${executor.peerInfo}. EventID: ${eventTypeToJSON(out_event.event)}, Tag: ${
                   out_event.tag
                }`
             );
@@ -371,7 +361,7 @@ class Architect implements ArchitectServiceImplementation {
          const error = ensureError(err);
          console.log(`Error occurred in stream. Error: ${error.message}`);
       } finally {
-         console.log(`All streams closed for ${connection.peerInfo}. Deleting connection.`);
+         console.log(`All streams closed for ${executor.peerInfo}. Deleting connection.`);
 
          // Ensure the other streams are cleaned up
          store_unsub();
@@ -379,7 +369,7 @@ class Architect implements ArchitectServiceImplementation {
          store_update_sink.end();
 
          // Use the Lost Connection action to force all child objects to be removed too
-         await this._store.dispatch(connectionsDropOne(connection));
+         await this._store.dispatch(connectionsDropOne(executor));
       }
    }
 
@@ -410,7 +400,7 @@ class Architect implements ArchitectServiceImplementation {
                const workers: IWorker[] = payload.ucxWorkerAddresses.map((value): IWorker => {
                   return {
                      id: generateId(),
-                     connectionId: event.machineId,
+                     executorId: event.machineId,
                      partitionAddress: 0,
                      ucxAddress: value,
                      state: {
@@ -495,9 +485,9 @@ class Architect implements ArchitectServiceImplementation {
                   throw new Error("`mapping` cannot be undefined");
                }
 
-               if (payload.mapping.connectionId == "0") {
-                  payload.mapping.connectionId = event.machineId;
-               } else if (payload.mapping.connectionId != event.machineId) {
+               if (payload.mapping.executorId == "0") {
+                  payload.mapping.executorId = event.machineId;
+               } else if (payload.mapping.executorId != event.machineId) {
                   throw new Error("Incorrect machineId");
                }
 
@@ -509,16 +499,16 @@ class Architect implements ArchitectServiceImplementation {
                   })
                );
 
-               const connection = connectionsSelectById(this._store.getState(), payload.mapping.connectionId);
+               const connection = connectionsSelectById(this._store.getState(), payload.mapping.executorId);
 
                if (!connection) {
-                  throw new Error(`Could not find connection with ID: ${payload.mapping.connectionId}`);
+                  throw new Error(`Could not find connection with ID: ${payload.mapping.executorId}`);
                }
 
-               const pipeline = new PipelineInstanceState(connection, payload.definitionId);
+               const pipeline = PipelineInstance.create(connection, payload.definitionId);
 
                // Create a pipeline instance with this mapping (Should be moved elsewhere eventually)
-               this._store.dispatch(pipelineInstancesAdd(pipeline));
+               this._store.dispatch(pipelineInstancesAdd(pipeline.get_interface()));
 
                // // Add a pipeline assignment to the machine
                // const addedInstances = this._store.dispatch(
