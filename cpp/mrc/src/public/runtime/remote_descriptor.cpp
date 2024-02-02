@@ -186,16 +186,16 @@ LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapp
   m_value_descriptor(std::move(value_descriptor))
 {}
 
-RemoteDescriptor2::RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
+RemoteDescriptorImpl2::RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
   m_serialized_object(std::move(encoded_object))
 {}
 
-codable::protos::RemoteSerializedObject& RemoteDescriptor2::encoded_object() const
+codable::protos::RemoteSerializedObject& RemoteDescriptorImpl2::encoded_object() const
 {
     return *m_serialized_object;
 }
 
-memory::buffer RemoteDescriptor2::to_bytes(std::shared_ptr<memory::memory_resource> mr) const
+memory::buffer RemoteDescriptorImpl2::to_bytes(std::shared_ptr<memory::memory_resource> mr) const
 {
     // Allocate enough bytes to hold the encoded object
     auto buffer = memory::buffer(m_serialized_object->ByteSizeLong(), mr);
@@ -205,7 +205,7 @@ memory::buffer RemoteDescriptor2::to_bytes(std::shared_ptr<memory::memory_resour
     return buffer;
 }
 
-memory::buffer_view RemoteDescriptor2::to_bytes(memory::buffer_view buffer) const
+memory::buffer_view RemoteDescriptorImpl2::to_bytes(memory::buffer_view buffer) const
 {
     if (!m_serialized_object->SerializeToArray(buffer.data(), buffer.bytes()))
     {
@@ -215,8 +215,9 @@ memory::buffer_view RemoteDescriptor2::to_bytes(memory::buffer_view buffer) cons
     return buffer;
 }
 
-std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr<LocalDescriptor2> local_desc,
-                                                                 data_plane::DataPlaneResources2& data_plane_resources)
+std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
+    std::unique_ptr<LocalDescriptor2> local_desc,
+    data_plane::DataPlaneResources2& data_plane_resources)
 {
     auto remote_object = std::make_unique<codable::protos::RemoteSerializedObject>();
 
@@ -253,10 +254,10 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr
     // TODO(Peter): Register the created RemoteDescriptor object with the data plane resources memory manager to keep it
     // alive until any remote payloads are received
 
-    return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(std::move(remote_object)));
+    return std::shared_ptr<RemoteDescriptorImpl2>(new RemoteDescriptorImpl2(std::move(remote_object)));
 }
 
-std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_bytes(memory::const_buffer_view view)
+std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_bytes(memory::const_buffer_view view)
 {
     auto encoded_obj_proto = std::make_unique<codable::protos::RemoteSerializedObject>();
 
@@ -265,7 +266,40 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_bytes(memory::const_b
         LOG(FATAL) << "Failed to parse EncodedObjectProto from bytes";
     }
 
-    return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(std::move(encoded_obj_proto)));
+    return std::shared_ptr<RemoteDescriptorImpl2>(new RemoteDescriptorImpl2(std::move(encoded_obj_proto)));
+}
+
+RemoteDescriptor2::RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
+  m_impl(new RemoteDescriptorImpl2(std::move(encoded_object)))
+{}
+
+RemoteDescriptor2::RemoteDescriptor2(std::shared_ptr<RemoteDescriptorImpl2> impl) : m_impl(std::move(impl)) {}
+
+codable::protos::RemoteSerializedObject& RemoteDescriptor2::encoded_object() const
+{
+    return m_impl->encoded_object();
+}
+
+memory::buffer RemoteDescriptor2::to_bytes(std::shared_ptr<memory::memory_resource> mr) const
+{
+    return m_impl->to_bytes(mr);
+}
+
+memory::buffer_view RemoteDescriptor2::to_bytes(memory::buffer_view buffer) const
+{
+    return m_impl->to_bytes(buffer);
+}
+
+std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_local(std::unique_ptr<LocalDescriptor2> local_desc,
+                                                                 data_plane::DataPlaneResources2& data_plane_resources)
+{
+    return std::unique_ptr<RemoteDescriptor2>(
+        new RemoteDescriptor2(RemoteDescriptorImpl2::from_local(std::move(local_desc), data_plane_resources)));
+}
+
+std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_bytes(memory::const_buffer_view view)
+{
+    return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(RemoteDescriptorImpl2::from_bytes(view)));
 }
 
 }  // namespace mrc::runtime

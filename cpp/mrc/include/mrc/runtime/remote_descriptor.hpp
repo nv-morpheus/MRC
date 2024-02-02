@@ -276,6 +276,7 @@ T Descriptor::await_decode(std::size_t object_idx)
 
 class LocalDescriptor2;
 class RemoteDescriptor2;
+class RemoteDescriptorImpl2;
 
 class ValueDescriptor
 {
@@ -361,6 +362,28 @@ class LocalDescriptor2
     std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
 };
 
+class RemoteDescriptorImpl2
+{
+  public:
+    codable::protos::RemoteSerializedObject& encoded_object() const;
+
+    memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
+
+    memory::buffer_view to_bytes(memory::buffer_view buffer) const;
+
+    static std::shared_ptr<RemoteDescriptorImpl2> from_local(std::unique_ptr<LocalDescriptor2> local_desc,
+                                                             data_plane::DataPlaneResources2& data_plane_resources);
+
+    static std::shared_ptr<RemoteDescriptorImpl2> from_bytes(memory::const_buffer_view view);
+
+  private:
+    friend class RemoteDescriptor2;
+
+    RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
+
+    std::unique_ptr<codable::protos::RemoteSerializedObject> m_serialized_object;
+};
+
 class RemoteDescriptor2
 {
   public:
@@ -378,7 +401,9 @@ class RemoteDescriptor2
   private:
     RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
 
-    std::unique_ptr<codable::protos::RemoteSerializedObject> m_serialized_object;
+    RemoteDescriptor2(std::shared_ptr<RemoteDescriptorImpl2> impl);
+
+    std::shared_ptr<RemoteDescriptorImpl2> m_impl;
 };
 
 template <typename T>
