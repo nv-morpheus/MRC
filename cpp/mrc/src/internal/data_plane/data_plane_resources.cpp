@@ -363,6 +363,25 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
     return request;
 }
 
+uint64_t DataPlaneResources2::get_next_object_id()
+{
+    auto object_id = m_next_object_id++;
+    while (m_remote_descriptor_by_id.find(object_id) != m_remote_descriptor_by_id.end())
+    {
+        object_id = m_next_object_id++;
+    }
+
+    return object_id;
+}
+
+uint64_t DataPlaneResources2::register_remote_decriptor(
+    std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor)
+{
+    auto object_id = get_next_object_id();
+    remote_descriptor->encoded_object().set_object_id(object_id);
+    return object_id;
+}
+
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
 //                                                             std::size_t bytes,
 //                                                             std::uint64_t tag,

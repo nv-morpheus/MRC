@@ -252,10 +252,11 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
         remote_payload->set_should_cache(should_cache);
     }
 
-    // TODO(Peter): Register the created RemoteDescriptor object with the data plane resources memory manager to keep it
-    // alive until any remote payloads are received
+    auto remote_descriptor = std::shared_ptr<RemoteDescriptorImpl2>(
+        new RemoteDescriptorImpl2(std::move(remote_object)));
+    data_plane_resources.register_remote_decriptor(remote_descriptor);
 
-    return std::shared_ptr<RemoteDescriptorImpl2>(new RemoteDescriptorImpl2(std::move(remote_object)));
+    return remote_descriptor;
 }
 
 std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_bytes(memory::const_buffer_view view)

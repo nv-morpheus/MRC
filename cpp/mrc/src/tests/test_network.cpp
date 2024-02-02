@@ -705,8 +705,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
 
     // Convert the local memory blocks into remote memory blocks
-    auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
+    auto send_remote_descriptor           = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
                                                                          *m_resources);
+    auto send_remote_descriptor_object_id = send_remote_descriptor->encoded_object().object_id();
 
     // TODO(Peter): Check the memory manager to assert that the remote payloads have been registered with the correct
     // number of tokens
@@ -730,10 +731,13 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
                                                                           receive_request->getRecvBuffer()->getSize(),
                                                                           mrc::memory::memory_kind::host});
+    auto recv_remote_descriptor_object_id = recv_remote_descriptor->encoded_object().object_id();
 
     // Convert to a local descriptor
     auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor),
                                                                         *m_resources);
+
+    EXPECT_EQ(send_remote_descriptor_object_id, recv_remote_descriptor_object_id);
 
     // TODO(Peter): After converting to a local descriptor, check that the remote payload has been released from the
     // memory manager and that the original `send_data` object has been destroyed
