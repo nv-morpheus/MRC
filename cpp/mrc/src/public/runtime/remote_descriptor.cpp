@@ -223,6 +223,7 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
 
     // Transfer the info object
     remote_object->set_allocated_info(local_desc->encoded_object().proto().release_info());
+    remote_object->set_instance_id(data_plane_resources.get_instance_id());
 
     // Loop over all local payloads and convert them to remote payloads
 
