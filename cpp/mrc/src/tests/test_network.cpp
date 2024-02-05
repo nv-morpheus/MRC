@@ -75,6 +75,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -84,12 +85,21 @@
 using namespace mrc;
 using namespace mrc::memory::literals;
 
+class DataPlaneResources2Tester : public data_plane::DataPlaneResources2
+{
+  public:
+    std::shared_ptr<runtime::RemoteDescriptorImpl2> get_descriptor(uint64_t object_id)
+    {
+        return m_remote_descriptor_by_id[object_id];
+    }
+};
+
 class TestNetwork : public ::testing::Test
 {
   protected:
     void SetUp() override
     {
-        m_resources = std::make_unique<data_plane::DataPlaneResources2>();
+        m_resources = std::make_unique<DataPlaneResources2Tester>();
 
         m_resources->set_instance_id(42);
 
@@ -119,7 +129,7 @@ class TestNetwork : public ::testing::Test
         }
     }
 
-    std::unique_ptr<data_plane::DataPlaneResources2> m_resources;
+    std::unique_ptr<DataPlaneResources2Tester> m_resources;
     std::shared_ptr<ucxx::Endpoint> m_loopback_endpoint;
 };
 
@@ -709,11 +719,12 @@ TEST_F(TestNetwork, TransferFullDescriptors)
                                                                          *m_resources);
     auto send_remote_descriptor_object_id = send_remote_descriptor->encoded_object().object_id();
 
-    // TODO(Peter): Check the memory manager to assert that the remote payloads have been registered with the correct
-    // number of tokens
+    // Check that remote payloads were registered with `DataPlaneResources2` with the correct number of tokens.
+    EXPECT_EQ(send_remote_descriptor->encoded_object().tokens(), std::numeric_limits<uint64_t>::max());
 
     // Get the serialized data
-    auto serialized_data = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
+    auto serialized_data   = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
+    send_remote_descriptor = nullptr;
 
     auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
@@ -724,8 +735,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
         m_resources->progress();
     }
 
-    // TODO(Peter): After sending, assert that the object's payloads are still alive (as well as the object). May need
-    // to convert the `send_data` object to a shared_ptr and use a weak_ptr to determine lifetime
+    // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
+    // invalid once `DataPlaneResources2` releases it.
+    std::weak_ptr<runtime::RemoteDescriptorImpl2> registered_send_remote_descriptor = m_resources->get_descriptor(
+        send_remote_descriptor_object_id);
+    EXPECT_NE(registered_send_remote_descriptor.lock(), nullptr);
 
     // Create a remote descriptor from the received data
     auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
@@ -739,8 +753,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     EXPECT_EQ(send_remote_descriptor_object_id, recv_remote_descriptor_object_id);
 
-    // TODO(Peter): After converting to a local descriptor, check that the remote payload has been released from the
-    // memory manager and that the original `send_data` object has been destroyed
+    // Process remote decrement messages.
+    m_resources->decrement();
+
+    // Check that the remote send descriptor is now invalid, i.e., released by `DataPlaneResources2`.
+    EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
 
     // Convert back into the value descriptor
     auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(

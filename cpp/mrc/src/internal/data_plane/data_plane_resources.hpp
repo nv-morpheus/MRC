@@ -194,6 +194,8 @@ class DataPlaneResources2
 
     uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
 
+    void decrement();
+
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
 
@@ -206,7 +208,6 @@ class DataPlaneResources2
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
-    std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
     uint64_t m_next_object_id{0};
 
     // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
@@ -214,6 +215,9 @@ class DataPlaneResources2
     // m_inbound_port_channels;
 
     uint64_t get_next_object_id();
+
+  protected:
+    std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
 };
 
 }  // namespace mrc::data_plane

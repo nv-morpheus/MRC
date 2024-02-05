@@ -21,6 +21,7 @@
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/utils.hpp"
@@ -379,7 +380,40 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
 {
     auto object_id = get_next_object_id();
     remote_descriptor->encoded_object().set_object_id(object_id);
+    m_remote_descriptor_by_id[object_id] = remote_descriptor;
     return object_id;
+}
+
+void DataPlaneResources2::decrement()
+{
+    std::map<std::shared_ptr<ucxx::Endpoint>, std::shared_ptr<ucxx::Request>> probeRequests;
+    for (auto& ep_pair : m_endpoints_by_address)
+    {
+        auto ep     = ep_pair.second;
+        auto worker = ep->getWorker();
+        if (worker->tagProbe(0))
+        {
+            remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
+
+            auto decrement_request = ep->tagRecv(&dec_message,
+                                                 sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+                                                 0);
+            while (!decrement_request->isCompleted())
+                worker->progress();
+
+            if (dec_message.tokens > 0)
+            {
+                auto remote_descriptor = m_remote_descriptor_by_id[dec_message.object_id];
+                auto tokens            = remote_descriptor->encoded_object().tokens();
+                tokens -= dec_message.tokens;
+                remote_descriptor->encoded_object().set_tokens(tokens);
+                if (tokens == 0)
+                {
+                    m_remote_descriptor_by_id.erase(dec_message.object_id);
+                }
+            }
+        }
+    }
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,

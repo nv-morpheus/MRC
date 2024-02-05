@@ -36,6 +36,7 @@
 #include <ucxx/api.h>
 
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -169,13 +170,13 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     // For the remote descriptor message, send decrement to the remote resources
     auto ep = data_plane_resources.find_endpoint(remote_descriptor->encoded_object().instance_id());
 
-    // TODO(Peter): Create a decrement object and send it to the remote endpoint to decrement this objects
     remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
     dec_message.object_id = remote_descriptor->encoded_object().object_id();
     dec_message.tokens    = remote_descriptor->encoded_object().tokens();
 
-    // auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
-    //                                      /*Decrement message tag*/);
+    // TODO(Peter): Settle on message type, probably custom AM implementation in UCXX
+    // TODO(Peter): Ensure completion immediately or push message to a pool to ensure completion later
+    auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage), 0);
 
     return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }
@@ -224,6 +225,7 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
     // Transfer the info object
     remote_object->set_allocated_info(local_desc->encoded_object().proto().release_info());
     remote_object->set_instance_id(data_plane_resources.get_instance_id());
+    remote_object->set_tokens(std::numeric_limits<uint64_t>::max());
 
     // Loop over all local payloads and convert them to remote payloads
 
