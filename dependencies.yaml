@@ -38,13 +38,11 @@ files:
     includes:
       - checks
 
-
 channels:
   - conda-forge
   - rapidsai
-  - nvidia/label/cuda-12.1.1
-  - nvidia
   - rapidsai-nightly
+  - nvidia
 
 dependencies:
 
