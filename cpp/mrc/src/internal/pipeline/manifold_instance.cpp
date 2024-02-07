@@ -22,6 +22,7 @@
 #include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
+#include "mrc/core/addresses.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
@@ -64,22 +65,22 @@ const std::string& ManifoldInstance::port_name() const
     return m_definition->name();
 }
 
-void ManifoldInstance::register_local_output(SegmentAddress address,
+void ManifoldInstance::register_local_output(PortAddress2 port_address,
                                              std::shared_ptr<segment::IngressPortBase> ingress_port)
 {
     // CHECK(!m_local_output.contains(address)) << "Local segment with address: " << address << ", already registered";
 
     // m_local_output[address] = ingress_port;
 
-    auto incoming_channel = this->runtime().data_plane().get_readable_ingress_channel(address);
+    auto incoming_channel = this->runtime().data_plane().get_readable_ingress_channel(port_address);
 
     // Save the channel to keep it alive
-    m_input_port_nodes[address] = incoming_channel;
+    m_input_port_nodes[port_address] = incoming_channel;
 
     mrc::make_edge(*incoming_channel, ingress_port->get_upstream_sink());
 }
 
-void ManifoldInstance::register_local_input(SegmentAddress address,
+void ManifoldInstance::register_local_input(PortAddress2 port_address,
                                             std::shared_ptr<segment::EgressPortBase> egress_port)
 {
     // CHECK(!m_local_input.contains(address)) << "Local segment with address: " << address << ", already registered";
@@ -92,12 +93,12 @@ void ManifoldInstance::register_local_input(SegmentAddress address,
     mrc::make_edge(egress_port->get_downstream_source(), outgoing_channel);
 }
 
-void ManifoldInstance::unregister_local_output(SegmentAddress address)
+void ManifoldInstance::unregister_local_output(PortAddress2 port_address)
 {
     throw std::runtime_error("Not implemented");
 }
 
-void ManifoldInstance::unregister_local_input(SegmentAddress address)
+void ManifoldInstance::unregister_local_input(PortAddress2 port_address)
 {
     throw std::runtime_error("Not implemented");
 }
@@ -157,51 +158,67 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     }
 
     std::vector<manifold::ManifoldPolicyInputInfo> manifold_inputs;
-    std::map<SegmentAddress, manifold::ManifoldPolicyOutputInfo> manifold_outputs;
+    std::map<PortAddress2, manifold::ManifoldPolicyOutputInfo> manifold_outputs;
 
-    std::map<InstanceID, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+    std::map<PortAddress2, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         input_port_nodes;
-    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+    std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         output_port_nodes;
 
     // First, loop over all requested inputs and hook these up so they are available
     for (const auto& [seg_id, is_local] : instance.requested_input_segments())
     {
+        SegmentAddress2 seg_address(seg_id);
+
+        PortAddress2 port_address(seg_address.executor_id,
+                                  seg_address.pipeline_id,
+                                  seg_address.segment_id,
+                                  port_name_hash(this->port_name()));
+
         if (is_local)
         {
             // Use nullptr if its local (because we never see the internal connection)
-            manifold_inputs.emplace_back(seg_id, true, 1, nullptr);
+            manifold_inputs.emplace_back(port_address, true, 1, nullptr);
         }
         else
         {
-            auto remote_edge = this->runtime().data_plane().get_readable_ingress_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_readable_ingress_channel(port_address);
 
-            input_port_nodes[seg_id] = remote_edge;
+            input_port_nodes[port_address] = remote_edge;
 
-            manifold_inputs.emplace_back(seg_id, false, 1, nullptr);
+            manifold_inputs.emplace_back(port_address, false, 1, nullptr);
         }
     }
 
     // Now loop over the requested outputs
     for (const auto& [seg_id, is_local] : instance.requested_output_segments())
     {
+        SegmentAddress2 seg_address(seg_id);
+
+        PortAddress2 port_address(seg_address.executor_id,
+                                  seg_address.pipeline_id,
+                                  seg_address.segment_id,
+                                  port_name_hash(this->port_name()));
+
         if (is_local)
         {
             // Gets the same queue that the data plane uses to send data to the manifold
-            auto remote_edge = this->runtime().data_plane().get_writable_ingress_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_writable_ingress_channel(port_address);
 
-            output_port_nodes[seg_id] = remote_edge;
+            output_port_nodes[port_address] = remote_edge;
 
-            manifold_outputs.emplace(seg_id, manifold::ManifoldPolicyOutputInfo(seg_id, true, 1, remote_edge.get()));
+            manifold_outputs.emplace(port_address,
+                                     manifold::ManifoldPolicyOutputInfo(port_address, true, 1, remote_edge.get()));
         }
         else
         {
             // Get an edge from the data plane for this particular, remote segment
-            auto remote_edge = this->runtime().data_plane().get_writable_egress_channel(seg_id);
+            auto remote_edge = this->runtime().data_plane().get_writable_egress_channel(port_address);
 
-            output_port_nodes[seg_id] = remote_edge;
+            output_port_nodes[port_address] = remote_edge;
 
-            manifold_outputs.emplace(seg_id, manifold::ManifoldPolicyOutputInfo(seg_id, false, 1, remote_edge.get()));
+            manifold_outputs.emplace(port_address,
+                                     manifold::ManifoldPolicyOutputInfo(port_address, false, 1, remote_edge.get()));
         }
     }
 

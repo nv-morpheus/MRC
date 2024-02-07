@@ -1,4 +1,5 @@
 #include "mrc/protos/architect_state.pb.h"
+#include "mrc/types.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -330,9 +331,9 @@ struct ManifoldInstance : public ResourceTopLevelMessage<protos::ManifoldInstanc
 
     const PipelineInstance& pipeline_instance() const;
 
-    std::map<uint32_t, bool> requested_output_segments() const;
+    std::map<SegmentAddressCombined2, bool> requested_output_segments() const;
 
-    std::map<uint32_t, bool> requested_input_segments() const;
+    std::map<SegmentAddressCombined2, bool> requested_input_segments() const;
 
   private:
     // std::shared_ptr<ControlPlaneNormalizedState> m_root_state;
@@ -349,11 +350,15 @@ struct SegmentInstance : public ResourceTopLevelMessage<protos::SegmentInstance>
 
     uint64_t id() const;
 
+    uint64_t executor_id() const;
+
+    uint64_t pipeline_instance_id() const;
+
+    uint64_t segment_address() const;
+
     const PipelineDefinition& pipeline_definition() const;
 
     std::string name() const;
-
-    uint32_t segment_address() const;
 
     const Worker& worker() const;
 

@@ -84,19 +84,20 @@ std::tuple<SegmentID, SegmentRank> segment_address_decode(const SegmentAddress& 
     return std::make_tuple(id, rank);
 }
 
-SegmentAddress2 segment_address_encode2(ExecutorID2 exeuctor_id,
-                                        PipelineID2 pipeline_id,
-                                        SegmentHash2 segment_hash,
-                                        SegmentID2 segment_id)
+SegmentAddressCombined2 segment_address_encode2(ExecutorID2 exeuctor_id,
+                                                PipelineID2 pipeline_id,
+                                                SegmentHash2 segment_hash,
+                                                SegmentID2 segment_id)
 {
-    SegmentAddress2 e = exeuctor_id;
-    SegmentAddress2 p = pipeline_id;
-    SegmentAddress2 h = segment_hash;
-    SegmentAddress2 i = segment_id;
+    SegmentAddressCombined2 e = exeuctor_id;
+    SegmentAddressCombined2 p = pipeline_id;
+    SegmentAddressCombined2 h = segment_hash;
+    SegmentAddressCombined2 i = segment_id;
     return (e << 48 | p << 32 | h << 16 | i);
 }
 
-std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2> segment_address_decode2(const SegmentAddress2& address)
+std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2> segment_address_decode2(
+    const SegmentAddressCombined2& address)
 {
     std::uint16_t e = (address >> 48) & 0x000000000000FFFF;
     std::uint16_t p = (address >> 32) & 0x000000000000FFFF;

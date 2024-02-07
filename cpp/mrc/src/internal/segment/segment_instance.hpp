@@ -53,13 +53,15 @@ class SegmentInstance final : public runtime::PartitionResourceManager<control_p
   public:
     SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                     std::shared_ptr<const SegmentDefinition> definition,
-                    SegmentAddress instance_id,
-                    uint64_t pipeline_instance_id);
+                    SegmentAddress2 segment_address);
     ~SegmentInstance() override;
 
+    SegmentID2 id() const;
     const std::string& name() const;
-    SegmentRank rank() const;
-    SegmentAddress address() const;
+    SegmentAddress2 address() const;
+
+    PipelineID2 pipeline_id() const;
+    // SegmentRank rank() const;
 
     std::shared_ptr<manifold::Interface> create_manifold(const PortName& name);
     void attach_manifold(std::shared_ptr<manifold::Interface> manifold);
@@ -86,10 +88,11 @@ class SegmentInstance final : public runtime::PartitionResourceManager<control_p
     // bool set_local_status(control_plane::state::ResourceActualStatus status);
 
     std::shared_ptr<const SegmentDefinition> m_definition;
-    uint64_t m_pipeline_instance_id;
+    // uint64_t m_pipeline_instance_id;
 
-    SegmentRank m_rank;
-    SegmentAddress m_address;
+    // SegmentRank m_rank;
+    SegmentAddress2 m_address;
+
     std::string m_info;
 
     std::unique_ptr<BuilderDefinition> m_builder;

@@ -90,7 +90,8 @@ using SegmentHash2  = std::uint16_t;  // 16 bit hash of segment name
 using SegmentID2    = std::uint16_t;  // 16 bit assigned ID for each segmentInstance/segment
 using ManifoldID2   = std::uint16_t;  // 16 bit assigned ID for each manifoldInstance/manifold
 using ManifoldHash2 = std::uint16_t;  // 16 bit hash of the manifold's port name
-using PortID2       = std::uint16_t;  // 16 bit name hash for each port
+using SegmentHash2  = std::uint16_t;  // 16 bit hash of segment name
+using PortHash2     = std::uint16_t;  // 16 bit name hash for each port
 
 // The following lists Address types which are used in MRC. Each address represents a unique instance in the system but
 // also contains information about the parent resources which the instance belongs to. Combining IDs goes from Parent
@@ -103,12 +104,82 @@ using ExecutorAddress2 = std::uint32_t;
 using PartitionAddress2 = std::uint32_t;
 // 16 bit ExecutorID + 16 bit PipelineID
 using PipelineAddress2 = std::uint32_t;
-// 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentHash + 16 bit SegmentID
-using SegmentAddress2 = std::uint64_t;
-// 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldHash2 + 16 bit ManifoldID
+// 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentHash + 16 bit SegmentID2
+using SegmentAddressCombined2 = std::uint64_t;
+// 16 bit ExecutorID + 16 bit PipelineID + 16 bit ManifoldHash2 + 16 bit ManifoldID2
 using ManifoldAddress2 = std::uint64_t;
-// 16 bit ExecutorID + 16 bit PipelineID + 16 bit SegmentID + 16 bit PortID
-using PortAddress2 = std::uint64_t;
+// 16 bit ExecutorID2 + 16 bit PipelineID2 + 16 bit SegmentID2 + 16 bit PortHash2
+using PortAddressCombined2 = std::uint64_t;
+
+union SegmentAddress2
+{
+    struct
+    {
+        SegmentID2 segment_id;
+        SegmentHash2 segment_hash;
+        PipelineID2 pipeline_id;
+        ExecutorID2 executor_id;
+    };
+    SegmentAddressCombined2 combined;
+
+    SegmentAddress2() : combined(0) {}
+
+    SegmentAddress2(SegmentAddressCombined2 combined) : combined(combined) {}
+
+    SegmentAddress2(ExecutorID2 executor_id, PipelineID2 pipeline_id, SegmentHash2 segment_hash, SegmentID2 segment_id) :
+      executor_id(executor_id),
+      pipeline_id(pipeline_id),
+      segment_hash(segment_hash),
+      segment_id(segment_id)
+    {}
+
+    bool operator<(const SegmentAddress2& rhs) const
+    {
+        return this->combined < rhs.combined;
+    }
+};
+
+static inline std::ostream& operator<<(std::ostream& os, const SegmentAddress2& s)
+{
+    os << "Segment[" << s.combined << "]: E:" << s.executor_id << ", P:" << s.pipeline_id << ", H:" << s.segment_hash
+       << ", S:" << s.segment_id;
+    return os;
+}
+
+union PortAddress2
+{
+    struct
+    {
+        PortHash2 port_hash;
+        SegmentID2 segment_id;
+        PipelineID2 pipeline_id;
+        ExecutorID2 executor_id;
+    };
+    PortAddressCombined2 combined;
+
+    PortAddress2() : combined(0) {}
+
+    PortAddress2(PortAddressCombined2 combined) : combined(combined) {}
+
+    PortAddress2(ExecutorID2 executor_id, PipelineID2 pipeline_id, SegmentID2 segment_id, PortHash2 port_hash) :
+      executor_id(executor_id),
+      pipeline_id(pipeline_id),
+      segment_id(segment_id),
+      port_hash(port_hash)
+    {}
+
+    bool operator<(const PortAddress2& rhs) const
+    {
+        return this->combined < rhs.combined;
+    }
+};
+
+static inline std::ostream& operator<<(std::ostream& os, const PortAddress2& s)
+{
+    os << "Port[" << s.combined << "]: E:" << s.executor_id << ", P:" << s.pipeline_id << ", S:" << s.segment_id
+       << ", H:" << s.port_hash;
+    return os;
+}
 
 // NOLINTEND(readability-identifier-naming)
 

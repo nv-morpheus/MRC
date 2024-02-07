@@ -29,12 +29,12 @@ class ManifoldTagger2 : public ManifoldTaggerBase2,
                         // Channel to hold data until we have downstream connections
                         public node::SinkChannelOwner<T>,
                         // Half of a router node to write to multiple outputs
-                        public node::RouterWritableAcceptor<InstanceID, T>
+                        public node::RouterWritableAcceptor<PortAddress2, T>
 {
   public:
-    using key_t            = InstanceID;
+    using key_t            = PortAddress2;
     using input_message_t  = T;
-    using output_message_t = std::pair<SegmentAddress, T>;
+    using output_message_t = std::pair<PortAddress2, T>;
 
     ManifoldTagger2()
     {
@@ -42,7 +42,7 @@ class ManifoldTagger2 : public ManifoldTaggerBase2,
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>(4));
     }
 
-    void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) override
+    void add_output(PortAddress2 port_address, bool is_local, edge::IWritableProviderBase* output_sink) override
     {
         std::shared_ptr<edge::WritableEdgeHandle> intermediate_edge =
             edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ValueDescriptor>>(

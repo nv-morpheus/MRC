@@ -20,6 +20,7 @@
 #include "mrc/node/port_builders.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ports.hpp"
+#include "mrc/types.hpp"
 
 namespace mrc::segment {
 
@@ -53,12 +54,12 @@ struct EgressPorts : public EgressPortsBase
                                                                std::index_sequence<Is...> _)
     {
         std::vector<std::shared_ptr<port_info_t>> infos;
-        (infos.push_back(
-             std::make_shared<EgressPortInfo<TypesT>>(names[Is],
-                                                      std::type_index(typeid(TypesT)),
-                                                      [](const SegmentAddress& address, const PortName& name) {
-                                                          return std::make_shared<EgressPort<TypesT>>(address, name);
-                                                      })),
+        (infos.push_back(std::make_shared<EgressPortInfo<TypesT>>(
+             names[Is],
+             std::type_index(typeid(TypesT)),
+             [](const SegmentAddress& address, const PortName& name) {
+                 return std::make_shared<EgressPort<TypesT>>(SegmentAddress2(address), name);
+             })),
          ...);
 
         return infos;

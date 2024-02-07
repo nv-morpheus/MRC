@@ -57,10 +57,10 @@ extern SegmentAddress segment_address_encode(SegmentID id, SegmentRank rank);
  * @param [in] segment_id The ID of the segment
  * @returns SegmentAddress
  **/
-SegmentAddress2 segment_address_encode2(ExecutorID2 exeuctor_id,
-                                        PipelineID2 pipeline_id,
-                                        SegmentHash2 segment_hash,
-                                        SegmentID2 segment_id);
+SegmentAddressCombined2 segment_address_encode2(ExecutorID2 exeuctor_id,
+                                                PipelineID2 pipeline_id,
+                                                SegmentHash2 segment_hash,
+                                                SegmentID2 segment_id);
 
 /**
  * @brief Decodes a SegmentAddress into a tuple of ExecutorID, PipelineID, SegmentHash, and SegmentID
@@ -68,7 +68,8 @@ SegmentAddress2 segment_address_encode2(ExecutorID2 exeuctor_id,
  * @param address
  * @return std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2>
  */
-std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2> segment_address_decode2(const SegmentAddress2& address);
+std::tuple<ExecutorID2, PipelineID2, SegmentHash2, SegmentID2> segment_address_decode2(
+    const SegmentAddressCombined2& address);
 
 /**
  * @brief Decodes a SegmentAddress

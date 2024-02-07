@@ -1,6 +1,7 @@
 #include "internal/control_plane/state/root_state.hpp"
 
 #include "mrc/protos/architect_state.pb.h"
+#include "mrc/types.hpp"
 
 #include <google/protobuf/util/json_util.h>
 #include <google/protobuf/util/message_differencer.h>
@@ -446,9 +447,9 @@ const PipelineInstance& ManifoldInstance::pipeline_instance() const
     return MAP_AT_WITH_CHECK(m_root_state->pipeline_instances, m_message.pipeline_instance_id());
 }
 
-std::map<uint32_t, bool> ManifoldInstance::requested_output_segments() const
+std::map<SegmentAddressCombined2, bool> ManifoldInstance::requested_output_segments() const
 {
-    std::map<uint32_t, bool> mapping;
+    std::map<SegmentAddressCombined2, bool> mapping;
 
     for (const auto& [seg_id, is_local] : m_message.requested_output_segments())
     {
@@ -458,9 +459,9 @@ std::map<uint32_t, bool> ManifoldInstance::requested_output_segments() const
     return mapping;
 }
 
-std::map<uint32_t, bool> ManifoldInstance::requested_input_segments() const
+std::map<SegmentAddressCombined2, bool> ManifoldInstance::requested_input_segments() const
 {
-    std::map<uint32_t, bool> mapping;
+    std::map<SegmentAddressCombined2, bool> mapping;
 
     for (const auto& [seg_id, is_local] : m_message.requested_input_segments())
     {
@@ -483,6 +484,21 @@ uint64_t SegmentInstance::id() const
     return m_message.id();
 }
 
+uint64_t SegmentInstance::executor_id() const
+{
+    return m_message.executor_id();
+}
+
+uint64_t SegmentInstance::pipeline_instance_id() const
+{
+    return m_message.pipeline_instance_id();
+}
+
+uint64_t SegmentInstance::segment_address() const
+{
+    return m_message.segment_address();
+}
+
 const PipelineDefinition& SegmentInstance::pipeline_definition() const
 {
     return MAP_AT_WITH_CHECK(m_root_state->pipeline_definitions, m_message.pipeline_definition_id());
@@ -491,11 +507,6 @@ const PipelineDefinition& SegmentInstance::pipeline_definition() const
 std::string SegmentInstance::name() const
 {
     return m_message.name();
-}
-
-uint32_t SegmentInstance::segment_address() const
-{
-    return m_message.segment_address();
 }
 
 const Worker& SegmentInstance::worker() const

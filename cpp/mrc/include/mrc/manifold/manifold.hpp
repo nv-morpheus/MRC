@@ -109,7 +109,7 @@ namespace mrc::manifold {
 // };
 
 class ManifoldTaggerBase2 : public virtual edge::IWritableProviderBase,
-                            public virtual edge::IMultiWritableAcceptorBase<InstanceID>,
+                            public virtual edge::IMultiWritableAcceptorBase<PortAddress2>,
                             // We need a runnable thread to avoid processing when we do not have any outputs
                             public runnable::RunnableWithContext<runnable::Context>
 {
@@ -118,14 +118,14 @@ class ManifoldTaggerBase2 : public virtual edge::IWritableProviderBase,
     // Mutex used to protect the output from being updated while in use
     std::shared_mutex m_output_mutex;
 
-    InstanceID get_next_tag();
+    PortAddress2 get_next_tag();
 
     bool has_connections() const;
 
   private:
     void update_policy(ManifoldPolicy&& policy);
 
-    virtual void add_output(InstanceID port_address, bool is_local, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void add_output(PortAddress2 port_address, bool is_local, edge::IWritableProviderBase* output_sink) = 0;
 
     virtual channel::Status process_one_message() = 0;
 
@@ -217,9 +217,9 @@ class ManifoldBase : public Interface, public runnable::RunnableResourcesProvide
     const std::string& info() const;
 
   private:
-    void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) final;
+    void add_local_input(const PortAddress2& address, edge::IWritableAcceptorBase* input_source) final;
 
-    void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) final;
+    void add_local_output(const PortAddress2& address, edge::IWritableProviderBase* output_sink) final;
 
     edge::IWritableProviderBase& get_input_sink() const override;
 

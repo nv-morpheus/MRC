@@ -58,12 +58,12 @@ struct IngressPorts : public IngressPortsBase
                                                                std::index_sequence<Is...> _)
     {
         std::vector<std::shared_ptr<port_info_t>> infos;
-        (infos.push_back(
-             std::make_shared<IngressPortInfo<TypesT>>(names[Is],
-                                                       std::type_index(typeid(TypesT)),
-                                                       [](const SegmentAddress& address, const PortName& name) {
-                                                           return std::make_shared<IngressPort<TypesT>>(address, name);
-                                                       })),
+        (infos.push_back(std::make_shared<IngressPortInfo<TypesT>>(
+             names[Is],
+             std::type_index(typeid(TypesT)),
+             [](const SegmentAddress& address, const PortName& name) {
+                 return std::make_shared<IngressPort<TypesT>>(SegmentAddress2(address), name);
+             })),
          ...);
 
         return infos;

@@ -94,19 +94,19 @@ bool SegmentsManager::sync_state(const control_plane::state::Worker& worker)
     DVLOG(10) << remove_segments.size() << " segments marked for removal";
 
     // construct new segments and attach to manifold
-    for (const auto& address : create_segments)
+    for (const auto& id : create_segments)
     {
         // auto partition_id = new_segments_map.at(address);
         // DVLOG(10) << info() << ": create segment for address " << ::mrc::segment::info(address)
         //           << " on resource partition: " << partition_id;
-        this->create_segment(worker.assigned_segments().at(address));
+        this->create_segment(worker.assigned_segments().at(id));
     }
 
     // detach from manifold or stop old segments
-    for (const auto& address : remove_segments)
+    for (const auto& id : remove_segments)
     {
         // DVLOG(10) << info() << ": stop segment for address " << ::mrc::segment::info(address);
-        this->erase_segment(address);
+        this->erase_segment(id);
     }
 
     // Return true if we have a possible shutdown scenario
@@ -192,16 +192,16 @@ void SegmentsManager::create_segment(const mrc::control_plane::state::SegmentIns
     // Get a reference to the pipeline we are creating the segment in
     auto& pipeline_def = this->runtime().pipelines_manager().get_definition(instance_state.pipeline_definition().id());
 
+    // Decode the address
+    SegmentAddress2 segment_address(instance_state.segment_address());
+
     auto [executor_id, pipeline_id, segment_hash, segment_id] = segment_address_decode2(
         instance_state.segment_address());
-    auto definition = pipeline_def.find_segment(segment_hash);
+    auto definition = pipeline_def.find_segment(segment_address.segment_hash);
 
     auto [added_iterator, did_add] = m_instances.emplace(
-        instance_state.segment_address(),
-        std::make_shared<segment::SegmentInstance>(*this,
-                                                   definition,
-                                                   instance_state.segment_address(),
-                                                   instance_state.pipeline_instance().id()));
+        instance_state.id(),
+        std::make_shared<segment::SegmentInstance>(*this, definition, segment_address));
 
     // Now start as a child service
     this->child_service_start(added_iterator->second);

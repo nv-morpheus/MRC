@@ -23,6 +23,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/forward.hpp"
 
+#include "mrc/channel/channel.hpp"
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -196,6 +197,8 @@ class DataPlaneResources2
 
     void decrement();
 
+    channel::Egress<std::unique_ptr<runtime::RemoteDescriptor2>>& get_inbound_channel() const;
+
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
 
@@ -209,6 +212,8 @@ class DataPlaneResources2
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
     uint64_t m_next_object_id{0};
+
+    std::unique_ptr<BufferedChannel<std::unique_ptr<runtime::RemoteDescriptor2>>> m_inbound_channel;
 
     // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
     // std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>>>

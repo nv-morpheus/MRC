@@ -361,7 +361,7 @@ class Architect implements ArchitectServiceImplementation {
          const error = ensureError(err);
          console.log(`Error occurred in stream. Error: ${error.message}`);
       } finally {
-         console.log(`All streams closed for ${executor.peerInfo}. Deleting connection.`);
+         console.log(`All streams closed for ${executor.peerInfo}. Deleting connection: ${executor.id}.`);
 
          // Ensure the other streams are cleaned up
          store_unsub();

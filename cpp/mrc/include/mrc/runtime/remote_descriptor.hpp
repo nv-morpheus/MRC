@@ -327,22 +327,8 @@ class TypedValueDescriptor : public ValueDescriptor
     friend class ValueDescriptor;
 };
 
-template <typename T>
-T ValueDescriptor::release_value() &&
-{
-    auto typed_descriptor = dynamic_cast<TypedValueDescriptor<T>*>(this);
-
-    if (!typed_descriptor)
-    {
-        LOG(FATAL) << "Cannot release value of type " << typeid(T).name() << " from descriptor of type "
-                   << typeid(*this).name();
-    }
-
-    return std::move(typed_descriptor->m_value);
-}
-
 // Combines a EncodedObjectProto with a local registered buffers if needed
-class LocalDescriptor2
+class LocalDescriptor2 : public ValueDescriptor
 {
   public:
     codable::LocalSerializedWrapper& encoded_object() const;
@@ -357,10 +343,43 @@ class LocalDescriptor2
     LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
                      std::unique_ptr<ValueDescriptor> value_descriptor = nullptr);
 
+    // TODO(MDD): Quick hack to get this working. Need to restructure the objects a bit
+    std::unique_ptr<codable::LocalSerializedWrapper> encode(
+        std::shared_ptr<memory::memory_block_provider> block_provider) override
+    {
+        throw std::runtime_error("Not implemented");
+    }
+
     std::unique_ptr<codable::LocalSerializedWrapper> m_encoded_object;
 
     std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
 };
+
+template <typename T>
+T ValueDescriptor::release_value() &&
+{
+    auto* typed_descriptor = dynamic_cast<TypedValueDescriptor<T>*>(this);
+
+    if (typed_descriptor)
+    {
+        return std::move(typed_descriptor->m_value);
+    }
+
+    auto* local_descriptor = dynamic_cast<LocalDescriptor2*>(this);
+
+    // We must be a local descriptor. So manually do the deserialization here
+    if (local_descriptor)
+    {
+        // Reset the counter
+        local_descriptor->encoded_object().reset_current_object_idx();
+
+        // Perform a decode to get the value
+        return mrc::codable::decode2<T>(local_descriptor->encoded_object());
+    }
+
+    LOG(FATAL) << "Cannot release value of type " << typeid(T).name() << " from descriptor of type "
+               << typeid(*this).name();
+}
 
 class RemoteDescriptorImpl2
 {

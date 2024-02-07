@@ -54,14 +54,13 @@ namespace mrc::segment {
 
 SegmentInstance::SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                                  std::shared_ptr<const SegmentDefinition> definition,
-                                 SegmentAddress instance_id,
-                                 uint64_t pipeline_instance_id) :
-  PartitionResourceManager(runtime, instance_id, MRC_CONCAT_STR("SegmentInstance[" << instance_id << "]")),
+                                 SegmentAddress2 segment_address) :
+  PartitionResourceManager(runtime,
+                           segment_address.segment_id,
+                           MRC_CONCAT_STR("SegmentInstance[" << segment_address.segment_id << "]")),
   m_definition(std::move(definition)),
-  m_pipeline_instance_id(pipeline_instance_id),
-  m_address(instance_id),
-  m_rank(std::get<1>(segment_address_decode(instance_id))),
-  m_info(::mrc::segment::info(instance_id))
+  m_address(segment_address),
+  m_info(::mrc::segment::info(segment_address.segment_id))
 {}
 
 SegmentInstance::~SegmentInstance()
@@ -69,17 +68,22 @@ SegmentInstance::~SegmentInstance()
     PartitionResourceManager::call_in_destructor();
 }
 
+SegmentID2 SegmentInstance::id() const
+{
+    return m_address.segment_id;
+}
+
 const std::string& SegmentInstance::name() const
 {
     return m_definition->name();
 }
 
-SegmentRank SegmentInstance::rank() const
-{
-    return m_rank;
-}
+// SegmentRank SegmentInstance::rank() const
+// {
+//     return m_rank;
+// }
 
-SegmentAddress SegmentInstance::address() const
+SegmentAddress2 SegmentInstance::address() const
 {
     return m_address;
 }
@@ -354,7 +358,7 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         m_builder->initialize();
 
         // Get a reference to the pipeline instance
-        auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_pipeline_instance_id);
+        auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_address.pipeline_id);
 
         // prepare launchers from m_builder
         // std::map<std::string, std::unique_ptr<mrc::runnable::Launcher>> egress_launchers;
@@ -391,7 +395,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher egress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_input(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_input(
+                PortAddress2(m_address.executor_id, m_address.pipeline_id, m_address.segment_id, port_name_hash(name)),
+                node);
 
             // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 
@@ -410,7 +416,9 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
         {
             DVLOG(10) << info() << " constructing launcher ingress port " << name;
 
-            pipeline_instance.get_manifold_instance(name).register_local_output(m_address, node);
+            pipeline_instance.get_manifold_instance(name).register_local_output(
+                PortAddress2(m_address.executor_id, m_address.pipeline_id, m_address.segment_id, port_name_hash(name)),
+                node);
 
             // node->connect_to_manifold(pipeline_instance.get_manifold_interface(name));
 

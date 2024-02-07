@@ -30,13 +30,13 @@ namespace mrc::manifold {
 
 struct ManifoldPolicyInfoBase
 {
-    ManifoldPolicyInfoBase(SegmentAddress _address, bool _is_local, size_t _points) :
+    ManifoldPolicyInfoBase(PortAddress2 _address, bool _is_local, size_t _points) :
       address(_address),
       is_local(_is_local),
       points(_points)
     {}
 
-    SegmentAddress address;
+    PortAddress2 address;
 
     // Whether or not this segment connection is local
     bool is_local;
@@ -47,10 +47,7 @@ struct ManifoldPolicyInfoBase
 
 struct ManifoldPolicyInputInfo : public ManifoldPolicyInfoBase
 {
-    ManifoldPolicyInputInfo(SegmentAddress _address,
-                            bool _is_local,
-                            size_t _points,
-                            edge::IWritableAcceptorBase* _edge) :
+    ManifoldPolicyInputInfo(PortAddress2 _address, bool _is_local, size_t _points, edge::IWritableAcceptorBase* _edge) :
       ManifoldPolicyInfoBase(_address, _is_local, _points),
       edge(_edge)
     {}
@@ -59,10 +56,7 @@ struct ManifoldPolicyInputInfo : public ManifoldPolicyInfoBase
 
 struct ManifoldPolicyOutputInfo : public ManifoldPolicyInfoBase
 {
-    ManifoldPolicyOutputInfo(SegmentAddress _address,
-                             bool _is_local,
-                             size_t _points,
-                             edge::IWritableProviderBase* _edge) :
+    ManifoldPolicyOutputInfo(PortAddress2 _address, bool _is_local, size_t _points, edge::IWritableProviderBase* _edge) :
       ManifoldPolicyInfoBase(_address, _is_local, _points),
       edge(_edge)
     {}
@@ -104,13 +98,13 @@ class ManifoldPolicy
     ManifoldPolicy() = default;
 
     ManifoldPolicy(std::vector<ManifoldPolicyInputInfo> inputs,
-                   std::map<SegmentAddress, ManifoldPolicyOutputInfo> outputs) :
+                   std::map<PortAddress2, ManifoldPolicyOutputInfo> outputs) :
       inputs(std::move(inputs)),
       outputs(std::move(outputs))
     {
         auto keys = extract_keys(this->outputs);
 
-        m_output_addresses = std::vector<SegmentAddress>(keys.begin(), keys.end());
+        m_output_addresses = std::vector<PortAddress2>(keys.begin(), keys.end());
 
         m_has_connections = !this->inputs.empty() && !this->outputs.empty();
     }
@@ -197,9 +191,9 @@ class ManifoldPolicy
     }
 
     std::vector<ManifoldPolicyInputInfo> inputs;
-    std::map<SegmentAddress, ManifoldPolicyOutputInfo> outputs;
+    std::map<PortAddress2, ManifoldPolicyOutputInfo> outputs;
 
-    SegmentAddress get_next_tag()
+    PortAddress2 get_next_tag()
     {
         return m_output_addresses[m_msg_counter++ % m_output_addresses.size()];
     }
@@ -207,7 +201,7 @@ class ManifoldPolicy
   private:
     bool m_has_connections{false};
     std::atomic_size_t m_msg_counter{0};
-    std::vector<SegmentAddress> m_output_addresses;
+    std::vector<PortAddress2> m_output_addresses;
 };
 
 struct Interface
@@ -219,8 +213,8 @@ struct Interface
     virtual void start() = 0;
     virtual void join()  = 0;
 
-    virtual void add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
-    virtual void add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void add_local_input(const PortAddress2& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void add_local_output(const PortAddress2& address, edge::IWritableProviderBase* output_sink) = 0;
 
     virtual edge::IWritableProviderBase& get_input_sink() const = 0;
 

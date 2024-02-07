@@ -68,6 +68,24 @@ GenericSource<T, ContextT>::GenericSource() :
 {}
 
 template <typename T>
+class LambdaSource : public GenericSource<T>
+{
+  public:
+    using subscribe_fn_t = std::function<void(rxcpp::subscriber<T>&)>;
+
+    LambdaSource(subscribe_fn_t subscribe_fn) : m_subscribe_fn(std::move(subscribe_fn)) {}
+    ~LambdaSource() override = default;
+
+  private:
+    void data_source(rxcpp::subscriber<T>& s) override
+    {
+        return m_subscribe_fn(s);
+    }
+
+    subscribe_fn_t m_subscribe_fn;
+};
+
+template <typename T>
 class GenericSourceComponent : public ForwardingEgressProvider<T>
 {
   public:

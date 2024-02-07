@@ -23,10 +23,12 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/core/async_service.hpp"
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 #include "mrc/node/generic_sink.hpp"
+#include "mrc/node/generic_source.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
@@ -61,7 +63,33 @@ DataPlaneSystemManager::~DataPlaneSystemManager()
 }
 
 std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
-    get_readable_ingress_channel(InstanceID port_address) const
+    get_readable_ingress_channel(PortAddress2 port_address) const
+{
+    std::unique_lock lock(m_port_mutex);
+
+    if (m_ingress_port_channels.contains(port_address))
+    {
+        // Now check that its alive otherwise we fall through
+        if (auto port = m_ingress_port_channels.at(port_address).lock())
+        {
+            return port;
+        }
+    }
+
+    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
+
+    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<ValueDescriptor>>>();
+
+    // Make a connection between the incoming channel and this port-specific channel
+    mrc::make_edge(*m_inbound_dispatcher->get_source(port_address), *port_channel);
+
+    mutable_this->m_ingress_port_channels[port_address] = port_channel;
+
+    return port_channel;
+}
+
+std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
+    get_writable_ingress_channel(PortAddress2 port_address) const
 {
     std::unique_lock lock(m_port_mutex);
 
@@ -84,30 +112,7 @@ std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> DataP
 }
 
 std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
-    get_writable_ingress_channel(InstanceID port_address) const
-{
-    std::unique_lock lock(m_port_mutex);
-
-    if (m_ingress_port_channels.contains(port_address))
-    {
-        // Now check that its alive otherwise we fall through
-        if (auto port = m_ingress_port_channels.at(port_address).lock())
-        {
-            return port;
-        }
-    }
-
-    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
-
-    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<ValueDescriptor>>>();
-
-    mutable_this->m_ingress_port_channels[port_address] = port_channel;
-
-    return port_channel;
-}
-
-std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
-    get_writable_egress_channel(InstanceID port_address) const
+    get_writable_egress_channel(PortAddress2 port_address) const
 {
     std::unique_lock lock(m_port_mutex);
 
@@ -122,11 +127,9 @@ std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataP
 
     auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
 
-    auto endpoint = m_resources->find_endpoint(port_address);
-
     auto port_channel = std::make_shared<node::LambdaSinkComponent<std::unique_ptr<ValueDescriptor>>>(
-        [mutable_this, endpoint](std::unique_ptr<ValueDescriptor>&& data) {
-            return mutable_this->send_descriptor(endpoint, std::move(data));
+        [mutable_this, port_address](std::unique_ptr<ValueDescriptor>&& data) {
+            return mutable_this->send_descriptor(port_address, std::move(data));
         });
 
     mutable_this->m_egress_port_channels[port_address] = port_channel;
@@ -209,6 +212,69 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
             completed_promise.set_value();
         });
 
+    auto resources_progress = std::make_unique<node::LambdaSource<int>>([this](rxcpp::subscriber<int>& subscriber) {
+        auto request = m_resources->am_recv_async(nullptr);
+
+        // Pull from the resources channel
+        while (subscriber.is_subscribed())
+        {
+            this->m_resources->progress();
+
+            std::unique_ptr<RemoteDescriptor2> temp_remote;
+
+            auto status = this->m_resources->get_inbound_channel().await_read_until(
+                temp_remote,
+                channel::clock_t::now() + std::chrono::milliseconds(100));
+
+            if (status == channel::Status::success)
+            {
+                auto destination = PortAddress2(temp_remote->encoded_object().destination_address());
+
+                // Convert from remote to local descriptor
+                auto local = LocalDescriptor2::from_remote(std::move(temp_remote), *m_resources);
+
+                subscriber.on_next(std::make_pair(destination, std::move(local)));
+            }
+        }
+    });
+
+    // Create a runnable to be pulling messages off the resources object
+    auto pull_remote_descriptors =
+        std::make_unique<node::LambdaSource<std::pair<PortAddress2, std::unique_ptr<ValueDescriptor>>>>(
+            [this](rxcpp::subscriber<std::pair<PortAddress2, std::unique_ptr<ValueDescriptor>>>& subscriber) {
+                // Pull from the resources channel
+                while (subscriber.is_subscribed())
+                {
+                    // TODO(MDD): Temp code to try and progress the worker
+                    while (this->m_resources->progress()) {}
+
+                    std::unique_ptr<RemoteDescriptor2> temp_remote;
+
+                    auto status = this->m_resources->get_inbound_channel().await_read_until(
+                        temp_remote,
+                        channel::clock_t::now() + std::chrono::milliseconds(100));
+
+                    if (status == channel::Status::success)
+                    {
+                        auto destination = PortAddress2(temp_remote->encoded_object().destination_address());
+
+                        // Convert from remote to local descriptor
+                        auto local = LocalDescriptor2::from_remote(std::move(temp_remote), *m_resources);
+
+                        subscriber.on_next(std::make_pair(destination, std::move(local)));
+                    }
+                }
+            });
+
+    m_inbound_dispatcher = std::make_unique<node::TaggedRouter<PortAddress2, std::unique_ptr<ValueDescriptor>>>();
+
+    mrc::make_edge(*pull_remote_descriptors, *m_inbound_dispatcher);
+
+    // Start the runnable
+    this->child_runnable_start("pull_remote_descriptors",
+                               mrc::runnable::LaunchOptions("mrc_network"),
+                               std::move(pull_remote_descriptors));
+
     this->mark_started();
 
     completed_promise.get_future().get();
@@ -227,7 +293,7 @@ void DataPlaneSystemManager::process_state_update(const control_plane::state::Co
     }
 }
 
-channel::Status DataPlaneSystemManager::send_descriptor(std::shared_ptr<ucxx::Endpoint> endpoint,
+channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destination,
                                                         std::unique_ptr<ValueDescriptor>&& descriptor)
 {
     auto block_provider = std::make_shared<memory::memory_block_provider>();
@@ -238,14 +304,19 @@ channel::Status DataPlaneSystemManager::send_descriptor(std::shared_ptr<ucxx::En
     // Convert from local to remote descriptor
     auto remote = RemoteDescriptor2::from_local(std::move(local), *m_resources);
 
+    // Set the destination
+    remote->encoded_object().set_destination_address(port_destination.combined);
+
     // Serialize to bytes
     auto serialized_buffer = remote->to_bytes(memory::malloc_memory_resource::instance());
 
-    // Save the remote block to the memory manager
+    // Get the endpoint for this message
+    auto endpoint = m_resources->find_endpoint(port_destination.executor_id);
 
     // Send the bytes to the remote worker
     auto request = m_resources->am_send_async(endpoint, serialized_buffer);
 
+    // TODO(MDD): Do we need to wait for the request to send or can we just assume it sends?
     m_resources->wait_requests(std::vector<std::shared_ptr<ucxx::Request>>{request});
 
     return channel::Status::success;

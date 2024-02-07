@@ -40,7 +40,7 @@ namespace mrc::manifold {
 //     ManifoldNodeBase::add_output(address, output_sink);
 // }
 
-InstanceID ManifoldTaggerBase2::get_next_tag()
+PortAddress2 ManifoldTaggerBase2::get_next_tag()
 {
     return m_current_policy.get_next_tag();
 }
@@ -68,7 +68,7 @@ void ManifoldTaggerBase2::update_policy(ManifoldPolicy&& policy)
         auto next_keys = extract_keys(policy.outputs);
 
         auto [to_add, to_remove] = compare_difference(this->writable_edge_keys(),
-                                                      std::vector<InstanceID>{next_keys.begin(), next_keys.end()});
+                                                      std::vector<PortAddress2>{next_keys.begin(), next_keys.end()});
 
         for (const auto& key : to_remove)
         {
@@ -190,7 +190,7 @@ const std::string& ManifoldBase::info() const
     return m_info;
 }
 
-void ManifoldBase::add_local_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
+void ManifoldBase::add_local_input(const PortAddress2& address, edge::IWritableAcceptorBase* input_source)
 {
     throw exceptions::MrcRuntimeError("Not implemented (add_local_input)");
 
@@ -200,7 +200,7 @@ void ManifoldBase::add_local_input(const SegmentAddress& address, edge::IWritabl
     // tagger.add_input(address, input_source);
 }
 
-void ManifoldBase::add_local_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink)
+void ManifoldBase::add_local_output(const PortAddress2& address, edge::IWritableProviderBase* output_sink)
 {
     throw exceptions::MrcRuntimeError("Not implemented (add_local_output)");
 

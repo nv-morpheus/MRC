@@ -27,6 +27,7 @@
 #include "internal/ucx/utils.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/channel/buffered_channel.hpp"
 #include "mrc/memory/literals.hpp"
 
 #include <ucp/api/ucp.h>
@@ -145,7 +146,8 @@ const InstanceID& DataPlaneResources::instance_id() const
     return m_instance_id;
 }
 
-DataPlaneResources2::DataPlaneResources2()
+DataPlaneResources2::DataPlaneResources2() :
+  m_inbound_channel(std::make_unique<channel::BufferedChannel<std::unique_ptr<runtime::RemoteDescriptor2>>>())
 {
     DVLOG(10) << "initializing ucx context";
 
@@ -414,6 +416,11 @@ void DataPlaneResources2::decrement()
             }
         }
     }
+}
+
+channel::Egress<std::unique_ptr<runtime::RemoteDescriptor2>>& DataPlaneResources2::get_inbound_channel() const
+{
+    return *m_inbound_channel;
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,

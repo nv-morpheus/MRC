@@ -77,7 +77,7 @@ namespace mrc::segment {
 
 BuilderDefinition::BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
                                      std::shared_ptr<const SegmentDefinition> definition,
-                                     SegmentAddress address) :
+                                     SegmentAddress2 address) :
   runtime::InternalRuntimeProvider(runtime),
   m_definition(std::move(definition)),
   m_address(address)
@@ -253,13 +253,13 @@ const SegmentDefinition& BuilderDefinition::definition() const
 
 void BuilderDefinition::initialize()
 {
-    auto rank = std::get<1>(segment_address_decode(m_address));
+    // auto rank = std::get<1>(segment_address_decode(m_address));
 
     // construct ingress ports
     for (const auto& [name, info] : this->definition().ingress_port_infos())
     {
         DVLOG(10) << "constructing ingress_port: " << name;
-        auto port = info->port_builder_fn(m_address, name);
+        auto port = info->port_builder_fn(m_address.combined, name);
         this->add_object(name, port);
     }
 
@@ -267,7 +267,7 @@ void BuilderDefinition::initialize()
     for (const auto& [name, info] : this->definition().egress_port_infos())
     {
         DVLOG(10) << "constructing egress_port: " << name;
-        auto port = info->port_builder_fn(m_address, name);
+        auto port = info->port_builder_fn(m_address.combined, name);
         this->add_object(name, port);
     }
 
@@ -278,7 +278,7 @@ void BuilderDefinition::initialize()
     } catch (const std::exception& e)
     {
         LOG(ERROR) << "Exception during segment initializer. Segment name: " << m_definition->name()
-                   << ", Segment Rank: " << rank << ". Exception message:\n"
+                   << ", Segment Address: " << m_address.combined << ". Exception message:\n"
                    << e.what();
 
         // Rethrow after logging

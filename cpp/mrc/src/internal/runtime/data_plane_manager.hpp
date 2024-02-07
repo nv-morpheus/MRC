@@ -48,6 +48,9 @@ class IWritableProvider;
 namespace mrc::node {
 template <typename T>
 class Queue;
+
+template <typename KeyT, typename ValueT>
+class TaggedRouter;
 }  // namespace mrc::node
 
 namespace mrc::runtime {
@@ -61,15 +64,15 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     // This is what each ingress object will connect to in order to pull the next message
     std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> get_readable_ingress_channel(
-        InstanceID port_address) const;
+        PortAddress2 port_address) const;
 
     // This is what local and remote egress objects will connect to in order to push the next message to a local ingress
     std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> get_writable_ingress_channel(
-        InstanceID port_address) const;
+        PortAddress2 port_address) const;
 
     // This is what each egress object will connect to in order to push messages to remote ingress objects
     std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> get_writable_egress_channel(
-        InstanceID port_address) const;
+        PortAddress2 port_address) const;
 
     std::shared_ptr<node::Queue<std::unique_ptr<Descriptor>>> get_incoming_port_channel(InstanceID port_address) const;
     std::shared_ptr<edge::IWritableProvider<std::unique_ptr<Descriptor>>> get_outgoing_port_channel(
@@ -80,8 +83,7 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     void process_state_update(const control_plane::state::ControlPlaneState& state);
 
-    channel::Status send_descriptor(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                    std::unique_ptr<ValueDescriptor>&& descriptor);
+    channel::Status send_descriptor(PortAddress2 port_destination, std::unique_ptr<ValueDescriptor>&& descriptor);
 
     // control_plane::state::ControlPlaneState m_previous_state;
 
@@ -89,8 +91,10 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     std::unique_ptr<data_plane::DataPlaneResources2> m_resources;
 
-    std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>>> m_ingress_port_channels;
-    std::map<InstanceID, std::weak_ptr<node::LambdaSinkComponent<std::unique_ptr<ValueDescriptor>>>>
+    std::unique_ptr<node::TaggedRouter<PortAddress2, std::unique_ptr<ValueDescriptor>>> m_inbound_dispatcher;
+
+    std::map<PortAddress2, std::weak_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>>> m_ingress_port_channels;
+    std::map<PortAddress2, std::weak_ptr<node::LambdaSinkComponent<std::unique_ptr<ValueDescriptor>>>>
         m_egress_port_channels;
 
     std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<Descriptor>>>> m_incoming_port_channels;

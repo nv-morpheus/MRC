@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/core/addresses.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/manifold/connectable.hpp"
@@ -61,8 +62,11 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
     // })
 
   public:
-    IngressPort(SegmentAddress address, PortName name) :
-      m_segment_address(address),
+    IngressPort(SegmentAddress2 segment_address, PortName name) :
+      m_port_address(PortAddress2(segment_address.executor_id,
+                                  segment_address.pipeline_id,
+                                  segment_address.segment_id,
+                                  port_name_hash(name))),
       m_port_name(std::move(name)),
       m_node(std::make_unique<node::RxNode<T>>())
     {}
@@ -91,7 +95,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         // ingress ports connect to manifold outputs
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         CHECK(m_node);
-        manifold->add_local_output(m_segment_address, m_node.get());
+        manifold->add_local_output(m_port_address, m_node.get());
     }
 
     edge::IReadableAcceptorBase& get_upstream_sink() const override
@@ -100,7 +104,7 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         return *m_node;
     }
 
-    SegmentAddress m_segment_address;
+    PortAddress2 m_port_address;
     PortName m_port_name;
     std::unique_ptr<node::RxNode<T>> m_node;
     std::mutex m_mutex;

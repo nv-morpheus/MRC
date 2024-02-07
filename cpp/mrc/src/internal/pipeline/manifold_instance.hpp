@@ -64,11 +64,11 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
 
     const std::string& port_name() const;
 
-    void register_local_output(SegmentAddress address, std::shared_ptr<segment::IngressPortBase> ingress_port);
-    void register_local_input(SegmentAddress address, std::shared_ptr<segment::EgressPortBase> egress_port);
+    void register_local_output(PortAddress2 port_address, std::shared_ptr<segment::IngressPortBase> ingress_port);
+    void register_local_input(PortAddress2 port_address, std::shared_ptr<segment::EgressPortBase> egress_port);
 
-    void unregister_local_output(SegmentAddress address);
-    void unregister_local_input(SegmentAddress address);
+    void unregister_local_output(PortAddress2 port_address);
+    void unregister_local_input(PortAddress2 port_address);
 
     std::shared_ptr<manifold::Interface> get_interface() const;
 
@@ -97,13 +97,13 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
     std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
     std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
 
-    std::map<InstanceID, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+    std::map<PortAddress2, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         m_input_port_nodes;
-    std::map<InstanceID, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+    std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         m_output_port_nodes;
 
-    std::map<SegmentAddress, bool> m_actual_input_segments;
-    std::map<SegmentAddress, bool> m_actual_output_segments;
+    std::map<SegmentAddressCombined2, bool> m_actual_input_segments;
+    std::map<SegmentAddressCombined2, bool> m_actual_output_segments;
 };
 
 }  // namespace mrc::pipeline

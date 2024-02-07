@@ -55,7 +55,7 @@ class BuilderDefinition : public IBuilder, public runtime::InternalRuntimeProvid
   public:
     BuilderDefinition(runtime::IInternalRuntimeProvider& runtime,
                       std::shared_ptr<const SegmentDefinition> definition,
-                      SegmentAddress address);
+                      SegmentAddress2 address);
 
     static std::shared_ptr<BuilderDefinition> unwrap(std::shared_ptr<IBuilder> object);
 
@@ -135,7 +135,7 @@ class BuilderDefinition : public IBuilder, public runtime::InternalRuntimeProvid
 
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;
-    SegmentAddress m_address;
+    SegmentAddress2 m_address;
 
     // Module info
     std::string m_namespace_prefix;

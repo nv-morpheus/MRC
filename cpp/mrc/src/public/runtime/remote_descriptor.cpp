@@ -31,6 +31,7 @@
 #include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 #include "mrc/memory/resources/memory_resource.hpp"
 #include "mrc/protos/codable.pb.h"
+#include "mrc/types.hpp"
 
 #include <ucp/api/ucp.h>
 #include <ucxx/api.h>
@@ -167,8 +168,10 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     // Now, we need to wait for all requests to be complete
     data_plane_resources.wait_requests(requests);
 
+    PortAddress2 port_address(remote_descriptor->encoded_object().destination_address());
+
     // For the remote descriptor message, send decrement to the remote resources
-    auto ep = data_plane_resources.find_endpoint(remote_descriptor->encoded_object().instance_id());
+    auto ep = data_plane_resources.find_endpoint(port_address.executor_id);
 
     remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
     dec_message.object_id = remote_descriptor->encoded_object().object_id();
@@ -224,7 +227,7 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
 
     // Transfer the info object
     remote_object->set_allocated_info(local_desc->encoded_object().proto().release_info());
-    remote_object->set_instance_id(data_plane_resources.get_instance_id());
+    // remote_object->set_instance_id(data_plane_resources.get_instance_id());
     remote_object->set_tokens(std::numeric_limits<uint64_t>::max());
 
     // Loop over all local payloads and convert them to remote payloads

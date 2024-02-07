@@ -210,19 +210,22 @@ message LocalSerializedObject
 message RemoteSerializedObject
 {
     // Destination of the remote object
-    uint64 instance_id = 1;
+    uint64 destination_address = 1;
+
+    // Destination of the remote object
+    uint64 source_address = 2;
 
     // Unique identifier for this object
-    uint64 object_id = 2;
+    uint64 object_id = 3;
 
     // The number of "lifetime" tokens associated with this object. When the number of tokens reaches 0, the object
     // is deleted
-    uint64 tokens = 3;
+    uint64 tokens = 4;
 
     // Information about the object serialization. i.e. the number of internal objects, types of objects, and any
     // metadata
-    SerializedInfo info = 4;
+    SerializedInfo info = 5;
 
     // The payload stored on remote machines associated with this object
-    repeated RemotePayload payloads  = 5;
+    repeated RemotePayload payloads  = 6;
 }
