@@ -52,7 +52,7 @@ dependencies:
         packages:
           - boost-cpp=1.84
           - ccache
-          - cmake=3.27
+          - cmake=3.26
           - cuda-nvcc
           - cxx-compiler
           - glog=0.6
