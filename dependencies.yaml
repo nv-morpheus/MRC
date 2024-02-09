@@ -119,6 +119,7 @@ dependencies:
           - codecov=2.1
           - gcovr=5.2
           - pre-commit
+          - sccache>=0.7.6
 
   examples:
     common:
