@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,9 +89,9 @@ jobs:
       # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
       conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
       # Build container
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-230920
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240209
       # Test container
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-230920
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240209
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:
