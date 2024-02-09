@@ -83,7 +83,8 @@ function update_conda_env() {
 
     if [[ "${SKIP_CONDA_ENV_UPDATE}" == "" ]]; then
         # Update the conda env with prune remove excess packages (in case one was removed from the env)
-        rapids-mamba-retry env update -n mrc --prune --file ${CONDA_ENV_YML}
+        # use conda instead of mamba due to bug: https://github.com/mamba-org/mamba/issues/3059
+        rapids-conda-retry env update -n mrc  --solver=libmamba --prune --file ${CONDA_ENV_YML}
     fi
 
     # Finally, reactivate
