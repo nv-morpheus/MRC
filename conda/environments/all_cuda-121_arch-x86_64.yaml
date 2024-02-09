@@ -50,7 +50,6 @@ dependencies:
 - pytest-timeout
 - python-graphviz
 - python=3.10
-- sccache>=0.7.6
 - scikit-build=0.17
 - ucx=1.15
 - yapf
