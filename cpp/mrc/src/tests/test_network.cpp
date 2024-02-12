@@ -753,10 +753,13 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     EXPECT_EQ(send_remote_descriptor_object_id, recv_remote_descriptor_object_id);
 
-    // Process remote decrement messages.
-    m_resources->decrement();
+    // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case it fails to
+    // complete.
+    // Wait for remote decrement messages.
+    while (registered_send_remote_descriptor.lock() != nullptr)
+        m_resources->progress();
 
-    // Check that the remote send descriptor is now invalid, i.e., released by `DataPlaneResources2`.
+    // Redundant with the above, but clarify intent.
     EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
 
     // Convert back into the value descriptor

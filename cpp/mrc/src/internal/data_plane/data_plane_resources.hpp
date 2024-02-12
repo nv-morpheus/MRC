@@ -194,8 +194,6 @@ class DataPlaneResources2
 
     uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
 
-    void decrement();
-
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
 

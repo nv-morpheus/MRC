@@ -161,6 +161,30 @@ DataPlaneResources2::DataPlaneResources2()
     DVLOG(10) << "initialize the registration cache for this context";
     m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
 
+    auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
+        if (req->getStatus() != UCS_OK)
+            // TODO(Peter): Ensure the error gets raised somehow
+            DVLOG(10) << "Error calling decrement_callback";
+
+        auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
+            req->getRecvBuffer()->data());
+
+        if (dec_message->tokens > 0)
+        {
+            auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
+            auto tokens            = remote_descriptor->encoded_object().tokens();
+            tokens -= dec_message->tokens;
+            remote_descriptor->encoded_object().set_tokens(tokens);
+            if (tokens == 0)
+            {
+                m_remote_descriptor_by_id.erase(dec_message->object_id);
+            }
+        }
+    });
+    m_worker->registerAmReceiverCallback(
+        ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
+        decrement_callback);
+
     // flush any work that needs to be done by the workers
     this->flush();
 }
@@ -382,39 +406,6 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
     remote_descriptor->encoded_object().set_object_id(object_id);
     m_remote_descriptor_by_id[object_id] = remote_descriptor;
     return object_id;
-}
-
-void DataPlaneResources2::decrement()
-{
-    std::map<std::shared_ptr<ucxx::Endpoint>, std::shared_ptr<ucxx::Request>> probeRequests;
-    for (auto& ep_pair : m_endpoints_by_address)
-    {
-        auto ep     = ep_pair.second;
-        auto worker = ep->getWorker();
-        if (worker->tagProbe(ucxx::Tag(0)))
-        {
-            remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
-
-            auto decrement_request = ep->tagRecv(&dec_message,
-                                                 sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
-                                                 ucxx::Tag(0),
-                                                 ucxx::TagMaskFull);
-            while (!decrement_request->isCompleted())
-                worker->progress();
-
-            if (dec_message.tokens > 0)
-            {
-                auto remote_descriptor = m_remote_descriptor_by_id[dec_message.object_id];
-                auto tokens            = remote_descriptor->encoded_object().tokens();
-                tokens -= dec_message.tokens;
-                remote_descriptor->encoded_object().set_tokens(tokens);
-                if (tokens == 0)
-                {
-                    m_remote_descriptor_by_id.erase(dec_message.object_id);
-                }
-            }
-        }
-    }
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
