@@ -16,6 +16,8 @@
 
 include_guard(GLOBAL)
 
+find_package(ucx REQUIRED)
+
 function(morpheus_utils_configure_UCXX)
   list(APPEND CMAKE_MESSAGE_CONTEXT "UCXX")
 
@@ -26,7 +28,7 @@ function(morpheus_utils_configure_UCXX)
   # https://github.com/rapidsai/ucxx/pull/166
   rapids_cpm_find(ucxx ${UCXX_VERSION}
     GLOBAL_TARGETS
-      ucxx ucxx::ucxx ucxx::ucxx_python ucx::ucs ucx::ucp
+      ucxx ucxx::ucxx ucx::ucs ucx::ucp
     BUILD_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     INSTALL_EXPORT_SET

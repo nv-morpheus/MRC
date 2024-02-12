@@ -75,7 +75,7 @@ target_link_libraries(test_mrc_private
     GTest::gtest
     hwloc::hwloc
     ucx::ucs
-    # ucx::ucp
+    ucx::ucp
     pthread
     mrc_test_protos
 )
