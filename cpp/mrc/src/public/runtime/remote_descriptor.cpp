@@ -176,7 +176,9 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
 
     // TODO(Peter): Settle on message type, probably custom AM implementation in UCXX
     // TODO(Peter): Ensure completion immediately or push message to a pool to ensure completion later
-    auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage), 0);
+    auto decrement_request = ep->tagSend(&dec_message,
+                                         sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+                                         ucxx::Tag(0));
 
     return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }

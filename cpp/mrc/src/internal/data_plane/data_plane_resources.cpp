@@ -316,7 +316,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::share
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, tag);
+    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, ucxx::Tag(tag));
 
     return request;
 }
@@ -329,7 +329,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::share
 {
     // TODO(MDD): Check that this EP belongs to this resource
     // TODO(MDD): Once 0.35 is released, support tag_mask
-    auto request = endpoint->tagRecv(buffer, length, tag);
+    auto request = endpoint->tagRecv(buffer, length, ucxx::Tag(tag), ucxx::TagMaskFull);
 
     return request;
 }
@@ -391,13 +391,14 @@ void DataPlaneResources2::decrement()
     {
         auto ep     = ep_pair.second;
         auto worker = ep->getWorker();
-        if (worker->tagProbe(0))
+        if (worker->tagProbe(ucxx::Tag(0)))
         {
             remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
 
             auto decrement_request = ep->tagRecv(&dec_message,
                                                  sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
-                                                 0);
+                                                 ucxx::Tag(0),
+                                                 ucxx::TagMaskFull);
             while (!decrement_request->isCompleted())
                 worker->progress();
 
