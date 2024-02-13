@@ -186,8 +186,6 @@ control_plane::state::PipelineInstance PipelineInstance::filter_resource(
 
 bool PipelineInstance::on_created_requested(control_plane::state::PipelineInstance& instance, bool needs_local_update)
 {
-    LOG(INFO) << "PipelineInstance: on_created_requested";
-
     this->sync_manifolds(instance);
 
     return true;

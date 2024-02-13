@@ -153,7 +153,7 @@ export class WorkersManager {
       const response = await connectionManager.send_request<RegisterWorkersResponse>(
          EventType.ClientUnaryRegisterWorkers,
          RegisterWorkersRequest.create({
-            ucxWorkerAddresses: stringToBytes(addresses),
+            ucxWorkerAddresses: addresses,
          })
       );
 

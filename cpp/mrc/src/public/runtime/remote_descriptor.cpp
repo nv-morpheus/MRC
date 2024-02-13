@@ -168,7 +168,7 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     // Now, we need to wait for all requests to be complete
     data_plane_resources.wait_requests(requests);
 
-    PortAddress2 port_address(remote_descriptor->encoded_object().destination_address());
+    PortAddress2 port_address(remote_descriptor->encoded_object().source_address());
 
     // For the remote descriptor message, send decrement to the remote resources
     auto ep = data_plane_resources.find_endpoint(port_address.executor_id);

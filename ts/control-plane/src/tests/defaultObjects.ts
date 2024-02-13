@@ -46,7 +46,7 @@ export const worker: IWorker = {
    id: workerId,
    executorId: executor.id,
    partitionAddress: generatePartitionAddress(Number(workerId)),
-   ucxAddress: stringToBytes("-----"),
+   ucxAddress: "-----",
    state: {
       ...default_resource_state,
    },

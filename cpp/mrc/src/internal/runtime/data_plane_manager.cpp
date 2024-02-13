@@ -35,13 +35,17 @@
 #include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/future/future.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
+#include <ucs/type/status.h>
+#include <ucxx/request.h>
 
 #include <exception>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -60,6 +64,11 @@ DataPlaneSystemManager::DataPlaneSystemManager(IInternalRuntimeProvider& runtime
 DataPlaneSystemManager::~DataPlaneSystemManager()
 {
     AsyncService::call_in_destructor();
+}
+
+std::string DataPlaneSystemManager::get_ucx_address() const
+{
+    return m_resources->address();
 }
 
 std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
@@ -130,6 +139,10 @@ std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataP
     auto port_channel = std::make_shared<node::LambdaSinkComponent<std::unique_ptr<ValueDescriptor>>>(
         [mutable_this, port_address](std::unique_ptr<ValueDescriptor>&& data) {
             return mutable_this->send_descriptor(port_address, std::move(data));
+        },
+        [mutable_this, port_address]() {
+            // Stream has closed. Need to send the closed message for this port
+            VLOG(10) << "Stream has closed for port " << port_address;
         });
 
     mutable_this->m_egress_port_channels[port_address] = port_channel;
@@ -213,27 +226,13 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
         });
 
     auto resources_progress = std::make_unique<node::LambdaSource<int>>([this](rxcpp::subscriber<int>& subscriber) {
-        auto request = m_resources->am_recv_async(nullptr);
-
         // Pull from the resources channel
         while (subscriber.is_subscribed())
         {
-            this->m_resources->progress();
-
-            std::unique_ptr<RemoteDescriptor2> temp_remote;
-
-            auto status = this->m_resources->get_inbound_channel().await_read_until(
-                temp_remote,
-                channel::clock_t::now() + std::chrono::milliseconds(100));
-
-            if (status == channel::Status::success)
+            if (!this->m_resources->progress())
             {
-                auto destination = PortAddress2(temp_remote->encoded_object().destination_address());
-
-                // Convert from remote to local descriptor
-                auto local = LocalDescriptor2::from_remote(std::move(temp_remote), *m_resources);
-
-                subscriber.on_next(std::make_pair(destination, std::move(local)));
+                // TODO(MDD): Convert this to an exponential backoff
+                boost::this_fiber::yield();
             }
         }
     });
@@ -245,9 +244,6 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
                 // Pull from the resources channel
                 while (subscriber.is_subscribed())
                 {
-                    // TODO(MDD): Temp code to try and progress the worker
-                    while (this->m_resources->progress()) {}
-
                     std::unique_ptr<RemoteDescriptor2> temp_remote;
 
                     auto status = this->m_resources->get_inbound_channel().await_read_until(
@@ -270,9 +266,13 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
 
     mrc::make_edge(*pull_remote_descriptors, *m_inbound_dispatcher);
 
-    // Start the runnable
+    // Start the runnables
+    this->child_runnable_start("remote_progress",
+                               mrc::runnable::LaunchOptions("mrc_network", 1),
+                               std::move(resources_progress));
+
     this->child_runnable_start("pull_remote_descriptors",
-                               mrc::runnable::LaunchOptions("mrc_network"),
+                               mrc::runnable::LaunchOptions("mrc_network", 1),
                                std::move(pull_remote_descriptors));
 
     this->mark_started();
@@ -282,6 +282,14 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
 
 void DataPlaneSystemManager::process_state_update(const control_plane::state::ControlPlaneState& state)
 {
+    if (!m_resources->has_instance_id())
+    {
+        // Get the current connection ID and set it in the resources
+        auto machine_id = this->runtime().control_plane().machine_id();
+
+        m_resources->set_instance_id(machine_id);
+    }
+
     // Ensure that endpoints exist for all workers
     for (const auto& [worker_id, worker] : state.workers())
     {
@@ -304,6 +312,10 @@ channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destin
     // Convert from local to remote descriptor
     auto remote = RemoteDescriptor2::from_local(std::move(local), *m_resources);
 
+    // TODO(MDD): Temp setting the source address as just the executor (so the tokens can be decremented)
+    remote->encoded_object().set_source_address(
+        PortAddress2(static_cast<uint16_t>(m_resources->get_instance_id()), 0, 0, 0).combined);
+
     // Set the destination
     remote->encoded_object().set_destination_address(port_destination.combined);
 
@@ -313,11 +325,30 @@ channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destin
     // Get the endpoint for this message
     auto endpoint = m_resources->find_endpoint(port_destination.executor_id);
 
+    Promise<void> completed_promise;
+
+    auto completed_future = completed_promise.get_future();
+
     // Send the bytes to the remote worker
-    auto request = m_resources->am_send_async(endpoint, serialized_buffer);
+    auto request = m_resources->am_send_async(
+        endpoint,
+        serialized_buffer,
+        ucxx::AmReceiverCallbackInfo("MRC", 1 << 2),
+        ucxx::RequestCallbackUserFunction([&completed_promise](ucs_status_t status, std::shared_ptr<void>) {
+            if (status != UCS_OK)
+            {
+                completed_promise.set_exception(
+                    std::make_exception_ptr(std::runtime_error("Failed to send descriptor")));
+            }
+            else
+            {
+                completed_promise.set_value();
+            }
+        }));
 
     // TODO(MDD): Do we need to wait for the request to send or can we just assume it sends?
-    m_resources->wait_requests(std::vector<std::shared_ptr<ucxx::Request>>{request});
+    completed_future.get();
+    // m_resources->wait_requests(std::vector<std::shared_ptr<ucxx::Request>>{request});
 
     return channel::Status::success;
 }

@@ -202,7 +202,7 @@ std::unique_ptr<LocalSerializedWrapper> encode2(const T& obj,
 
     auto encoded_string = encoded_object->proto().DebugString();
 
-    VLOG(10) << "Encoded object proto: \n" << encoded_string;
+    VLOG(20) << "Encoded object proto: \n" << encoded_string;
 
     return encoded_object;
 }

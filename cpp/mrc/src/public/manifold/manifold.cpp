@@ -145,6 +145,7 @@ void ManifoldTaggerBase2::run(runnable::Context& ctx)
         {
             // Drop all downstream connections
             // TODO(MDD): Release all connections
+            throw exceptions::MrcRuntimeError("Not implemented");
         }
         else
         {

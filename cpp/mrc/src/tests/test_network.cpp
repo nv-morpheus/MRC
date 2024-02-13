@@ -38,6 +38,7 @@
 #include "internal/ucx/memory_block.hpp"
 #include "internal/ucx/registration_cache.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/fundamental_types.hpp"
@@ -64,6 +65,7 @@
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 
+#include <boost/fiber/fiber.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
@@ -79,6 +81,7 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <stop_token>
 #include <thread>
 #include <utility>
 
@@ -702,6 +705,20 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 {
     static_assert(codable::is_static_decodable_v<TransferObject>);
 
+    std::stop_source stop_source;
+
+    auto progress_fiber = boost::fibers::fiber(
+        [this](std::stop_token stop_token) {
+            while (!stop_token.stop_requested())
+            {
+                if (!m_resources->progress())
+                {
+                    boost::this_fiber::yield();
+                }
+            }
+        },
+        stop_source.get_token());
+
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
     TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
@@ -715,8 +732,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
 
     // Convert the local memory blocks into remote memory blocks
-    auto send_remote_descriptor           = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
+    auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
                                                                          *m_resources);
+    send_remote_descriptor->encoded_object().set_destination_address(
+        PortAddress2(static_cast<uint16_t>(m_resources->get_instance_id()), 0, 0, 0).combined);
+
     auto send_remote_descriptor_object_id = send_remote_descriptor->encoded_object().object_id();
 
     // Check that remote payloads were registered with `DataPlaneResources2` with the correct number of tokens.
@@ -726,14 +746,21 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto serialized_data   = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
     send_remote_descriptor = nullptr;
 
-    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
+    auto send_request = m_resources->am_send_async(m_loopback_endpoint,
+                                                   serialized_data,
+                                                   ucxx::AmReceiverCallbackInfo("MRC", 1 << 2));
 
-    auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
+    // while (!send_request->isCompleted())
+    // {
+    //     boost::this_fiber::yield();
+    // }
 
-    while (!send_request->isCompleted() || !receive_request->isCompleted())
-    {
-        m_resources->progress();
-    }
+    // while (m_resources->progress())
+    // {
+    //     // Do nothing
+    // }
+
+    // auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
     // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
     // invalid once `DataPlaneResources2` releases it.
@@ -742,9 +769,15 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     EXPECT_NE(registered_send_remote_descriptor.lock(), nullptr);
 
     // Create a remote descriptor from the received data
-    auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
-                                                                          receive_request->getRecvBuffer()->getSize(),
-                                                                          mrc::memory::memory_kind::host});
+    // auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes({receive_request->getRecvBuffer()->data(),
+    //                                                                       receive_request->getRecvBuffer()->getSize(),
+    //                                                                       mrc::memory::memory_kind::host});
+
+    std::unique_ptr<runtime::RemoteDescriptor2> recv_remote_descriptor;
+
+    // Get the sent descriptor
+    EXPECT_EQ(m_resources->get_inbound_channel().await_read(recv_remote_descriptor), channel::Status::success);
+
     auto recv_remote_descriptor_object_id = recv_remote_descriptor->encoded_object().object_id();
 
     // Convert to a local descriptor
@@ -757,7 +790,7 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     // complete.
     // Wait for remote decrement messages.
     while (registered_send_remote_descriptor.lock() != nullptr)
-        m_resources->progress();
+        boost::this_fiber::yield();
 
     // Redundant with the above, but clarify intent.
     EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
@@ -770,6 +803,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto recv_data = recv_value_descriptor->value();
 
     EXPECT_EQ(send_data, recv_data);
+
+    // Shutdown
+    stop_source.request_stop();
+
+    progress_fiber.join();
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)

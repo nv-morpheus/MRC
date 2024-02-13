@@ -57,7 +57,7 @@ export class Executor implements IExecutor {
          id: id,
          executorAddress: generateExecutorAddress(Number(id)),
          peerInfo: peerInfo,
-         ucxAddress: new Uint8Array(),
+         ucxAddress: "",
          assignedPipelineIds: [],
          mappedPipelineDefinitions: [],
          assignedSegmentIds: [],

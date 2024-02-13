@@ -46,9 +46,9 @@ class ResourceInstanceBase : public AsyncService, public runnable::RunnableResou
     void do_service_start(std::stop_token stop_token) final;
     virtual void post_service_start() {}
 
-    virtual ResourceT filter_object(const control_plane::state::ControlPlaneState& state)
+    virtual ResourceT filter_object(const control_plane::state::ControlPlaneState& state);
 
-        void process_state_update(control_plane::state::SegmentInstance& instance);
+    void process_state_update(control_plane::state::SegmentInstance& instance);
 
     runtime::Runtime& m_runtime;
 

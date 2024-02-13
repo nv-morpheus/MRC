@@ -62,6 +62,8 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
     DataPlaneSystemManager(IInternalRuntimeProvider& runtime);
     ~DataPlaneSystemManager() override;
 
+    std::string get_ucx_address() const;
+
     // This is what each ingress object will connect to in order to pull the next message
     std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> get_readable_ingress_channel(
         PortAddress2 port_address) const;

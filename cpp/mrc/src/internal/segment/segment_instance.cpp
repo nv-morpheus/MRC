@@ -462,6 +462,22 @@ void SegmentInstance::on_completed_requested(control_plane::state::SegmentInstan
     DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
 }
 
+void SegmentInstance::on_stopped_requested(control_plane::state::SegmentInstance& instance)
+{
+    auto& pipeline_instance = this->runtime().pipelines_manager().get_instance(m_address.pipeline_id);
+
+    // Now try to disconnect the segments
+    for (const auto& [name, node] : m_builder->egress_ports())
+    {
+        DVLOG(10) << info() << " constructing launcher egress port " << name;
+
+        pipeline_instance.get_manifold_instance(name).unregister_local_input(
+            PortAddress2(m_address.executor_id, m_address.pipeline_id, m_address.segment_id, port_name_hash(name)));
+    }
+
+    this->service_stop();
+}
+
 // void SegmentInstance::do_service_start(std::stop_token stop_token)
 // {
 //     Promise<void> completed_promise;

@@ -381,7 +381,7 @@ export interface Executor {
   /** Info about the client (IP/Port) */
   peerInfo: string;
   /** Serialized UCX worker address */
-  ucxAddress: Uint8Array;
+  ucxAddress: string;
   /** The pipeline instances that are assigned to this machine */
   assignedPipelineIds: string[];
   /** The pipeline definitions that are assigned to this machine */
@@ -409,7 +409,7 @@ export interface Worker {
   /** The PartitionAddress of this worker. 16 bit unused + 16 bit PartitionID */
   partitionAddress: number;
   /** Serialized UCX worker address */
-  ucxAddress: Uint8Array;
+  ucxAddress: string;
   /** Current state of the worker */
   state:
     | ResourceState
@@ -1207,7 +1207,7 @@ function createBaseExecutor(): Executor {
     id: "0",
     executorAddress: 0,
     peerInfo: "",
-    ucxAddress: new Uint8Array(0),
+    ucxAddress: "",
     assignedPipelineIds: [],
     mappedPipelineDefinitions: [],
     assignedSegmentIds: [],
@@ -1229,8 +1229,8 @@ export const Executor = {
     if (message.peerInfo !== "") {
       writer.uint32(26).string(message.peerInfo);
     }
-    if (message.ucxAddress.length !== 0) {
-      writer.uint32(34).bytes(message.ucxAddress);
+    if (message.ucxAddress !== "") {
+      writer.uint32(34).string(message.ucxAddress);
     }
     writer.uint32(42).fork();
     for (const v of message.assignedPipelineIds) {
@@ -1291,7 +1291,7 @@ export const Executor = {
             break;
           }
 
-          message.ucxAddress = reader.bytes();
+          message.ucxAddress = reader.string();
           continue;
         case 5:
           if (tag === 40) {
@@ -1383,7 +1383,7 @@ export const Executor = {
       id: isSet(object.id) ? String(object.id) : "0",
       executorAddress: isSet(object.executorAddress) ? Number(object.executorAddress) : 0,
       peerInfo: isSet(object.peerInfo) ? String(object.peerInfo) : "",
-      ucxAddress: isSet(object.ucxAddress) ? bytesFromBase64(object.ucxAddress) : new Uint8Array(0),
+      ucxAddress: isSet(object.ucxAddress) ? String(object.ucxAddress) : "",
       assignedPipelineIds: Array.isArray(object?.assignedPipelineIds)
         ? object.assignedPipelineIds.map((e: any) => String(e))
         : [],
@@ -1403,8 +1403,7 @@ export const Executor = {
     message.id !== undefined && (obj.id = message.id);
     message.executorAddress !== undefined && (obj.executorAddress = Math.round(message.executorAddress));
     message.peerInfo !== undefined && (obj.peerInfo = message.peerInfo);
-    message.ucxAddress !== undefined &&
-      (obj.ucxAddress = base64FromBytes(message.ucxAddress !== undefined ? message.ucxAddress : new Uint8Array(0)));
+    message.ucxAddress !== undefined && (obj.ucxAddress = message.ucxAddress);
     if (message.assignedPipelineIds) {
       obj.assignedPipelineIds = message.assignedPipelineIds.map((e) => e);
     } else {
@@ -1438,7 +1437,7 @@ export const Executor = {
     message.id = object.id ?? "0";
     message.executorAddress = object.executorAddress ?? 0;
     message.peerInfo = object.peerInfo ?? "";
-    message.ucxAddress = object.ucxAddress ?? new Uint8Array(0);
+    message.ucxAddress = object.ucxAddress ?? "";
     message.assignedPipelineIds = object.assignedPipelineIds?.map((e) => e) || [];
     message.mappedPipelineDefinitions = object.mappedPipelineDefinitions?.map((e) => e) || [];
     message.assignedSegmentIds = object.assignedSegmentIds?.map((e) => e) || [];
@@ -1458,7 +1457,7 @@ function createBaseWorker(): Worker {
     id: "0",
     executorId: "0",
     partitionAddress: 0,
-    ucxAddress: new Uint8Array(0),
+    ucxAddress: "",
     state: undefined,
     assignedSegmentIds: [],
   };
@@ -1477,8 +1476,8 @@ export const Worker = {
     if (message.partitionAddress !== 0) {
       writer.uint32(24).uint32(message.partitionAddress);
     }
-    if (message.ucxAddress.length !== 0) {
-      writer.uint32(34).bytes(message.ucxAddress);
+    if (message.ucxAddress !== "") {
+      writer.uint32(34).string(message.ucxAddress);
     }
     if (message.state !== undefined) {
       ResourceState.encode(message.state, writer.uint32(42).fork()).ldelim();
@@ -1524,7 +1523,7 @@ export const Worker = {
             break;
           }
 
-          message.ucxAddress = reader.bytes();
+          message.ucxAddress = reader.string();
           continue;
         case 5:
           if (tag !== 42) {
@@ -1565,7 +1564,7 @@ export const Worker = {
       id: isSet(object.id) ? String(object.id) : "0",
       executorId: isSet(object.executorId) ? String(object.executorId) : "0",
       partitionAddress: isSet(object.partitionAddress) ? Number(object.partitionAddress) : 0,
-      ucxAddress: isSet(object.ucxAddress) ? bytesFromBase64(object.ucxAddress) : new Uint8Array(0),
+      ucxAddress: isSet(object.ucxAddress) ? String(object.ucxAddress) : "",
       state: isSet(object.state) ? ResourceState.fromJSON(object.state) : undefined,
       assignedSegmentIds: Array.isArray(object?.assignedSegmentIds)
         ? object.assignedSegmentIds.map((e: any) => String(e))
@@ -1578,8 +1577,7 @@ export const Worker = {
     message.id !== undefined && (obj.id = message.id);
     message.executorId !== undefined && (obj.executorId = message.executorId);
     message.partitionAddress !== undefined && (obj.partitionAddress = Math.round(message.partitionAddress));
-    message.ucxAddress !== undefined &&
-      (obj.ucxAddress = base64FromBytes(message.ucxAddress !== undefined ? message.ucxAddress : new Uint8Array(0)));
+    message.ucxAddress !== undefined && (obj.ucxAddress = message.ucxAddress);
     message.state !== undefined && (obj.state = message.state ? ResourceState.toJSON(message.state) : undefined);
     if (message.assignedSegmentIds) {
       obj.assignedSegmentIds = message.assignedSegmentIds.map((e) => e);
@@ -1598,7 +1596,7 @@ export const Worker = {
     message.id = object.id ?? "0";
     message.executorId = object.executorId ?? "0";
     message.partitionAddress = object.partitionAddress ?? 0;
-    message.ucxAddress = object.ucxAddress ?? new Uint8Array(0);
+    message.ucxAddress = object.ucxAddress ?? "";
     message.state = (object.state !== undefined && object.state !== null)
       ? ResourceState.fromPartial(object.state)
       : undefined;
@@ -7402,50 +7400,6 @@ export const EgressPolicy = {
 };
 
 messageTypeRegistry.set(EgressPolicy.$type, EgressPolicy);
-
-declare var self: any | undefined;
-declare var window: any | undefined;
-declare var global: any | undefined;
-var tsProtoGlobalThis: any = (() => {
-  if (typeof globalThis !== "undefined") {
-    return globalThis;
-  }
-  if (typeof self !== "undefined") {
-    return self;
-  }
-  if (typeof window !== "undefined") {
-    return window;
-  }
-  if (typeof global !== "undefined") {
-    return global;
-  }
-  throw "Unable to locate global object";
-})();
-
-function bytesFromBase64(b64: string): Uint8Array {
-  if (tsProtoGlobalThis.Buffer) {
-    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
-  } else {
-    const bin = tsProtoGlobalThis.atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; ++i) {
-      arr[i] = bin.charCodeAt(i);
-    }
-    return arr;
-  }
-}
-
-function base64FromBytes(arr: Uint8Array): string {
-  if (tsProtoGlobalThis.Buffer) {
-    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
-  } else {
-    const bin: string[] = [];
-    arr.forEach((byte) => {
-      bin.push(String.fromCharCode(byte));
-    });
-    return tsProtoGlobalThis.btoa(bin.join(""));
-  }
-}
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 

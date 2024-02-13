@@ -30,15 +30,67 @@
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/memory/literals.hpp"
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/insert_linebreaks.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <glog/logging.h>
 #include <ucp/api/ucp.h>
 #include <ucs/memory/memory_type.h>
 #include <ucxx/api.h>
 
+#include <iostream>
 #include <memory>
+#include <mutex>
+#include <string>
 
 namespace mrc::data_plane {
 
 using namespace mrc::memory::literals;
+
+std::string decode64(const std::string& val)
+{
+    using namespace boost::archive::iterators;
+    using namespace std;
+
+    typedef transform_width<binary_from_base64<remove_whitespace<string::const_iterator>>, 8, 6> it_binary_t;
+    typedef insert_linebreaks<base64_from_binary<transform_width<string::const_iterator, 6, 8>>, 72> it_base64_t;
+
+    std::string tmp = val;
+
+    unsigned int paddChars = count(tmp.begin(), tmp.end(), '=');
+    std::replace(tmp.begin(), tmp.end(), '=', 'A');                   // replace '=' by base64 encoding of '\0'
+    string result(it_binary_t(tmp.begin()), it_binary_t(tmp.end()));  // decode
+    result.erase(result.end() - paddChars, result.end());             // erase padding '\0' characters
+
+    return result;
+
+    // using It = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
+    // return boost::algorithm::trim_right_copy_if(std::string(It(std::begin(val)), It(std::end(val))), [](char c) {
+    //     return c == '\0';
+    // });
+}
+
+std::string encode64(const std::string& val)
+{
+    using namespace boost::archive::iterators;
+    using namespace std;
+
+    typedef transform_width<binary_from_base64<remove_whitespace<string::const_iterator>>, 8, 6> it_binary_t;
+    typedef insert_linebreaks<base64_from_binary<transform_width<string::const_iterator, 6, 8>>, 72> it_base64_t;
+
+    // Encode
+    unsigned int writePaddChars = (3 - val.length() % 3) % 3;
+    string base64(it_base64_t(val.begin()), it_base64_t(val.end()));
+    base64.append(writePaddChars, '=');
+
+    return base64;
+
+    // using It = base64_from_binary<transform_width<std::string::const_iterator, 6, 8>>;
+    // auto tmp = std::string(It(std::begin(val)), It(std::end(val)));
+    // return tmp.append((3 - val.size() % 3) % 3, '=');
+}
 
 DataPlaneResources::DataPlaneResources(resources::PartitionResourceBase& base,
                                        ucx::UcxResources& ucx,
@@ -160,32 +212,82 @@ DataPlaneResources2::DataPlaneResources2() :
 
     m_address = m_worker->getAddress();
 
+    auto test_str = m_address->getString();
+
+    auto encoded = encode64(test_str);
+    auto decoded = decode64(encoded);
+
+    DCHECK_EQ(test_str, decoded) << "UCX Address Roundtrip failed";
+
+    DVLOG(10) << "Created worker with address: " << this->address();
+
     DVLOG(10) << "initialize the registration cache for this context";
     m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
 
     auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
         if (req->getStatus() != UCS_OK)
+        {
             // TODO(Peter): Ensure the error gets raised somehow
             DVLOG(10) << "Error calling decrement_callback";
+        }
 
         auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
             req->getRecvBuffer()->data());
 
         if (dec_message->tokens > 0)
         {
-            auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
-            auto tokens            = remote_descriptor->encoded_object().tokens();
-            tokens -= dec_message->tokens;
-            remote_descriptor->encoded_object().set_tokens(tokens);
-            if (tokens == 0)
+            // Lock on usages of the descriptor map
+            std::unique_lock lock(m_mutex);
+
+            if (m_remote_descriptor_by_id.find(dec_message->object_id) == m_remote_descriptor_by_id.end())
             {
+                LOG(ERROR) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
+                           << dec_message->object_id << ") " << dec_message->tokens << ". Not found.";
+                return;
+            }
+
+            auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
+            auto start_tokens      = remote_descriptor->encoded_object().tokens();
+            auto remaining_tokens  = start_tokens - dec_message->tokens;
+
+            remote_descriptor->encoded_object().set_tokens(remaining_tokens);
+
+            if (remaining_tokens == 0)
+            {
+                VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
+                         << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
+                         << remaining_tokens << ". Destroying.";
+
                 m_remote_descriptor_by_id.erase(dec_message->object_id);
+            }
+            else
+            {
+                VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
+                         << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
+                         << remaining_tokens << ".";
             }
         }
     });
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
         decrement_callback);
+
+    auto remote_descriptor_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
+        if (req->getStatus() != UCS_OK)
+        {
+            LOG(ERROR) << "Error calling remote_descriptor_callback";
+        }
+
+        // Deserialize the remote descriptor
+        auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes(
+            {req->getRecvBuffer()->data(), req->getRecvBuffer()->getSize(), mrc::memory::memory_kind::host});
+
+        // Write it to the inbound channel to be processed
+        m_inbound_channel->await_write(std::move(recv_remote_descriptor));
+    });
+    m_worker->registerAmReceiverCallback(
+        ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(1 << 2)),
+        remote_descriptor_callback);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -205,7 +307,7 @@ ucxx::Worker& DataPlaneResources2::worker() const
 
 std::string DataPlaneResources2::address() const
 {
-    return m_address->getString();
+    return encode64(m_address->getString());
 }
 
 ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
@@ -216,12 +318,16 @@ ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
 std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address,
                                                                      uint64_t instance_id)
 {
-    auto address_obj = ucxx::createAddressFromString(address);
+    std::string decoded = decode64(address);
+
+    auto address_obj = ucxx::createAddressFromString(decoded);
 
     auto endpoint = m_worker->createEndpointFromWorkerAddress(address_obj);
 
     m_endpoints_by_address[address] = endpoint;
     m_endpoints_by_id[instance_id]  = endpoint;
+
+    DVLOG(10) << "Created endpoint with address: " << address;
 
     return endpoint;
 }
@@ -360,24 +466,41 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::share
     return request;
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                  memory::const_buffer_view buffer_view)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    memory::const_buffer_view buffer_view,
+    std::optional<ucxx::AmReceiverCallbackInfo> callback_info,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     return this->am_send_async(endpoint,
                                buffer_view.data(),
                                buffer_view.bytes(),
-                               ucx::to_ucs_memory_type(buffer_view.kind()));
+                               ucx::to_ucs_memory_type(buffer_view.kind()),
+                               callback_info,
+                               std::move(callback_function),
+                               std::move(callback_data));
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                  const void* addr,
-                                                                  std::size_t bytes,
-                                                                  ucs_memory_type_t mem_type)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    const void* addr,
+    std::size_t bytes,
+    ucs_memory_type_t mem_type,
+    std::optional<ucxx::AmReceiverCallbackInfo> callback_info,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type);
+    auto request = endpoint->amSend(const_cast<void*>(addr),
+                                    bytes,
+                                    mem_type,
+                                    callback_info,
+                                    false,
+                                    std::move(callback_function),
+                                    std::move(callback_data));
 
     return request;
 }
@@ -393,12 +516,18 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
 uint64_t DataPlaneResources2::get_next_object_id()
 {
     auto object_id = m_next_object_id++;
-    while (m_remote_descriptor_by_id.find(object_id) != m_remote_descriptor_by_id.end())
-    {
-        object_id = m_next_object_id++;
-    }
 
     return object_id;
+
+    // // Lock on usages of the descriptor map
+    // std::unique_lock lock(m_mutex);
+
+    // while (m_remote_descriptor_by_id.find(object_id) != m_remote_descriptor_by_id.end())
+    // {
+    //     object_id = m_next_object_id++;
+    // }
+
+    // return object_id;
 }
 
 uint64_t DataPlaneResources2::register_remote_decriptor(
@@ -406,7 +535,15 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
 {
     auto object_id = get_next_object_id();
     remote_descriptor->encoded_object().set_object_id(object_id);
+
+    // Lock on usages of the descriptor map
+    std::unique_lock lock(m_mutex);
+
     m_remote_descriptor_by_id[object_id] = remote_descriptor;
+
+    VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Registering RD(" << object_id
+             << ") Tokens=" << remote_descriptor->encoded_object().tokens() << ".";
+
     return object_id;
 }
 

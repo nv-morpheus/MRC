@@ -379,6 +379,7 @@ T ValueDescriptor::release_value() &&
 
     LOG(FATAL) << "Cannot release value of type " << typeid(T).name() << " from descriptor of type "
                << typeid(*this).name();
+    throw std::runtime_error("Cannot release value");
 }
 
 class RemoteDescriptorImpl2

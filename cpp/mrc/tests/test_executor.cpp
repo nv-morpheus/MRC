@@ -100,9 +100,15 @@ class TestExecutor : public ::testing::Test
         // ideally we make this a true source (seg_1) and true source (seg_4)
         pipeline->make_segment("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
             auto src = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
-                s.on_next(1);
-                s.on_next(2);
-                s.on_next(3);
+                for (int i = 0; i < 3; i++)
+                {
+                    s.on_next(i);
+
+#ifndef NDEBUG
+                    boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
+#endif
+                }
+
                 s.on_completed();
             });
 
@@ -132,7 +138,7 @@ class TestExecutor : public ::testing::Test
             auto in   = s.get_ingress<int>("my_int2");
             auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
                                                // Write to the log
-                                               VLOG(10) << x;
+                                               VLOG(10) << "Got value: " << x;
                                            }));
             s.make_edge(in, sink);
         });

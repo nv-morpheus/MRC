@@ -191,7 +191,7 @@ target_link_libraries(libmrc
     gRPC::grpc++
     gRPC::grpc
     gRPC::gpr
-    ucxx
+    ucxx::ucxx
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199

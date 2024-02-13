@@ -343,7 +343,7 @@ export interface ClientConnectedResponse {
 
 export interface RegisterWorkersRequest {
   $type: "mrc.protos.RegisterWorkersRequest";
-  ucxWorkerAddresses: Uint8Array[];
+  ucxWorkerAddresses: string[];
   pipeline: Pipeline | undefined;
 }
 
@@ -1170,7 +1170,7 @@ export const RegisterWorkersRequest = {
 
   encode(message: RegisterWorkersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.ucxWorkerAddresses) {
-      writer.uint32(10).bytes(v!);
+      writer.uint32(10).string(v!);
     }
     if (message.pipeline !== undefined) {
       Pipeline.encode(message.pipeline, writer.uint32(18).fork()).ldelim();
@@ -1190,7 +1190,7 @@ export const RegisterWorkersRequest = {
             break;
           }
 
-          message.ucxWorkerAddresses.push(reader.bytes());
+          message.ucxWorkerAddresses.push(reader.string());
           continue;
         case 2:
           if (tag !== 18) {
@@ -1212,7 +1212,7 @@ export const RegisterWorkersRequest = {
     return {
       $type: RegisterWorkersRequest.$type,
       ucxWorkerAddresses: Array.isArray(object?.ucxWorkerAddresses)
-        ? object.ucxWorkerAddresses.map((e: any) => bytesFromBase64(e))
+        ? object.ucxWorkerAddresses.map((e: any) => String(e))
         : [],
       pipeline: isSet(object.pipeline) ? Pipeline.fromJSON(object.pipeline) : undefined,
     };
@@ -1221,9 +1221,7 @@ export const RegisterWorkersRequest = {
   toJSON(message: RegisterWorkersRequest): unknown {
     const obj: any = {};
     if (message.ucxWorkerAddresses) {
-      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) =>
-        base64FromBytes(e !== undefined ? e : new Uint8Array(0))
-      );
+      obj.ucxWorkerAddresses = message.ucxWorkerAddresses.map((e) => e);
     } else {
       obj.ucxWorkerAddresses = [];
     }
@@ -5021,50 +5019,6 @@ export interface ArchitectClient<CallOptionsExt = {}> {
   eventStream(request: AsyncIterable<DeepPartial<Event>>, options?: CallOptions & CallOptionsExt): AsyncIterable<Event>;
   ping(request: DeepPartial<PingRequest>, options?: CallOptions & CallOptionsExt): Promise<PingResponse>;
   shutdown(request: DeepPartial<ShutdownRequest>, options?: CallOptions & CallOptionsExt): Promise<ShutdownResponse>;
-}
-
-declare var self: any | undefined;
-declare var window: any | undefined;
-declare var global: any | undefined;
-var tsProtoGlobalThis: any = (() => {
-  if (typeof globalThis !== "undefined") {
-    return globalThis;
-  }
-  if (typeof self !== "undefined") {
-    return self;
-  }
-  if (typeof window !== "undefined") {
-    return window;
-  }
-  if (typeof global !== "undefined") {
-    return global;
-  }
-  throw "Unable to locate global object";
-})();
-
-function bytesFromBase64(b64: string): Uint8Array {
-  if (tsProtoGlobalThis.Buffer) {
-    return Uint8Array.from(tsProtoGlobalThis.Buffer.from(b64, "base64"));
-  } else {
-    const bin = tsProtoGlobalThis.atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; ++i) {
-      arr[i] = bin.charCodeAt(i);
-    }
-    return arr;
-  }
-}
-
-function base64FromBytes(arr: Uint8Array): string {
-  if (tsProtoGlobalThis.Buffer) {
-    return tsProtoGlobalThis.Buffer.from(arr).toString("base64");
-  } else {
-    const bin: string[] = [];
-    arr.forEach((byte) => {
-      bin.push(String.fromCharCode(byte));
-    });
-    return tsProtoGlobalThis.btoa(bin.join(""));
-  }
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

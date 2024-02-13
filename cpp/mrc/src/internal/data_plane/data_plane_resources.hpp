@@ -30,7 +30,9 @@
 #include "mrc/types.hpp"
 
 #include <ucp/api/ucp_def.h>
+#include <ucxx/typedefs.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -184,13 +186,21 @@ class DataPlaneResources2
                                                      uint64_t tag,
                                                      uint64_t tag_mask);
 
-    std::shared_ptr<ucxx::Request> am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                 memory::const_buffer_view buffer_view);
+    std::shared_ptr<ucxx::Request> am_send_async(
+        std::shared_ptr<ucxx::Endpoint> endpoint,
+        memory::const_buffer_view buffer_view,
+        std::optional<ucxx::AmReceiverCallbackInfo> callback_info = std::nullopt,
+        ucxx::RequestCallbackUserFunction callback_function       = nullptr,
+        ucxx::RequestCallbackUserData callback_data               = nullptr);
 
-    std::shared_ptr<ucxx::Request> am_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                 const void* addr,
-                                                 std::size_t bytes,
-                                                 ucs_memory_type_t mem_type);
+    std::shared_ptr<ucxx::Request> am_send_async(
+        std::shared_ptr<ucxx::Endpoint> endpoint,
+        const void* addr,
+        std::size_t bytes,
+        ucs_memory_type_t mem_type,
+        std::optional<ucxx::AmReceiverCallbackInfo> callback_info = std::nullopt,
+        ucxx::RequestCallbackUserFunction callback_function       = nullptr,
+        ucxx::RequestCallbackUserData callback_data               = nullptr);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
     uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
@@ -209,9 +219,11 @@ class DataPlaneResources2
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
-    uint64_t m_next_object_id{0};
+    std::atomic_size_t m_next_object_id{0};
 
     std::unique_ptr<BufferedChannel<std::unique_ptr<runtime::RemoteDescriptor2>>> m_inbound_channel;
+
+    mutable Mutex m_mutex;
 
     // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
     // std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>>>

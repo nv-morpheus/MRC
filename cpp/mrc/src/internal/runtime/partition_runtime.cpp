@@ -25,6 +25,7 @@
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/resources/partition_resources.hpp"
 #include "internal/resources/system_resources.hpp"
+#include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/runtime.hpp"
 #include "internal/runtime/worker_manager.hpp"
 #include "internal/ucx/ucx_resources.hpp"
@@ -130,7 +131,7 @@ void PartitionRuntime::do_service_start(std::stop_token stop_token)
     // First thing, need to register this worker with the control plane
     protos::RegisterWorkersRequest req;
 
-    req.add_ucx_worker_addresses(this->resources().ucx()->worker().address());
+    req.add_ucx_worker_addresses(this->data_plane().get_ucx_address());
 
     auto resp = this->control_plane().await_unary<protos::RegisterWorkersResponse>(protos::ClientUnaryRegisterWorkers,
                                                                                    std::move(req));

@@ -50,6 +50,8 @@ class BuilderDefinition;
 // todo(ryan) - inherit from service
 class SegmentInstance final : public runtime::PartitionResourceManager<control_plane::state::SegmentInstance>
 {
+    using base_t = runtime::PartitionResourceManager<control_plane::state::SegmentInstance>;
+
   public:
     SegmentInstance(runtime::IInternalPartitionRuntimeProvider& runtime,
                     std::shared_ptr<const SegmentDefinition> definition,
@@ -76,6 +78,8 @@ class SegmentInstance final : public runtime::PartitionResourceManager<control_p
     bool on_created_requested(control_plane::state::SegmentInstance& instance, bool needs_local_update) override;
 
     void on_completed_requested(control_plane::state::SegmentInstance& instance) override;
+
+    void on_stopped_requested(control_plane::state::SegmentInstance& instance) override;
 
     void service_start_impl();
     // void do_service_await_live() final;

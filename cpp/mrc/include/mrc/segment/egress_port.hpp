@@ -74,8 +74,12 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
                                   port_name_hash(name))),
       m_port_name(std::move(name)),
       m_node(std::make_unique<node::RxNode<T>>(rxcpp::operators::map([this](T data) {
-          return data;
-      })))
+                                                   return data;
+                                               }),
+                                               rxcpp::operators::finally([this]() {
+                                                   VLOG(10) << "EgressPort " << m_port_name
+                                                            << " completed. Dropping connection";
+                                               })))
     {}
 
   private:

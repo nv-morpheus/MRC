@@ -104,7 +104,7 @@ message Executor {
    string peer_info = 3;
 
    // Serialized UCX worker address
-   bytes ucx_address = 4;
+   string ucx_address = 4;
 
    // The pipeline instances that are assigned to this machine
    repeated uint64 assigned_pipeline_ids = 5;
@@ -136,7 +136,7 @@ message Worker {
    uint32 partition_address = 3;
 
    // Serialized UCX worker address
-   bytes ucx_address = 4;
+   string ucx_address = 4;
 
    // Current state of the worker
    ResourceState state = 5;

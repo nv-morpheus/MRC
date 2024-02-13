@@ -28,7 +28,7 @@ function(morpheus_utils_configure_UCXX)
   # https://github.com/rapidsai/ucxx/pull/166
   rapids_cpm_find(ucxx ${UCXX_VERSION}
     GLOBAL_TARGETS
-      ucxx ucxx::ucxx
+      ucxx::ucxx ucxx::python
     BUILD_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     INSTALL_EXPORT_SET
