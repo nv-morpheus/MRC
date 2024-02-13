@@ -177,9 +177,12 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     dec_message.object_id = remote_descriptor->encoded_object().object_id();
     dec_message.tokens    = remote_descriptor->encoded_object().tokens();
 
-    // TODO(Peter): Settle on message type, probably custom AM implementation in UCXX
-    // TODO(Peter): Ensure completion immediately or push message to a pool to ensure completion later
-    auto decrement_request = ep->tagSend(&dec_message, sizeof(remote_descriptor::RemoteDescriptorDecrementMessage), 0);
+    // TODO(Peter): Define `ucxx::AmReceiverCallbackInfo` at central place, must be known by all MRC processes.
+    // Send a decrement message using custom AM receiver callback
+    auto decrement_request = ep->amSend(&dec_message,
+                                        sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+                                        UCS_MEMORY_TYPE_HOST,
+                                        ucxx::AmReceiverCallbackInfo("MRC", 0));
 
     return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
 }

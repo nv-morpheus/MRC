@@ -195,8 +195,6 @@ class DataPlaneResources2
 
     uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
 
-    void decrement();
-
     channel::Egress<std::unique_ptr<runtime::RemoteDescriptor2>>& get_inbound_channel() const;
 
   private:
