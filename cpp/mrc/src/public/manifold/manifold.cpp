@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,6 +49,8 @@ const std::string& Manifold::info() const
 {
     return m_info;
 }
+
+void Manifold::kill() {}
 
 void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {

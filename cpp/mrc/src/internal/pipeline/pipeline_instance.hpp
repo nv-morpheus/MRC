@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,6 +54,7 @@ class PipelineInstance final : public Service, public PipelineResources
     void stop_segment(const SegmentAddress& address);
     void join_segment(const SegmentAddress& address);
     void remove_segment(const SegmentAddress& address);
+    void kill_segment(const SegmentAddress& address);
 
     /**
      * @brief Start all Segments and Manifolds
@@ -80,11 +81,15 @@ class PipelineInstance final : public Service, public PipelineResources
     std::shared_ptr<const PipelineDefinition> m_definition;  // convert to pipeline::Pipeline
 
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
+
+    decltype(m_segments)::iterator find_segment(const SegmentAddress& address);
+
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;
 
     bool m_joinable{false};
     Promise<void> m_joinable_promise;
     SharedFuture<void> m_joinable_future;
+    Mutex m_kill_mux;
 };
 
 }  // namespace mrc::pipeline

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+#include "test_mrc.hpp"  // IWYU pragma: associated
+
+#include "mrc/node/rx_node.hpp"  // for RxNode
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_sink_base.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -37,6 +40,7 @@
 #include <cstdint>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace mrc {
@@ -57,6 +61,9 @@ class TestPipeline : public ::testing::Test
     std::unique_ptr<pipeline::IPipeline> m_pipeline;
     std::unique_ptr<Options> m_options;
 };
+
+class TestPipelineDeathTest : public TestPipeline
+{};
 
 TEST_F(TestPipeline, LifeCycle)
 {
@@ -159,6 +166,168 @@ TEST_F(TestPipeline, TwoSegment)
     EXPECT_EQ(complete_count, 1);
 
     LOG(INFO) << "Done" << std::endl;
+}
+
+TEST_F(TestPipeline, SegmentInitErrorHandling)
+{
+    // Test to reproduce issue #360
+    auto pipeline = mrc::make_pipeline();
+
+    auto seg = pipeline->make_segment("seg_1", [](segment::IBuilder& seg) {
+        auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+            FAIL() << "This should not be called";
+        });
+
+        auto rx_sink = seg.make_sink<float>("rx_sink",
+                                            rxcpp::make_observer_dynamic<float>(
+                                                [&](float x) {
+                                                    FAIL() << "This should not be "
+                                                              "called";
+                                                },
+                                                [&]() {
+                                                    FAIL() << "This should not be "
+                                                              "called";
+                                                }));
+
+        seg.make_edge(rx_source, rx_sink);
+
+        throw std::runtime_error("Error in initializer");
+    });
+
+    Executor exec(std::move(m_options));
+
+    exec.register_pipeline(std::move(pipeline));
+
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
+}
+
+TEST_F(TestPipelineDeathTest, SegmentInitErrorHandlingNoSource)
+{
+    EXPECT_DEATH_OR_THROW(
+        {
+            // Test to reproduce issue #360
+            auto pipeline = mrc::make_pipeline();
+
+            auto seg = pipeline->make_segment("seg_1", [](segment::IBuilder& seg) {
+                auto internal1 = seg.make_node<float, float>("internal1", rxcpp::operators::map([](float f) {
+                                                                 return f * 2.1F;
+                                                             }));
+
+                auto internal2 = seg.make_node<float, float>("internal2", rxcpp::operators::map([](float f) {
+                                                                 return f * 2.2F;
+                                                             }));
+
+                seg.make_edge(internal1, internal2);
+
+                throw std::runtime_error("Error in initializer");
+
+                auto source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+                    FAIL() << "This should not be called";
+                });
+
+                seg.make_edge(source, internal1);
+            });
+
+            Executor exec(std::move(m_options));
+
+            exec.register_pipeline(std::move(pipeline));
+            exec.start();
+            exec.join();
+        },
+        "A node was destructed which still had dependent connections.*",
+        std::runtime_error);
+}
+
+TEST_F(TestPipeline, SegmentInitErrorHandlingFirstSeg)
+{
+    // Test to reproduce issue #360
+    auto pipeline = mrc::make_pipeline();
+
+    auto seg_1 =
+        pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::IBuilder& seg) {
+            auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+                FAIL() << "This should not be called";
+            });
+
+            auto my_float_egress = seg.get_egress<float>("float_port");
+
+            seg.make_edge(rx_source, my_float_egress);
+            throw std::runtime_error("Error in initializer");
+        });
+
+    auto seg_2 = pipeline->make_segment("seg_2",
+                                        segment::IngressPorts<float>({"float_port"}),
+                                        [&](segment::IBuilder& seg) {
+                                            auto my_float_ingress = seg.get_ingress<float>("float_port");
+
+                                            auto rx_sink = seg.make_sink<float>("rx_sink",
+                                                                                rxcpp::make_observer_dynamic<float>(
+                                                                                    [&](float x) {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    },
+                                                                                    [&]() {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    }));
+
+                                            seg.make_edge(my_float_ingress, rx_sink);
+                                        });
+
+    Executor exec(std::move(m_options));
+
+    exec.register_pipeline(std::move(pipeline));
+
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
+}
+
+TEST_F(TestPipeline, SegmentInitErrorHandlingSecondSeg)
+{
+    // Test to reproduce issue #360
+    auto pipeline = mrc::make_pipeline();
+
+    auto seg_1 =
+        pipeline->make_segment("seg_1", segment::EgressPorts<float>({"float_port"}), [](segment::IBuilder& seg) {
+            auto rx_source = seg.make_source<float>("rx_source", [](rxcpp::subscriber<float> s) {
+                FAIL() << "This should not be called";
+            });
+
+            auto my_float_egress = seg.get_egress<float>("float_port");
+
+            seg.make_edge(rx_source, my_float_egress);
+        });
+
+    auto seg_2 = pipeline->make_segment("seg_2",
+                                        segment::IngressPorts<float>({"float_port"}),
+                                        [&](segment::IBuilder& seg) {
+                                            auto my_float_ingress = seg.get_ingress<float>("float_port");
+
+                                            auto rx_sink = seg.make_sink<float>("rx_sink",
+                                                                                rxcpp::make_observer_dynamic<float>(
+                                                                                    [&](float x) {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    },
+                                                                                    [&]() {
+                                                                                        FAIL() << "This should not be "
+                                                                                                  "called";
+                                                                                    }));
+
+                                            seg.make_edge(my_float_ingress, rx_sink);
+                                            throw std::runtime_error("Error in initializer");
+                                        });
+
+    Executor exec(std::move(m_options));
+
+    exec.register_pipeline(std::move(pipeline));
+
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
 }
 
 /*
