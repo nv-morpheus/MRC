@@ -39,7 +39,7 @@ class Manifold : public Interface
     ~Manifold() override;
 
     const PortName& port_name() const final;
-    void shutdown() override;
+    void kill() override;
 
   protected:
     runnable::IRunnableResources& resources();

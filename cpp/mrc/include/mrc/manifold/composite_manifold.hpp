@@ -61,10 +61,10 @@ class CompositeManifold : public Manifold
 
     ~CompositeManifold() override
     {
-        shutdown();
+        kill();
     };
 
-    void shutdown() final
+    void kill() final
     {
         m_ingress->shutdown();
         m_egress->shutdown();

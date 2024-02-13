@@ -50,7 +50,7 @@ const std::string& Manifold::info() const
     return m_info;
 }
 
-void Manifold::shutdown() {}
+void Manifold::kill() {}
 
 void Manifold::add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source)
 {

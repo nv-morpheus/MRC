@@ -212,7 +212,7 @@ void PipelineInstance::do_service_kill()
     for (const auto& [name, manifold] : m_manifolds)
     {
         DVLOG(10) << "pipeline::PipelineInstance - killing manifold " << name;
-        manifold->shutdown();
+        manifold->kill();
     }
 
     m_manifolds.clear();
