@@ -16,8 +16,6 @@
 
 include_guard(GLOBAL)
 
-find_package(ucx REQUIRED)
-
 function(morpheus_utils_configure_UCXX)
   list(APPEND CMAKE_MESSAGE_CONTEXT "UCXX")
 
