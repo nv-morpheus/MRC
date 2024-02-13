@@ -380,13 +380,8 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
 
 uint64_t DataPlaneResources2::get_next_object_id()
 {
-    auto object_id = m_next_object_id++;
-    while (m_remote_descriptor_by_id.find(object_id) != m_remote_descriptor_by_id.end())
-    {
-        object_id = m_next_object_id++;
-    }
-
-    return object_id;
+    // TODO(Peter): Handle overflow?
+    return m_next_object_id++;
 }
 
 uint64_t DataPlaneResources2::register_remote_decriptor(
