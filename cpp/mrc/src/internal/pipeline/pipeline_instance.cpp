@@ -76,33 +76,38 @@ void PipelineInstance::update()
     mark_joinable();
 }
 
-void PipelineInstance::remove_segment(const SegmentAddress& address)
+decltype(PipelineInstance::m_segments)::iterator PipelineInstance::find_segment(const SegmentAddress& address)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
+    return search;
+}
+
+void PipelineInstance::remove_segment(const SegmentAddress& address)
+{
+    auto search = find_segment(address);
     m_segments.erase(search);
 }
 
 void PipelineInstance::join_segment(const SegmentAddress& address)
 {
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
+    auto search = find_segment(address);
     search->second->service_await_join();
 }
 
-void PipelineInstance::stop_segment(const SegmentAddress& address, bool kill)
+void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
+    auto search = find_segment(address);
 
     auto [id, rank]    = segment_address_decode(address);
     const auto& segdef = m_definition->find_segment(id);
+    search->second->service_stop();
+}
 
-    if (kill)
-    {
-        search->second->shutdown();
-    }
-
+void PipelineInstance::kill_segment(const SegmentAddress& address)
+{
+    auto search = find_segment(address);
+    search->second->shutdown();
     search->second->service_stop();
 }
 
@@ -219,7 +224,7 @@ void PipelineInstance::do_service_kill()
 
     for (auto& [id, segment] : m_segments)
     {
-        stop_segment(id, true);
+        kill_segment(id);
         segment->service_kill();
     }
 

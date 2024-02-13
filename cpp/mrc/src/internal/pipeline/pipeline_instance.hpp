@@ -51,9 +51,10 @@ class PipelineInstance final : public Service, public PipelineResources
     // we need to stage those object that are created into some struct/container so we can mass start them after all
     // object have been created
     void create_segment(const SegmentAddress& address, std::uint32_t partition_id);
-    void stop_segment(const SegmentAddress& address, bool kill = false);
+    void stop_segment(const SegmentAddress& address);
     void join_segment(const SegmentAddress& address);
     void remove_segment(const SegmentAddress& address);
+    void kill_segment(const SegmentAddress& address);
 
     /**
      * @brief Start all Segments and Manifolds
@@ -80,6 +81,9 @@ class PipelineInstance final : public Service, public PipelineResources
     std::shared_ptr<const PipelineDefinition> m_definition;  // convert to pipeline::Pipeline
 
     std::map<SegmentAddress, std::unique_ptr<segment::SegmentInstance>> m_segments;
+
+    decltype(m_segments)::iterator find_segment(const SegmentAddress& address);
+
     std::map<PortName, std::shared_ptr<manifold::Interface>> m_manifolds;
 
     bool m_joinable{false};
