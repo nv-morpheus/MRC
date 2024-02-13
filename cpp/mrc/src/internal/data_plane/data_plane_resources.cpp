@@ -169,17 +169,7 @@ DataPlaneResources2::DataPlaneResources2()
         auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
             req->getRecvBuffer()->data());
 
-        if (dec_message->tokens > 0)
-        {
-            auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
-            auto tokens            = remote_descriptor->encoded_object().tokens();
-            tokens -= dec_message->tokens;
-            remote_descriptor->encoded_object().set_tokens(tokens);
-            if (tokens == 0)
-            {
-                m_remote_descriptor_by_id.erase(dec_message->object_id);
-            }
-        }
+        decrement_tokens(dec_message);
     });
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
@@ -406,6 +396,21 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
     remote_descriptor->encoded_object().set_object_id(object_id);
     m_remote_descriptor_by_id[object_id] = remote_descriptor;
     return object_id;
+}
+
+void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message)
+{
+    if (dec_message->tokens > 0)
+    {
+        auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
+        auto tokens            = remote_descriptor->encoded_object().tokens();
+        tokens -= dec_message->tokens;
+        remote_descriptor->encoded_object().set_tokens(tokens);
+        if (tokens == 0)
+        {
+            m_remote_descriptor_by_id.erase(dec_message->object_id);
+        }
+    }
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,

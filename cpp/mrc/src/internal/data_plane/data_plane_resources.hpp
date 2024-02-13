@@ -19,6 +19,7 @@
 
 #include "internal/data_plane/request.hpp"
 #include "internal/memory/transient_pool.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/resources/partition_resources_base.hpp"
 #include "internal/service.hpp"
 #include "internal/ucx/forward.hpp"
@@ -213,6 +214,8 @@ class DataPlaneResources2
     // m_inbound_port_channels;
 
     uint64_t get_next_object_id();
+
+    void decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message);
 
   protected:
     std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
