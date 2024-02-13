@@ -194,6 +194,8 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
     uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
+    uint64_t registered_remote_descriptor_count();
+    uint64_t registered_remote_descriptor_token_count(uint64_t object_id);
 
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance

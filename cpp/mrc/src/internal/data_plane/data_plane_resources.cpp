@@ -393,6 +393,16 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
     return object_id;
 }
 
+uint64_t DataPlaneResources2::registered_remote_descriptor_count()
+{
+    return m_remote_descriptor_by_id.size();
+}
+
+uint64_t DataPlaneResources2::registered_remote_descriptor_token_count(uint64_t object_id)
+{
+    return m_remote_descriptor_by_id.at(object_id)->encoded_object().tokens();
+}
+
 void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message)
 {
     if (dec_message->tokens > 0)

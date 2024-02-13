@@ -714,6 +714,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     // Convert to a local descriptor
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
 
+    // Check that no remote payloads are yet registered with `DataPlaneResources2`.
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+
     // Convert the local memory blocks into remote memory blocks
     auto send_remote_descriptor           = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
                                                                          *m_resources);
@@ -721,6 +724,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     // Check that remote payloads were registered with `DataPlaneResources2` with the correct number of tokens.
     EXPECT_EQ(send_remote_descriptor->encoded_object().tokens(), std::numeric_limits<uint64_t>::max());
+    EXPECT_EQ(m_resources->registered_remote_descriptor_token_count(send_remote_descriptor_object_id),
+              std::numeric_limits<uint64_t>::max());
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 1);
 
     // Get the serialized data
     auto serialized_data   = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
@@ -761,6 +767,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     // Redundant with the above, but clarify intent.
     EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
+
+    // Check all remote payloads have been deregistered, including the one previously transferred.
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+    EXPECT_THROW(m_resources->registered_remote_descriptor_token_count(send_remote_descriptor_object_id),
+                 std::out_of_range);
 
     // Convert back into the value descriptor
     auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(
