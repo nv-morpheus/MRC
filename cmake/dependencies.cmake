@@ -40,6 +40,10 @@ morpheus_utils_configure_ucx()
 # =====
 morpheus_utils_configure_hwloc()
 
+# cccl
+# =========
+morpheus_utils_configure_cccl()
+
 # NVIDIA RAPIDS RMM
 # =================
 morpheus_utils_configure_rmm()
@@ -93,10 +97,6 @@ rapids_find_package(nlohmann_json REQUIRED
 # prometheus
 # =========
 morpheus_utils_configure_prometheus_cpp()
-
-# libcudacxx
-# =========
-morpheus_utils_configure_libcudacxx()
 
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
