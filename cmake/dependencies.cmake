@@ -94,9 +94,9 @@ rapids_find_package(nlohmann_json REQUIRED
 # =========
 morpheus_utils_configure_prometheus_cpp()
 
-# libcudacxx
+# cccl
 # =========
-morpheus_utils_configure_libcudacxx()
+morpheus_utils_configure_cccl()
 
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
