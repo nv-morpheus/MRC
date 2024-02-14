@@ -15,7 +15,7 @@ import {
    segmentInstanceDecRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
-   segmentInstancesSelectBySegmentAddress,
+   segmentInstancesSelectByAddress,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
@@ -323,11 +323,11 @@ function syncSegmentNameForManifold(
    // Determine any that need to be removed
    const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.segmentAddress).includes(s));
 
-   toRemove.forEach((segId) => {
-      const seg = segmentInstancesSelectById(state, segId);
+   toRemove.forEach((segAddress) => {
+      const seg = segmentInstancesSelectByAddress(state, segAddress);
 
       if (!seg) {
-         throw new Error(`Could not find segment with ID: ${segId}`);
+         throw new Error(`Could not find segment with address: ${segAddress}`);
       }
 
       // Dispatch the attach action
@@ -427,9 +427,9 @@ function manifoldInstanceUpdateActualSegment(
    segmentAddress: string,
    isLocal: boolean
 ) {
-   const segment = segmentInstancesSelectBySegmentAddress(state, segmentAddress)[0];
+   const segment = segmentInstancesSelectByAddress(state, segmentAddress);
    if (!segment) {
-      throw new Error(`Could not find segment with segment address: ${segmentAddress}`);
+      throw new Error(`Could not find segment with address: ${segmentAddress}`);
    }
 
    const requestedMapping: { [key: string]: boolean } = isInput

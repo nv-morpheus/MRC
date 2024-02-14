@@ -284,6 +284,14 @@ const selectByPipelineId = createSelector(
 export const segmentInstancesSelectByPipelineId = (state: RootState, pipeline_id: string) =>
    selectByPipelineId(state.segmentInstances, pipeline_id);
 
+const selectByAddress = createSelector(
+   [segmentInstancesAdapter.getAll, (state: SegmentInstancesStateType, segmentAddress: string) => segmentAddress],
+   (segmentInstances, segmentAddress) => segmentInstances.find((x) => x.segmentAddress === segmentAddress)
+);
+
+export const segmentInstancesSelectByAddress = (state: RootState, segmentAddress: string) =>
+   selectByAddress(state.segmentInstances, segmentAddress);
+
 const selectByNameAndPipelineDef = createSelector(
    [
       segmentInstancesAdapter.getAll,
