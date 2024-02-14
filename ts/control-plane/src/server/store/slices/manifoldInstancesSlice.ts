@@ -121,11 +121,11 @@ export const manifoldInstancesSlice = createSlice({
             : found.requestedOutputSegments;
 
          // Check to make sure this hasnt been added already
-         if (action.payload.segment.segmentAddress in requestedMap) {
+         if (action.payload.segment.id in requestedMap) {
             throw new Error("Segment already attached to manifold");
          }
 
-         requestedMap[action.payload.segment.segmentAddress] = action.payload.is_local;
+         requestedMap[action.payload.segment.id] = action.payload.is_local;
       },
       detachRequestedSegment: (
          state,
@@ -302,7 +302,7 @@ function syncSegmentNameForManifold(
    const activeSegments = isInput ? segmentMapping.input : segmentMapping.output;
 
    // Determine any that need to be added
-   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.segmentAddress));
+   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.id));
 
    toAdd.forEach((seg) => {
       // Figure out if this is local
@@ -320,7 +320,7 @@ function syncSegmentNameForManifold(
    });
 
    // Determine any that need to be removed
-   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.segmentAddress).includes(s));
+   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.id).includes(s));
 
    toRemove.forEach((segId) => {
       const seg = segmentInstancesSelectById(state, segId);
