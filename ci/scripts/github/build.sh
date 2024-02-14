@@ -56,10 +56,10 @@ show_conda_info
 
 rapids-logger "Configuring for build and test"
 git submodule update --init --recursive
-cmake -B build -G Ninja ${CMAKE_FLAGS} .
+cmake -B build -G Ninja ${CMAKE_FLAGS} --debug-find-pkg=spdlog --debug-find-pkg=Thrust --trace-expand .
 
 rapids-logger "Building MRC"
-cmake --build build --parallel ${PARALLEL_LEVEL} --debug-find-pkg=spdlog --debug-find-pkg=Thrust --trace-expand
+cmake --build build --parallel ${PARALLEL_LEVEL}
 
 if [[ "${LOCAL_CI}" == "" ]]; then
     rapids-logger "sccache usage for MRC build:"
