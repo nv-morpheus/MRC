@@ -302,7 +302,7 @@ function syncSegmentNameForManifold(
    const activeSegments = isInput ? segmentMapping.input : segmentMapping.output;
 
    // Determine any that need to be added
-   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.id));
+   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.segmentAddress));
 
    toAdd.forEach((seg) => {
       // Figure out if this is local
@@ -320,7 +320,7 @@ function syncSegmentNameForManifold(
    });
 
    // Determine any that need to be removed
-   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.id).includes(s));
+   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.segmentAddress).includes(s));
 
    toRemove.forEach((segId) => {
       const seg = segmentInstancesSelectById(state, segId);
