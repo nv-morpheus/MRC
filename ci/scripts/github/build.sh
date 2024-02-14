@@ -59,7 +59,7 @@ git submodule update --init --recursive
 cmake -B build -G Ninja ${CMAKE_FLAGS} .
 
 rapids-logger "Building MRC"
-cmake --build build --parallel ${PARALLEL_LEVEL} --debug-find-pkg=spdlog
+cmake --build build --parallel ${PARALLEL_LEVEL} --debug-find-pkg=spdlog --debug-find-pkg=Thrust
 
 if [[ "${LOCAL_CI}" == "" ]]; then
     rapids-logger "sccache usage for MRC build:"
