@@ -281,6 +281,8 @@ class RemoteDescriptorImpl2;
 class ValueDescriptor
 {
   public:
+    virtual ~ValueDescriptor();
+
     template <typename T>
     T release_value() &&;
 
@@ -302,6 +304,11 @@ template <typename T>
 class TypedValueDescriptor : public ValueDescriptor
 {
   public:
+    ~TypedValueDescriptor() override
+    {
+        LOG(INFO) << "TypedValueDescriptor::~TypedValueDescriptor()";
+    }
+
     const T& value() const
     {
         return m_value;
@@ -331,6 +338,8 @@ class TypedValueDescriptor : public ValueDescriptor
 class LocalDescriptor2 : public ValueDescriptor
 {
   public:
+    ~LocalDescriptor2() override;
+
     codable::LocalSerializedWrapper& encoded_object() const;
 
     static std::unique_ptr<LocalDescriptor2> from_value(std::unique_ptr<ValueDescriptor> value_descriptor,
@@ -385,6 +394,8 @@ T ValueDescriptor::release_value() &&
 class RemoteDescriptorImpl2
 {
   public:
+    ~RemoteDescriptorImpl2();
+
     codable::protos::RemoteSerializedObject& encoded_object() const;
 
     memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
@@ -399,14 +410,18 @@ class RemoteDescriptorImpl2
   private:
     friend class RemoteDescriptor2;
 
-    RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
+    RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object,
+                          std::unique_ptr<LocalDescriptor2> local_descriptor);
 
     std::unique_ptr<codable::protos::RemoteSerializedObject> m_serialized_object;
+    std::unique_ptr<LocalDescriptor2> m_local_descriptor;
 };
 
 class RemoteDescriptor2
 {
   public:
+    ~RemoteDescriptor2();
+
     codable::protos::RemoteSerializedObject& encoded_object() const;
 
     memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;

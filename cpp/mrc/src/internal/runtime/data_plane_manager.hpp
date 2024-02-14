@@ -85,7 +85,10 @@ class DataPlaneSystemManager : public AsyncService, public InternalRuntimeProvid
 
     void process_state_update(const control_plane::state::ControlPlaneState& state);
 
-    channel::Status send_descriptor(PortAddress2 port_destination, std::unique_ptr<ValueDescriptor>&& descriptor);
+    std::shared_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>> get_ingress_port_channel(
+        PortAddress2 port_address) const;
+
+    channel::Status send_descriptor(PortAddress2 port_destination, std::unique_ptr<ValueDescriptor> descriptor);
 
     // control_plane::state::ControlPlaneState m_previous_state;
 

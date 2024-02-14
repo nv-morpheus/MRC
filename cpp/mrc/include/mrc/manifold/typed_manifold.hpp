@@ -8,13 +8,14 @@
 #include "mrc/node/forward.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
-#include "mrc/node/writable_entrypoint.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/types.hpp"
 #include "mrc/utils/string_utils.hpp"
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -22,69 +23,69 @@
 
 namespace mrc::manifold {
 
+struct ManifoldAction
+{
+    PortAddress2 source_address;
+    std::unique_ptr<runtime::ValueDescriptor> descriptor;
+    std::function<void()> on_completed;
+};
+
 template <typename T>
 class ManifoldTagger2 : public ManifoldTaggerBase2,
                         // Mimic a RxSink Base
-                        public node::ReadableWritableSink<T>,
+                        public node::ReadableWritableSink<ManifoldAction>,
                         // Channel to hold data until we have downstream connections
-                        public node::SinkChannelOwner<T>,
+                        public node::SinkChannelOwner<ManifoldAction>,
                         // Half of a router node to write to multiple outputs
-                        public node::RouterWritableAcceptor<PortAddress2, T>
+                        public node::RouterWritableAcceptor<PortAddress2, std::unique_ptr<runtime::ValueDescriptor>>
 {
   public:
     using key_t            = PortAddress2;
-    using input_message_t  = T;
-    using output_message_t = std::pair<PortAddress2, T>;
+    using input_message_t  = ManifoldAction;
+    using output_message_t = std::pair<PortAddress2, std::unique_ptr<runtime::ValueDescriptor>>;
 
     ManifoldTagger2()
     {
         // Set the default channel
-        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>(4));
+        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<input_message_t>>());
     }
 
     void add_output(PortAddress2 port_address, bool is_local, edge::IWritableProviderBase* output_sink) override
     {
-        std::shared_ptr<edge::WritableEdgeHandle> intermediate_edge =
-            edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ValueDescriptor>>(
-                output_sink->get_writable_edge_handle());
-
-        // if (is_local)
-        // {
-        //     intermediate_edge =
-        //     edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::ResidentDescriptor<T>>>(
-        //         output_sink->get_writable_edge_handle());
-        // }
-        // else
-        // {
-        //     // Its remote, so convert from
-
-        //     intermediate_edge = edge::EdgeBuilder::adapt_writable_edge<std::unique_ptr<runtime::CodedDescriptor<T>>>(
-        //         output_sink->get_writable_edge_handle());
-        // }
-
-        // Now set it as the writable edge for this address. This will do the final conversion from T ->
-        // ResidentDescriptor<T>/CodableDescriptor<T>
-        this->set_writable_edge_handle(port_address, intermediate_edge);
+        mrc::make_edge(*this->get_source(port_address), *output_sink);
     }
 
   protected:
     channel::Status on_next(input_message_t&& data)
     {
-        // Get a read only lock
-        // std::shared_lock lock(m_output_mutex);
+        // Move it so it goes out of scope
+        auto local_data = std::move(data);
 
-        // Figure out which port to send this to
-        auto port = this->get_next_tag();
+        channel::Status status = channel::Status::success;
 
-        // auto output = this->convert_value(std::move(data));
+        if (local_data.descriptor)
+        {
+            // Figure out which port to send this to
+            auto port = this->get_next_tag();
 
-        return this->get_writable_edge(port)->await_write(std::move(data));
+            // auto output = this->convert_value(std::move(data));
+
+            status = this->get_writable_edge(port)->await_write(std::move(local_data.descriptor));
+        }
+
+        // If there is a completion function, call it
+        if (local_data.on_completed)
+        {
+            local_data.on_completed();
+        }
+
+        return status;
     }
 
   private:
     channel::Status process_one_message() override
     {
-        T data;
+        input_message_t data;
 
         // Now pull from the queue. Dont wait for any time if there isnt a message
         auto status = this->get_readable_edge()->await_read_for(data, channel::duration_t::zero());

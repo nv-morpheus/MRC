@@ -203,6 +203,18 @@ export function generateSegmentHash(seg_name: string, worker_id: string): number
    return Number((name_hash << 16n) | worker_hash);
 }
 
+export function sortObjectByKeys(x: any): any {
+   if (typeof x !== "object" || !x) {
+      return x;
+   }
+   if (Array.isArray(x)) {
+      return x.map(sortObjectByKeys);
+   }
+   return Object.keys(x)
+      .sort()
+      .reduce((o, k) => ({ ...o, [k]: sortObjectByKeys(x[k]) }), {});
+}
+
 // Generats a hash for a serialized object in string or buffer form
 export function hashObject(data: BinaryLike): string {
    const hash = createHash("md5");
@@ -227,7 +239,9 @@ export function hashProtoMessage<MessageDataT extends UnknownMessage>(data: Mess
 
    const buffer = new BufferWriter();
 
-   message_type.encode(data, buffer);
+   const sorted_data = sortObjectByKeys(data);
+
+   message_type.encode(sorted_data, buffer);
 
    return hashObject(buffer.finish());
 }

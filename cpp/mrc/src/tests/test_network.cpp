@@ -137,76 +137,6 @@ class TestNetwork : public ::testing::Test
 };
 
 namespace mrc::codable {
-template <typename T>
-struct codable_protocol<std::vector<T>>
-{
-    static void serialize(const std::vector<T>& obj,
-                          mrc::codable::Encoder<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts)
-    {
-        // First put in the size
-        mrc::codable::encode2(obj.size(), encoder, opts);
-
-        // Now encode each object
-        for (const auto& o : obj)
-        {
-            mrc::codable::encode2(o, encoder, opts);
-        }
-    }
-
-    static void serialize(const std::vector<T>& obj,
-                          mrc::codable::Encoder2<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts)
-    {
-        // First put in the size
-        mrc::codable::encode2(obj.size(), encoder, opts);
-
-        if constexpr (std::is_fundamental_v<T>)
-        {
-            // Since these are fundamental types, just encode in a single memory block
-            encoder.write_descriptor({obj.data(), obj.size() * sizeof(T), memory::memory_kind::host},
-                                     DescriptorKind::Deferred);
-        }
-        else
-        {
-            // Now encode each object
-            for (const auto& o : obj)
-            {
-                mrc::codable::encode2(o, encoder, opts);
-            }
-        }
-    }
-
-    static std::vector<T> deserialize(const Decoder<std::vector<T>>& decoder, std::size_t object_idx)
-    {
-        DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(), decoder.type_index_hash_for_object(object_idx));
-
-        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
-
-        auto object = std::vector<T>(count);
-
-        auto idx   = decoder.start_idx_for_object(object_idx);
-        auto bytes = decoder.buffer_size(idx);
-
-        decoder.copy_from_buffer(idx, {object.data(), count * sizeof(T), memory::memory_kind::host});
-
-        return object;
-    }
-
-    static std::vector<T> deserialize(const Decoder2<std::vector<T>>& decoder, std::size_t object_idx)
-    {
-        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
-        // decoder.type_index_hash_for_object(object_idx));
-
-        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
-
-        auto object = std::vector<T>(count);
-
-        decoder.read_descriptor(0, {object.data(), count * sizeof(T), memory::memory_kind::host});
-
-        return object;
-    }
-};
 
 // template <typename T>
 // struct codable_protocol<std::vector<T>, std::enable_if_t<std::is_fundamental_v<T>>>
@@ -251,11 +181,44 @@ class TransferObject
 {
   public:
     TransferObject() = default;
-    TransferObject(std::string name, int value, std::vector<u_int8_t>&& data) :
+    TransferObject(std::string name, int value, std::vector<int> data) :
+      m_has_data(true),
       m_name(std::move(name)),
       m_value(value),
       m_data(std::move(data))
     {}
+
+    TransferObject(const TransferObject& other)            = default;
+    TransferObject& operator=(const TransferObject& other) = default;
+
+    // Move constructor
+    TransferObject(TransferObject&& other) noexcept :
+      m_has_data(std::exchange(other.m_has_data, false)),
+      m_name(std::move(other.m_name)),
+      m_value(std::exchange(other.m_value, 0)),
+      m_data(std::move(other.m_data))
+    {}
+
+    // Move assignment
+    TransferObject& operator=(TransferObject&& other) noexcept
+    {
+        if (this != &other)
+        {
+            m_has_data = std::exchange(other.m_has_data, false);
+            m_name     = std::move(other.m_name);
+            m_value    = std::exchange(other.m_value, 0);
+            m_data     = std::move(other.m_data);
+        }
+        return *this;
+    }
+
+    ~TransferObject()
+    {
+        if (m_has_data)
+        {
+            LOG(INFO) << "TransferObject dtor when it has data";
+        }
+    }
 
     // int a() const { return m_a; }
     // int b() const { return m_b; }
@@ -289,18 +252,21 @@ class TransferObject
     {
         TransferObject obj;
 
-        obj.m_name  = mrc::codable::decode2<std::string, TransferObject>(decoder, object_idx);
-        obj.m_value = mrc::codable::decode2<int, TransferObject>(decoder, object_idx);
-        obj.m_data  = mrc::codable::decode2<std::vector<u_int8_t>, TransferObject>(decoder, object_idx);
+        obj.m_has_data = true;
+        obj.m_name     = mrc::codable::decode2<std::string, TransferObject>(decoder, object_idx);
+        obj.m_value    = mrc::codable::decode2<int, TransferObject>(decoder, object_idx);
+        obj.m_data     = mrc::codable::decode2<std::vector<int>, TransferObject>(decoder, object_idx);
 
         return obj;
     }
 
   private:
+    bool m_has_data{false};
+
     std::string m_name;
     int m_value{0};
 
-    std::vector<u_int8_t> m_data;
+    std::vector<int> m_data;
 };
 
 TEST_F(TestNetwork, Arena)
@@ -721,12 +687,12 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
-    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
+    TransferObject send_data = {"test", 42, std::vector<int>(1_KiB)};
 
     auto send_data_copy = send_data;
 
     // Create a value descriptor
-    auto value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::create(std::move(send_data_copy));
+    auto value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::create(std::move(send_data));
 
     // Convert to a local descriptor
     auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
@@ -734,6 +700,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     // Convert the local memory blocks into remote memory blocks
     auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
                                                                          *m_resources);
+
+    send_remote_descriptor->encoded_object().set_source_address(
+        PortAddress2(static_cast<uint16_t>(m_resources->get_instance_id()), 0, 0, 0).combined);
     send_remote_descriptor->encoded_object().set_destination_address(
         PortAddress2(static_cast<uint16_t>(m_resources->get_instance_id()), 0, 0, 0).combined);
 
@@ -800,9 +769,9 @@ TEST_F(TestNetwork, TransferFullDescriptors)
         std::move(recv_local_descriptor));
 
     // Finally, get the value
-    auto recv_data = recv_value_descriptor->value();
+    const auto& recv_data = recv_value_descriptor->value();
 
-    EXPECT_EQ(send_data, recv_data);
+    EXPECT_EQ(send_data_copy, recv_data);
 
     // Shutdown
     stop_source.request_stop();

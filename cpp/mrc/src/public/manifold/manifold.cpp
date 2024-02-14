@@ -79,7 +79,7 @@ void ManifoldTaggerBase2::update_policy(ManifoldPolicy&& policy)
         {
             const auto& output = policy.outputs.at(key);
 
-            this->add_output(key, output.is_local, output.edge);
+            this->add_output(key, output.is_local, output.edge.get());
         }
 
         // Set a flag to indicate if we have at least one local input connection and one (local or remote) output
@@ -96,6 +96,8 @@ void ManifoldTaggerBase2::update_policy(ManifoldPolicy&& policy)
     // Before continuing, wait for the update to be processed
     update_future.get();
 }
+
+void ManifoldTaggerBase2::flush() {}
 
 void ManifoldTaggerBase2::run(runnable::Context& ctx)
 {
@@ -239,6 +241,12 @@ void ManifoldBase::update_policy(ManifoldPolicy&& policy)
 
     const_cast<ManifoldTaggerBase2&>(m_router_runner->runnable_as<ManifoldTaggerBase2>())
         .update_policy(std::move(policy));
+}
+
+void ManifoldBase::flush()
+{
+    // Forward the flush onto the tagger
+    const_cast<ManifoldTaggerBase2&>(m_router_runner->runnable_as<ManifoldTaggerBase2>()).flush();
 }
 
 void ManifoldBase::update_inputs()

@@ -489,20 +489,20 @@ export interface ManifoldUpdateActualAssignmentsRequest {
   $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest";
   manifoldInstanceId: string;
   /** The actual input connections. True = Local, False = Remote */
-  actualInputSegments: { [key: number]: boolean };
+  actualInputSegments: { [key: string]: boolean };
   /** The actual output connections. True = Local, False = Remote */
-  actualOutputSegments: { [key: number]: boolean };
+  actualOutputSegments: { [key: string]: boolean };
 }
 
 export interface ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
   $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
 export interface ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
   $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry";
-  key: number;
+  key: string;
   value: boolean;
 }
 
@@ -545,7 +545,7 @@ export interface ControlMessage {
 
 export interface OnComplete {
   $type: "mrc.protos.OnComplete";
-  segmentAddresses: number[];
+  segmentAddresses: string[];
 }
 
 export interface UpdateAssignments {
@@ -557,15 +557,15 @@ export interface SegmentAssignment {
   $type: "mrc.protos.SegmentAssignment";
   machineId: string;
   instanceId: string;
-  address: number;
-  egressPolices: { [key: number]: EgressPolicy };
+  address: string;
+  egressPolices: { [key: string]: EgressPolicy };
   issueEventOnComplete: boolean;
-  networkIngressPorts: number[];
+  networkIngressPorts: string[];
 }
 
 export interface SegmentAssignment_EgressPolicesEntry {
   $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry";
-  key: number;
+  key: string;
   value: EgressPolicy | undefined;
 }
 
@@ -3099,14 +3099,14 @@ export const ManifoldUpdateActualAssignmentsRequest = {
       $type: ManifoldUpdateActualAssignmentsRequest.$type,
       manifoldInstanceId: isSet(object.manifoldInstanceId) ? String(object.manifoldInstanceId) : "0",
       actualInputSegments: isObject(object.actualInputSegments)
-        ? Object.entries(object.actualInputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.actualInputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
       actualOutputSegments: isObject(object.actualOutputSegments)
-        ? Object.entries(object.actualOutputSegments).reduce<{ [key: number]: boolean }>((acc, [key, value]) => {
-          acc[Number(key)] = Boolean(value);
+        ? Object.entries(object.actualOutputSegments).reduce<{ [key: string]: boolean }>((acc, [key, value]) => {
+          acc[key] = Boolean(value);
           return acc;
         }, {})
         : {},
@@ -3138,19 +3138,19 @@ export const ManifoldUpdateActualAssignmentsRequest = {
   fromPartial(object: DeepPartial<ManifoldUpdateActualAssignmentsRequest>): ManifoldUpdateActualAssignmentsRequest {
     const message = createBaseManifoldUpdateActualAssignmentsRequest();
     message.manifoldInstanceId = object.manifoldInstanceId ?? "0";
-    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+    message.actualInputSegments = Object.entries(object.actualInputSegments ?? {}).reduce<{ [key: string]: boolean }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
-          acc[Number(key)] = Boolean(value);
+          acc[key] = Boolean(value);
         }
         return acc;
       },
       {},
     );
-    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: number]: boolean }>(
+    message.actualOutputSegments = Object.entries(object.actualOutputSegments ?? {}).reduce<{ [key: string]: boolean }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
-          acc[Number(key)] = Boolean(value);
+          acc[key] = Boolean(value);
         }
         return acc;
       },
@@ -3163,7 +3163,11 @@ export const ManifoldUpdateActualAssignmentsRequest = {
 messageTypeRegistry.set(ManifoldUpdateActualAssignmentsRequest.$type, ManifoldUpdateActualAssignmentsRequest);
 
 function createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry(): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry", key: 0, value: false };
+  return {
+    $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualInputSegmentsEntry",
+    key: "0",
+    value: false,
+  };
 }
 
 export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
@@ -3173,8 +3177,8 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
     message: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry,
     writer: _m0.Writer = _m0.Writer.create(),
   ): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -3197,7 +3201,7 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -3218,14 +3222,14 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
   fromJSON(object: any): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
     return {
       $type: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -3240,7 +3244,7 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry = {
     object: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry>,
   ): ManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry {
     const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualInputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },
@@ -3252,7 +3256,11 @@ messageTypeRegistry.set(
 );
 
 function createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry(): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
-  return { $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry", key: 0, value: false };
+  return {
+    $type: "mrc.protos.ManifoldUpdateActualAssignmentsRequest.ActualOutputSegmentsEntry",
+    key: "0",
+    value: false,
+  };
 }
 
 export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = {
@@ -3262,8 +3270,8 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = 
     message: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry,
     writer: _m0.Writer = _m0.Writer.create(),
   ): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value === true) {
       writer.uint32(16).bool(message.value);
@@ -3286,7 +3294,7 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = 
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 16) {
@@ -3307,14 +3315,14 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = 
   fromJSON(object: any): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
     return {
       $type: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? Boolean(object.value) : false,
     };
   },
 
   toJSON(message: ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value);
     return obj;
   },
@@ -3329,7 +3337,7 @@ export const ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry = 
     object: DeepPartial<ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry>,
   ): ManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry {
     const message = createBaseManifoldUpdateActualAssignmentsRequest_ActualOutputSegmentsEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = object.value ?? false;
     return message;
   },
@@ -3839,7 +3847,7 @@ export const OnComplete = {
   encode(message: OnComplete, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     writer.uint32(10).fork();
     for (const v of message.segmentAddresses) {
-      writer.uint32(v);
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -3854,7 +3862,7 @@ export const OnComplete = {
       switch (tag >>> 3) {
         case 1:
           if (tag === 8) {
-            message.segmentAddresses.push(reader.uint32());
+            message.segmentAddresses.push(longToString(reader.uint64() as Long));
 
             continue;
           }
@@ -3862,7 +3870,7 @@ export const OnComplete = {
           if (tag === 10) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.segmentAddresses.push(reader.uint32());
+              message.segmentAddresses.push(longToString(reader.uint64() as Long));
             }
 
             continue;
@@ -3882,7 +3890,7 @@ export const OnComplete = {
     return {
       $type: OnComplete.$type,
       segmentAddresses: Array.isArray(object?.segmentAddresses)
-        ? object.segmentAddresses.map((e: any) => Number(e))
+        ? object.segmentAddresses.map((e: any) => String(e))
         : [],
     };
   },
@@ -3890,7 +3898,7 @@ export const OnComplete = {
   toJSON(message: OnComplete): unknown {
     const obj: any = {};
     if (message.segmentAddresses) {
-      obj.segmentAddresses = message.segmentAddresses.map((e) => Math.round(e));
+      obj.segmentAddresses = message.segmentAddresses.map((e) => e);
     } else {
       obj.segmentAddresses = [];
     }
@@ -3984,7 +3992,7 @@ function createBaseSegmentAssignment(): SegmentAssignment {
     $type: "mrc.protos.SegmentAssignment",
     machineId: "0",
     instanceId: "0",
-    address: 0,
+    address: "0",
     egressPolices: {},
     issueEventOnComplete: false,
     networkIngressPorts: [],
@@ -4001,8 +4009,8 @@ export const SegmentAssignment = {
     if (message.instanceId !== "0") {
       writer.uint32(16).uint64(message.instanceId);
     }
-    if (message.address !== 0) {
-      writer.uint32(24).uint32(message.address);
+    if (message.address !== "0") {
+      writer.uint32(24).uint64(message.address);
     }
     Object.entries(message.egressPolices).forEach(([key, value]) => {
       SegmentAssignment_EgressPolicesEntry.encode({
@@ -4016,7 +4024,7 @@ export const SegmentAssignment = {
     }
     writer.uint32(58).fork();
     for (const v of message.networkIngressPorts) {
-      writer.uint32(v);
+      writer.uint64(v);
     }
     writer.ldelim();
     return writer;
@@ -4048,7 +4056,7 @@ export const SegmentAssignment = {
             break;
           }
 
-          message.address = reader.uint32();
+          message.address = longToString(reader.uint64() as Long);
           continue;
         case 5:
           if (tag !== 42) {
@@ -4069,7 +4077,7 @@ export const SegmentAssignment = {
           continue;
         case 7:
           if (tag === 56) {
-            message.networkIngressPorts.push(reader.uint32());
+            message.networkIngressPorts.push(longToString(reader.uint64() as Long));
 
             continue;
           }
@@ -4077,7 +4085,7 @@ export const SegmentAssignment = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.networkIngressPorts.push(reader.uint32());
+              message.networkIngressPorts.push(longToString(reader.uint64() as Long));
             }
 
             continue;
@@ -4098,16 +4106,16 @@ export const SegmentAssignment = {
       $type: SegmentAssignment.$type,
       machineId: isSet(object.machineId) ? String(object.machineId) : "0",
       instanceId: isSet(object.instanceId) ? String(object.instanceId) : "0",
-      address: isSet(object.address) ? Number(object.address) : 0,
+      address: isSet(object.address) ? String(object.address) : "0",
       egressPolices: isObject(object.egressPolices)
-        ? Object.entries(object.egressPolices).reduce<{ [key: number]: EgressPolicy }>((acc, [key, value]) => {
-          acc[Number(key)] = EgressPolicy.fromJSON(value);
+        ? Object.entries(object.egressPolices).reduce<{ [key: string]: EgressPolicy }>((acc, [key, value]) => {
+          acc[key] = EgressPolicy.fromJSON(value);
           return acc;
         }, {})
         : {},
       issueEventOnComplete: isSet(object.issueEventOnComplete) ? Boolean(object.issueEventOnComplete) : false,
       networkIngressPorts: Array.isArray(object?.networkIngressPorts)
-        ? object.networkIngressPorts.map((e: any) => Number(e))
+        ? object.networkIngressPorts.map((e: any) => String(e))
         : [],
     };
   },
@@ -4116,7 +4124,7 @@ export const SegmentAssignment = {
     const obj: any = {};
     message.machineId !== undefined && (obj.machineId = message.machineId);
     message.instanceId !== undefined && (obj.instanceId = message.instanceId);
-    message.address !== undefined && (obj.address = Math.round(message.address));
+    message.address !== undefined && (obj.address = message.address);
     obj.egressPolices = {};
     if (message.egressPolices) {
       Object.entries(message.egressPolices).forEach(([k, v]) => {
@@ -4125,7 +4133,7 @@ export const SegmentAssignment = {
     }
     message.issueEventOnComplete !== undefined && (obj.issueEventOnComplete = message.issueEventOnComplete);
     if (message.networkIngressPorts) {
-      obj.networkIngressPorts = message.networkIngressPorts.map((e) => Math.round(e));
+      obj.networkIngressPorts = message.networkIngressPorts.map((e) => e);
     } else {
       obj.networkIngressPorts = [];
     }
@@ -4140,11 +4148,11 @@ export const SegmentAssignment = {
     const message = createBaseSegmentAssignment();
     message.machineId = object.machineId ?? "0";
     message.instanceId = object.instanceId ?? "0";
-    message.address = object.address ?? 0;
-    message.egressPolices = Object.entries(object.egressPolices ?? {}).reduce<{ [key: number]: EgressPolicy }>(
+    message.address = object.address ?? "0";
+    message.egressPolices = Object.entries(object.egressPolices ?? {}).reduce<{ [key: string]: EgressPolicy }>(
       (acc, [key, value]) => {
         if (value !== undefined) {
-          acc[Number(key)] = EgressPolicy.fromPartial(value);
+          acc[key] = EgressPolicy.fromPartial(value);
         }
         return acc;
       },
@@ -4159,15 +4167,15 @@ export const SegmentAssignment = {
 messageTypeRegistry.set(SegmentAssignment.$type, SegmentAssignment);
 
 function createBaseSegmentAssignment_EgressPolicesEntry(): SegmentAssignment_EgressPolicesEntry {
-  return { $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry", key: 0, value: undefined };
+  return { $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry", key: "0", value: undefined };
 }
 
 export const SegmentAssignment_EgressPolicesEntry = {
   $type: "mrc.protos.SegmentAssignment.EgressPolicesEntry" as const,
 
   encode(message: SegmentAssignment_EgressPolicesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.key !== 0) {
-      writer.uint32(8).uint32(message.key);
+    if (message.key !== "0") {
+      writer.uint32(8).uint64(message.key);
     }
     if (message.value !== undefined) {
       EgressPolicy.encode(message.value, writer.uint32(18).fork()).ldelim();
@@ -4187,7 +4195,7 @@ export const SegmentAssignment_EgressPolicesEntry = {
             break;
           }
 
-          message.key = reader.uint32();
+          message.key = longToString(reader.uint64() as Long);
           continue;
         case 2:
           if (tag !== 18) {
@@ -4208,14 +4216,14 @@ export const SegmentAssignment_EgressPolicesEntry = {
   fromJSON(object: any): SegmentAssignment_EgressPolicesEntry {
     return {
       $type: SegmentAssignment_EgressPolicesEntry.$type,
-      key: isSet(object.key) ? Number(object.key) : 0,
+      key: isSet(object.key) ? String(object.key) : "0",
       value: isSet(object.value) ? EgressPolicy.fromJSON(object.value) : undefined,
     };
   },
 
   toJSON(message: SegmentAssignment_EgressPolicesEntry): unknown {
     const obj: any = {};
-    message.key !== undefined && (obj.key = Math.round(message.key));
+    message.key !== undefined && (obj.key = message.key);
     message.value !== undefined && (obj.value = message.value ? EgressPolicy.toJSON(message.value) : undefined);
     return obj;
   },
@@ -4226,7 +4234,7 @@ export const SegmentAssignment_EgressPolicesEntry = {
 
   fromPartial(object: DeepPartial<SegmentAssignment_EgressPolicesEntry>): SegmentAssignment_EgressPolicesEntry {
     const message = createBaseSegmentAssignment_EgressPolicesEntry();
-    message.key = object.key ?? 0;
+    message.key = object.key ?? "0";
     message.value = (object.value !== undefined && object.value !== null)
       ? EgressPolicy.fromPartial(object.value)
       : undefined;

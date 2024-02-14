@@ -51,6 +51,10 @@ class EgressPortBase;
 class IngressPortBase;
 }  // namespace mrc::segment
 
+namespace mrc::manifold {
+struct ManifoldAction;
+}
+
 namespace mrc::pipeline {
 class ManifoldDefinition;
 
@@ -82,6 +86,8 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
 
     void on_running_state_updated(control_plane::state::ManifoldInstance& instance) override;
 
+    void on_stopped_requested(control_plane::state::ManifoldInstance& instance) override;
+
     void add_input(SegmentAddress address, bool is_local);
     void add_output(SegmentAddress address, bool is_local);
 
@@ -93,14 +99,20 @@ class ManifoldInstance final : public runtime::SystemResourceManager<control_pla
     uint64_t m_instance_id;
 
     std::shared_ptr<manifold::Interface> m_interface;
+    std::shared_ptr<node::WritableEntrypoint<manifold::ManifoldAction>> m_manifold_action_entry;
 
     std::map<SegmentAddress, std::shared_ptr<segment::IngressPortBase>> m_local_output;
     std::map<SegmentAddress, std::shared_ptr<segment::EgressPortBase>> m_local_input;
 
     std::map<PortAddress2, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
-        m_input_port_nodes;
+        m_local_input_channels;
     std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
-        m_output_port_nodes;
+        m_local_output_channels;
+
+    std::map<PortAddress2, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+        m_policy_input_channels;
+    std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+        m_policy_output_channels;
 
     std::map<SegmentAddressCombined2, bool> m_actual_input_segments;
     std::map<SegmentAddressCombined2, bool> m_actual_output_segments;

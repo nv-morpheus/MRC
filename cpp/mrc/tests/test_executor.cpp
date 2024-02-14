@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include "mrc/codable/fundamental_types.hpp"
+#include "mrc/memory/literals.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_sink_base.hpp"
@@ -52,6 +54,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace mrc {
 
@@ -76,6 +79,8 @@ class TestExecutor : public ::testing::Test
 
     static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
+        using transfer_t = std::vector<uint8_t>;
+
         auto pipeline = mrc::make_pipeline();
 
         auto segment_initializer = [](segment::IBuilder& seg) {};
@@ -98,21 +103,23 @@ class TestExecutor : public ::testing::Test
         // });
 
         // ideally we make this a true source (seg_1) and true source (seg_4)
-        pipeline->make_segment("seg_1", segment::EgressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
-            auto src = s.make_source<int>("rx_source", [](rxcpp::subscriber<int> s) {
-                for (int i = 0; i < 3; i++)
-                {
-                    s.on_next(i);
+        pipeline->make_segment("seg_1", segment::EgressPorts<transfer_t>({"my_int2"}), [](segment::IBuilder& s) {
+            auto src = s.make_source<transfer_t>("rx_source", [](rxcpp::subscriber<transfer_t> s) {
+                using namespace mrc::memory::literals;
 
-#ifndef NDEBUG
-                    boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
-#endif
+                for (int i = 0; i < 2; i++)
+                {
+                    s.on_next(transfer_t(10, i));
+
+                    // #ifndef NDEBUG
+                    //                     boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
+                    // #endif
                 }
 
                 s.on_completed();
             });
 
-            auto egress = s.get_egress<int>("my_int2");
+            auto egress = s.get_egress<transfer_t>("my_int2");
             s.make_edge(src, egress);
         });
         // pipeline->make_segment("seg_2",
@@ -133,13 +140,13 @@ class TestExecutor : public ::testing::Test
         //                            auto out = s.get_egress<int>("my_int4");
         //                            s.make_edge(in, out);
         //                        });
-        pipeline->make_segment("seg_4", segment::IngressPorts<int>({"my_int2"}), [](segment::IBuilder& s) {
+        pipeline->make_segment("seg_4", segment::IngressPorts<transfer_t>({"my_int2"}), [](segment::IBuilder& s) {
             // pure pass-thru
-            auto in   = s.get_ingress<int>("my_int2");
-            auto sink = s.make_sink<float>("rx_sink", rxcpp::make_observer_dynamic<int>([&](int x) {
-                                               // Write to the log
-                                               VLOG(10) << "Got value: " << x;
-                                           }));
+            auto in   = s.get_ingress<transfer_t>("my_int2");
+            auto sink = s.make_sink<transfer_t>("rx_sink", rxcpp::make_observer_dynamic<transfer_t>([&](transfer_t x) {
+                                                    // Write to the log
+                                                    VLOG(10) << "Got value: " << x.size() << " " << x[0];
+                                                }));
             s.make_edge(in, sink);
         });
 

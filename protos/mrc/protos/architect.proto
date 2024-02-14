@@ -285,10 +285,10 @@ message ManifoldUpdateActualAssignmentsRequest
     uint64 manifold_instance_id = 1;
 
    // The actual input connections. True = Local, False = Remote
-   map<uint32, bool> actual_input_segments = 2;
+   map<uint64, bool> actual_input_segments = 2;
 
    // The actual output connections. True = Local, False = Remote
-   map<uint32, bool> actual_output_segments = 3;
+   map<uint64, bool> actual_output_segments = 3;
 }
 
 message ManifoldUpdateActualAssignmentsResponse
@@ -337,7 +337,7 @@ message ControlMessage
 
 message OnComplete
 {
-    repeated uint32 segment_addresses = 1;
+    repeated uint64 segment_addresses = 1;
 }
 
 // Update Assignments - Primary
@@ -351,10 +351,10 @@ message SegmentAssignment
 {
     uint64 machine_id = 1;
     uint64 instance_id = 2;
-    uint32 address = 3;
-    map<uint32, EgressPolicy> egress_polices = 5;
+    uint64 address = 3;
+    map<uint64, EgressPolicy> egress_polices = 5;
     bool issue_event_on_complete = 6;
-    repeated uint32 network_ingress_ports = 7;
+    repeated uint64 network_ingress_ports = 7;
 }
 
 message Topology

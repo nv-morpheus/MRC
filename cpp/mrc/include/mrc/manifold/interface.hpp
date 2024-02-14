@@ -24,6 +24,7 @@
 #include <atomic>
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace mrc::manifold {
@@ -47,21 +48,27 @@ struct ManifoldPolicyInfoBase
 
 struct ManifoldPolicyInputInfo : public ManifoldPolicyInfoBase
 {
-    ManifoldPolicyInputInfo(PortAddress2 _address, bool _is_local, size_t _points, edge::IWritableAcceptorBase* _edge) :
+    ManifoldPolicyInputInfo(PortAddress2 _address,
+                            bool _is_local,
+                            size_t _points,
+                            std::shared_ptr<edge::IReadableProviderBase> _edge) :
       ManifoldPolicyInfoBase(_address, _is_local, _points),
-      edge(_edge)
+      edge(std::move(_edge))
     {}
-    edge::IWritableAcceptorBase* edge;
+    std::shared_ptr<edge::IReadableProviderBase> edge;
 };
 
 struct ManifoldPolicyOutputInfo : public ManifoldPolicyInfoBase
 {
-    ManifoldPolicyOutputInfo(PortAddress2 _address, bool _is_local, size_t _points, edge::IWritableProviderBase* _edge) :
+    ManifoldPolicyOutputInfo(PortAddress2 _address,
+                             bool _is_local,
+                             size_t _points,
+                             std::shared_ptr<edge::IWritableProviderBase> _edge) :
       ManifoldPolicyInfoBase(_address, _is_local, _points),
-      edge(_edge)
+      edge(std::move(_edge))
     {}
 
-    edge::IWritableProviderBase* edge;
+    std::shared_ptr<edge::IWritableProviderBase> edge;
 };
 
 // struct ManifoldPolicy;
@@ -219,6 +226,9 @@ struct Interface
     virtual edge::IWritableProviderBase& get_input_sink() const = 0;
 
     virtual void update_policy(ManifoldPolicy&& policy) = 0;
+
+    // Ensures there are no pending messages to be sent
+    virtual void flush() = 0;
 
     // virtual void add_remote_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     // virtual void add_remote_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;

@@ -135,4 +135,75 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
     }
 };
 
+template <typename T>
+struct codable_protocol<std::vector<T>>
+{
+    static void serialize(const std::vector<T>& obj,
+                          mrc::codable::Encoder<std::vector<T>>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        // First put in the size
+        mrc::codable::encode2(obj.size(), encoder, opts);
+
+        // Now encode each object
+        for (const auto& o : obj)
+        {
+            mrc::codable::encode2(o, encoder, opts);
+        }
+    }
+
+    static void serialize(const std::vector<T>& obj,
+                          mrc::codable::Encoder2<std::vector<T>>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        // First put in the size
+        mrc::codable::encode2(obj.size(), encoder, opts);
+
+        if constexpr (std::is_fundamental_v<T>)
+        {
+            // Since these are fundamental types, just encode in a single memory block
+            encoder.write_descriptor({obj.data(), obj.size() * sizeof(T), memory::memory_kind::host},
+                                     DescriptorKind::Deferred);
+        }
+        else
+        {
+            // Now encode each object
+            for (const auto& o : obj)
+            {
+                mrc::codable::encode2(o, encoder, opts);
+            }
+        }
+    }
+
+    static std::vector<T> deserialize(const Decoder<std::vector<T>>& decoder, std::size_t object_idx)
+    {
+        DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+
+        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
+
+        auto object = std::vector<T>(count);
+
+        auto idx   = decoder.start_idx_for_object(object_idx);
+        auto bytes = decoder.buffer_size(idx);
+
+        decoder.copy_from_buffer(idx, {object.data(), count * sizeof(T), memory::memory_kind::host});
+
+        return object;
+    }
+
+    static std::vector<T> deserialize(const Decoder2<std::vector<T>>& decoder, std::size_t object_idx)
+    {
+        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
+        // decoder.type_index_hash_for_object(object_idx));
+
+        auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
+
+        auto object = std::vector<T>(count);
+
+        decoder.read_descriptor(0, {object.data(), count * sizeof(T), memory::memory_kind::host});
+
+        return object;
+    }
+};
+
 }  // namespace mrc::codable

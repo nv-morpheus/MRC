@@ -152,39 +152,53 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Request> memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::const_buffer_view buffer_view,
                                                      uintptr_t remote_addr,
-                                                     ucp_rkey_h rkey);
+                                                     ucp_rkey_h rkey,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      const void* addr,
                                                      std::size_t bytes,
                                                      uintptr_t remote_addr,
-                                                     ucp_rkey_h rkey);
+                                                     ucp_rkey_h rkey,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::buffer_view buffer_view,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data);
+                                                     const void* packed_rkey_data,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      void* addr,
                                                      std::size_t bytes,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data);
+                                                     const void* packed_rkey_data,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::const_buffer_view buffer_view,
-                                                     uint64_t tag);
+                                                     uint64_t tag,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      const void* buffer,
                                                      size_t bytes,
-                                                     uint64_t tag);
+                                                     uint64_t tag,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> tagged_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      void* buffer,
                                                      size_t bytes,
                                                      uint64_t tag,
-                                                     uint64_t tag_mask);
+                                                     uint64_t tag_mask,
+                                                     ucxx::RequestCallbackUserFunction callback_function = nullptr,
+                                                     ucxx::RequestCallbackUserData callback_data         = nullptr);
 
     std::shared_ptr<ucxx::Request> am_send_async(
         std::shared_ptr<ucxx::Endpoint> endpoint,

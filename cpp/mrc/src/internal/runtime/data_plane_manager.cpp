@@ -74,50 +74,13 @@ std::string DataPlaneSystemManager::get_ucx_address() const
 std::shared_ptr<edge::IReadableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
     get_readable_ingress_channel(PortAddress2 port_address) const
 {
-    std::unique_lock lock(m_port_mutex);
-
-    if (m_ingress_port_channels.contains(port_address))
-    {
-        // Now check that its alive otherwise we fall through
-        if (auto port = m_ingress_port_channels.at(port_address).lock())
-        {
-            return port;
-        }
-    }
-
-    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
-
-    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<ValueDescriptor>>>();
-
-    // Make a connection between the incoming channel and this port-specific channel
-    mrc::make_edge(*m_inbound_dispatcher->get_source(port_address), *port_channel);
-
-    mutable_this->m_ingress_port_channels[port_address] = port_channel;
-
-    return port_channel;
+    return this->get_ingress_port_channel(port_address);
 }
 
 std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
     get_writable_ingress_channel(PortAddress2 port_address) const
 {
-    std::unique_lock lock(m_port_mutex);
-
-    if (m_ingress_port_channels.contains(port_address))
-    {
-        // Now check that its alive otherwise we fall through
-        if (auto port = m_ingress_port_channels.at(port_address).lock())
-        {
-            return port;
-        }
-    }
-
-    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
-
-    auto port_channel = std::make_shared<node::Queue<std::unique_ptr<ValueDescriptor>>>();
-
-    mutable_this->m_ingress_port_channels[port_address] = port_channel;
-
-    return port_channel;
+    return this->get_ingress_port_channel(port_address);
 }
 
 std::shared_ptr<edge::IWritableProvider<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::
@@ -301,8 +264,41 @@ void DataPlaneSystemManager::process_state_update(const control_plane::state::Co
     }
 }
 
+std::shared_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemManager::get_ingress_port_channel(
+    PortAddress2 port_address) const
+{
+    std::unique_lock lock(m_port_mutex);
+
+    if (m_ingress_port_channels.contains(port_address))
+    {
+        // Now check that its alive otherwise we fall through
+        if (auto port = m_ingress_port_channels.at(port_address).lock())
+        {
+            return port;
+        }
+    }
+
+    auto* mutable_this = const_cast<DataPlaneSystemManager*>(this);
+
+    auto port_channel = std::shared_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>>(
+        new node::Queue<std::unique_ptr<ValueDescriptor>>(),
+        [mutable_this, port_address](node::Queue<std::unique_ptr<ValueDescriptor>>* to_delete) {
+            // Make sure to unregister before deleting
+            mutable_this->m_inbound_dispatcher->drop_source(port_address);
+
+            delete to_delete;
+        });
+
+    // Make a connection between the incoming channel and this port-specific channel
+    mrc::make_edge(*m_inbound_dispatcher->get_source(port_address), *port_channel);
+
+    mutable_this->m_ingress_port_channels[port_address] = port_channel;
+
+    return port_channel;
+}
+
 channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destination,
-                                                        std::unique_ptr<ValueDescriptor>&& descriptor)
+                                                        std::unique_ptr<ValueDescriptor> descriptor)
 {
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 

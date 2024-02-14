@@ -124,6 +124,7 @@ class ManifoldTaggerBase2 : public virtual edge::IWritableProviderBase,
 
   private:
     void update_policy(ManifoldPolicy&& policy);
+    void flush();
 
     virtual void add_output(PortAddress2 port_address, bool is_local, edge::IWritableProviderBase* output_sink) = 0;
 
@@ -224,6 +225,7 @@ class ManifoldBase : public Interface, public runnable::RunnableResourcesProvide
     edge::IWritableProviderBase& get_input_sink() const override;
 
     void update_policy(ManifoldPolicy&& policy) override;
+    void flush() override;
 
     void update_inputs() override;
     void update_outputs() override;

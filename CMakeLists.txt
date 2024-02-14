@@ -132,6 +132,9 @@ set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
+add_link_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
+
 # Setup cache before dependencies
 # Configure CCache if requested
 include(environment/init_ccache)

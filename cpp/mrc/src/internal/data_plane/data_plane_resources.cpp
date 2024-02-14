@@ -228,7 +228,7 @@ DataPlaneResources2::DataPlaneResources2() :
         if (req->getStatus() != UCS_OK)
         {
             // TODO(Peter): Ensure the error gets raised somehow
-            DVLOG(10) << "Error calling decrement_callback";
+            LOG(ERROR) << "Error calling decrement_callback";
         }
 
         auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
@@ -254,17 +254,17 @@ DataPlaneResources2::DataPlaneResources2() :
 
             if (remaining_tokens == 0)
             {
-                VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
-                         << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
-                         << remaining_tokens << ". Destroying.";
+                // VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
+                //          << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
+                //          << remaining_tokens << ". Destroying.";
 
                 m_remote_descriptor_by_id.erase(dec_message->object_id);
             }
             else
             {
-                VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
-                         << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
-                         << remaining_tokens << ".";
+                // VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Decrementing RD("
+                //          << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
+                //          << remaining_tokens << ".";
             }
         }
     });
@@ -380,39 +380,69 @@ void DataPlaneResources2::wait_requests(const std::vector<std::shared_ptr<ucxx::
     }
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      memory::const_buffer_view buffer_view,
-                                                                      uintptr_t remote_addr,
-                                                                      ucp_rkey_h rkey)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    memory::const_buffer_view buffer_view,
+    uintptr_t remote_addr,
+    ucp_rkey_h rkey,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
-    return this->memory_send_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, rkey);
+    return this->memory_send_async(endpoint,
+                                   buffer_view.data(),
+                                   buffer_view.bytes(),
+                                   remote_addr,
+                                   rkey,
+                                   std::move(callback_function),
+                                   std::move(callback_data));
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      const void* addr,
-                                                                      std::size_t bytes,
-                                                                      uintptr_t remote_addr,
-                                                                      ucp_rkey_h rkey)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    const void* addr,
+    std::size_t bytes,
+    uintptr_t remote_addr,
+    ucp_rkey_h rkey,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->memPut(const_cast<void*>(addr), bytes, remote_addr, rkey);
+    auto request = endpoint->memPut(const_cast<void*>(addr),
+                                    bytes,
+                                    remote_addr,
+                                    rkey,
+                                    false,
+                                    std::move(callback_function),
+                                    std::move(callback_data));
 
     return request;
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      memory::buffer_view buffer_view,
-                                                                      uintptr_t remote_addr,
-                                                                      const void* packed_rkey_data)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    memory::buffer_view buffer_view,
+    uintptr_t remote_addr,
+    const void* packed_rkey_data,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
-    return this->memory_recv_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, packed_rkey_data);
+    return this->memory_recv_async(endpoint,
+                                   buffer_view.data(),
+                                   buffer_view.bytes(),
+                                   remote_addr,
+                                   packed_rkey_data,
+                                   std::move(callback_function),
+                                   std::move(callback_data));
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      void* addr,
-                                                                      std::size_t bytes,
-                                                                      uintptr_t remote_addr,
-                                                                      const void* packed_rkey_data)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    void* addr,
+    std::size_t bytes,
+    uintptr_t remote_addr,
+    const void* packed_rkey_data,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     ucp_rkey_h rkey;
 
@@ -421,47 +451,79 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::share
     CHECK_EQ(rc, UCS_OK);
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->memGet(addr,
-                                    bytes,
-                                    remote_addr,
-                                    rkey,
-                                    false,
-                                    [rkey](ucs_status_t status, std::shared_ptr<void> user_data) {
-                                        ucp_rkey_destroy(rkey);
-                                    });
+    auto request = endpoint->memGet(
+        addr,
+        bytes,
+        remote_addr,
+        rkey,
+        false,
+        [rkey, callback_function](ucs_status_t status, std::shared_ptr<void> user_data) {
+            ucp_rkey_destroy(rkey);
+
+            if (callback_function)
+            {
+                callback_function(status, std::move(user_data));
+            }
+        },
+        std::move(callback_data));
 
     return request;
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      memory::const_buffer_view buffer_view,
-                                                                      uint64_t tag)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    memory::const_buffer_view buffer_view,
+    uint64_t tag,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
-    return this->tagged_send_async(endpoint, buffer_view.data(), buffer_view.bytes(), tag);
+    return this->tagged_send_async(endpoint,
+                                   buffer_view.data(),
+                                   buffer_view.bytes(),
+                                   tag,
+                                   std::move(callback_function),
+                                   std::move(callback_data));
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      const void* buffer,
-                                                                      size_t length,
-                                                                      uint64_t tag)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    const void* buffer,
+    size_t length,
+    uint64_t tag,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, ucxx::Tag(tag));
+    auto request = endpoint->tagSend(const_cast<void*>(buffer),
+                                     length,
+                                     ucxx::Tag(tag),
+                                     false,
+                                     std::move(callback_function),
+                                     std::move(callback_data));
 
     return request;
 }
 
-std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
-                                                                      void* buffer,
-                                                                      size_t length,
-                                                                      uint64_t tag,
-                                                                      uint64_t tag_mask)
+std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    void* buffer,
+    size_t length,
+    uint64_t tag,
+    uint64_t tag_mask,
+    ucxx::RequestCallbackUserFunction callback_function,
+    ucxx::RequestCallbackUserData callback_data)
 {
     // TODO(MDD): Check that this EP belongs to this resource
     // TODO(MDD): Once 0.35 is released, support tag_mask
-    auto request = endpoint->tagRecv(buffer, length, ucxx::Tag(tag), ucxx::TagMaskFull);
+    auto request = endpoint->tagRecv(buffer,
+                                     length,
+                                     ucxx::Tag(tag),
+                                     ucxx::TagMaskFull,
+                                     false,
+                                     std::move(callback_function),
+                                     std::move(callback_data));
 
     return request;
 }
@@ -541,8 +603,8 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
 
     m_remote_descriptor_by_id[object_id] = remote_descriptor;
 
-    VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Registering RD(" << object_id
-             << ") Tokens=" << remote_descriptor->encoded_object().tokens() << ".";
+    // VLOG(10) << "DataPlaneResources2[" << this->get_instance_id() << "]: Registering RD(" << object_id
+    //          << ") Tokens=" << remote_descriptor->encoded_object().tokens() << ".";
 
     return object_id;
 }

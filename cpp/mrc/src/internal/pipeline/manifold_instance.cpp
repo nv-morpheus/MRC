@@ -22,13 +22,18 @@
 #include "internal/runtime/data_plane_manager.hpp"
 #include "internal/runtime/runtime_provider.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/core/addresses.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/manifold/interface.hpp"
+#include "mrc/manifold/typed_manifold.hpp"
+#include "mrc/node/forward.hpp"
+#include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/queue.hpp"
 #include "mrc/protos/architect.pb.h"
+#include "mrc/runtime/remote_descriptor.hpp"
 #include "mrc/segment/egress_port.hpp"
 #include "mrc/segment/ingress_port.hpp"
 #include "mrc/types.hpp"
@@ -37,6 +42,7 @@
 #include <glog/logging.h>
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -75,7 +81,7 @@ void ManifoldInstance::register_local_output(PortAddress2 port_address,
     auto incoming_channel = this->runtime().data_plane().get_readable_ingress_channel(port_address);
 
     // Save the channel to keep it alive
-    m_input_port_nodes[port_address] = incoming_channel;
+    m_local_input_channels[port_address] = incoming_channel;
 
     mrc::make_edge(*incoming_channel, ingress_port->get_upstream_sink());
 }
@@ -83,14 +89,42 @@ void ManifoldInstance::register_local_output(PortAddress2 port_address,
 void ManifoldInstance::register_local_input(PortAddress2 port_address,
                                             std::shared_ptr<segment::EgressPortBase> egress_port)
 {
-    // CHECK(!m_local_input.contains(address)) << "Local segment with address: " << address << ", already registered";
-    // egress_port.m_local_input[address] = egress_port;
-
     auto& outgoing_channel = m_interface->get_input_sink();
 
-    // Probably want to save the channel here
+    // Convert from a ValueDescriptor to a ManifoldAction to add the port address
+    auto converting_node =
+        std::make_shared<node::LambdaNodeComponent<std::unique_ptr<runtime::ValueDescriptor>, manifold::ManifoldAction>>(
+            [port_address](std::unique_ptr<runtime::ValueDescriptor>&& value) -> manifold::ManifoldAction {
+                return {.source_address = port_address, .descriptor = std::move(value), .on_completed = nullptr};
+            },
+            [port_address, this]() {
+                // Ensure the interface does not have any pending messages to send
+                Promise<void> completed_promise;
 
-    mrc::make_edge(egress_port->get_downstream_source(), outgoing_channel);
+                auto completed_future = completed_promise.get_future();
+
+                auto callback = [&]() {
+                    completed_promise.set_value();
+                };
+
+                CHECK_EQ(m_manifold_action_entry->await_write(manifold::ManifoldAction{.source_address = port_address,
+                                                                                       .descriptor     = nullptr,
+                                                                                       .on_completed   = callback}),
+                         channel::Status::success);
+
+                // Wait for it to be completed before removing the port. This ensures that the interface does not have
+                // any pending messages to send before removing a local input
+                completed_future.get();
+            });
+
+    // Keep the converting node alive
+    m_local_output_channels[port_address] = converting_node;
+
+    // Connection from T -> ValueDescriptor
+    mrc::make_edge(egress_port->get_downstream_source(), *converting_node);
+
+    // Conversion from ValueDescriptor -> ManifoldAction
+    mrc::make_edge(*converting_node, outgoing_channel);
 }
 
 void ManifoldInstance::unregister_local_output(PortAddress2 port_address)
@@ -100,7 +134,13 @@ void ManifoldInstance::unregister_local_output(PortAddress2 port_address)
 
 void ManifoldInstance::unregister_local_input(PortAddress2 port_address)
 {
-    throw std::runtime_error("Not implemented");
+    if (!m_local_output_channels.contains(port_address))
+    {
+        return;
+    }
+
+    // Now remove the local connection
+    m_local_output_channels.erase(port_address);
 }
 
 std::shared_ptr<manifold::Interface> ManifoldInstance::get_interface() const
@@ -146,6 +186,11 @@ void ManifoldInstance::on_completed_requested(control_plane::state::ManifoldInst
     CHECK(m_interface) << "Must create ManifoldInstance before starting";
 
     m_interface->start();
+
+    // Save a reference to the interface input channel so we can push messages
+    m_manifold_action_entry = std::make_shared<node::WritableEntrypoint<manifold::ManifoldAction>>();
+
+    mrc::make_edge(*m_manifold_action_entry, m_interface->get_input_sink());
 }
 
 void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldInstance& instance)
@@ -162,8 +207,8 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
 
     std::map<PortAddress2, std::shared_ptr<edge::IReadableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
         input_port_nodes;
-    std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
-        output_port_nodes;
+    // std::map<PortAddress2, std::shared_ptr<edge::IWritableProvider<std::unique_ptr<runtime::ValueDescriptor>>>>
+    //     output_port_nodes;
 
     // First, loop over all requested inputs and hook these up so they are available
     for (const auto& [seg_id, is_local] : instance.requested_input_segments())
@@ -184,9 +229,9 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         {
             auto remote_edge = this->runtime().data_plane().get_readable_ingress_channel(port_address);
 
-            input_port_nodes[port_address] = remote_edge;
+            // input_port_nodes[port_address] = remote_edge;
 
-            manifold_inputs.emplace_back(port_address, false, 1, nullptr);
+            manifold_inputs.emplace_back(port_address, false, 1, remote_edge);
         }
     }
 
@@ -205,20 +250,20 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
             // Gets the same queue that the data plane uses to send data to the manifold
             auto remote_edge = this->runtime().data_plane().get_writable_ingress_channel(port_address);
 
-            output_port_nodes[port_address] = remote_edge;
+            // output_port_nodes[port_address] = remote_edge;
 
             manifold_outputs.emplace(port_address,
-                                     manifold::ManifoldPolicyOutputInfo(port_address, true, 1, remote_edge.get()));
+                                     manifold::ManifoldPolicyOutputInfo(port_address, true, 1, remote_edge));
         }
         else
         {
             // Get an edge from the data plane for this particular, remote segment
             auto remote_edge = this->runtime().data_plane().get_writable_egress_channel(port_address);
 
-            output_port_nodes[port_address] = remote_edge;
+            // output_port_nodes[port_address] = remote_edge;
 
             manifold_outputs.emplace(port_address,
-                                     manifold::ManifoldPolicyOutputInfo(port_address, false, 1, remote_edge.get()));
+                                     manifold::ManifoldPolicyOutputInfo(port_address, false, 1, remote_edge));
         }
     }
 
@@ -226,8 +271,8 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
     m_interface->update_policy(manifold::ManifoldPolicy(std::move(manifold_inputs), std::move(manifold_outputs)));
 
     // Now persist the port nodes so they stay alive
-    m_input_port_nodes  = std::move(input_port_nodes);
-    m_output_port_nodes = std::move(output_port_nodes);
+    // m_policy_input_channels  = std::move(input_port_nodes);
+    // m_policy_output_channels = std::move(output_port_nodes);
 
     // Now save the actual values for next iteration
     m_actual_input_segments  = instance.requested_input_segments();
@@ -244,6 +289,17 @@ void ManifoldInstance::on_running_state_updated(control_plane::state::ManifoldIn
         this->runtime().control_plane().template await_unary<protos::ManifoldUpdateActualAssignmentsResponse>(
             protos::EventType::ClientUnaryManifoldUpdateActualAssignments,
             request);
+}
+
+void ManifoldInstance::on_stopped_requested(control_plane::state::ManifoldInstance& instance)
+{
+    // Stop first to prevent getting further state updates
+    this->service_stop();
+
+    // Remove the writable entrypoint which is guaranteeing the interface channel is staying alive
+    m_manifold_action_entry.reset();
+
+    m_interface->join();
 }
 
 void ManifoldInstance::add_input(SegmentAddress address, bool is_local)

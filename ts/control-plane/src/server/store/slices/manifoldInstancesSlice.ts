@@ -15,6 +15,8 @@ import {
    segmentInstanceDecRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
+   segmentInstancesSelectAll,
+   segmentInstancesSelectByAddress,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
@@ -302,7 +304,7 @@ function syncSegmentNameForManifold(
    const activeSegments = isInput ? segmentMapping.input : segmentMapping.output;
 
    // Determine any that need to be added
-   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.id));
+   const toAdd = activeSegments.filter((s) => !currentSegmentIds.includes(s.segmentAddress));
 
    toAdd.forEach((seg) => {
       // Figure out if this is local
@@ -320,13 +322,13 @@ function syncSegmentNameForManifold(
    });
 
    // Determine any that need to be removed
-   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.id).includes(s));
+   const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.segmentAddress).includes(s));
 
-   toRemove.forEach((segId) => {
-      const seg = segmentInstancesSelectById(state, segId);
+   toRemove.forEach((segAddress) => {
+      const seg = segmentInstancesSelectByAddress(state, segAddress);
 
       if (!seg) {
-         throw new Error(`Could not find segment with ID: ${segId}`);
+         throw new Error(`Could not find segment with address: ${segAddress}`);
       }
 
       // Dispatch the attach action
@@ -423,12 +425,12 @@ function manifoldInstanceUpdateActualSegment(
    state: RootState,
    manifold: IManifoldInstance,
    isInput: boolean,
-   segmentId: string,
+   segmentAddress: string,
    isLocal: boolean
 ) {
-   const segment = segmentInstancesSelectById(state, segmentId);
+   const segment = segmentInstancesSelectByAddress(state, segmentAddress);
    if (!segment) {
-      throw new Error(`Could not find segment with ID: ${segmentId}`);
+      throw new Error(`Could not find segment with address: ${segmentAddress}`);
    }
 
    const requestedMapping: { [key: string]: boolean } = isInput
@@ -461,7 +463,7 @@ function manifoldInstanceUpdateActualSegment(
          );
          dispatch(segmentInstanceDecRefCount({ segment: segment }));
       } else {
-         throw new Error(`Actual segment ${segmentId} does not match an attached segment`);
+         throw new Error(`Actual segment ${segmentAddress} does not match an attached segment`);
       }
    }
 }
@@ -479,34 +481,34 @@ export function manifoldInstancesUpdateActualSegments(
       }
 
       const actualInputToAdd = Object.entries(actualInputSegments).filter(
-         ([segmentId]) => !(segmentId in manifold.actualInputSegments)
+         ([segmentAddress]) => !(segmentAddress in manifold.actualInputSegments)
       );
       const actualOutputToAdd = Object.entries(actualOutputSegments).filter(
-         ([segmentId]) => !(segmentId in manifold.actualOutputSegments)
+         ([segmentAddress]) => !(segmentAddress in manifold.actualOutputSegments)
       );
       const actualInputToRemove = Object.entries(manifold.actualInputSegments).filter(
-         ([segmentId]) => !(segmentId in actualInputSegments)
+         ([segmentAddress]) => !(segmentAddress in actualInputSegments)
       );
       const actualOutputToRemove = Object.entries(manifold.actualOutputSegments).filter(
-         ([segmentId]) => !(segmentId in actualOutputSegments)
+         ([segmentAddress]) => !(segmentAddress in actualOutputSegments)
       );
 
       // perform any adds
-      actualInputToAdd.forEach(([segmentId, isLocal]) => {
-         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentId, isLocal);
+      actualInputToAdd.forEach(([segmentAddress, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentAddress, isLocal);
       });
 
-      actualOutputToAdd.forEach(([segmentId, isLocal]) => {
-         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
+      actualOutputToAdd.forEach(([segmentAddress, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentAddress, isLocal);
       });
 
       // perform any removes
-      actualInputToRemove.forEach(([segmentId, isLocal]) => {
-         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentId, isLocal);
+      actualInputToRemove.forEach(([segmentAddress, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, true, segmentAddress, isLocal);
       });
 
-      actualOutputToRemove.forEach(([segmentId, isLocal]) => {
-         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentId, isLocal);
+      actualOutputToRemove.forEach(([segmentAddress, isLocal]) => {
+         manifoldInstanceUpdateActualSegment(dispatch, state, manifold, false, segmentAddress, isLocal);
       });
    };
 }

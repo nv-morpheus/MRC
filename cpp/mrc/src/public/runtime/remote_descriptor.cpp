@@ -37,6 +37,7 @@
 #include <ucxx/api.h>
 
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <memory>
 #include <utility>
@@ -111,6 +112,18 @@ std::unique_ptr<codable::IDecodableStorage> RemoteDescriptor::release_storage()
 //     return has_value();
 // }
 
+ValueDescriptor::~ValueDescriptor()
+{
+    LOG(INFO) << "ValueDescriptor::~ValueDescriptor()";
+}
+
+LocalDescriptor2::~LocalDescriptor2()
+{
+    LOG(INFO) << "LocalDescriptor2::~LocalDescriptor2()";
+
+    m_value_descriptor.reset();
+}
+
 codable::LocalSerializedWrapper& LocalDescriptor2::encoded_object() const
 {
     return *m_encoded_object;
@@ -138,10 +151,44 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
 
     auto mr = memory::malloc_memory_resource::instance();
 
-    std::vector<std::shared_ptr<ucxx::Request>> requests;
+    std::vector<Future<void>> requests;
 
     // Transfer the info object
     local_obj->proto().set_allocated_info(remote_descriptor->encoded_object().release_info());
+
+    auto async_recv = [&data_plane_resources](std::shared_ptr<ucxx::Endpoint> endpoint,
+                                              memory::buffer_view buffer_view,
+                                              uintptr_t remote_addr,
+                                              const void* packed_rkey_data) {
+        auto promise = std::make_shared<Promise<void>>();
+
+        auto future = promise->get_future();
+
+        data_plane_resources.memory_recv_async(
+            endpoint,
+            buffer_view,
+            remote_addr,
+            packed_rkey_data,
+            [](ucs_status_t status, std::shared_ptr<void> request) {
+                auto inner_promise = std::static_pointer_cast<Promise<void>>(request);
+
+                if (status != UCS_OK)
+                {
+                    inner_promise->set_exception(
+                        std::make_exception_ptr(std::runtime_error("Failed to receive memory")));
+                }
+                else
+                {
+                    inner_promise->set_value();
+                }
+            },
+            promise);
+
+        return future;
+    };
+
+    // Use this to keep buffers alive while we wait on the async request
+    std::vector<memory::buffer> buffers;
 
     // Loop over all remote payloads and convert them to local payloads
     for (const auto& remote_payload : remote_descriptor->encoded_object().payloads())
@@ -150,13 +197,10 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
         auto ep = data_plane_resources.find_endpoint(remote_payload.instance_id());
 
         // Allocate the memory needed for this
-        auto buffer = memory::buffer(remote_payload.bytes(), mr);
+        auto& buffer = buffers.emplace_back(remote_payload.bytes(), mr);
 
         // now issue the request
-        requests.push_back(data_plane_resources.memory_recv_async(ep,
-                                                                  buffer,
-                                                                  remote_payload.address(),
-                                                                  remote_payload.remote_key().data()));
+        requests.push_back(async_recv(ep, buffer, remote_payload.address(), remote_payload.remote_key().data()));
 
         auto* local_payload = local_obj->proto().add_payloads();
 
@@ -166,7 +210,13 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     }
 
     // Now, we need to wait for all requests to be complete
-    data_plane_resources.wait_requests(requests);
+    for (auto& f : requests)
+    {
+        f.get();
+    }
+
+    // Clear the memory out now that the requests have finished
+    buffers.clear();
 
     PortAddress2 port_address(remote_descriptor->encoded_object().source_address());
 
@@ -193,9 +243,18 @@ LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapp
   m_value_descriptor(std::move(value_descriptor))
 {}
 
-RemoteDescriptorImpl2::RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
-  m_serialized_object(std::move(encoded_object))
+RemoteDescriptorImpl2::RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object,
+                                             std::unique_ptr<LocalDescriptor2> local_descriptor) :
+  m_serialized_object(std::move(encoded_object)),
+  m_local_descriptor(std::move(local_descriptor))
 {}
+
+RemoteDescriptorImpl2::~RemoteDescriptorImpl2()
+{
+    LOG(INFO) << "RemoteDescriptorImpl2::~RemoteDescriptorImpl2()";
+
+    m_local_descriptor.reset();
+}
 
 codable::protos::RemoteSerializedObject& RemoteDescriptorImpl2::encoded_object() const
 {
@@ -261,7 +320,7 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
     }
 
     auto remote_descriptor = std::shared_ptr<RemoteDescriptorImpl2>(
-        new RemoteDescriptorImpl2(std::move(remote_object)));
+        new RemoteDescriptorImpl2(std::move(remote_object), std::move(local_desc)));
     data_plane_resources.register_remote_decriptor(remote_descriptor);
 
     return remote_descriptor;
@@ -276,14 +335,21 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_bytes(memory:
         LOG(FATAL) << "Failed to parse EncodedObjectProto from bytes";
     }
 
-    return std::shared_ptr<RemoteDescriptorImpl2>(new RemoteDescriptorImpl2(std::move(encoded_obj_proto)));
+    return std::shared_ptr<RemoteDescriptorImpl2>(new RemoteDescriptorImpl2(std::move(encoded_obj_proto), nullptr));
 }
 
 RemoteDescriptor2::RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object) :
-  m_impl(new RemoteDescriptorImpl2(std::move(encoded_object)))
+  m_impl(new RemoteDescriptorImpl2(std::move(encoded_object), nullptr))
 {}
 
 RemoteDescriptor2::RemoteDescriptor2(std::shared_ptr<RemoteDescriptorImpl2> impl) : m_impl(std::move(impl)) {}
+
+RemoteDescriptor2::~RemoteDescriptor2()
+{
+    LOG(INFO) << "RemoteDescriptor2::~RemoteDescriptor2()";
+
+    m_impl.reset();
+}
 
 codable::protos::RemoteSerializedObject& RemoteDescriptor2::encoded_object() const
 {

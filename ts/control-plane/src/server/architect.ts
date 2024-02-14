@@ -86,6 +86,7 @@ import {
 } from "@mrc/server/store/slices/pipelineDefinitionsSlice";
 import { PipelineInstance } from "@mrc/common/models/pipeline_instance";
 import { Executor } from "@mrc/common/models/executor";
+import { Mutex } from "async-mutex";
 
 interface IncomingData {
    msg: Event;
@@ -171,6 +172,8 @@ class Architect implements ArchitectServiceImplementation {
 
    private shutdown_subject: Subject<void> = new Subject<void>();
    private _stop_controller: AbortController;
+
+   private _mutex = new Mutex();
 
    constructor(store?: RootStore) {
       // Use the default store if not supplied
@@ -292,6 +295,9 @@ class Architect implements ArchitectServiceImplementation {
 
                const yeilded_events: Event[] = [];
 
+               // Ensure only one request is running at the same time. Otherwise the async order can get messed up
+               const release = await self._mutex.acquire();
+
                try {
                   console.log(`--- Start Request for '${request_identifier}' ---`);
 
@@ -327,6 +333,9 @@ class Architect implements ArchitectServiceImplementation {
                   }
 
                   console.log(`--- End Request for '${request_identifier}' ---`);
+
+                  // Release the mutex
+                  release();
                }
             }
          } catch (err) {
@@ -662,16 +671,16 @@ class Architect implements ArchitectServiceImplementation {
       } catch (err) {
          const error = ensureError(err);
 
-         console.log(`Error occurred handing event. Error: ${error.message}`);
+         console.error(`Error occurred handing event. Error: ${error.message}`);
 
-         // Now yield an error message to pass back to the client
-         yield Event.create({
-            error: {
-               message: error.message,
-            },
-            event: EventType.Response,
-            tag: event.msg.tag,
-         });
+         // // Now yield an error message to pass back to the client
+         // yield Event.create({
+         //    error: {
+         //       message: error.message,
+         //    },
+         //    event: EventType.Response,
+         //    tag: event.msg.tag,
+         // });
       }
    }
 

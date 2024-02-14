@@ -375,10 +375,10 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
 
                     // Now remove the runner
                     // CHECK_EQ(m_runners.erase(n), 1) << "Erased wrong number of runners";
-                    LOG(INFO) << "Before: " << m_runners.size();
+                    // LOG(INFO) << "Before: " << m_runners.size();
                     // auto count = m_runners.erase(n);
                     m_running_count--;
-                    LOG(INFO) << "After: " << m_runners.size();
+                    // LOG(INFO) << "After: " << m_runners.size();
 
                     if (m_running_count == 0)
                     {
@@ -386,7 +386,7 @@ bool SegmentInstance::on_created_requested(control_plane::state::SegmentInstance
                         this->mark_completed();
                     }
 
-                    LOG(INFO) << "Post check: " << m_runners.size();
+                    // LOG(INFO) << "Post check: " << m_runners.size();
                 });
             });
         };
