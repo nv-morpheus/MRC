@@ -56,7 +56,7 @@ show_conda_info
 
 rapids-logger "Configuring for build and test"
 git submodule update --init --recursive
-cmake -B build -G Ninja ${CMAKE_FLAGS} --debug-find-pkg=spdlog --debug-find-pkg=Thrust --trace-expand .
+cmake -B build -G Ninja ${CMAKE_FLAGS} --debug-find-pkg=spdlog --debug-find-pkg=Thrust .
 
 rapids-logger "Building MRC"
 cmake --build build --parallel ${PARALLEL_LEVEL}
