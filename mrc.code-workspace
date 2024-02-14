@@ -173,7 +173,18 @@
                 ],
                 "request": "launch",
                 "type": "python"
-            }
+            },
+            {
+                "name": "Debug Jest Tests",
+                "type": "node",
+                "request": "launch",
+                "cwd": "${workspaceFolder}/ts/control-plane",
+                "runtimeArgs": [
+                  "${workspaceFolder}/ts/control-plane/node_modules/.bin/jest",
+                ],
+                "console": "integratedTerminal",
+                "internalConsoleOptions": "neverOpen"
+              }
         ],
         // Use IntelliSense to learn about possible attributes.
         // Hover to view descriptions of existing attributes.
