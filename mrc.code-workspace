@@ -175,7 +175,7 @@
                 "type": "python"
             },
             {
-                "name": "Debug Jest Tests",
+                "name": "Debug TS Tests",
                 "type": "node",
                 "request": "launch",
                 "cwd": "${workspaceFolder}/ts/control-plane",
