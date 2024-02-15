@@ -132,15 +132,15 @@ set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
-add_link_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
+# add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
+# add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address>")
 
 # Setup cache before dependencies
 # Configure CCache if requested
 include(environment/init_ccache)
 
 # Disable exporting compile commands for dependencies
-set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Create a custom target to allow preparing for style checks
 add_custom_target(${PROJECT_NAME}_style_checks

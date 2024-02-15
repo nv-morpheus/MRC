@@ -114,12 +114,12 @@ std::unique_ptr<codable::IDecodableStorage> RemoteDescriptor::release_storage()
 
 ValueDescriptor::~ValueDescriptor()
 {
-    LOG(INFO) << "ValueDescriptor::~ValueDescriptor()";
+    DVLOG(20) << "ValueDescriptor::~ValueDescriptor()";
 }
 
 LocalDescriptor2::~LocalDescriptor2()
 {
-    LOG(INFO) << "LocalDescriptor2::~LocalDescriptor2()";
+    DVLOG(20) << "LocalDescriptor2::~LocalDescriptor2()";
 
     m_value_descriptor.reset();
 }
@@ -215,9 +215,6 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
         f.get();
     }
 
-    // Clear the memory out now that the requests have finished
-    buffers.clear();
-
     PortAddress2 port_address(remote_descriptor->encoded_object().source_address());
 
     // For the remote descriptor message, send decrement to the remote resources
@@ -234,13 +231,19 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
                                         UCS_MEMORY_TYPE_HOST,
                                         ucxx::AmReceiverCallbackInfo("MRC", 0));
 
-    return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj)));
+    return std::unique_ptr<LocalDescriptor2>(new LocalDescriptor2(std::move(local_obj), std::move(buffers)));
 }
 
 LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
                                    std::unique_ptr<ValueDescriptor> value_descriptor) :
   m_encoded_object(std::move(encoded_object)),
   m_value_descriptor(std::move(value_descriptor))
+{}
+
+LocalDescriptor2::LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
+                                   std::vector<memory::buffer> payload_buffers) :
+  m_encoded_object(std::move(encoded_object)),
+  m_payload_buffers(std::move(payload_buffers))
 {}
 
 RemoteDescriptorImpl2::RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object,
@@ -251,7 +254,7 @@ RemoteDescriptorImpl2::RemoteDescriptorImpl2(std::unique_ptr<codable::protos::Re
 
 RemoteDescriptorImpl2::~RemoteDescriptorImpl2()
 {
-    LOG(INFO) << "RemoteDescriptorImpl2::~RemoteDescriptorImpl2()";
+    DVLOG(20) << "RemoteDescriptorImpl2::~RemoteDescriptorImpl2()";
 
     m_local_descriptor.reset();
 }
@@ -346,7 +349,7 @@ RemoteDescriptor2::RemoteDescriptor2(std::shared_ptr<RemoteDescriptorImpl2> impl
 
 RemoteDescriptor2::~RemoteDescriptor2()
 {
-    LOG(INFO) << "RemoteDescriptor2::~RemoteDescriptor2()";
+    DVLOG(20) << "RemoteDescriptor2::~RemoteDescriptor2()";
 
     m_impl.reset();
 }

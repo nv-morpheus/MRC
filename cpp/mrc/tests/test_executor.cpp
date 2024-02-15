@@ -79,7 +79,7 @@ class TestExecutor : public ::testing::Test
 
     static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
-        using transfer_t = std::vector<uint8_t>;
+        using transfer_t = std::vector<int>;
 
         auto pipeline = mrc::make_pipeline();
 
@@ -107,9 +107,9 @@ class TestExecutor : public ::testing::Test
             auto src = s.make_source<transfer_t>("rx_source", [](rxcpp::subscriber<transfer_t> s) {
                 using namespace mrc::memory::literals;
 
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    s.on_next(transfer_t(10, i));
+                    s.on_next(transfer_t(1_MiB / sizeof(transfer_t::value_type), i));
 
                     // #ifndef NDEBUG
                     //                     boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
@@ -489,6 +489,54 @@ TEST_F(TestExecutor, MultiNode)
 
     machine_2.join();
     machine_1.join();
+}
+
+TEST_F(TestExecutor, MultiNodeA)
+{
+    auto options_1 = make_options();
+
+    options_1->architect_url("127.0.0.1:13337");
+    options_1->enable_server(true);
+
+    Executor machine_1(std::move(options_1));
+
+    auto pipeline_1 = make_pipeline();
+
+    auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
+
+    mapping_1.get_segment("seg_4").set_enabled(false);
+
+    auto start_1 = boost::fibers::async([&] {
+        machine_1.start();
+    });
+
+    start_1.get();
+
+    machine_1.join();
+}
+
+TEST_F(TestExecutor, MultiNodeB)
+{
+    auto options_2 = make_options();
+
+    options_2->architect_url("127.0.0.1:13337");
+    options_2->topology().user_cpuset("1");
+
+    Executor machine_2(std::move(options_2));
+
+    auto pipeline_2 = make_pipeline();
+
+    auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
+
+    mapping_2.get_segment("seg_1").set_enabled(false);
+
+    auto start_2 = boost::fibers::async([&] {
+        machine_2.start();
+    });
+
+    start_2.get();
+
+    machine_2.join();
 }
 
 // TEST_F(TestExecutor, MultiNodeTwoSegmentExample)

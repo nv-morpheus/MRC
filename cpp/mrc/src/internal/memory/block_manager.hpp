@@ -56,7 +56,7 @@ class BlockManager final
         auto key = reinterpret_cast<std::uintptr_t>(block.data()) + block.bytes();
         DCHECK(!owns(block.data()) && !owns(reinterpret_cast<void*>(key - 1))) << "block manager already owns a block "
                                                                                   "with an overlapping address";
-        DVLOG(10) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
+        DVLOG(20) << "adding block: " << key << " - " << block.data() << "; " << block.bytes();
         m_block_map[key] = std::move(block);
         return m_block_map[key];
     }

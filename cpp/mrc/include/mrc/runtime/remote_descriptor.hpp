@@ -306,7 +306,7 @@ class TypedValueDescriptor : public ValueDescriptor
   public:
     ~TypedValueDescriptor() override
     {
-        LOG(INFO) << "TypedValueDescriptor::~TypedValueDescriptor()";
+        DVLOG(20) << "TypedValueDescriptor::~TypedValueDescriptor()";
     }
 
     const T& value() const
@@ -350,7 +350,10 @@ class LocalDescriptor2 : public ValueDescriptor
 
   private:
     LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
-                     std::unique_ptr<ValueDescriptor> value_descriptor = nullptr);
+                     std::unique_ptr<ValueDescriptor> value_descriptor);
+
+    LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
+                     std::vector<memory::buffer> payload_buffers);
 
     // TODO(MDD): Quick hack to get this working. Need to restructure the objects a bit
     std::unique_ptr<codable::LocalSerializedWrapper> encode(
@@ -362,6 +365,9 @@ class LocalDescriptor2 : public ValueDescriptor
     std::unique_ptr<codable::LocalSerializedWrapper> m_encoded_object;
 
     std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
+
+    // Holds onto the payloads when deserializing the object. Must have the same lifetime as the encoded object
+    std::vector<memory::buffer> m_payload_buffers;
 };
 
 template <typename T>
