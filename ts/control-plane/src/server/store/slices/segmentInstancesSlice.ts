@@ -195,9 +195,9 @@ export function segmentInstancesRequestStop(segmentInstanceId: string) {
       } else {
          Object.values(state.manifoldInstances.entities).forEach((m) => {
             if (m !== undefined) {
-               if (found.segmentAddress in (m?.requestedInputSegments ?? {})) {
+               if (found.id in (m?.requestedInputSegments ?? {})) {
                   dispatch(manifoldInstancesDetachRequestedSegment({ manifold: m, is_input: true, segment: found }));
-               } else if (found.segmentAddress in (m?.requestedOutputSegments ?? {})) {
+               } else if (found.id in (m?.requestedOutputSegments ?? {})) {
                   dispatch(manifoldInstancesDetachRequestedSegment({ manifold: m, is_input: false, segment: found }));
                }
             }
