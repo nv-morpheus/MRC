@@ -783,6 +783,155 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     EXPECT_EQ(send_data, recv_data);
 }
 
+TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
+{
+    // Create resources to simulate remote processes
+    auto resources_recv1 = std::make_unique<DataPlaneResources2Tester>();
+    resources_recv1->set_instance_id(43);
+    auto resources_recv2 = std::make_unique<DataPlaneResources2Tester>();
+    resources_recv2->set_instance_id(44);
+
+    auto endpoint_recv1 = m_resources->create_endpoint(resources_recv1->address(), resources_recv1->get_instance_id());
+    auto endpoint_recv2 = m_resources->create_endpoint(resources_recv2->address(), resources_recv2->get_instance_id());
+
+    auto endpoint_send1 = resources_recv1->create_endpoint(m_resources->address(), m_resources->get_instance_id());
+    auto endpoint_send2 = resources_recv2->create_endpoint(m_resources->address(), m_resources->get_instance_id());
+
+    // Create initial data
+    static_assert(codable::is_static_decodable_v<TransferObject>);
+
+    auto block_provider = std::make_shared<memory::memory_block_provider>();
+
+    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
+
+    auto send_data_copy = send_data;
+
+    // Create a value descriptor
+    auto value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::create(std::move(send_data_copy));
+
+    // Convert to a local descriptor
+    auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor), block_provider);
+
+    // Check that no remote payloads are yet registered with `DataPlaneResources2`.
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+
+    // Convert the local memory blocks into remote memory blocks
+    auto send_remote_descriptor           = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
+                                                                         *m_resources);
+    auto send_remote_descriptor_object_id = send_remote_descriptor->encoded_object().object_id();
+    auto send_remote_descriptor_tokens    = send_remote_descriptor->encoded_object().tokens();
+
+    auto original_tokens = std::numeric_limits<uint64_t>::max();
+
+    // Check that remote payloads were registered with `DataPlaneResources2` with the correct number of tokens.
+    EXPECT_EQ(send_remote_descriptor_tokens, std::numeric_limits<uint64_t>::max());
+    EXPECT_EQ(m_resources->registered_remote_descriptor_token_count(send_remote_descriptor_object_id), original_tokens);
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 1);
+
+    // Get the serialized data with proper amount of tokens.
+    // TODO(Peter): A better API is needed instead of modifying with `set_tokens()` and serializing the
+    // modified object.
+    auto tokens_recv1 = (send_remote_descriptor_tokens >> 1) + 1;
+    send_remote_descriptor->encoded_object().set_tokens(tokens_recv1);
+    EXPECT_EQ(send_remote_descriptor->encoded_object().tokens(), tokens_recv1);
+    auto serialized_data1 = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
+
+    auto tokens_recv2 = send_remote_descriptor_tokens >> 1;
+    send_remote_descriptor->encoded_object().set_tokens(tokens_recv2);
+    EXPECT_EQ(send_remote_descriptor->encoded_object().tokens(), tokens_recv2);
+    auto serialized_data2 = send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance());
+
+    // Set original amount of tokens back
+    // TODO(Peter): A better API is needed instead of setting back the original amount of tokens.
+    send_remote_descriptor->encoded_object().set_tokens(original_tokens);
+
+    send_remote_descriptor = nullptr;
+
+    auto processRequest = [this, &send_data, send_remote_descriptor_object_id](auto& resources_recv,
+                                                                               auto& endpoint_recv,
+                                                                               auto& endpoint_send,
+                                                                               auto& serialized_data,
+                                                                               auto expected_tokens) {
+        auto receive_request = resources_recv->am_recv_async(endpoint_send);
+        auto send_request    = m_resources->am_send_async(endpoint_recv, serialized_data);
+
+        while (!send_request->isCompleted() || !receive_request->isCompleted())
+        {
+            m_resources->progress();
+            resources_recv->progress();
+        }
+
+        // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
+        // invalid once `DataPlaneResources2` releases it.
+        std::weak_ptr<runtime::RemoteDescriptorImpl2> registered_send_remote_descriptor = m_resources->get_descriptor(
+            send_remote_descriptor_object_id);
+        EXPECT_NE(registered_send_remote_descriptor.lock(), nullptr);
+
+        // Create a remote descriptor from the received data
+        auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes(
+            {receive_request->getRecvBuffer()->data(),
+             receive_request->getRecvBuffer()->getSize(),
+             mrc::memory::memory_kind::host});
+        auto recv_remote_descriptor_object_id = recv_remote_descriptor->encoded_object().object_id();
+
+        // Convert to a local descriptor
+        auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor),
+                                                                            *m_resources);
+
+        EXPECT_EQ(send_remote_descriptor_object_id, recv_remote_descriptor_object_id);
+
+        if (expected_tokens > 0)
+        {
+            // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case
+            // it fails to complete. Wait for remote decrement messages.
+            while (m_resources->get_descriptor(send_remote_descriptor_object_id)->encoded_object().tokens() !=
+                   expected_tokens)
+            {
+                m_resources->progress();
+                resources_recv->progress();
+            }
+
+            // Redundant with the above, but clarify intent.
+            EXPECT_EQ(m_resources->get_descriptor(send_remote_descriptor_object_id)->encoded_object().tokens(),
+                      expected_tokens);
+        }
+        else
+        {
+            // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case
+            // it fails to complete. Wait for remote decrement messages.
+            while (registered_send_remote_descriptor.lock() != nullptr)
+            {
+                m_resources->progress();
+                resources_recv->progress();
+            }
+
+            // Redundant with the above, but clarify intent.
+            EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
+        }
+
+        // Convert back into the value descriptor
+        auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(
+            std::move(recv_local_descriptor));
+
+        // Finally, get the value
+        auto recv_data = recv_value_descriptor->value();
+
+        EXPECT_EQ(send_data, recv_data);
+
+        // TODO(Peter): Find out why not storing a reference to `recv_value_descriptor` causes a segfault in
+        // `recv_value_descriptor->value()` when called in the next request.
+        return recv_value_descriptor;
+    };
+
+    auto recv_value_descriptor1 = processRequest(resources_recv1,
+                                                 endpoint_recv1,
+                                                 endpoint_send1,
+                                                 serialized_data1,
+                                                 std::numeric_limits<uint64_t>::max() - tokens_recv1);
+
+    auto recv_value_descriptor2 = processRequest(resources_recv2, endpoint_recv2, endpoint_send2, serialized_data2, 0);
+}
+
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
