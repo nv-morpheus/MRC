@@ -162,9 +162,12 @@ DataPlaneResources2::DataPlaneResources2()
     m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
 
     auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
-        if (req->getStatus() != UCS_OK)
-            // TODO(Peter): Ensure the error gets raised somehow
-            DVLOG(10) << "Error calling decrement_callback";
+        auto status = req->getStatus();
+        if (status != UCS_OK)
+        {
+            LOG(ERROR) << "Error calling decrement_callback, request failed with status " << status << "("
+                       << ucs_status_string(status) << ")";
+        }
 
         auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
             req->getRecvBuffer()->data());
@@ -380,7 +383,6 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
 
 uint64_t DataPlaneResources2::get_next_object_id()
 {
-    // TODO(Peter): Handle overflow?
     return m_next_object_id++;
 }
 
