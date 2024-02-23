@@ -21,6 +21,7 @@
 #include "internal/data_plane/client.hpp"
 #include "internal/data_plane/server.hpp"
 #include "internal/memory/host_resources.hpp"
+#include "internal/remote_descriptor/messages.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/utils.hpp"
@@ -159,6 +160,23 @@ DataPlaneResources2::DataPlaneResources2()
 
     DVLOG(10) << "initialize the registration cache for this context";
     m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
+
+    auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
+        auto status = req->getStatus();
+        if (status != UCS_OK)
+        {
+            LOG(ERROR) << "Error calling decrement_callback, request failed with status " << status << "("
+                       << ucs_status_string(status) << ")";
+        }
+
+        auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
+            req->getRecvBuffer()->data());
+
+        decrement_tokens(dec_message);
+    });
+    m_worker->registerAmReceiverCallback(
+        ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
+        decrement_callback);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -315,7 +333,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_send_async(std::share
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, tag);
+    auto request = endpoint->tagSend(const_cast<void*>(buffer), length, ucxx::Tag(tag));
 
     return request;
 }
@@ -328,7 +346,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::tagged_recv_async(std::share
 {
     // TODO(MDD): Check that this EP belongs to this resource
     // TODO(MDD): Once 0.35 is released, support tag_mask
-    auto request = endpoint->tagRecv(buffer, length, tag);
+    auto request = endpoint->tagRecv(buffer, length, ucxx::Tag(tag), ucxx::TagMaskFull);
 
     return request;
 }
@@ -361,6 +379,45 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
     auto request = endpoint->amRecv();
 
     return request;
+}
+
+uint64_t DataPlaneResources2::get_next_object_id()
+{
+    return m_next_object_id++;
+}
+
+uint64_t DataPlaneResources2::register_remote_decriptor(
+    std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor)
+{
+    auto object_id = get_next_object_id();
+    remote_descriptor->encoded_object().set_object_id(object_id);
+    m_remote_descriptor_by_id[object_id] = remote_descriptor;
+    return object_id;
+}
+
+uint64_t DataPlaneResources2::registered_remote_descriptor_count()
+{
+    return m_remote_descriptor_by_id.size();
+}
+
+uint64_t DataPlaneResources2::registered_remote_descriptor_token_count(uint64_t object_id)
+{
+    return m_remote_descriptor_by_id.at(object_id)->encoded_object().tokens();
+}
+
+void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message)
+{
+    if (dec_message->tokens > 0)
+    {
+        auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
+        auto tokens            = remote_descriptor->encoded_object().tokens();
+        tokens -= dec_message->tokens;
+        remote_descriptor->encoded_object().set_tokens(tokens);
+        if (tokens == 0)
+        {
+            m_remote_descriptor_by_id.erase(dec_message->object_id);
+        }
+    }
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
