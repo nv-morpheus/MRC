@@ -15,6 +15,7 @@ import {
    segmentInstanceDecRefCount,
    segmentInstancesSelectById,
    segmentInstancesSelectByNameAndPipelineDef,
+   segmentInstancesSelectByAddress,
 } from "@mrc/server/store/slices/segmentInstancesSlice";
 import { startAppListening } from "@mrc/server/store/listener_middleware";
 import { createWatcher } from "@mrc/server/store/resourceStateWatcher";
@@ -121,11 +122,11 @@ export const manifoldInstancesSlice = createSlice({
             : found.requestedOutputSegments;
 
          // Check to make sure this hasnt been added already
-         if (action.payload.segment.segmentAddress in requestedMap) {
+         if (action.payload.segment.id in requestedMap) {
             throw new Error("Segment already attached to manifold");
          }
 
-         requestedMap[action.payload.segment.segmentAddress] = action.payload.is_local;
+         requestedMap[action.payload.segment.id] = action.payload.is_local;
       },
       detachRequestedSegment: (
          state,
@@ -146,11 +147,11 @@ export const manifoldInstancesSlice = createSlice({
             : found.requestedOutputSegments;
 
          // Check to make sure its already added
-         if (!(action.payload.segment.segmentAddress in requestedMap)) {
+         if (!(action.payload.segment.id in requestedMap)) {
             throw new Error("Segment not attached to manifold");
          }
 
-         delete requestedMap[action.payload.segment.segmentAddress];
+         delete requestedMap[action.payload.segment.id];
       },
 
       attachActualSegment: (
@@ -173,12 +174,12 @@ export const manifoldInstancesSlice = createSlice({
             ? found.actualInputSegments
             : found.actualOutputSegments;
 
-         const isLocal = requestedMap[action.payload.segment.segmentAddress];
+         const isLocal = requestedMap[action.payload.segment.id];
          if (isLocal === undefined) {
             throw new Error("Segment not attached to manifold");
          }
 
-         actualMap[action.payload.segment.segmentAddress] = isLocal;
+         actualMap[action.payload.segment.id] = isLocal;
       },
 
       detachActualSegment: (
@@ -199,11 +200,11 @@ export const manifoldInstancesSlice = createSlice({
             ? found.actualInputSegments
             : found.actualOutputSegments;
 
-         if (!(action.payload.segment.segmentAddress in actualMap)) {
+         if (!(action.payload.segment.id in actualMap)) {
             throw new Error("Segment not attached to manifold");
          }
 
-         delete actualMap[action.payload.segment.segmentAddress];
+         delete actualMap[action.payload.segment.id];
 
          const numRequestedInputs: number = Object.keys(found.requestedInputSegments).length;
          const numActualInputs: number = Object.keys(found.actualInputSegments).length;
@@ -215,8 +216,8 @@ export const manifoldInstancesSlice = createSlice({
 
             if (action.payload.is_input) {
                if (numRequestedOutputs > 0) {
-                  Object.keys(found.requestedOutputSegments).forEach((segmentAddress) => {
-                     delete found.requestedOutputSegments[parseInt(segmentAddress)];
+                  Object.keys(found.requestedOutputSegments).forEach((segmentId) => {
+                     delete found.requestedOutputSegments[parseInt(segmentId)];
                      // TODO: we need decrement the segment's refcount
                   });
                } else {
@@ -322,11 +323,11 @@ function syncSegmentNameForManifold(
    // Determine any that need to be removed
    const toRemove = currentSegmentIds.filter((s) => !activeSegments.map((s) => s.id).includes(s));
 
-   toRemove.forEach((segId) => {
-      const seg = segmentInstancesSelectById(state, segId);
+   toRemove.forEach((segAddress) => {
+      const seg = segmentInstancesSelectByAddress(state, segAddress);
 
       if (!seg) {
-         throw new Error(`Could not find segment with ID: ${segId}`);
+         throw new Error(`Could not find segment with address: ${segAddress}`);
       }
 
       // Dispatch the attach action
@@ -428,7 +429,7 @@ function manifoldInstanceUpdateActualSegment(
 ) {
    const segment = segmentInstancesSelectById(state, segmentId);
    if (!segment) {
-      throw new Error(`Could not find segment with ID: ${segmentId}`);
+      throw new Error(`Could not find segment with address: ${segmentId}`);
    }
 
    const requestedMapping: { [key: string]: boolean } = isInput
@@ -439,7 +440,7 @@ function manifoldInstanceUpdateActualSegment(
       : manifold.actualOutputSegments;
 
    // figure out if we are adding or removing
-   if (segment.segmentAddress in requestedMapping) {
+   if (segment.id in requestedMapping) {
       // segment exists in requested, and the client added it to the actual
       dispatch(
          manifoldInstancesSlice.actions.attachActualSegment({ manifold: manifold, is_input: isInput, segment: segment })
@@ -451,7 +452,7 @@ function manifoldInstanceUpdateActualSegment(
       // One of two cases:
       //   1) Server asked the client to remove the segment and they did in which, and now we need to remove it from the actual
       //   2) Client is sending us an invalid segmentId
-      if (segment.segmentAddress in actualMapping) {
+      if (segment.id in actualMapping) {
          dispatch(
             manifoldInstancesSlice.actions.detachActualSegment({
                manifold: manifold,
