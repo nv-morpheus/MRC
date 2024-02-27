@@ -917,19 +917,15 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
         auto recv_data = recv_value_descriptor->value();
 
         EXPECT_EQ(send_data, recv_data);
-
-        // TODO(Peter): Find out why not storing a reference to `recv_value_descriptor` causes a segfault in
-        // `recv_value_descriptor->value()` when called in the next request.
-        return recv_value_descriptor;
     };
 
-    auto recv_value_descriptor1 = processRequest(resources_recv1,
-                                                 endpoint_recv1,
-                                                 endpoint_send1,
-                                                 serialized_data1,
-                                                 std::numeric_limits<uint64_t>::max() - tokens_recv1);
+    processRequest(resources_recv1,
+                   endpoint_recv1,
+                   endpoint_send1,
+                   serialized_data1,
+                   std::numeric_limits<uint64_t>::max() - tokens_recv1);
 
-    auto recv_value_descriptor2 = processRequest(resources_recv2, endpoint_recv2, endpoint_send2, serialized_data2, 0);
+    processRequest(resources_recv2, endpoint_recv2, endpoint_send2, serialized_data2, 0);
 }
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
