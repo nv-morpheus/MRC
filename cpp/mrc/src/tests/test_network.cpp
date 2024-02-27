@@ -928,6 +928,134 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     processRequest(resources_recv2, endpoint_recv2, endpoint_send2, serialized_data2, 0);
 }
 
+TEST_F(TestNetwork, TransferPressureControl)
+{
+    static_assert(codable::is_static_decodable_v<TransferObject>);
+
+    auto block_provider = std::make_shared<memory::memory_block_provider>();
+
+    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
+
+    size_t max_remote_descriptors{3};
+    size_t total_remote_descriptors{10};
+    m_resources->set_max_remote_descriptors(max_remote_descriptors);
+
+    bool registration_finished{false};
+    std::queue<memory::buffer> serialized_data;
+    std::queue<uint64_t> send_remote_descriptor_object_ids;
+
+    auto register_descriptors = [this,
+                                 block_provider,
+                                 &send_data,
+                                 &serialized_data,
+                                 &send_remote_descriptor_object_ids,
+                                 &total_remote_descriptors,
+                                 &registration_finished]() {
+        for (size_t i = 0; i < total_remote_descriptors; ++i)
+        {
+            auto send_data_copy = send_data;
+
+            // Create a value descriptor
+            auto value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::create(
+                std::move(send_data_copy));
+
+            // Convert to a local descriptor
+            auto send_local_descriptor = runtime::LocalDescriptor2::from_value(std::move(value_descriptor),
+                                                                               block_provider);
+
+            // Convert the local memory blocks into remote memory blocks
+            auto send_remote_descriptor = runtime::RemoteDescriptor2::from_local(std::move(send_local_descriptor),
+                                                                                 *m_resources);
+            send_remote_descriptor_object_ids.push(send_remote_descriptor->encoded_object().object_id());
+
+            // Get the serialized data and push to queue for consumption by request processing thread
+            serialized_data.push(
+                std::move(send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance())));
+        }
+        registration_finished = true;
+    };
+
+    auto process_request = [this,
+                            &send_data,
+                            block_provider,
+                            max_remote_descriptors,
+                            &registration_finished,
+                            &serialized_data,
+                            &send_remote_descriptor_object_ids](uint64_t index) {
+        // Block processing requests until either the maximum number of remote descriptors is registered
+        // (`DataPlaneResources2` internal queue is full) and registrations are still ongoing or serialized data is not
+        // available yet.
+        while ((m_resources->registered_remote_descriptor_count() < max_remote_descriptors && !registration_finished) ||
+               serialized_data.empty())
+        {
+            ;
+        }
+
+        auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
+
+        auto local_serialized_data = std::move(serialized_data.front());
+        serialized_data.pop();
+        auto send_request = m_resources->am_send_async(m_loopback_endpoint, local_serialized_data);
+
+        while (!send_request->isCompleted() || !receive_request->isCompleted())
+        {
+            m_resources->progress();
+        }
+
+        // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
+        // invalid once `DataPlaneResources2` releases it.
+        auto send_remote_descriptor_object_id = send_remote_descriptor_object_ids.front();
+        send_remote_descriptor_object_ids.pop();
+        std::weak_ptr<runtime::RemoteDescriptorImpl2> registered_send_remote_descriptor = m_resources->get_descriptor(
+            send_remote_descriptor_object_id);
+        EXPECT_NE(registered_send_remote_descriptor.lock(), nullptr);
+
+        // Create a remote descriptor from the received data
+        auto recv_remote_descriptor = runtime::RemoteDescriptor2::from_bytes(
+            {receive_request->getRecvBuffer()->data(),
+             receive_request->getRecvBuffer()->getSize(),
+             mrc::memory::memory_kind::host});
+        auto recv_remote_descriptor_object_id = recv_remote_descriptor->encoded_object().object_id();
+
+        // Convert to a local descriptor
+        auto recv_local_descriptor = runtime::LocalDescriptor2::from_remote(std::move(recv_remote_descriptor),
+                                                                            *m_resources);
+
+        EXPECT_EQ(send_remote_descriptor_object_id, recv_remote_descriptor_object_id);
+
+        // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case it
+        // fails to complete. Wait for remote decrement messages.
+        while (registered_send_remote_descriptor.lock() != nullptr)
+        {
+            m_resources->progress();
+        }
+
+        // Redundant with the above, but clarify intent.
+        EXPECT_EQ(registered_send_remote_descriptor.lock(), nullptr);
+
+        // Convert back into the value descriptor
+        auto recv_value_descriptor = runtime::TypedValueDescriptor<decltype(send_data)>::from_local(
+            std::move(recv_local_descriptor));
+
+        // Finally, get the value
+        auto recv_data = recv_value_descriptor->value();
+
+        EXPECT_EQ(send_data, recv_data);
+    };
+
+    // Launch thread to register remote descriptors, which will block once max_remote_descriptors are pending
+    std::thread t(register_descriptors);
+
+    // Process requests in current thread
+    for (size_t i = 0; i < total_remote_descriptors; ++i)
+    {
+        process_request(i);
+    }
+
+    t.join();
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+}
+
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {
 //     auto launcher = m_launch_control->prepare_launcher(std::move(m_mutable_nem));
