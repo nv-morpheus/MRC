@@ -33,7 +33,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 
@@ -123,6 +125,8 @@ class DataPlaneResources2
     void set_instance_id(uint64_t instance_id);
     bool has_instance_id() const;
     uint64_t get_instance_id() const;
+
+    void set_max_remote_descriptors(uint64_t max_remote_descriptors);
 
     ucxx::Context& context() const;
 
@@ -218,6 +222,10 @@ class DataPlaneResources2
     uint64_t get_next_object_id();
 
     void decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message);
+
+    uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
+    std::mutex m_remote_descriptors_mutex{};
+    std::condition_variable m_remote_descriptors_cv{};
 
   protected:
     std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
