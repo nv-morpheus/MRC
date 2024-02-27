@@ -43,11 +43,6 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     /**
      * @brief Suspends the current function and resumes it according to the scheduler's implementation.
      */
-    [[nodiscard]] virtual Task<> schedule() = 0;
-
-    /**
-     * @brief Suspends the current function and resumes it according to the scheduler's implementation.
-     */
     [[nodiscard]] virtual Task<> yield() = 0;
 };
 

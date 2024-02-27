@@ -85,7 +85,7 @@ class __attribute__((visibility("default"))) PythonCallbackAsyncioRunnable : pub
   public:
     PythonCallbackAsyncioRunnable(pymrc::PyObjectHolder operation) : m_operation(std::move(operation)) {}
 
-    mrc::coroutines::AsyncGenerator<int> on_data(int&& value) override
+    mrc::coroutines::AsyncGenerator<int> on_data(int&& value, std::shared_ptr<mrc::coroutines::Scheduler> on) override
     {
         py::gil_scoped_acquire acquire;
 

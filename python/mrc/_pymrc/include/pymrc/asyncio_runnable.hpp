@@ -205,7 +205,7 @@ class AsyncioRunnable : public AsyncSink<InputT>,
      * @brief Value's read from the sink's channel are fed to this function and yields from the
      * resulting generator are written to the source's channel.
      */
-    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value) = 0;
+    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value, std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
 
     std::stop_source m_stop_source;
 
@@ -316,9 +316,10 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     try
     {
         // Call the on_data function
-        auto on_data_gen = this->on_data(std::move(value));
+        auto on_data_gen = this->on_data(std::move(value), on);
 
         auto iter = co_await on_data_gen.begin();
+    // co_await on->yield();
 
         while (iter != on_data_gen.end())
         {
@@ -326,6 +327,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
             auto data = std::move(*iter);
 
             co_await this->write_async(std::move(data));
+    // co_await on->yield();
 
             // Advance the iterator
             co_await ++iter;
