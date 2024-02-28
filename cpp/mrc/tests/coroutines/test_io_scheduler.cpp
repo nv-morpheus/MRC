@@ -23,7 +23,7 @@
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <chrono>
 #include <coroutine>

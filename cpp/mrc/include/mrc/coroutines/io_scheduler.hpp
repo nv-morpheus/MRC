@@ -49,7 +49,6 @@
     #include "coro/net/socket.hpp"
 #endif
 
-#include <stdint.h>
 #include <sys/eventfd.h>
 
 #include <array>
@@ -57,6 +56,7 @@
 #include <chrono>
 #include <coroutine>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -248,14 +248,14 @@ class IoScheduler : public Scheduler
      * @param amount The amount of time to yield for before resuming executino of this task.
      *               Given zero or negative amount of time this behaves identical to yield().
      */
-    [[nodiscard]] auto yield_for(std::chrono::milliseconds amount) -> mrc::coroutines::Task<void>;
+    [[nodiscard]] mrc::coroutines::Task<void> yield_for(std::chrono::milliseconds amount) override;
 
     /**
      * Yields the current task until the given time point in the future.
      * @param time The time point to resume execution of this task.  Given 'now' or a time point in the
      *             in the past this behaves identical to yield().
      */
-    [[nodiscard]] auto yield_until(time_point_t time) -> mrc::coroutines::Task<void>;
+    [[nodiscard]] mrc::coroutines::Task<void> yield_until(time_point_t time) override;
 
     /**
      * Polls the given file descriptor for the given operations.

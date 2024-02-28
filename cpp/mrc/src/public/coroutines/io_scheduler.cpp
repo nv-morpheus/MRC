@@ -43,11 +43,11 @@
 #include "mrc/coroutines/task_container.hpp"
 #include "mrc/coroutines/time.hpp"
 
-#include <errno.h>
+#include <cerrno>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 #include <atomic>
