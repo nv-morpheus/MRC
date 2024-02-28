@@ -319,7 +319,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
         auto on_data_gen = this->on_data(std::move(value), on);
 
         auto iter = co_await on_data_gen.begin();
-    // co_await on->yield();
 
         while (iter != on_data_gen.end())
         {
@@ -327,7 +326,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
             auto data = std::move(*iter);
 
             co_await this->write_async(std::move(data));
-    // co_await on->yield();
 
             // Advance the iterator
             co_await ++iter;

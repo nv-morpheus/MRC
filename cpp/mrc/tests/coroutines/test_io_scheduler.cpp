@@ -19,6 +19,8 @@
 #include "mrc/coroutines/io_scheduler.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/time.hpp"
+#include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
 
@@ -35,9 +37,41 @@ TEST_F(TestCoroIoScheduler, YieldFor)
     auto scheduler = coroutines::IoScheduler::get_instance();
 
     auto task = [scheduler]() -> coroutines::Task<> {
-        // co_await scheduler->yield_for(1000ms);
-        co_return;
+        co_await scheduler->yield_for(10ms);
     };
 
     coroutines::sync_wait(task());
+}
+
+TEST_F(TestCoroIoScheduler, YieldUntil)
+{
+    auto scheduler = coroutines::IoScheduler::get_instance();
+
+    auto task = [scheduler]() -> coroutines::Task<> {
+        co_await scheduler->yield_until(coroutines::clock_t::now() + 10ms);
+    };
+
+    coroutines::sync_wait(task());
+}
+
+TEST_F(TestCoroIoScheduler, Concurrent)
+{
+    auto scheduler = coroutines::IoScheduler::get_instance();
+
+    auto task = [scheduler]() -> coroutines::Task<> {
+        co_await scheduler->yield_for(10ms);
+    };
+
+    auto start = coroutines::clock_t::now();
+
+    std::vector<coroutines::Task<>> tasks;
+
+    for (uint32_t i = 0; i < 1000; i++)
+    {
+        tasks.push_back(task());
+    }
+
+    coroutines::sync_wait(coroutines::when_all(std::move(tasks)));
+
+    ASSERT_LT(coroutines::clock_t::now() - start, 20ms);
 }
