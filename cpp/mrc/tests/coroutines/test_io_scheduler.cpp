@@ -23,10 +23,10 @@
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
-#include <cstdint>
 
 #include <chrono>
 #include <coroutine>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
