@@ -58,13 +58,32 @@
 using namespace std::chrono_literals;
 
 namespace mrc::coroutines {
+
+std::shared_ptr<IoScheduler> IoScheduler::get_instance()
+{
+    static std::shared_ptr<IoScheduler> instance;
+    static std::mutex instance_mutex{};
+
+    if (instance == nullptr)
+    {
+        auto lock = std::lock_guard(instance_mutex);
+
+        if (instance == nullptr)
+        {
+            instance = std::make_shared<IoScheduler>();
+        }
+    }
+
+    return instance;
+}
+
 IoScheduler::IoScheduler(Options opts) :
   m_opts(std::move(opts)),
   m_epoll_fd(epoll_create1(EPOLL_CLOEXEC)),
   m_shutdown_fd(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK)),
   m_timer_fd(timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC)),
   m_schedule_fd(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK)),
-  m_owned_tasks(new mrc::coroutines::TaskContainer(this->shared_from_this()))
+  m_owned_tasks(new mrc::coroutines::TaskContainer(std::shared_ptr<IoScheduler>(this, [](auto _) {})))
 {
     if (opts.execution_strategy == ExecutionStrategy::process_tasks_on_thread_pool)
     {

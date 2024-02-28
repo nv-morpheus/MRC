@@ -22,9 +22,11 @@
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include <boost/fiber/future/async.hpp>
+#include <mrc/coroutines/io_scheduler.hpp>
 #include <mrc/coroutines/scheduler.hpp>
 #include <mrc/coroutines/task.hpp>
 #include <mrc/coroutines/task_container.hpp>
+#include <mrc/coroutines/time.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
@@ -89,6 +91,18 @@ class AsyncioScheduler : public mrc::coroutines::Scheduler
     {
         co_await ContinueOnLoopOperation(m_loop);
     }
+
+    [[nodiscard]] coroutines::Task<> yield_for(std::chrono::milliseconds amount) override
+    {
+        co_await coroutines::IoScheduler::get_instance()->yield_for(amount);
+        co_await ContinueOnLoopOperation(m_loop);
+    };
+
+    [[nodiscard]] coroutines::Task<> yield_until(mrc::coroutines::time_point_t time) override
+    {
+        co_await coroutines::IoScheduler::get_instance()->yield_until(time);
+        co_await ContinueOnLoopOperation(m_loop);
+    };
 
   private:
     mrc::pymrc::PyHolder m_loop;

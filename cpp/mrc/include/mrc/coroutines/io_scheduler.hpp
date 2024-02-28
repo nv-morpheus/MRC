@@ -35,8 +35,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- #pragma once
+
+#pragma once
 
 #include "mrc/coroutines/detail/poll_info.hpp"
 #include "mrc/coroutines/fd.hpp"
@@ -60,11 +60,15 @@
 #include <vector>
 
 namespace mrc::coroutines {
+
 class IoScheduler : public Scheduler
 {
+  private:
     using timed_events_t = detail::PollInfo::timed_events_t;
 
   public:
+    static std::shared_ptr<IoScheduler> get_instance();
+
     class schedule_operation;
     friend schedule_operation;
 
@@ -124,7 +128,7 @@ class IoScheduler : public Scheduler
     auto operator=(const IoScheduler&) -> IoScheduler& = delete;
     auto operator=(IoScheduler&&) -> IoScheduler&      = delete;
 
-    ~IoScheduler();
+    ~IoScheduler() override;
 
     /**
      * Given a ThreadStrategy::manual this function should be called at regular intervals to

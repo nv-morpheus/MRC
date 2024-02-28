@@ -17,6 +17,7 @@
 add_executable(test_mrc
   coroutines/test_async_generator.cpp
   coroutines/test_event.cpp
+  coroutines/test_io_scheduler.cpp
   coroutines/test_latch.cpp
   coroutines/test_ring_buffer.cpp
   coroutines/test_task_container.cpp

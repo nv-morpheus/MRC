@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/time.hpp"
 
 #include <coroutine>
 #include <cstddef>
@@ -44,6 +45,10 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
      * @brief Suspends the current function and resumes it according to the scheduler's implementation.
      */
     [[nodiscard]] virtual Task<> yield() = 0;
+
+    [[nodiscard]] virtual Task<> yield_for(std::chrono::milliseconds amount) = 0;
+
+    [[nodiscard]] virtual Task<> yield_until(time_point_t time) = 0;
 };
 
 }  // namespace mrc::coroutines
