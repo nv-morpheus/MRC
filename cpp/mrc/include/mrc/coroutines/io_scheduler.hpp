@@ -40,26 +40,32 @@
 
 #include "mrc/coroutines/detail/poll_info.hpp"
 #include "mrc/coroutines/fd.hpp"
-#include "mrc/coroutines/poll.hpp"
 #include "mrc/coroutines/scheduler.hpp"
-#include "mrc/coroutines/task_container.hpp"
+#include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/thread_pool.hpp"
+#include "mrc/coroutines/time.hpp"
 
 #ifdef LIBCORO_FEATURE_NETWORKING
     #include "coro/net/socket.hpp"
 #endif
 
+#include <stdint.h>
 #include <sys/eventfd.h>
 
+#include <array>
+#include <atomic>
 #include <chrono>
+#include <coroutine>
+#include <cstddef>
 #include <functional>
-#include <map>
 #include <memory>
-#include <optional>
+#include <mutex>
 #include <thread>
 #include <vector>
 
 namespace mrc::coroutines {
+enum class PollOperation : uint64_t;
+enum class PollStatus;
 
 class IoScheduler : public Scheduler
 {
@@ -70,6 +76,7 @@ class IoScheduler : public Scheduler
     static std::shared_ptr<IoScheduler> get_instance();
 
     class schedule_operation;
+
     friend schedule_operation;
 
     enum class ThreadStrategy

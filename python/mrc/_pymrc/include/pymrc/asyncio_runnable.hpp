@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,7 +205,8 @@ class AsyncioRunnable : public AsyncSink<InputT>,
      * @brief Value's read from the sink's channel are fed to this function and yields from the
      * resulting generator are written to the source's channel.
      */
-    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value, std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
+    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value,
+                                                             std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
 
     std::stop_source m_stop_source;
 

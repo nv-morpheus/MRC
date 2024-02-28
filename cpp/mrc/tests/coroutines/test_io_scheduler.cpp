@@ -23,8 +23,13 @@
 #include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <chrono>
 #include <coroutine>
+#include <memory>
+#include <utility>
+#include <vector>
 
 using namespace mrc;
 using namespace std::chrono_literals;

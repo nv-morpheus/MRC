@@ -47,15 +47,16 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     [[nodiscard]] virtual Task<> yield() = 0;
 
     /**
-     * @brief Suspends the current function for a given duration and resumes it according to the schedulers's implementation.
+     * @brief Suspends the current function for a given duration and resumes it according to the schedulers's
+     * implementation.
      */
     [[nodiscard]] virtual Task<> yield_for(std::chrono::milliseconds amount) = 0;
 
     /**
-     * @brief Suspends the current function until a given time point and resumes it according to the schedulers's implementation.
+     * @brief Suspends the current function until a given time point and resumes it according to the schedulers's
+     * implementation.
      */
     [[nodiscard]] virtual Task<> yield_until(time_point_t time) = 0;
-    
 };
 
 }  // namespace mrc::coroutines
