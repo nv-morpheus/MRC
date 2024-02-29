@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -136,7 +136,7 @@ auto TaskContainer::gc_internal() -> std::size_t
 auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos) -> Task<void>
 {
     // Immediately move the task onto the executor.
-    co_await m_scheduler->schedule();
+    co_await m_scheduler->yield();
 
     try
     {

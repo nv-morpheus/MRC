@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,6 +54,10 @@
 #include <string>
 #include <utility>
 
+namespace mrc::coroutines {
+class Scheduler;
+}  // namespace mrc::coroutines
+
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
@@ -85,7 +89,7 @@ class __attribute__((visibility("default"))) PythonCallbackAsyncioRunnable : pub
   public:
     PythonCallbackAsyncioRunnable(pymrc::PyObjectHolder operation) : m_operation(std::move(operation)) {}
 
-    mrc::coroutines::AsyncGenerator<int> on_data(int&& value) override
+    mrc::coroutines::AsyncGenerator<int> on_data(int&& value, std::shared_ptr<mrc::coroutines::Scheduler> on) override
     {
         py::gil_scoped_acquire acquire;
 
