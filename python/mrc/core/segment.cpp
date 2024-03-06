@@ -219,8 +219,6 @@ PYBIND11_MODULE(segment, py_mod)
      */
     Builder.def("get_ingress", &BuilderProxy::get_ingress, py::arg("name"));
 
-    Builder.def("make_edge", &BuilderProxy::make_edge);
-
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 
     Builder.def("splice_edge",

@@ -51,7 +51,6 @@ morpheus_utils_configure_rmm()
 # gflags
 # ======
 rapids_find_package(gflags REQUIRED
-  GLOBAL_TARGETS gflags
   BUILD_EXPORT_SET ${PROJECT_NAME}-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-exports
 )

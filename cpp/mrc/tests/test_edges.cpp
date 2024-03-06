@@ -29,7 +29,9 @@
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
@@ -41,6 +43,7 @@
 #include <gtest/internal/gtest-internal.h>
 #include <rxcpp/rx.hpp>  // for observable_member
 
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -666,6 +669,21 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     sink1->run();
 }
 
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
+
+    source->run();
+    sink1->run();
+}
+
 TEST_F(TestEdges, SourceToBroadcastToSink)
 {
     auto source    = std::make_shared<node::TestSource<int>>();
@@ -703,6 +721,20 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSourceFirst)
 
     source->run();
     sink->run();
+}
+
+TEST_F(TestEdges, SourceToBroadcastTypelessToDifferentSinks)
+{
+    auto source    = std::make_shared<node::TestSource<int>>();
+    auto broadcast = std::make_shared<node::BroadcastTypeless>();
+    auto sink1     = std::make_shared<node::TestSink<int>>();
+    auto sink2     = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *broadcast);
+    mrc::make_edge(*broadcast, *sink1);
+    mrc::make_edge(*broadcast, *sink2);
+
+    source->run();
 }
 
 TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSinkFirst)
@@ -813,13 +845,94 @@ TEST_F(TestEdges, CombineLatest)
     auto source1 = std::make_shared<node::TestSource<int>>();
     auto source2 = std::make_shared<node::TestSource<float>>();
 
-    auto combine_latest = std::make_shared<node::CombineLatest<int, float>>();
+    auto combine_latest = std::make_shared<node::CombineLatest<std::tuple<int, float>>>();
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
     mrc::make_edge(*source1, *combine_latest->get_sink<0>());
     mrc::make_edge(*source2, *combine_latest->get_sink<1>());
     mrc::make_edge(*combine_latest, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+}
+
+TEST_F(TestEdges, CombineLatestTransform)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto zip = std::make_shared<node::CombineLatestTransform<std::tuple<int, float>, float>>(
+        [](std::tuple<int, float>&& val) {
+            return std::get<0>(val) + std::get<1>(val);
+        });
+
+    auto sink = std::make_shared<node::TestSink<float>>();
+
+    mrc::make_edge(*source1, *zip->get_sink<0>());
+    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+}
+
+TEST_F(TestEdges, Zip)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto zip = std::make_shared<node::Zip<std::tuple<int, float>>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, *zip->get_sink<0>());
+    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+}
+
+TEST_F(TestEdges, ZipTransform)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto zip = std::make_shared<node::ZipTransform<std::tuple<int, float>, float>>([](std::tuple<int, float>&& val) {
+        return std::get<0>(val) + std::get<1>(val);
+    });
+
+    auto sink = std::make_shared<node::TestSink<float>>();
+
+    mrc::make_edge(*source1, *zip->get_sink<0>());
+    mrc::make_edge(*source2, *zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+}
+
+TEST_F(TestEdges, DynamicZipComponent)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<int>>();
+
+    auto zip = std::make_shared<node::DynamicZipComponent<size_t, int>>();
+
+    auto sink = std::make_shared<node::TestSink<std::vector<int>>>();
+
+    mrc::make_edge(*source1, *zip->get_sink(0));
+    mrc::make_edge(*source2, *zip->get_sink(1));
+    mrc::make_edge(*zip, *sink);
 
     source1->run();
     source2->run();
@@ -885,6 +998,14 @@ TEST_F(TestEdges, CreateAndDestroy)
 
     {
         auto x = std::make_shared<node::TestConditional<int>>();
+    }
+
+    {
+        auto x = std::make_shared<node::CombineLatest<std::tuple<int, float>>>();
+    }
+
+    {
+        auto x = std::make_shared<node::Zip<std::tuple<int, float>>>();
     }
 }
 

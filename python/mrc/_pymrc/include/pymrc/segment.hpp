@@ -19,6 +19,8 @@
 
 #include "pymrc/types.hpp"
 
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
@@ -29,6 +31,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 
 namespace mrc::modules {
 class SegmentModule;
@@ -216,9 +219,17 @@ class BuilderProxy
                                                                                const std::string& name,
                                                                                pybind11::args operators);
 
+    // static void make_edge(mrc::segment::IBuilder& self,
+    //                       std::shared_ptr<mrc::segment::ObjectProperties> source,
+    //                       std::shared_ptr<mrc::segment::ObjectProperties> sink);
+
     static void make_edge(mrc::segment::IBuilder& self,
-                          std::shared_ptr<mrc::segment::ObjectProperties> source,
-                          std::shared_ptr<mrc::segment::ObjectProperties> sink);
+                          std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+                                       std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
+                                       std::shared_ptr<mrc::edge::IReadableProviderBase>> source,
+                          std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+                                       std::shared_ptr<mrc::edge::IWritableProviderBase>,
+                                       std::shared_ptr<mrc::edge::IReadableAcceptorBase>> sink);
 
     static void splice_edge(mrc::segment::IBuilder& self,
                             std::string& source,

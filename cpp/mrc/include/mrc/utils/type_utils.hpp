@@ -207,4 +207,23 @@ constexpr auto type_name() noexcept
     //    return name;
 }
 
+// NOLINTBEGIN(readability-identifier-naming)
+// Disable naming conventions for std library-like functions
+template <class... VariantsT>
+struct dispatch : VariantsT...
+{
+    using VariantsT::operator()...;
+};
+template <class... VariantsT>
+dispatch(VariantsT...) -> dispatch<VariantsT...>;
+// NOLINTEND(readability-identifier-naming)
+
+template <class T, class = void>
+struct IsComplete : std::false_type
+{};
+
+template <class T>
+struct IsComplete<T, decltype(void(sizeof(T)))> : std::true_type
+{};
+
 }  // namespace mrc

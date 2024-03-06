@@ -131,6 +131,9 @@ struct EdgeAdapterUtil
     template <typename OutputT>
     static ingress_adapter_fn_t build_source_ingress_adapter()
     {
+        static_assert(IsComplete<pybind11::detail::make_caster<OutputT>>::value,
+                      "OutputT must have a pybind11::detail::make_caster specialization");
+
         return [](const edge::EdgeTypeInfo& target_type, std::shared_ptr<edge::IEdgeWritableBase> ingress_handle) {
             // Check to make sure we are targeting this type
             if (target_type != edge::EdgeTypeInfo::create<OutputT>())
@@ -140,24 +143,21 @@ struct EdgeAdapterUtil
 
             auto ingress_type = ingress_handle->get_type();
 
-            // Check to see if we have a conversion in pybind11
-            if (pybind11::detail::get_type_info(target_type.unwrapped_type(), false))
+            // Check if we are coming from a python object. Skip if we are not
+            if (ingress_type.full_type() != typeid(PyHolder))
             {
-                // Check if we are coming from a python object
-                if (ingress_type.full_type() == typeid(PyHolder))
-                {
-                    auto py_typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<PyHolder>>(ingress_handle);
-
-                    CHECK(py_typed_ingress) << "Invalid conversion. Incoming ingress is not a PyHolder";
-
-                    // Create a conversion from PyHolder to our type
-                    auto edge = std::make_shared<edge::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
-
-                    return std::make_shared<edge::WritableEdgeHandle>(edge);
-                }
+                return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
             }
 
-            return std::shared_ptr<edge::WritableEdgeHandle>(nullptr);
+            // By the time we are here, there must be a C++ -> Python conversion that exists. So use that
+            auto py_typed_ingress = std::dynamic_pointer_cast<edge::IEdgeWritable<PyHolder>>(ingress_handle);
+
+            CHECK(py_typed_ingress) << "Invalid conversion. Incoming ingress is not a PyHolder";
+
+            // Create a conversion from PyHolder to our type
+            auto edge = std::make_shared<edge::ConvertingEdgeWritable<OutputT, PyHolder>>(py_typed_ingress);
+
+            return std::make_shared<edge::WritableEdgeHandle>(edge);
         };
     }
 

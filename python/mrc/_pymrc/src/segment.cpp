@@ -27,10 +27,14 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>
@@ -490,24 +494,173 @@ py::dict BuilderProxy::get_current_module_config(mrc::segment::IBuilder& self)
     return cast_from_json(json_config);
 }
 
+// void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
+//                              std::shared_ptr<mrc::segment::ObjectProperties> source,
+//                              std::shared_ptr<mrc::segment::ObjectProperties> sink)
+// {
+//     if (source->is_writable_acceptor() && sink->is_writable_provider())
+//     {
+//         mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
+//     }
+//     else if (source->is_readable_provider() && sink->is_readable_acceptor())
+//     {
+//         mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
+//     }
+//     else
+//     {
+//         throw std::runtime_error(
+//             "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+//             "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+//     }
+// }
+
 void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
-                             std::shared_ptr<mrc::segment::ObjectProperties> source,
-                             std::shared_ptr<mrc::segment::ObjectProperties> sink)
+                             std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+                                          std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
+                                          std::shared_ptr<mrc::edge::IReadableProviderBase>> source,
+                             std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+                                          std::shared_ptr<mrc::edge::IWritableProviderBase>,
+                                          std::shared_ptr<mrc::edge::IReadableAcceptorBase>> sink)
 {
-    if (source->is_writable_acceptor() && sink->is_writable_provider())
+    // auto source_check = [](auto obj, bool is_writable) {
+    //     return std::visit(mrc::dispatch{
+    //                           [is_writable](std::shared_ptr<mrc::segment::ObjectProperties> node) {
+    //                               return is_writable ? node->is_writable_acceptor() : node->is_readable_provider();
+    //                           },
+    //                           [is_writable](std::shared_ptr<mrc::edge::IWritableAcceptorBase> edge) {
+    //                               return is_writable;
+    //                           },
+    //                           [is_writable](std::shared_ptr<mrc::edge::IReadableProviderBase> edge) {
+    //                               return !is_writable;
+    //                           },
+    //                       },
+    //                       obj);
+    // };
+
+    // auto sink_check = [](auto obj, bool is_writable) {
+    //     return std::visit(mrc::dispatch{
+    //                           [is_writable](std::shared_ptr<mrc::segment::ObjectProperties> node) {
+    //                               return is_writable ? node->is_writable_provider() : node->is_readable_acceptor();
+    //                           },
+    //                           [is_writable](std::shared_ptr<mrc::edge::IWritableProviderBase> edge) {
+    //                               return is_writable;
+    //                           },
+    //                           [is_writable](std::shared_ptr<mrc::edge::IReadableAcceptorBase> edge) {
+    //                               return !is_writable;
+    //                           },
+    //                       },
+    //                       obj);
+    // };
+
+    // using source_variant_t = std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+    //                                       std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
+    //                                       std::shared_ptr<mrc::edge::IReadableProviderBase>>;
+
+    // using sink_variant_t = std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
+    //                                     std::shared_ptr<mrc::edge::IWritableProviderBase>,
+    //                                     std::shared_ptr<mrc::edge::IReadableAcceptorBase>>;
+
+    struct Dispatcher
     {
-        mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
-    }
-    else if (source->is_readable_provider() && sink->is_readable_acceptor())
-    {
-        mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
-    }
-    else
-    {
-        throw std::runtime_error(
+        std::string base_error =
             "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
-            "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
-    }
+            "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor.";
+
+        void operator()(std::shared_ptr<mrc::segment::ObjectProperties> source,
+                        std::shared_ptr<mrc::segment::ObjectProperties> sink) const
+        {
+            if (source->is_writable_acceptor() && sink->is_writable_provider())
+            {
+                mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
+            }
+            else if (source->is_readable_provider() && sink->is_readable_acceptor())
+            {
+                mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
+            }
+            else
+            {
+                throw std::runtime_error(base_error);
+            }
+        }
+
+        void operator()(std::shared_ptr<mrc::segment::ObjectProperties> source,
+                        std::shared_ptr<mrc::edge::IWritableProviderBase> sink) const
+        {
+            if (source->is_writable_acceptor())
+            {
+                mrc::make_edge_typeless(source->writable_acceptor_base(), *sink);
+            }
+            else
+            {
+                throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: Object -> WritableProvider"));
+            }
+        }
+
+        void operator()(std::shared_ptr<mrc::segment::ObjectProperties> source,
+                        std::shared_ptr<mrc::edge::IReadableAcceptorBase> sink) const
+        {
+            if (source->is_readable_provider())
+            {
+                mrc::make_edge_typeless(source->readable_provider_base(), *sink);
+            }
+            else
+            {
+                throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: Object -> ReadableAcceptor"));
+            }
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IWritableAcceptorBase> source,
+                        std::shared_ptr<mrc::segment::ObjectProperties> sink) const
+        {
+            if (sink->is_writable_provider())
+            {
+                mrc::make_edge_typeless(*source, sink->writable_provider_base());
+            }
+            else
+            {
+                throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: WritableAcceptor -> Object"));
+            }
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IWritableAcceptorBase> source,
+                        std::shared_ptr<mrc::edge::IWritableProviderBase> sink) const
+        {
+            mrc::make_edge_typeless(*source, *sink);
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IWritableAcceptorBase> source,
+                        std::shared_ptr<mrc::edge::IReadableAcceptorBase> sink) const
+        {
+            throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: WritableAcceptor -> ReadableAcceptor"));
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IReadableProviderBase> source,
+                        std::shared_ptr<mrc::segment::ObjectProperties> sink) const
+        {
+            if (sink->is_readable_acceptor())
+            {
+                mrc::make_edge_typeless(*source, sink->readable_acceptor_base());
+            }
+            else
+            {
+                throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: ReadableProvider -> Object"));
+            }
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IReadableProviderBase> source,
+                        std::shared_ptr<mrc::edge::IWritableProviderBase> sink) const
+        {
+            throw std::runtime_error(MRC_CONCAT_STR(base_error << " Provided: ReadableProvider -> WritableProvider"));
+        }
+
+        void operator()(std::shared_ptr<mrc::edge::IReadableProviderBase> source,
+                        std::shared_ptr<mrc::edge::IReadableAcceptorBase> sink) const
+        {
+            mrc::make_edge_typeless(*source, *sink);
+        }
+    };
+
+    std::visit(Dispatcher{}, source, sink);
 }
 
 }  // namespace mrc::pymrc
