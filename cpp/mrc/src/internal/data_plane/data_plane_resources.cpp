@@ -391,7 +391,13 @@ uint64_t DataPlaneResources2::register_remote_decriptor(
 {
     auto object_id = get_next_object_id();
     remote_descriptor->encoded_object().set_object_id(object_id);
-    m_remote_descriptor_by_id[object_id] = remote_descriptor;
+    {
+        std::unique_lock lock(m_remote_descriptors_mutex);
+        m_remote_descriptors_cv.wait(lock, [this] {
+            return m_remote_descriptor_by_id.size() < m_max_remote_descriptors;
+        });
+        m_remote_descriptor_by_id[object_id] = remote_descriptor;
+    }
     return object_id;
 }
 
@@ -415,9 +421,19 @@ void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDe
         remote_descriptor->encoded_object().set_tokens(tokens);
         if (tokens == 0)
         {
-            m_remote_descriptor_by_id.erase(dec_message->object_id);
+            {
+                std::unique_lock lock(m_remote_descriptors_mutex);
+                m_remote_descriptor_by_id.erase(dec_message->object_id);
+            }
+            m_remote_descriptors_cv.notify_one();
         }
     }
+}
+
+void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
+{
+    m_max_remote_descriptors = max_remote_descriptors;
+    m_remote_descriptors_cv.notify_all();
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,

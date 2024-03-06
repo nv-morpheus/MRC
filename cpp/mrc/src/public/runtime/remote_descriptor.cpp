@@ -138,6 +138,7 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     auto mr = memory::malloc_memory_resource::instance();
 
     std::vector<std::shared_ptr<ucxx::Request>> requests;
+    std::vector<memory::buffer> buffers;
 
     // Transfer the info object
     local_obj->proto().set_allocated_info(remote_descriptor->encoded_object().release_info());
@@ -148,19 +149,19 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
         // Find the endpoint for this endpoint ID
         auto ep = data_plane_resources.find_endpoint(remote_payload.instance_id());
 
-        // Allocate the memory needed for this
-        auto buffer = memory::buffer(remote_payload.bytes(), mr);
+        // Allocate the memory needed for this and prevent it from going out-of-scope before request completes
+        buffers.emplace_back(remote_payload.bytes(), mr);
 
         // now issue the request
         requests.push_back(data_plane_resources.memory_recv_async(ep,
-                                                                  buffer,
+                                                                  buffers.back(),
                                                                   remote_payload.address(),
                                                                   remote_payload.remote_key().data()));
 
         auto* local_payload = local_obj->proto().add_payloads();
 
-        local_payload->set_address(reinterpret_cast<uintptr_t>(buffer.data()));
-        local_payload->set_bytes(buffer.bytes());
+        local_payload->set_address(reinterpret_cast<uintptr_t>(buffers.back().data()));
+        local_payload->set_bytes(buffers.back().bytes());
         local_payload->set_memory_kind(remote_payload.memory_kind());
     }
 
