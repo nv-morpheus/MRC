@@ -20,6 +20,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -54,6 +55,15 @@ PYBIND11_MODULE(node, py_mod)
                std::shared_ptr<mrc::segment::Object<node::BroadcastTypeless>>>(py_mod, "Broadcast")
         .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name) {
             auto node = builder.construct_object<node::BroadcastTypeless>(name);
+
+            return node;
+        }));
+
+    py::class_<mrc::segment::Object<node::RoundRobinRouterTypeless>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::RoundRobinRouterTypeless>>>(py_mod, "RoundRobinRouter")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name) {
+            auto node = builder.construct_object<node::RoundRobinRouterTypeless>(name);
 
             return node;
         }));
