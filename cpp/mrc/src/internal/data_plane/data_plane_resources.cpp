@@ -433,6 +433,7 @@ void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDe
 void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
 {
     m_max_remote_descriptors = max_remote_descriptors;
+    m_remote_descriptors_cv.notify_all();
 }
 
 // std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
