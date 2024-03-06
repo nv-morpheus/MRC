@@ -928,7 +928,10 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     processRequest(resources_recv2, endpoint_recv2, endpoint_send2, serialized_data2, 0);
 }
 
-TEST_F(TestNetwork, TransferPressureControl)
+class TestNetworkPressure : public TestNetwork, public ::testing::WithParamInterface<bool>
+{};
+
+TEST_P(TestNetworkPressure, TransferPressureControl)
 {
     static_assert(codable::is_static_decodable_v<TransferObject>);
 
@@ -938,6 +941,7 @@ TEST_F(TestNetwork, TransferPressureControl)
 
     size_t max_remote_descriptors{3};
     size_t total_remote_descriptors{10};
+    size_t registered_remote_descriptors{0};
     m_resources->set_max_remote_descriptors(max_remote_descriptors);
 
     bool registration_finished{false};
@@ -949,7 +953,8 @@ TEST_F(TestNetwork, TransferPressureControl)
                                  &send_data,
                                  &serialized_data,
                                  &send_remote_descriptor_object_ids,
-                                 &total_remote_descriptors,
+                                 &registered_remote_descriptors,
+                                 total_remote_descriptors,
                                  &registration_finished]() {
         for (size_t i = 0; i < total_remote_descriptors; ++i)
         {
@@ -971,9 +976,23 @@ TEST_F(TestNetwork, TransferPressureControl)
             // Get the serialized data and push to queue for consumption by request processing thread
             serialized_data.push(
                 std::move(send_remote_descriptor->to_bytes(memory::malloc_memory_resource::instance())));
+
+            ++registered_remote_descriptors;
         }
         registration_finished = true;
     };
+
+    auto increase_max_descriptors =
+        [this, max_remote_descriptors, total_remote_descriptors, &registered_remote_descriptors]() {
+            // Wait until registration hits max number of descriptors and blocks
+            while (registered_remote_descriptors < max_remote_descriptors)
+            {
+                ;
+            }
+
+            // Unblock `register_descriptors` immediately, even if requests are not being processed
+            m_resources->set_max_remote_descriptors(total_remote_descriptors);
+        };
 
     auto process_request = [this,
                             &send_data,
@@ -1043,8 +1062,14 @@ TEST_F(TestNetwork, TransferPressureControl)
         EXPECT_EQ(send_data, recv_data);
     };
 
+    if (GetParam())
+    {
+        std::thread increase_max_thread(increase_max_descriptors);
+        increase_max_thread.join();
+    }
+
     // Launch thread to register remote descriptors, which will block once max_remote_descriptors are pending
-    std::thread t(register_descriptors);
+    std::thread process_thread(register_descriptors);
 
     // Process requests in current thread
     for (size_t i = 0; i < total_remote_descriptors; ++i)
@@ -1052,9 +1077,11 @@ TEST_F(TestNetwork, TransferPressureControl)
         process_request(i);
     }
 
-    t.join();
+    process_thread.join();
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
 }
+
+INSTANTIATE_TEST_SUITE_P(IncreaseMaxRemoteDescriptorsWhileRunning, TestNetworkPressure, ::testing::Values(false, true));
 
 // TEST_F(TestNetwork, NetworkEventsManagerLifeCycle)
 // {
