@@ -79,6 +79,20 @@ class __attribute__((visibility("default"))) PythonObjectCache
     pybind11::object& get_module(const std::string& module_name);
 
     /**
+     * @brief Retrieve an object from the cache without removing it.
+     * @param object_id The ID of the object to retrieve.
+     * @return The cached object, or pybind11::none() if not found.
+     */
+    pybind11::object get(const std::string& object_id);
+
+    /**
+     * @brief Retrieve and remove an object from the cache.
+     * @param object_id The ID of the object to pop.
+     * @return The cached object, or pybind11::none() if not found.
+     */
+    pybind11::object pop(const std::string& object_id);
+
+    /**
      * @brief Add an arbitrary python object to the cache. If an entry with the same name exists it will be
      * overwritten.
      */

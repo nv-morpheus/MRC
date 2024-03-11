@@ -75,6 +75,26 @@ std::size_t PythonObjectCache::size()
     return m_object_cache.size();
 }
 
+/**
+ * @brief Retrieve an object from the cache without removing it.
+ * @param object_id The ID of the object to retrieve.
+ * @return The cached object, or pybind11::none() if not found.
+ */
+pybind11::object PythonObjectCache::get(const std::string& object_id)
+{
+    std::lock_guard<std::mutex> lock(s_cache_lock);
+
+    auto iter = m_object_cache.find(object_id);
+    if (iter != m_object_cache.end())
+    {
+        VLOG(1) << "Retrieving object: " << object_id;
+        return iter->second;
+    }
+
+    VLOG(1) << "Object not found in cache: " << object_id;
+    return pybind11::none();
+}
+
 pybind11::object PythonObjectCache::get_or_load(const std::string& object_id, std::function<pybind11::object()> loader)
 {
     std::lock_guard<std::mutex> lock(s_cache_lock);
@@ -90,6 +110,28 @@ pybind11::object PythonObjectCache::get_or_load(const std::string& object_id, st
     VLOG(1) << "Done caching loader object: " << object_id;
 
     return m_object_cache[object_id];
+}
+
+/**
+ * @brief Retrieve and remove an object from the cache.
+ * @param object_id The ID of the object to pop.
+ * @return The cached object, or pybind11::none() if not found.
+ */
+pybind11::object PythonObjectCache::pop(const std::string& object_id)
+{
+    std::lock_guard<std::mutex> lock(s_cache_lock);
+
+    auto iter = m_object_cache.find(object_id);
+    if (iter != m_object_cache.end())
+    {
+        VLOG(1) << "Popping and removing object: " << object_id;
+        pybind11::object obj = std::move(iter->second);
+        m_object_cache.erase(iter);
+        return obj;
+    }
+
+    VLOG(1) << "Object not found in cache to pop: " << object_id;
+    return pybind11::none();
 }
 
 pybind11::object& PythonObjectCache::get_module(const std::string& module_name)
