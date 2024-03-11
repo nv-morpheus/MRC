@@ -17,6 +17,8 @@
 
 #include "pymrc/utils.hpp"
 
+#include "pymrc/utilities/acquire_gil.hpp"
+
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -170,8 +172,11 @@ json cast_from_pyobject(const py::object& source)
         return json(py::cast<std::string>(source));
     }
 
-    // else unsupported return null
-    return json();
+    // else unsupported return throw a type error
+    {
+        AcquireGIL gil;
+        throw py::type_error("Object is not JSON serializable");
+    }
     // NOLINTEND(modernize-return-braced-init-list)
 }
 
