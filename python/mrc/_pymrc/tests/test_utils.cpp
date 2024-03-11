@@ -34,6 +34,7 @@
 #include <climits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -140,6 +141,25 @@ TEST_F(TestUtils, CastFromPyObject)
             expected_t expected{{"is", "a test"}};
             EXPECT_EQ(j["this"].get<expected_t>(), expected);
         }
+    }
+}
+
+TEST_F(TestUtils, CastFromPyObjectSerializeErrors)
+{
+    // Test to verify that cast_from_pyobject throws a python TypeError when encountering something that is not json
+    // serializable issue #450
+    {
+        // Exceptions are not serializable. Keep in mind we aren't throwins a `std::runtime_error`, we are just trying
+        // to serialize it
+        py::object o = py::cast(std::runtime_error("test error"));
+        EXPECT_THROW(pymrc::cast_from_pyobject(o), py::type_error);
+    }
+
+    {
+        // decimal.Decimal is not serializable
+        py::object Decimal = py::module_::import("decimal").attr("Decimal");
+        py::object o       = Decimal("1.0");
+        EXPECT_THROW(pymrc::cast_from_pyobject(o), py::type_error);
     }
 }
 
