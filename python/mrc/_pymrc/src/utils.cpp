@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,9 @@
 
 #include "pymrc/utils.hpp"
 
+#include "pymrc/utilities/acquire_gil.hpp"
+
+#include <glog/logging.h>
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/detail/internals.h>
@@ -25,6 +28,7 @@
 #include <pyerrors.h>
 #include <warnings.h>
 
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -70,6 +74,18 @@ const std::type_info* cpptype_info_from_object(py::object& obj)
     }
 
     return nullptr;
+}
+
+std::string get_py_type_name(const pybind11::object& obj)
+{
+    if (!obj)
+    {
+        // calling py::type::of on a null object will trigger an abort
+        return "";
+    }
+
+    const auto py_type = py::type::of(obj);
+    return py_type.attr("__name__").cast<std::string>();
 }
 
 py::object cast_from_json(const json& source)
@@ -123,7 +139,7 @@ py::object cast_from_json(const json& source)
     // throw std::runtime_error("Unsupported conversion type.");
 }
 
-json cast_from_pyobject(const py::object& source)
+json cast_from_pyobject_impl(const py::object& source, const std::string& parent_path = "")
 {
     // Dont return via initializer list with JSON. It performs type deduction and gives different results
     // NOLINTBEGIN(modernize-return-braced-init-list)
@@ -137,7 +153,9 @@ json cast_from_pyobject(const py::object& source)
         auto json_obj      = json::object();
         for (const auto& p : py_dict)
         {
-            json_obj[py::cast<std::string>(p.first)] = cast_from_pyobject(p.second.cast<py::object>());
+            std::string key{p.first.cast<std::string>()};
+            std::string path{parent_path + "/" + key};
+            json_obj[key] = cast_from_pyobject_impl(p.second.cast<py::object>(), path);
         }
 
         return json_obj;
@@ -148,7 +166,7 @@ json cast_from_pyobject(const py::object& source)
         auto json_arr      = json::array();
         for (const auto& p : py_list)
         {
-            json_arr.push_back(cast_from_pyobject(p.cast<py::object>()));
+            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), parent_path));
         }
 
         return json_arr;
@@ -170,9 +188,29 @@ json cast_from_pyobject(const py::object& source)
         return json(py::cast<std::string>(source));
     }
 
-    // else unsupported return null
-    return json();
+    // else unsupported return throw a type error
+    {
+        AcquireGIL gil;
+        std::ostringstream error_message;
+        std::string path{parent_path};
+        if (path.empty())
+        {
+            path = "/";
+        }
+
+        error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " << get_py_type_name(source)
+                      << " at path: " << path << " is not JSON serializable";
+
+        DVLOG(5) << error_message.str();
+        throw py::type_error(error_message.str());
+    }
+
     // NOLINTEND(modernize-return-braced-init-list)
+}
+
+json cast_from_pyobject(const py::object& source)
+{
+    return cast_from_pyobject_impl(source);
 }
 
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
