@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
@@ -661,6 +662,21 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     mrc::make_edge(*source, *router);
     mrc::make_edge(*router->get_source("odd"), *sink1);
     mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+}
+
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
 
     source->run();
     sink1->run();
