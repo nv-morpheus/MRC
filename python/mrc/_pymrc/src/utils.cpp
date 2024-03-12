@@ -138,7 +138,9 @@ py::object cast_from_json(const json& source)
     // throw std::runtime_error("Unsupported conversion type.");
 }
 
-json cast_from_pyobject_impl(const py::object& source, const std::string& parent_path = "")
+json cast_from_pyobject_impl(const py::object& source,
+                             unserializable_handler_fn_t unserializable_handler_fn,
+                             const std::string& parent_path = "")
 {
     // Dont return via initializer list with JSON. It performs type deduction and gives different results
     // NOLINTBEGIN(modernize-return-braced-init-list)
@@ -155,7 +157,7 @@ json cast_from_pyobject_impl(const py::object& source, const std::string& parent
         {
             std::string key{p.first.cast<std::string>()};
             std::string path{parent_path + "/" + key};
-            json_obj[key] = cast_from_pyobject_impl(p.second.cast<py::object>(), path);
+            json_obj[key] = cast_from_pyobject_impl(p.second.cast<py::object>(), unserializable_handler_fn, path);
         }
 
         return json_obj;
@@ -167,7 +169,7 @@ json cast_from_pyobject_impl(const py::object& source, const std::string& parent
         auto json_arr      = json::array();
         for (const auto& p : py_list)
         {
-            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), parent_path));
+            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), unserializable_handler_fn, parent_path));
         }
 
         return json_arr;
@@ -194,41 +196,33 @@ json cast_from_pyobject_impl(const py::object& source, const std::string& parent
     }
 
     // else unsupported return throw a type error
-    // {
-    //     AcquireGIL gil;
-    //     std::ostringstream error_message;
-    //     std::string path{parent_path};
-    //     if (path.empty())
-    //     {
-    //         path = "/";
-    //     }
+    {
+        AcquireGIL gil;
+        std::ostringstream error_message;
+        std::string path{parent_path};
+        if (path.empty())
+        {
+            path = "/";
+        }
 
-    //     error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " <<
-    //     get_py_type_name(source)
-    //                   << " at path: " << path << " is not JSON serializable";
+        if (unserializable_handler_fn != nullptr)
+        {
+            return unserializable_handler_fn(source, path);
+        }
 
-    //     DVLOG(5) << error_message.str();
-    //     throw py::type_error(error_message.str());
-    // }
+        error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " << get_py_type_name(source)
+                      << " at path: " << path << " is not JSON serializable";
 
-    /* We don't know how to serialize the Object, throw it into cache and return a reference ID*/
-    // Use Python's uuid module to generate a UUID
-    py::object uuid_module = py::module_::import("uuid");
-    py::object uuid_obj    = uuid_module.attr("uuid4")();
-    std::string uuid_str   = py::str(uuid_obj);
+        DVLOG(5) << error_message.str();
+        throw py::type_error(error_message.str());
+    }
 
-    // Remove constness and cache the object
-    py::object non_const_source = const_cast<py::object&>(source);
-    PythonObjectCache::get_handle().cache_object(uuid_str, non_const_source);
-
-    // Return the UUID string
-    return json(std::string("cache_object:") + uuid_str);
     // NOLINTEND(modernize-return-braced-init-list)
 }
 
-json cast_from_pyobject(const py::object& source)
+json cast_from_pyobject(const py::object& source, unserializable_handler_fn_t unserializable_handler_fn)
 {
-    return cast_from_pyobject_impl(source);
+    return cast_from_pyobject_impl(source, unserializable_handler_fn);
 }
 
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
