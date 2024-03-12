@@ -54,6 +54,21 @@ void from_import_as(pybind11::module_& dest, const std::string& from, const std:
  */
 const std::type_info* cpptype_info_from_object(pybind11::object& obj);
 
+/**
+ * @brief Given a pybind11 object, return the Python type name essentially the same as `str(type(obj))`
+ * @param obj : pybind11 object
+ * @return std::string.
+ */
+std::string get_py_type_name(const pybind11::object& obj, bool ignore_exceptions = true);
+
+/**
+ * @brief Given a pybind11 object, return the Python string representation essentially the same as `str(obj)`
+ * @param obj : pybind11 object
+ * @param ignore_exceptions : if true, exceptions will be caught and the return value will be an empty string.
+ * @return std::string.
+ */
+std::string as_string(const pybind11::object& obj, bool ignore_exceptions = true);
+
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level = 1);
 
 #pragma GCC visibility pop

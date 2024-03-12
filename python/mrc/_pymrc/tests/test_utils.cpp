@@ -42,6 +42,7 @@
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
+using namespace pybind11::literals;  // to bring in the `_a` literal
 
 // Create values too big to fit in int & float types to ensure we can pass
 // long & double types to both nlohmann/json and python
@@ -148,19 +149,15 @@ TEST_F(TestUtils, CastFromPyObjectSerializeErrors)
 {
     // Test to verify that cast_from_pyobject throws a python TypeError when encountering something that is not json
     // serializable issue #450
-    {
-        // Exceptions are not serializable. Keep in mind we aren't throwins a `std::runtime_error`, we are just trying
-        // to serialize it
-        py::object o = py::cast(std::runtime_error("test error"));
-        EXPECT_THROW(pymrc::cast_from_pyobject(o), py::type_error);
-    }
 
-    {
-        // decimal.Decimal is not serializable
-        py::object Decimal = py::module_::import("decimal").attr("Decimal");
-        py::object o       = Decimal("1.0");
-        EXPECT_THROW(pymrc::cast_from_pyobject(o), py::type_error);
-    }
+    // decimal.Decimal is not serializable
+    py::object Decimal = py::module_::import("decimal").attr("Decimal");
+    py::object o       = Decimal("1.0");
+    EXPECT_THROW(pymrc::cast_from_pyobject(o), py::type_error);
+
+    // Test with object in a nested dict
+    py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = o))), "other"_a = 2);
+    EXPECT_THROW(pymrc::cast_from_pyobject(d), py::type_error);
 }
 
 TEST_F(TestUtils, PyObjectWrapper)
