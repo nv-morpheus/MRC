@@ -76,37 +76,16 @@ const std::type_info* cpptype_info_from_object(py::object& obj)
     return nullptr;
 }
 
-std::string get_py_type_name(const pybind11::object& obj, bool ignore_exceptions)
+std::string get_py_type_name(const pybind11::object& obj)
 {
-    try
+    if (!obj)
     {
-        const auto py_type = py::type::of(obj);
-        return py_type.attr("__name__").cast<std::string>();
-    } catch (...)
-    {
-        if (!ignore_exceptions)
-        {
-            throw;
-        }
+        // calling py::type::of on a null object will trigger an abort
+        return "";
     }
 
-    return "";
-}
-
-std::string as_string(const pybind11::object& obj, bool ignore_exceptions)
-{
-    try
-    {
-        return py::str(obj).cast<std::string>();
-    } catch (...)
-    {
-        if (!ignore_exceptions)
-        {
-            throw;
-        }
-    }
-
-    return "";
+    const auto py_type = py::type::of(obj);
+    return py_type.attr("__name__").cast<std::string>();
 }
 
 py::object cast_from_json(const json& source)
@@ -219,7 +198,7 @@ json cast_from_pyobject_impl(const py::object& source, const std::string& parent
             path = "/";
         }
 
-        error_message << "Object (" << as_string(source, true) << ") of type: " << get_py_type_name(source, true)
+        error_message << "Object (" << py::str(source).cast<std::string>() << ") of type: " << get_py_type_name(source)
                       << " at path: " << path << " is not JSON serializable";
 
         DVLOG(5) << error_message.str();

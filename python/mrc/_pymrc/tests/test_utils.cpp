@@ -34,7 +34,6 @@
 #include <climits>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -158,6 +157,17 @@ TEST_F(TestUtils, CastFromPyObjectSerializeErrors)
     // Test with object in a nested dict
     py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = o))), "other"_a = 2);
     EXPECT_THROW(pymrc::cast_from_pyobject(d), py::type_error);
+}
+
+TEST_F(TestUtils, GetTypeName)
+{
+    // invalid objects should return an empty string
+    EXPECT_EQ(pymrc::get_py_type_name(py::object()), "");
+    EXPECT_EQ(pymrc::get_py_type_name(py::none()), "NoneType");
+
+    py::object Decimal = py::module_::import("decimal").attr("Decimal");
+    py::object o       = Decimal("1.0");
+    EXPECT_EQ(pymrc::get_py_type_name(o), "Decimal");
 }
 
 TEST_F(TestUtils, PyObjectWrapper)
