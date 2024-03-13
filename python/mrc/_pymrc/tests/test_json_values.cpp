@@ -52,7 +52,7 @@ TEST_F(TestJSONValues, ToPythonSerializable)
     JSONValues j{py_dict};
     auto result = j.to_python();
 
-    EXPECT_EQ(result, py_dict);
+    EXPECT_TRUE(result.equal(py_dict));
     EXPECT_FALSE(result.is(py_dict));  // Ensure we actually serialized the object and not stored it
 }
 
@@ -62,8 +62,27 @@ TEST_F(TestJSONValues, ToPythonRootUnserializable)
 
     JSONValues j{py_dec};
     auto result = j.to_python();
+    py::print(result);
 
+    EXPECT_TRUE(result.equal(py_dec));
     EXPECT_TRUE(result.is(py_dec));  // Ensure we stored the object
+}
+
+TEST_F(TestJSONValues, ToPythonSimpleDict)
+{
+    py::object py_dec = py::module_::import("decimal").attr("Decimal")("1.0");
+    py::dict py_dict;
+    py_dict[py::str("test"s)] = py_dec;
+
+    JSONValues j{py_dict};
+    py::dict result = j.to_python();
+    py::print(result);  // TODO: Remove
+
+    EXPECT_TRUE(result.equal(py_dict));
+    EXPECT_FALSE(result.is(py_dict));  // Ensure we actually serialized the dict and not stored it
+
+    py::object result_dec = result["test"];
+    EXPECT_TRUE(result_dec.is(py_dec));  // Ensure we stored the decimal object
 }
 
 TEST_F(TestJSONValues, ToPythonNestedDictUnserializable)
@@ -85,7 +104,7 @@ TEST_F(TestJSONValues, ToPythonNestedDictUnserializable)
 
     JSONValues j{py_dict};
     auto result = j.to_python();
-    EXPECT_EQ(result, py_dict);
+    EXPECT_TRUE(result.equal(py_dict));
     EXPECT_FALSE(result.is(py_dict));  // Ensure we actually serialized the object and not stored it
 
     // Individual Decimal instances shoudl be stored and thus pass an `is` test
@@ -100,4 +119,17 @@ TEST_F(TestJSONValues, ToPythonNestedDictUnserializable)
     EXPECT_TRUE(result_dec3.is(py_dec3));
 }
 
-TEST_F(TestJSONValues, ToPythonList) {}
+TEST_F(TestJSONValues, ToPythonList)
+{
+    py::object Decimal = py::module_::import("decimal").attr("Decimal");
+    py::object py_dec  = Decimal("1.1");
+
+    std::vector<py::object> py_values = {py::cast(1), py::cast(2), py_dec, py::cast(4)};
+    py::list py_list                  = py::cast(py_values);
+
+    JSONValues j{py_list};
+    py::list result = j.to_python();
+    EXPECT_TRUE(result.equal(py_list));
+    py::object result_dec = result[2];
+    EXPECT_TRUE(result_dec.is(py_dec));
+}

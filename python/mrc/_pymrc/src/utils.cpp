@@ -170,7 +170,7 @@ json cast_from_pyobject_impl(const py::object& source,
         for (const auto& p : py_list)
         {
             std::string path{parent_path + "/" + std::to_string(json_arr.size())};
-            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), unserializable_handler_fn, parent_path));
+            json_arr.push_back(cast_from_pyobject_impl(p.cast<py::object>(), unserializable_handler_fn, path));
         }
 
         return json_arr;

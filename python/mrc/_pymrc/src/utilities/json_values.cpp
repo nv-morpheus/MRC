@@ -48,7 +48,8 @@ void patch_object(py::object& obj,
                   const py::object& value)
 {
     // Terminal case, assign value to obj
-    if (path == path_end)
+    const auto& path_str = *path;
+    if (path_str.empty())
     {
         obj = value;
     }
@@ -58,23 +59,18 @@ void patch_object(py::object& obj,
         // list. There are one of two possibilities here:
         // 1. The next_path is terminal and we should assign value to the container
         // 2. The next_path is not terminal and we should recurse into the container
-        const auto& path_str = *path;
-        auto next_path       = std::next(path);
+        auto next_path = std::next(path);
 
-        // Note for both dict and list the [] operator will return an item_accessor object. Assigning a value to it will
-        // trigger a __setitem__ call, casting it to a py::object will trigger a __getitem__ call.
         if (py::isinstance<py::dict>(obj))
         {
-            auto py_dict   = obj.cast<py::dict>();
-            auto entry     = py_dict[path_str.c_str()];
-            auto next_path = std::next(path);
+            auto py_dict = obj.cast<py::dict>();
             if (next_path == path_end)
             {
-                entry = value;
+                py_dict[path_str.c_str()] = value;
             }
             else
             {
-                py::object next_obj = entry;
+                py::object next_obj = py_dict[path_str.c_str()];
                 patch_object(next_obj, next_path, path_end, value);
             }
         }
@@ -82,14 +78,13 @@ void patch_object(py::object& obj,
         {
             auto py_list     = obj.cast<py::list>();
             const auto index = std::stoul(path_str);
-            auto entry       = py_list[index];
             if (next_path == path_end)
             {
-                entry = value;
+                py_list[index] = value;
             }
             else
             {
-                py::object next_obj = entry;
+                py::object next_obj = py_list[index];
                 patch_object(next_obj, next_path, path_end, value);
             }
         }
@@ -113,7 +108,7 @@ JSONValues::JSONValues(py::object values)
 py::object JSONValues::to_python() const
 {
     AcquireGIL gil;
-    py::object results{cast_from_json(m_serialized_values)};
+    py::object results = cast_from_json(m_serialized_values);
     for (const auto& [path, obj] : m_py_objects)
     {
         DCHECK(path[0] == '/');
@@ -124,7 +119,7 @@ py::object JSONValues::to_python() const
         // Since our paths always begin with a '/', the first element will always be empty in the case where path="/"
         // path_parts will be {"", ""} and we can skip the first element
         auto itr = path_parts.cbegin();
-        ++itr;
+        patch_object(results, std::next(itr), path_parts.cend(), obj);
     }
 
     return results;
@@ -132,14 +127,14 @@ py::object JSONValues::to_python() const
 
 nlohmann::json JSONValues::unserializable_handler(const py::object& obj, const std::string& path)
 {
-    /* We don't know how to serialize the Object, throw it into m_py_objects and return a reference ID*/
+    /* We don't know how to serialize the Object, throw it into m_py_objects and return a place-holder */
 
-    // Remove constness and cache the object
+    // Take a non-const copy of the object
     py::object non_const_copy = obj;
     DVLOG(10) << "Storing unserializable object at path: " << path;
     m_py_objects[path] = std::move(non_const_copy);
 
-    return {"**pymrc_placeholder"s};
+    return "**pymrc_placeholder"s;
 }
 
 }  // namespace mrc::pymrc
