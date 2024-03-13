@@ -48,50 +48,56 @@ void patch_object(py::object& obj,
                   std::vector<std::string>::const_iterator path_end,
                   const py::object& value)
 {
+    // Terminal case, assign value to obj
     if (path == path_end)
     {
         obj = value;
     }
-    else if (py::isinstance<py::dict>(obj))
-    {
-        const auto& key = *path;
-        auto py_dict    = obj.cast<py::dict>();
-        auto entry      = py_dict[key.c_str()];
-        auto next_path  = std::next(path);
-
-        // There are one of two possibilities here:
-        // 1. The path is terminal and we should assign value to the dict
-        // 2. The path is not terminal and we should recurse into the dict
-        if (next_path == path_end)
-        {
-            entry = value;
-        }
-        else
-        {
-            // entry is of type item_accessor, assigning it to a py::object will trigger a __getitem__ call
-            py::object next_obj = entry;
-            patch_object(next_obj, next_path, path_end, value);
-        }
-    }
-    else if (py::isinstance<py::list>(obj))
-    {
-        auto py_list     = obj.cast<py::list>();
-        const auto index = std::stoul(*path);
-        auto next_path   = std::next(path);
-        auto entry       = py_list[index];
-        if (next_path == path_end)
-        {
-            entry = value;
-        }
-        else
-        {
-            py::object next_obj = entry;
-            patch_object(next_obj, next_path, path_end, value);
-        }
-    }
     else
     {
-        throw std::runtime_error("Invalid path");
+        // Nested object, since obj is a de-serialized python object the only valid container types will be dict and
+        // list. There are one of two possibilities here:
+        // 1. The next_path is terminal and we should assign value to the container
+        // 2. The next_path is not terminal and we should recurse into the container
+        const auto& path_str = *path;
+        auto next_path       = std::next(path);
+
+        // Note for both dict and list the [] operator will return an item_accessor object. Assigning a value to it will
+        // trigger a __setitem__ call, casting it to a py::object will trigger a __getitem__ call.
+        if (py::isinstance<py::dict>(obj))
+        {
+            auto py_dict   = obj.cast<py::dict>();
+            auto entry     = py_dict[path_str.c_str()];
+            auto next_path = std::next(path);
+            if (next_path == path_end)
+            {
+                entry = value;
+            }
+            else
+            {
+                py::object next_obj = entry;
+                patch_object(next_obj, next_path, path_end, value);
+            }
+        }
+        else if (py::isinstance<py::list>(obj))
+        {
+            auto py_list     = obj.cast<py::list>();
+            const auto index = std::stoul(path_str);
+            auto entry       = py_list[index];
+            if (next_path == path_end)
+            {
+                entry = value;
+            }
+            else
+            {
+                py::object next_obj = entry;
+                patch_object(next_obj, next_path, path_end, value);
+            }
+        }
+        else
+        {
+            throw std::runtime_error("Invalid path");
+        }
     }
 }
 }  // namespace
