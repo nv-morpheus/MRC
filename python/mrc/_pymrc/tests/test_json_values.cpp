@@ -62,7 +62,6 @@ TEST_F(TestJSONValues, ToPythonRootUnserializable)
 
     JSONValues j{py_dec};
     auto result = j.to_python();
-    py::print(result);
 
     EXPECT_TRUE(result.equal(py_dec));
     EXPECT_TRUE(result.is(py_dec));  // Ensure we stored the object
@@ -76,7 +75,6 @@ TEST_F(TestJSONValues, ToPythonSimpleDict)
 
     JSONValues j{py_dict};
     py::dict result = j.to_python();
-    py::print(result);  // TODO: Remove
 
     EXPECT_TRUE(result.equal(py_dict));
     EXPECT_FALSE(result.is(py_dict));  // Ensure we actually serialized the dict and not stored it
