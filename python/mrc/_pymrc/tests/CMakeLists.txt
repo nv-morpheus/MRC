@@ -24,6 +24,7 @@ add_executable(test_pymrc
   test_asyncio_runnable.cpp
   test_codable_pyobject.cpp
   test_executor.cpp
+  test_json_values.cpp
   test_main.cpp
   test_object_cache.cpp
   test_pickle_wrapper.cpp
