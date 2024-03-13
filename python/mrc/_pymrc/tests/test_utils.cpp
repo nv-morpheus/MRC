@@ -24,7 +24,6 @@
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -33,6 +32,7 @@
 #include <array>
 #include <cfloat>
 #include <climits>
+#include <cstddef>  // for size_t
 #include <map>
 #include <memory>
 #include <string>

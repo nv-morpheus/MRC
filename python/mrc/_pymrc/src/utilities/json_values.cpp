@@ -20,26 +20,25 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string.hpp>  // for split
 #include <glog/logging.h>
-#include <nlohmann/json_fwd.hpp>
 #include <pybind11/cast.h>
-#include <pybind11/gil.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pylifecycle.h>
 
-#include <cstddef>
-#include <mutex>
-#include <ostream>
-#include <ranges>
-#include <stdexcept>
-#include <string_view>
-#include <utility>
-#include <vector>
+#include <iterator>   // for next
+#include <ostream>    // for operator<< needed for logging
+#include <stdexcept>  // for runtime_error
+#include <utility>    // for move
+#include <vector>     // for vector
+
+// We already have <boost/algorithm/string.hpp> included we don't need these others, it is also the only public header
+// with a definition for boost::is_any_of, so even if we replaced string.hpp with these others we would still need to
+// include string.hpp or a detail/ header
+// IWYU pragma: no_include <boost/algorithm/string/classification.hpp>
+// IWYU pragma: no_include <boost/algorithm/string/split.hpp>
+// IWYU pragma: no_include <boost/iterator/iterator_facade.hpp>
 
 namespace py = pybind11;
-using namespace std::literals;
+using namespace std::string_literals;
 
 namespace {
 

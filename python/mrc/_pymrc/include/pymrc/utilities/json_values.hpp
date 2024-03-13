@@ -18,11 +18,12 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include <pybind11/pytypes.h>
+#include <pybind11/pytypes.h>  // for PYBIND11_EXPORT & pybind11::object
 
 #include <map>
-#include <memory>
 #include <string>
+// IWYU wants us to use the pybind11.h for the PYBIND11_EXPORT macro, but we already have it in pytypes.h
+// IWYU pragma: no_include <pybind11/pybind11.h>
 
 namespace mrc::pymrc {
 
