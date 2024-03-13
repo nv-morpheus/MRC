@@ -18,23 +18,14 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/utilities/json_values.hpp"
-#include "pymrc/utils.hpp"  // for imort_module_object
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <array>
-#include <cfloat>
-#include <climits>
-#include <map>
-#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace py = pybind11;
