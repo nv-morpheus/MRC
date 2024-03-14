@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 #include <pybind11/pytypes.h>  // for PYBIND11_EXPORT & pybind11::object
 
+#include <cstddef>  // for size_t
 #include <map>
 #include <string>
 // IWYU wants us to use the pybind11.h for the PYBIND11_EXPORT macro, but we already have it in pytypes.h

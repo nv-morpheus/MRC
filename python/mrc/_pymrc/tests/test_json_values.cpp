@@ -20,8 +20,7 @@
 #include "pymrc/utilities/json_values.hpp"
 
 #include <gtest/gtest.h>
-#include <nlohmann/json_fwd.hpp>
-#include <pybind11/detail/common.h>
+#include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 

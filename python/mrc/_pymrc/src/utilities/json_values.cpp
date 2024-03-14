@@ -26,7 +26,6 @@
 
 #include <iterator>   // for next
 #include <ostream>    // for operator<< needed for logging
-#include <sstream>    // for stringstream
 #include <stdexcept>  // for runtime_error
 #include <utility>    // for move
 #include <vector>     // for vector
