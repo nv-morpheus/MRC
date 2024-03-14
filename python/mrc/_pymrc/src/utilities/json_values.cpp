@@ -26,6 +26,7 @@
 
 #include <iterator>   // for next
 #include <ostream>    // for operator<< needed for logging
+#include <sstream>    // for stringstream
 #include <stdexcept>  // for runtime_error
 #include <utility>    // for move
 #include <vector>     // for vector
@@ -94,6 +95,25 @@ void patch_object(py::object& obj,
         }
     }
 }
+
+void patch_object(py::object& obj, const std::string& path, const py::object& value)
+{
+    std::vector<std::string> path_parts;
+    boost::split(path_parts, path, boost::is_any_of("/"));
+
+    // Since our paths always begin with a '/', the first element will always be empty in the case where path="/"
+    // path_parts will be {"", ""} and we can skip the first element
+    auto itr = path_parts.cbegin();
+    patch_object(obj, std::next(itr), path_parts.cend(), value);
+}
+
+void validate_path(const std::string& path)
+{
+    if (path.empty() || path[0] != '/')
+    {
+        throw std::runtime_error("Invalid path: " + path);
+    }
+}
 }  // namespace
 
 namespace mrc::pymrc {
@@ -105,6 +125,18 @@ JSONValues::JSONValues(py::object values)
     });
 }
 
+JSONValues::JSONValues(nlohmann::json values) : m_serialized_values(std::move(values)) {}
+
+std::size_t JSONValues::num_unserializable() const
+{
+    return m_py_objects.size();
+}
+
+bool JSONValues::has_unserializable() const
+{
+    return !m_py_objects.empty();
+}
+
 py::object JSONValues::to_python() const
 {
     AcquireGIL gil;
@@ -113,16 +145,61 @@ py::object JSONValues::to_python() const
     {
         DCHECK(path[0] == '/');
         DVLOG(10) << "Restoring object at path: " << path;
-        std::vector<std::string> path_parts;
-        boost::split(path_parts, path, boost::is_any_of("/"));
-
-        // Since our paths always begin with a '/', the first element will always be empty in the case where path="/"
-        // path_parts will be {"", ""} and we can skip the first element
-        auto itr = path_parts.cbegin();
-        patch_object(results, std::next(itr), path_parts.cend(), obj);
+        patch_object(results, path, obj);
     }
 
     return results;
+}
+
+nlohmann::json JSONValues::to_json() const
+{
+    if (const auto num_unserializable = this->num_unserializable(); num_unserializable > 0)
+    {
+        std::ostringstream error_message;
+        error_message << "There are " << num_unserializable << " unserializable objects located at:";
+        for (const auto& [path, obj] : m_py_objects)
+        {
+            error_message << "\n" << path;
+        }
+
+        throw std::runtime_error(error_message.str());
+    }
+
+    return m_serialized_values;
+}
+
+JSONValues JSONValues::set_value(const std::string& path, const pybind11::object& value) const
+{
+    validate_path(path);
+
+    AcquireGIL gil;
+    py::object py_obj = this->to_python();
+    patch_object(py_obj, path, value);
+    return {py_obj};
+}
+
+JSONValues JSONValues::set_value(const std::string& path, nlohmann::json value) const
+{
+    // Two possibilities:
+    // 1) We don't have any unserializable objects, in which case we can just update the JSON object
+    // 2) We do have unserializable objects, in which case we need to cast value to python and call the python version
+    // of set_value
+
+    if (!has_unserializable())
+    {
+        validate_path(path);
+
+        // The add operation will update an existing value if it exists, or add a new value if it does not
+        // ref: https://datatracker.ietf.org/doc/html/rfc6902#section-4.1
+        nlohmann::json patch{{"op", "add"}, {"path", path}, {"value", value}};
+        nlohmann::json patches = nlohmann::json::array({std::move(patch)});
+        auto new_values        = m_serialized_values.patch(std::move(patches));
+        return {std::move(new_values)};
+    }
+
+    AcquireGIL gil;
+    py::object py_obj = cast_from_json(value);
+    return set_value(path, py_obj);
 }
 
 nlohmann::json JSONValues::unserializable_handler(const py::object& obj, const std::string& path)

@@ -20,10 +20,14 @@
 #include "pymrc/utilities/json_values.hpp"
 
 #include <gtest/gtest.h>
+#include <nlohmann/json_fwd.hpp>
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <array>
 #include <cstddef>  // for size_t
+#include <stdexcept>
 #include <string>
 #include <utility>  // for pair
 #include <vector>
@@ -39,10 +43,31 @@ using namespace pybind11::literals;  // to bring in the `_a` literal
 
 PYMRC_TEST_CLASS(JSONValues);
 
+py::dict mk_py_dict()
+{
+    // return a simple python dict of {"test": "this"}
+    std::array<std::string, 3> alphabet = {"a", "b", "c"};
+    return py::dict("this"_a     = py::dict("is"_a = "a test"s),
+                    "alphabet"_a = py::cast(alphabet),
+                    "ncc"_a      = 1701,
+                    "cost"_a     = 47.47);
+}
+
+nlohmann::json mk_json()
+{
+    // return a simple json object comparable to that returned by mk_py_dict
+    return {{"this", {{"is", "a test"}}}, {"alphabet", {"a", "b", "c"}}, {"ncc", 1701}, {"cost", 47.47}};
+}
+
+py::object mk_decimal(const std::string& value = "1.0"s)
+{
+    // return a Python decimal.Decimal object, as a simple object without a supported JSON serialization
+    return py::module_::import("decimal").attr("Decimal")(value);
+}
+
 TEST_F(TestJSONValues, ToPythonSerializable)
 {
-    py::dict py_dict;
-    py_dict[py::str("test"s)] = py::str("this"s);
+    auto py_dict = mk_py_dict();
 
     JSONValues j{py_dict};
     auto result = j.to_python();
@@ -51,9 +76,49 @@ TEST_F(TestJSONValues, ToPythonSerializable)
     EXPECT_FALSE(result.is(py_dict));  // Ensure we actually serialized the object and not stored it
 }
 
+TEST_F(TestJSONValues, ToPythonFromJSON)
+{
+    py::dict py_expected_results = mk_py_dict();
+
+    nlohmann::json json_input = mk_json();
+    JSONValues j{json_input};
+    auto result = j.to_python();
+
+    EXPECT_TRUE(result.equal(py_expected_results));
+}
+
+TEST_F(TestJSONValues, ToJSONFromPython)
+{
+    auto expected_results = mk_json();
+
+    py::dict py_input = mk_py_dict();
+
+    JSONValues j{py_input};
+    auto result = j.to_json();
+
+    EXPECT_EQ(result, expected_results);
+}
+
+TEST_F(TestJSONValues, ToJSONFromPythonUnserializable)
+{
+    py::dict py_input = mk_py_dict();
+    py_input["other"] = mk_decimal();
+
+    JSONValues j{py_input};
+    EXPECT_THROW(j.to_json(), std::runtime_error);
+}
+
+TEST_F(TestJSONValues, ToJSONFromJSON)
+{
+    JSONValues j{mk_json()};
+    auto result = j.to_json();
+
+    EXPECT_EQ(result, mk_json());
+}
+
 TEST_F(TestJSONValues, ToPythonRootUnserializable)
 {
-    py::object py_dec = py::module_::import("decimal").attr("Decimal")("1.0");
+    py::object py_dec = mk_decimal();
 
     JSONValues j{py_dec};
     auto result = j.to_python();
@@ -64,7 +129,7 @@ TEST_F(TestJSONValues, ToPythonRootUnserializable)
 
 TEST_F(TestJSONValues, ToPythonSimpleDict)
 {
-    py::object py_dec = py::module_::import("decimal").attr("Decimal")("1.0");
+    py::object py_dec = mk_decimal();
     py::dict py_dict;
     py_dict[py::str("test"s)] = py_dec;
 
@@ -81,11 +146,9 @@ TEST_F(TestJSONValues, ToPythonSimpleDict)
 TEST_F(TestJSONValues, ToPythonNestedDictUnserializable)
 {
     // decimal.Decimal is not serializable
-    py::object Decimal = py::module_::import("decimal").attr("Decimal");
-
-    py::object py_dec1 = Decimal("1.1");
-    py::object py_dec2 = Decimal("1.2");
-    py::object py_dec3 = Decimal("1.3");
+    py::object py_dec1 = mk_decimal("1.1");
+    py::object py_dec2 = mk_decimal("1.2");
+    py::object py_dec3 = mk_decimal("1.3");
 
     std::vector<py::object> py_values = {py::cast(1), py::cast(2), py_dec3, py::cast(4)};
     py::list py_list                  = py::cast(py_values);
@@ -114,8 +177,7 @@ TEST_F(TestJSONValues, ToPythonNestedDictUnserializable)
 
 TEST_F(TestJSONValues, ToPythonList)
 {
-    py::object Decimal = py::module_::import("decimal").attr("Decimal");
-    py::object py_dec  = Decimal("1.1");
+    py::object py_dec = mk_decimal("1.1"s);
 
     std::vector<py::object> py_values = {py::cast(1), py::cast(2), py_dec, py::cast(4)};
     py::list py_list                  = py::cast(py_values);
@@ -181,4 +243,132 @@ TEST_F(TestJSONValues, ToPythonMultipleTypes)
         py::object result_value = nested_list[index];
         EXPECT_TRUE(result_value.is(value));
     }
+}
+
+TEST_F(TestJSONValues, NumUnserializable)
+{
+    {
+        JSONValues j{mk_json()};
+        EXPECT_EQ(j.num_unserializable(), 0);
+        EXPECT_FALSE(j.has_unserializable());
+    }
+    {
+        JSONValues j{mk_py_dict()};
+        EXPECT_EQ(j.num_unserializable(), 0);
+        EXPECT_FALSE(j.has_unserializable());
+    }
+    {
+        // Test with object in a nested dict
+        py::object py_dec = mk_decimal();
+        {
+            py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = py_dec))), "other"_a = 2);
+
+            JSONValues j{d};
+            EXPECT_EQ(j.num_unserializable(), 1);
+            EXPECT_TRUE(j.has_unserializable());
+        }
+        {
+            // Storing the same object twice should count twice
+            py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = py_dec))), "other"_a = py_dec);
+
+            JSONValues j{d};
+            EXPECT_EQ(j.num_unserializable(), 2);
+            EXPECT_TRUE(j.has_unserializable());
+        }
+        {
+            py::object py_dec2 = mk_decimal("2.0");
+            py::dict d("a"_a     = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = py_dec, "e"_a = py_dec2))),
+                       "other"_a = py_dec);
+
+            JSONValues j{d};
+            EXPECT_EQ(j.num_unserializable(), 3);
+            EXPECT_TRUE(j.has_unserializable());
+        }
+    }
+}
+
+TEST_F(TestJSONValues, SetValueNewKeyJSON)
+{
+    // Set to new key that doesn't exist
+    auto expected_results     = mk_json();
+    expected_results["other"] = mk_json();
+
+    JSONValues values{mk_json()};
+    auto new_values = values.set_value("/other", mk_json());
+    EXPECT_EQ(new_values.to_json(), expected_results);
+}
+
+TEST_F(TestJSONValues, SetValueExistingKeyJSON)
+{
+    // Set to existing key
+    auto expected_results    = mk_json();
+    expected_results["this"] = mk_json();
+
+    JSONValues values{mk_json()};
+    auto new_values = values.set_value("/this", mk_json());
+    EXPECT_EQ(new_values.to_json(), expected_results);
+}
+
+TEST_F(TestJSONValues, SetValueNewKeyJSONWithUnserializable)
+{
+    // Set to new key that doesn't exist
+    auto expected_results     = mk_py_dict();
+    expected_results["other"] = mk_py_dict();
+    expected_results["dec"]   = mk_decimal();
+
+    auto input   = mk_py_dict();
+    input["dec"] = mk_decimal();
+
+    JSONValues values{input};
+    auto new_values = values.set_value("/other", mk_json());
+    EXPECT_TRUE(new_values.to_python().equal(expected_results));
+}
+
+TEST_F(TestJSONValues, SetValueExistingKeyJSONWithUnserializable)
+{
+    // Set to existing key
+    auto expected_results    = mk_py_dict();
+    expected_results["dec"]  = mk_decimal();
+    expected_results["this"] = mk_py_dict();
+
+    auto input   = mk_py_dict();
+    input["dec"] = mk_decimal();
+
+    JSONValues values{input};
+    auto new_values = values.set_value("/this", mk_json());
+    EXPECT_TRUE(new_values.to_python().equal(expected_results));
+}
+
+TEST_F(TestJSONValues, SetValueNewKeyPython)
+{
+    // Set to new key that doesn't exist
+    auto expected_results     = mk_py_dict();
+    expected_results["other"] = mk_decimal();
+
+    JSONValues values{mk_json()};
+    auto new_values = values.set_value("/other", mk_decimal());
+    EXPECT_TRUE(new_values.to_python().equal(expected_results));
+}
+
+TEST_F(TestJSONValues, SetValueNestedUnsupportedPython)
+{
+    JSONValues values{mk_json()};
+    EXPECT_THROW(values.set_value("/other/nested", mk_decimal()), py::error_already_set);
+}
+
+TEST_F(TestJSONValues, SetValueNestedUnsupportedJSON)
+{
+    JSONValues values{mk_json()};
+    EXPECT_THROW(values.set_value("/other/nested", nlohmann::json(1.0)), nlohmann::json::out_of_range);
+}
+
+TEST_F(TestJSONValues, SetValueExistingKeyPython)
+{
+    // Set to existing key
+    auto expected_results    = mk_py_dict();
+    expected_results["this"] = mk_decimal();
+
+    JSONValues values{mk_json()};
+    auto new_values = values.set_value("/this", mk_decimal());
+    EXPECT_TRUE(new_values.to_python().equal(expected_results));
 }

@@ -37,12 +37,20 @@ class PYBIND11_EXPORT JSONValues
   public:
     JSONValues() = delete;
     JSONValues(pybind11::object values);
+    JSONValues(nlohmann::json values);
 
     JSONValues(const JSONValues& other) = default;
     JSONValues(JSONValues&& other)      = default;
     ~JSONValues()                       = default;
 
+    JSONValues set_value(const std::string& path, const pybind11::object& value) const;
+    JSONValues set_value(const std::string& path, nlohmann::json value) const;
+
+    std::size_t num_unserializable() const;
+    bool has_unserializable() const;
+
     pybind11::object to_python() const;
+    nlohmann::json to_json() const;
 
   private:
     nlohmann::json unserializable_handler(const pybind11::object& obj, const std::string& path);
