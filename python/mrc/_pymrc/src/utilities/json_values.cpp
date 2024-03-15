@@ -116,6 +116,8 @@ void validate_path(const std::string& path)
 }  // namespace
 
 namespace mrc::pymrc {
+JSONValues::JSONValues() : JSONValues(nlohmann::json()) {}
+
 JSONValues::JSONValues(py::object values)
 {
     AcquireGIL gil;

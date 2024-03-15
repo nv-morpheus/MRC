@@ -64,6 +64,14 @@ py::object mk_decimal(const std::string& value = "1.0"s)
     return py::module_::import("decimal").attr("Decimal")(value);
 }
 
+TEST_F(TestJSONValues, DefaultConstructor)
+{
+    JSONValues j;
+
+    EXPECT_EQ(j.to_json(), nlohmann::json());
+    EXPECT_TRUE(j.to_python().is_none());
+}
+
 TEST_F(TestJSONValues, ToPythonSerializable)
 {
     auto py_dict = mk_py_dict();

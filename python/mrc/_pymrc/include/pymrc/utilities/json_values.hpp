@@ -36,7 +36,7 @@ namespace mrc::pymrc {
 class PYBIND11_EXPORT JSONValues
 {
   public:
-    JSONValues() = delete;
+    JSONValues();
     JSONValues(pybind11::object values);
     JSONValues(nlohmann::json values);
 
