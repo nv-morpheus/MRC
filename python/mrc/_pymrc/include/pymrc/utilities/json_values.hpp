@@ -44,6 +44,9 @@ class PYBIND11_EXPORT JSONValues
     JSONValues(JSONValues&& other)      = default;
     ~JSONValues()                       = default;
 
+    JSONValues& operator=(const JSONValues& other) = default;
+    JSONValues& operator=(JSONValues&& other)      = default;
+
     JSONValues set_value(const std::string& path, const pybind11::object& value) const;
     JSONValues set_value(const std::string& path, nlohmann::json value) const;
 
