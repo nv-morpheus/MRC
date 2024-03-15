@@ -226,6 +226,11 @@ json cast_from_pyobject(const py::object& source, unserializable_handler_fn_t un
     return cast_from_pyobject_impl(source, unserializable_handler_fn);
 }
 
+json cast_from_pyobject(const py::object& source)
+{
+    return cast_from_pyobject_impl(source, nullptr);
+}
+
 void show_deprecation_warning(const std::string& deprecation_message, ssize_t stack_level)
 {
     PyErr_WarnEx(PyExc_DeprecationWarning, deprecation_message.c_str(), stack_level);

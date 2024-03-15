@@ -42,8 +42,24 @@ pybind11::object cast_from_json(const nlohmann::json& source);
  */
 using unserializable_handler_fn_t =
     std::function<nlohmann::json(const pybind11::object& /* source*/, const std::string& /* path */)>;
+
+/**
+ * @brief Convert a pybind11 object to a JSON object. If the object cannot be serialized, a pybind11::type_error
+ * exception be thrown.
+ * @param source : pybind11 object
+ * @return nlohmann::json.
+ */
+nlohmann::json cast_from_pyobject(const pybind11::object& source);
+
+/**
+ * @brief Convert a pybind11 object to a JSON object. If the object cannot be serialized, the unserializable_handler_fn
+ * will be invoked to handle the object.
+ * @param source : pybind11 object
+ * @param unserializable_handler_fn : unserializable_handler_fn_t
+ * @return nlohmann::json.
+ */
 nlohmann::json cast_from_pyobject(const pybind11::object& source,
-                                  unserializable_handler_fn_t unserializable_handler_fn = nullptr);
+                                  unserializable_handler_fn_t unserializable_handler_fn);
 
 void import_module_object(pybind11::module_&, const std::string&, const std::string&);
 void import_module_object(pybind11::module_& dest, const pybind11::module_& mod);
