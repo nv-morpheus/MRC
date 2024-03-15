@@ -49,6 +49,7 @@ class PYBIND11_EXPORT JSONValues
 
     JSONValues set_value(const std::string& path, const pybind11::object& value) const;
     JSONValues set_value(const std::string& path, nlohmann::json value) const;
+    JSONValues set_value(const std::string& path, const JSONValues& value) const;
 
     std::size_t num_unserializable() const;
     bool has_unserializable() const;

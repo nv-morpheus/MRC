@@ -21,7 +21,9 @@
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <array>
@@ -377,5 +379,41 @@ TEST_F(TestJSONValues, SetValueExistingKeyPython)
 
     JSONValues values{mk_json()};
     auto new_values = values.set_value("/this", mk_decimal());
+    EXPECT_TRUE(new_values.to_python().equal(expected_results));
+}
+
+TEST_F(TestJSONValues, SetValueNewKeyJSONDefaultConstructed)
+{
+    nlohmann::json expected_results{{"other", mk_json()}};
+
+    JSONValues values;
+    auto new_values = values.set_value("/other", mk_json());
+    EXPECT_EQ(new_values.to_json(), expected_results);
+}
+
+TEST_F(TestJSONValues, SetValueJSONValues)
+{
+    // Set to new key that doesn't exist
+    auto expected_results     = mk_json();
+    expected_results["other"] = mk_json();
+
+    JSONValues values1{mk_json()};
+    JSONValues values2{mk_json()};
+    auto new_values = values1.set_value("/other", values2);
+    EXPECT_EQ(new_values.to_json(), expected_results);
+}
+
+TEST_F(TestJSONValues, SetValueJSONValuesWithUnserializable)
+{
+    // Set to new key that doesn't exist
+    auto expected_results     = mk_py_dict();
+    expected_results["other"] = py::dict("dec"_a = mk_decimal());
+
+    JSONValues values1{mk_json()};
+
+    auto input_dict = py::dict("dec"_a = mk_decimal());
+    JSONValues values2{input_dict};
+
+    auto new_values = values1.set_value("/other", values2);
     EXPECT_TRUE(new_values.to_python().equal(expected_results));
 }

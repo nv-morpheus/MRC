@@ -203,6 +203,18 @@ JSONValues JSONValues::set_value(const std::string& path, nlohmann::json value) 
     return set_value(path, py_obj);
 }
 
+JSONValues JSONValues::set_value(const std::string& path, const JSONValues& value) const
+{
+    if (value.has_unserializable())
+    {
+        AcquireGIL gil;
+        py::object py_obj = value.to_python();
+        return set_value(path, py_obj);
+    }
+
+    return set_value(path, value.to_json());
+}
+
 nlohmann::json JSONValues::unserializable_handler(const py::object& obj, const std::string& path)
 {
     /* We don't know how to serialize the Object, throw it into m_py_objects and return a place-holder */
