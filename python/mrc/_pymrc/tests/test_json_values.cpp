@@ -21,9 +21,7 @@
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <array>
