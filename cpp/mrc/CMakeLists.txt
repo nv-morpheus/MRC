@@ -118,6 +118,7 @@ add_library(libmrc
   src/public/coroutines/io_scheduler.cpp
   src/public/coroutines/sync_wait.cpp
   src/public/coroutines/task_container.cpp
+  src/public/coroutines/test_scheduler.cpp
   src/public/coroutines/thread_local_context.cpp
   src/public/coroutines/thread_pool.cpp
   src/public/cuda/device_guard.cpp
