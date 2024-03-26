@@ -56,14 +56,12 @@ class PYBIND11_EXPORT JSONValues
 
     pybind11::object to_python() const;
     nlohmann::json::const_reference to_json() const;
-    nlohmann::json to_json();
 
     pybind11::object get_python(const std::string& path) const;
     nlohmann::json get_json(const std::string& path) const;
 
   private:
     nlohmann::json unserializable_handler(const pybind11::object& obj, const std::string& path);
-    void ensure_json_serializable() const;
 
     nlohmann::json m_serialized_values;
     std::map<std::string, pybind11::object> m_py_objects;

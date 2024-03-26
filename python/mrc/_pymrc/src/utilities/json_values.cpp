@@ -27,7 +27,7 @@
 #include <pybind11/cast.h>
 
 #include <iterator>   // for next
-#include <ostream>    // for operator<< needed for logging
+#include <sstream>    // for operator<< & stringstream
 #include <stdexcept>  // for runtime_error
 #include <utility>    // for move
 #include <vector>     // for vector
@@ -170,7 +170,7 @@ py::object JSONValues::to_python() const
     return results;
 }
 
-void JSONValues::ensure_json_serializable() const
+nlohmann::json::const_reference JSONValues::to_json() const
 {
     if (const auto num_unserializable = this->num_unserializable(); num_unserializable > 0)
     {
@@ -183,17 +183,7 @@ void JSONValues::ensure_json_serializable() const
 
         throw std::runtime_error(error_message.str());
     }
-}
 
-nlohmann::json::const_reference JSONValues::to_json() const
-{
-    ensure_json_serializable();
-    return m_serialized_values;
-}
-
-nlohmann::json JSONValues::to_json()
-{
-    ensure_json_serializable();
     return m_serialized_values;
 }
 
