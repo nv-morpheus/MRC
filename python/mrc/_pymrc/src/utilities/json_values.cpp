@@ -190,14 +190,10 @@ nlohmann::json::const_reference JSONValues::to_json() const
 pybind11::object JSONValues::get_python(const std::string& path) const
 
 {
+    DCHECK(path[0] == '/');
     AcquireGIL gil;
     auto root_obj = to_python();
-    if (path.empty())
-    {
-        return root_obj;
-    }
-
-    auto found = find_object_at_path(root_obj, path);
+    auto found    = find_object_at_path(root_obj, path);
     if (found.index.is_none())
     {
         return found.obj;
@@ -208,8 +204,9 @@ pybind11::object JSONValues::get_python(const std::string& path) const
 
 nlohmann::json JSONValues::get_json(const std::string& path) const
 {
+    DCHECK(path[0] == '/');
     nlohmann::json::const_reference json = to_json();
-    if (path.empty() || path == "/")
+    if (path == "/")
     {
         return json;
     }

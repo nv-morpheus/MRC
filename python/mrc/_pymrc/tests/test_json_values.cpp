@@ -25,7 +25,8 @@
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <array>
-#include <cstddef>  // for size_t
+#include <cstddef>           // for size_t
+#include <initializer_list>  // for initializer_list
 #include <stdexcept>
 #include <string>
 #include <utility>  // for pair
@@ -44,7 +45,7 @@ PYMRC_TEST_CLASS(JSONValues);
 
 py::dict mk_py_dict()
 {
-    // return a simple python dict of {"test": "this"}
+    // return a simple python dict with a nested dict, a list, an integer, and a float
     std::array<std::string, 3> alphabet = {"a", "b", "c"};
     return py::dict("this"_a     = py::dict("is"_a = "a test"s),
                     "alphabet"_a = py::cast(alphabet),
@@ -414,4 +415,72 @@ TEST_F(TestJSONValues, SetValueJSONValuesWithUnserializable)
 
     auto new_values = values1.set_value("/other", values2);
     EXPECT_TRUE(new_values.to_python().equal(expected_results));
+}
+
+TEST_F(TestJSONValues, GetJSON)
+{
+    using namespace nlohmann;
+    const auto json_doc            = mk_json();
+    std::vector<std::string> paths = {"/", "/this", "/this/is", "/alphabet", "/ncc", "/cost"};
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& path : paths)
+        {
+            json::json_pointer jp;
+            if (path != "/")
+            {
+                jp = json::json_pointer(path);
+            }
+
+            EXPECT_TRUE(json_doc.contains(jp)) << "Path: '" << path << "' not found in json";
+            EXPECT_EQ(value.get_json(path), json_doc[jp]);
+        }
+    }
+}
+
+TEST_F(TestJSONValues, GetJSONError)
+{
+    std::vector<std::string> paths = {"/doesntexist", "/this/fake"};
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& path : paths)
+        {
+            EXPECT_THROW(value.get_json(path), std::runtime_error);
+        }
+    }
+}
+
+TEST_F(TestJSONValues, GetPython)
+{
+    const auto py_dict = mk_py_dict();
+
+    // <path, expected_result>
+    std::vector<std::pair<std::string, py::object>> tests = {{"/", py_dict},
+                                                             {"/this", py::dict("is"_a = "a test"s)},
+                                                             {"/this/is", py::str("a test"s)},
+                                                             {"/alphabet", py_dict["alphabet"]},
+                                                             {"/ncc", py::int_(1701)},
+                                                             {"/cost", py::float_(47.47)}};
+
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& p : tests)
+        {
+            const auto& path            = p.first;
+            const auto& expected_result = p.second;
+            EXPECT_TRUE(value.get_python(path).equal(expected_result));
+        }
+    }
+}
+
+TEST_F(TestJSONValues, GetPythonError)
+{
+    std::vector<std::string> paths = {"/doesntexist", "/this/fake"};
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& path : paths)
+        {
+            EXPECT_THROW(value.get_python(path), std::runtime_error) << "Expected failure with path: '" << path << "'";
+        }
+    }
 }
