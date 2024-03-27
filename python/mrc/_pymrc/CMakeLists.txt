@@ -37,6 +37,7 @@ add_library(pymrc
   src/utilities/acquire_gil.cpp
   src/utilities/deserializers.cpp
   src/utilities/function_wrappers.cpp
+  src/utilities/json_values.cpp
   src/utilities/object_cache.cpp
   src/utilities/object_wrappers.cpp
   src/utilities/serializers.cpp
