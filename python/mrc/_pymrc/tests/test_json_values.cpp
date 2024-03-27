@@ -17,6 +17,7 @@
 
 #include "test_pymrc.hpp"
 
+#include "pymrc/types.hpp"
 #include "pymrc/utilities/json_values.hpp"
 
 #include <gtest/gtest.h>
@@ -481,6 +482,40 @@ TEST_F(TestJSONValues, GetPythonError)
         for (const auto& path : paths)
         {
             EXPECT_THROW(value.get_python(path), std::runtime_error) << "Expected failure with path: '" << path << "'";
+        }
+    }
+}
+
+TEST_F(TestJSONValues, SubscriptOpt)
+{
+    using namespace nlohmann;
+    const auto json_doc            = mk_json();
+    std::vector<std::string> paths = {"/", "/this", "/this/is", "/alphabet", "/ncc", "/cost"};
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& path : paths)
+        {
+            auto jv = value[path];
+
+            json::json_pointer jp;
+            if (path != "/")
+            {
+                jp = json::json_pointer(path);
+            }
+
+            EXPECT_EQ(jv.to_json(), json_doc[jp]);
+        }
+    }
+}
+
+TEST_F(TestJSONValues, SubscriptOptError)
+{
+    std::vector<std::string> paths = {"/doesntexist", "/this/fake"};
+    for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
+    {
+        for (const auto& path : paths)
+        {
+            EXPECT_THROW(value[path], std::runtime_error);
         }
     }
 }

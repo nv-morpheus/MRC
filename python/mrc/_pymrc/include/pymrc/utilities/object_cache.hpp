@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "pymrc/types.hpp"
+
 #include <pybind11/pytypes.h>
 
 #include <cstddef>
@@ -95,7 +97,7 @@ class __attribute__((visibility("default"))) PythonObjectCache
      */
     void atexit_callback();
 
-    std::map<std::string, pybind11::object> m_object_cache;
+    python_map_t m_object_cache;
 };
 
 #pragma GCC visibility pop

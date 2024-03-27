@@ -17,11 +17,12 @@
 
 #pragma once
 
+#include "pymrc/types.hpp"
+
 #include <nlohmann/json.hpp>
 #include <pybind11/pytypes.h>  // for PYBIND11_EXPORT & pybind11::object
 
 #include <cstddef>  // for size_t
-#include <map>
 #include <string>
 // IWYU wants us to use the pybind11.h for the PYBIND11_EXPORT macro, but we already have it in pytypes.h
 // IWYU pragma: no_include <pybind11/pybind11.h>
@@ -29,6 +30,7 @@
 namespace mrc::pymrc {
 
 #pragma GCC visibility push(default)
+
 /**
  * @brief Immutable container for holding Python values as JSON objects if possible, and as pybind11::object otherwise.
  * The container can be copied and moved, but the underlying JSON object is immutable.
@@ -58,13 +60,16 @@ class PYBIND11_EXPORT JSONValues
     nlohmann::json::const_reference to_json() const;
 
     pybind11::object get_python(const std::string& path) const;
-    nlohmann::json get_json(const std::string& path) const;
+    nlohmann::json::const_reference get_json(const std::string& path) const;
+
+    JSONValues operator[](const std::string& path) const;
 
   private:
+    JSONValues(nlohmann::json&& values, python_map_t&& py_objects);
     nlohmann::json unserializable_handler(const pybind11::object& obj, const std::string& path);
 
     nlohmann::json m_serialized_values;
-    std::map<std::string, pybind11::object> m_py_objects;
+    python_map_t m_py_objects;
 };
 
 #pragma GCC visibility pop

@@ -24,6 +24,8 @@
 #include <rxcpp/rx.hpp>
 
 #include <functional>
+#include <map>
+#include <string>
 
 namespace mrc::pymrc {
 
@@ -36,5 +38,7 @@ using PyObjectObservable = rxcpp::observable<PyHolder>;
 using PyNode             = mrc::segment::ObjectProperties;
 using PyObjectOperateFn  = std::function<PyObjectObservable(PyObjectObservable source)>;
 // NOLINTEND(readability-identifier-naming)
+
+using python_map_t = std::map<std::string, pybind11::object>;
 
 }  // namespace mrc::pymrc

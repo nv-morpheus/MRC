@@ -27,6 +27,7 @@
 #include <pybind11/cast.h>
 
 #include <iterator>   // for next
+#include <map>        // for map
 #include <sstream>    // for operator<< & stringstream
 #include <stdexcept>  // for runtime_error
 #include <utility>    // for move
@@ -146,6 +147,11 @@ JSONValues::JSONValues(py::object values)
 
 JSONValues::JSONValues(nlohmann::json values) : m_serialized_values(std::move(values)) {}
 
+JSONValues::JSONValues(nlohmann::json&& values, python_map_t&& py_objects) :
+  m_serialized_values(std::move(values)),
+  m_py_objects(std::move(py_objects))
+{}
+
 std::size_t JSONValues::num_unserializable() const
 {
     return m_py_objects.size();
@@ -187,22 +193,40 @@ nlohmann::json::const_reference JSONValues::to_json() const
     return m_serialized_values;
 }
 
-pybind11::object JSONValues::get_python(const std::string& path) const
-
+JSONValues JSONValues::operator[](const std::string& path) const
 {
     DCHECK(path[0] == '/');
-    AcquireGIL gil;
-    auto root_obj = to_python();
-    auto found    = find_object_at_path(root_obj, path);
-    if (found.index.is_none())
+    if (path == "/")
     {
-        return found.obj;
+        return *this;  // Return a copy of the object
     }
 
-    return found.obj[found.index];
+    nlohmann::json::json_pointer node_json_ptr(path);
+    if (!m_serialized_values.contains(node_json_ptr))
+    {
+        throw std::runtime_error(MRC_CONCAT_STR("Path: '" << path << "' not found in json"));
+    }
+
+    // take a copy of the sub-object
+    nlohmann::json value = m_serialized_values[node_json_ptr];
+    python_map_t py_objects;
+    for (const auto& [py_path, obj] : m_py_objects)
+    {
+        if (py_path.find(path) == 0)
+        {
+            py_objects[py_path] = obj;
+        }
+    }
+
+    return {std::move(value), std::move(py_objects)};
 }
 
-nlohmann::json JSONValues::get_json(const std::string& path) const
+pybind11::object JSONValues::get_python(const std::string& path) const
+{
+    return (*this)[path].to_python();
+}
+
+nlohmann::json::const_reference JSONValues::get_json(const std::string& path) const
 {
     DCHECK(path[0] == '/');
     nlohmann::json::const_reference json = to_json();
