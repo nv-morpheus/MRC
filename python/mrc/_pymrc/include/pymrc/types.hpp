@@ -21,6 +21,7 @@
 
 #include "mrc/segment/object.hpp"
 
+#include <nlohmann/json_fwd.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <functional>
@@ -40,5 +41,15 @@ using PyObjectOperateFn  = std::function<PyObjectObservable(PyObjectObservable s
 // NOLINTEND(readability-identifier-naming)
 
 using python_map_t = std::map<std::string, pybind11::object>;
+
+/**
+ * @brief Unserializable handler function type, invoked by `cast_from_pyobject` when an object cannot be serialized to
+ * JSON. Implementations should return a valid json object, or throw an exception if the object cannot be serialized.
+ * @param source : pybind11 object
+ * @param path : string json path to object
+ * @return nlohmann::json.
+ */
+using unserializable_handler_fn_t =
+    std::function<nlohmann::json(const pybind11::object& /* source*/, const std::string& /* path */)>;
 
 }  // namespace mrc::pymrc

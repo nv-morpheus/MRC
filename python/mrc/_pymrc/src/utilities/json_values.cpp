@@ -20,7 +20,7 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR
 
 #include <boost/algorithm/string.hpp>  // for split
 #include <glog/logging.h>
@@ -176,12 +176,21 @@ py::object JSONValues::to_python() const
     return results;
 }
 
-nlohmann::json::const_reference JSONValues::to_json() const
+nlohmann::json::const_reference JSONValues::view_json() const
 {
-    if (const auto num_unserializable = this->num_unserializable(); num_unserializable > 0)
+    return m_serialized_values;
+}
+
+nlohmann::json JSONValues::to_json(unserializable_handler_fn_t unserializable_handler_fn) const
+{
+    // start with a copy
+    nlohmann::json json_doc = m_serialized_values;
+    nlohmann::json patches  = nlohmann::json::array();
+
+    if (unserializable_handler_fn == nullptr && !m_py_objects.empty())
     {
         std::ostringstream error_message;
-        error_message << "There are " << num_unserializable << " unserializable objects located at:";
+        error_message << "There are " << num_unserializable() << " unserializable objects located at:";
         for (const auto& [path, obj] : m_py_objects)
         {
             error_message << "\n" << path;
@@ -190,7 +199,18 @@ nlohmann::json::const_reference JSONValues::to_json() const
         throw std::runtime_error(error_message.str());
     }
 
-    return m_serialized_values;
+    for (const auto& [path, obj] : m_py_objects)
+    {
+        nlohmann::json patch{{"op", "replace"}, {"path", path}, {"value", unserializable_handler_fn(obj, path)}};
+        patches.emplace_back(std::move(patch));
+    }
+
+    if (!patches.empty())
+    {
+        json_doc.patch_inplace(patches);
+    }
+
+    return json_doc;
 }
 
 JSONValues JSONValues::operator[](const std::string& path) const
@@ -226,22 +246,16 @@ pybind11::object JSONValues::get_python(const std::string& path) const
     return (*this)[path].to_python();
 }
 
-nlohmann::json::const_reference JSONValues::get_json(const std::string& path) const
+nlohmann::json JSONValues::get_json(const std::string& path,
+                                    unserializable_handler_fn_t unserializable_handler_fn) const
 {
-    DCHECK(path[0] == '/');
-    nlohmann::json::const_reference json = to_json();
-    if (path == "/")
-    {
-        return json;
-    }
+    return (*this)[path].to_json(unserializable_handler_fn);
+}
 
-    nlohmann::json::json_pointer node_json_ptr(path);
-    if (!json.contains(node_json_ptr))
-    {
-        throw std::runtime_error(MRC_CONCAT_STR("Path: '" << path << "' not found in json"));
-    }
-
-    return json[node_json_ptr];
+nlohmann::json JSONValues::stringify(const pybind11::object& obj, const std::string& path)
+{
+    AcquireGIL gil;
+    return {py::str(obj)};
 }
 
 JSONValues JSONValues::set_value(const std::string& path, const pybind11::object& value) const
@@ -258,8 +272,8 @@ JSONValues JSONValues::set_value(const std::string& path, nlohmann::json value) 
 {
     // Two possibilities:
     // 1) We don't have any unserializable objects, in which case we can just update the JSON object
-    // 2) We do have unserializable objects, in which case we need to cast value to python and call the python version
-    // of set_value
+    // 2) We do have unserializable objects, in which case we need to cast value to python and call the python
+    // version of set_value
 
     if (!has_unserializable())
     {
@@ -287,7 +301,7 @@ JSONValues JSONValues::set_value(const std::string& path, const JSONValues& valu
         return set_value(path, py_obj);
     }
 
-    return set_value(path, value.to_json());
+    return set_value(path, value.to_json(nullptr));
 }
 
 nlohmann::json JSONValues::unserializable_handler(const py::object& obj, const std::string& path)

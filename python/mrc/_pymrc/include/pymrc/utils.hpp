@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "pymrc/types.hpp"
+
 #include <nlohmann/json_fwd.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -32,16 +34,6 @@ namespace mrc::pymrc {
 #pragma GCC visibility push(default)
 
 pybind11::object cast_from_json(const nlohmann::json& source);
-
-/**
- * @brief Unserializable handler function type, invoked by `cast_from_pyobject` when an object cannot be serialized to
- * JSON. Implementations should return a valid json object, or throw an exception if the object cannot be serialized.
- * @param source : pybind11 object
- * @param path : string json path to object
- * @return nlohmann::json.
- */
-using unserializable_handler_fn_t =
-    std::function<nlohmann::json(const pybind11::object& /* source*/, const std::string& /* path */)>;
 
 /**
  * @brief Convert a pybind11 object to a JSON object. If the object cannot be serialized, a pybind11::type_error

@@ -49,6 +49,7 @@ class PYBIND11_EXPORT JSONValues
     JSONValues& operator=(const JSONValues& other) = default;
     JSONValues& operator=(JSONValues&& other)      = default;
 
+    // TODO: Docstrings
     JSONValues set_value(const std::string& path, const pybind11::object& value) const;
     JSONValues set_value(const std::string& path, nlohmann::json value) const;
     JSONValues set_value(const std::string& path, const JSONValues& value) const;
@@ -57,10 +58,16 @@ class PYBIND11_EXPORT JSONValues
     bool has_unserializable() const;
 
     pybind11::object to_python() const;
-    nlohmann::json::const_reference to_json() const;
+
+    nlohmann::json::const_reference view_json() const;
+
+    nlohmann::json to_json(unserializable_handler_fn_t unserializable_handler_fn = nullptr) const;
+
+    static nlohmann::json stringify(const pybind11::object& obj, const std::string& path);
 
     pybind11::object get_python(const std::string& path) const;
-    nlohmann::json::const_reference get_json(const std::string& path) const;
+    nlohmann::json get_json(const std::string& path,
+                            unserializable_handler_fn_t unserializable_handler_fn = nullptr) const;
 
     JSONValues operator[](const std::string& path) const;
 
