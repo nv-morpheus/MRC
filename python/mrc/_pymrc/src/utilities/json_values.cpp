@@ -255,7 +255,7 @@ nlohmann::json JSONValues::get_json(const std::string& path,
 nlohmann::json JSONValues::stringify(const pybind11::object& obj, const std::string& path)
 {
     AcquireGIL gil;
-    return {py::str(obj)};
+    return {py::str(obj).cast<std::string>()};
 }
 
 JSONValues JSONValues::set_value(const std::string& path, const pybind11::object& value) const
