@@ -28,6 +28,7 @@
 #include <pyerrors.h>
 #include <warnings.h>
 
+#include <functional>  // for function
 #include <sstream>
 #include <string>
 #include <utility>

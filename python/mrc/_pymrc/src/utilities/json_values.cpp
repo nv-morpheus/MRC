@@ -26,12 +26,13 @@
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 
-#include <iterator>   // for next
-#include <map>        // for map
-#include <sstream>    // for operator<< & stringstream
-#include <stdexcept>  // for runtime_error
-#include <utility>    // for move
-#include <vector>     // for vector
+#include <functional>  // for function
+#include <iterator>    // for next
+#include <map>         // for map
+#include <sstream>     // for operator<< & stringstream
+#include <stdexcept>   // for runtime_error
+#include <utility>     // for move
+#include <vector>      // for vector
 
 // We already have <boost/algorithm/string.hpp> included we don't need these others, it is also the only public header
 // with a definition for boost::is_any_of, so even if we replaced string.hpp with these others we would still need to

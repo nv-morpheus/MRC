@@ -24,7 +24,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <rxcpp/rx.hpp>
 
-#include <functional>
+#include <functional>  // for function
 #include <map>
 #include <string>
 

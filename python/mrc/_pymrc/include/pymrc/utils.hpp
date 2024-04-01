@@ -24,7 +24,6 @@
 #include <pybind11/pytypes.h>
 #include <sys/types.h>
 
-#include <functional>  // for function
 #include <string>
 #include <typeinfo>
 
