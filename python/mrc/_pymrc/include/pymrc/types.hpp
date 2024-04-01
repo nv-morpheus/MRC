@@ -29,7 +29,6 @@
 #include <string>
 
 namespace mrc::pymrc {
-#pragma GCC visibility push(default)
 
 // NOLINTBEGIN(readability-identifier-naming)
 using PyHolder           = PyObjectHolder;
@@ -53,5 +52,4 @@ using python_map_t = std::map<std::string, pybind11::object>;
 using unserializable_handler_fn_t =
     std::function<nlohmann::json(const pybind11::object& /* source*/, const std::string& /* path */)>;
 
-#pragma GCC visibility pop
 }  // namespace mrc::pymrc
