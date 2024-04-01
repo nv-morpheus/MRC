@@ -186,19 +186,6 @@ nlohmann::json JSONValues::to_json(unserializable_handler_fn_t unserializable_ha
     // start with a copy
     nlohmann::json json_doc = m_serialized_values;
     nlohmann::json patches  = nlohmann::json::array();
-
-    if (unserializable_handler_fn == nullptr && !m_py_objects.empty())
-    {
-        std::ostringstream error_message;
-        error_message << "There are " << num_unserializable() << " unserializable objects located at:";
-        for (const auto& [path, obj] : m_py_objects)
-        {
-            error_message << "\n" << path;
-        }
-
-        throw std::runtime_error(error_message.str());
-    }
-
     for (const auto& [path, obj] : m_py_objects)
     {
         nlohmann::json patch{{"op", "replace"}, {"path", path}, {"value", unserializable_handler_fn(obj, path)}};
@@ -215,7 +202,8 @@ nlohmann::json JSONValues::to_json(unserializable_handler_fn_t unserializable_ha
 
 JSONValues JSONValues::operator[](const std::string& path) const
 {
-    DCHECK(path[0] == '/');
+    validate_path(path);
+
     if (path == "/")
     {
         return *this;  // Return a copy of the object
@@ -301,7 +289,10 @@ JSONValues JSONValues::set_value(const std::string& path, const JSONValues& valu
         return set_value(path, py_obj);
     }
 
-    return set_value(path, value.to_json(nullptr));
+    return set_value(path, value.to_json([](const py::object& source, const std::string& path) {
+        DLOG(FATAL) << "Should never be called";
+        return nlohmann::json();  // unreachable but needed to satisfy the signature
+    }));
 }
 
 nlohmann::json JSONValues::unserializable_handler(const py::object& obj, const std::string& path)

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "pymrc/types.hpp"
+#include "pymrc/types.hpp"  // for python_map_t & unserializable_handler_fn_t
 
 #include <nlohmann/json.hpp>
 #include <pybind11/pytypes.h>  // for PYBIND11_EXPORT & pybind11::object
@@ -49,26 +49,100 @@ class PYBIND11_EXPORT JSONValues
     JSONValues& operator=(const JSONValues& other) = default;
     JSONValues& operator=(JSONValues&& other)      = default;
 
-    // TODO: Docstrings
+    /**
+     * @brief Sets a value in the JSON object at the specified path with the provided Python object. If `value` is
+     * serializable as JSON it will be stored as JSON, otherwise it will be stored as-is.
+     * @param path The path in the JSON object where the value should be set.
+     * @param value The Python object to set.
+     * @throws std::runtime_error If the path is invalid.
+     * @return A new JSONValues object with the updated value.
+     */
     JSONValues set_value(const std::string& path, const pybind11::object& value) const;
+
+    /**
+     * @brief Sets a value in the JSON object at the specified path with the provided JSON object.
+     * @param path The path in the JSON object where the value should be set.
+     * @param value The JSON object to set.
+     * @throws std::runtime_error If the path is invalid.
+     * @return A new JSONValues object with the updated value.
+     */
     JSONValues set_value(const std::string& path, nlohmann::json value) const;
+
+    /**
+     * @brief Sets a value in the JSON object at the specified path with the provided JSONValues object.
+     * @param path The path in the JSON object where the value should be set.
+     * @param value The JSONValues object to set.
+     * @throws std::runtime_error If the path is invalid.
+     * @return A new JSONValues object with the updated value.
+     */
     JSONValues set_value(const std::string& path, const JSONValues& value) const;
 
+    /**
+     * @brief Returns the number of unserializable Python objects.
+     * @return The number of unserializable Python objects.
+     */
     std::size_t num_unserializable() const;
+
+    /**
+     * @brief Checks if there are any unserializable Python objects.
+     * @return True if there are unserializable Python objects, false otherwise.
+     */
     bool has_unserializable() const;
 
+    /**
+     * @brief Convert to a Python object.
+     * @return The Python object representation of the values.
+     */
     pybind11::object to_python() const;
 
+    /**
+     * @brief Returns a constant reference to the underlying JSON object. Any unserializable Python objects, will be
+     * represented in the JSON object with a string place-holder with the value `"**pymrc_placeholder"`.
+     * @return A constant reference to the JSON object.
+     */
     nlohmann::json::const_reference view_json() const;
 
-    nlohmann::json to_json(unserializable_handler_fn_t unserializable_handler_fn = nullptr) const;
+    /**
+     * @brief Converts the JSON object to a JSON object. If any unserializable Python objects are present, the
+     * `unserializable_handler_fn` will be invoked to handle the object.
+     * @param unserializable_handler_fn Optional function to handle unserializable objects.
+     * @return The JSON string representation of the JSON object.
+     */
+    nlohmann::json to_json(unserializable_handler_fn_t unserializable_handler_fn) const;
 
+    /**
+     * @brief Converts a Python object to a JSON string. Convienence function that matches the
+     * `unserializable_handler_fn_t` signature. Convienent for use with `to_json` and `get_json`.
+     * @param obj The Python object to convert.
+     * @param path The path in the JSON object where the value should be set.
+     * @return The JSON string representation of the Python object.
+     */
     static nlohmann::json stringify(const pybind11::object& obj, const std::string& path);
 
+    /**
+     * @brief Returns the object at the specified path as a Python object.
+     * @param path Path to the specified object.
+     * @throws std::runtime_error If the path does not exist or is not a valid path.
+     * @return Python representation of the object at the specified path.
+     */
     pybind11::object get_python(const std::string& path) const;
-    nlohmann::json get_json(const std::string& path,
-                            unserializable_handler_fn_t unserializable_handler_fn = nullptr) const;
 
+    /**
+     * @brief Returns the object at the specified path. If the object is an unserializable Python object the
+     * `unserializable_handler_fn` will be invoked.
+     * @param path Path to the specified object.
+     * @param unserializable_handler_fn Function to handle unserializable objects.
+     * @throws std::runtime_error If the path does not exist or is not a valid path.
+     * @return The JSON object at the specified path.
+     */
+    nlohmann::json get_json(const std::string& path, unserializable_handler_fn_t unserializable_handler_fn) const;
+
+    /**
+     * @brief Return a new JSONValues object with the value at the specified path.
+     * @param path Path to the specified object.
+     * @throws std::runtime_error If the path does not exist or is not a valid path.
+     * @return The value at the specified path.
+     */
     JSONValues operator[](const std::string& path) const;
 
   private:
