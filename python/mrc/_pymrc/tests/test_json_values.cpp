@@ -523,3 +523,9 @@ TEST_F(TestJSONValues, SubscriptOptError)
         }
     }
 }
+
+TEST_F(TestJSONValues, Stringify)
+{
+    auto dec_val = mk_decimal("2.2"s);
+    EXPECT_EQ(JSONValues::stringify(dec_val, "/"s), nlohmann::json("2.2"s));
+}
