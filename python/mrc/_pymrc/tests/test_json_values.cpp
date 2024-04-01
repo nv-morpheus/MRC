@@ -70,7 +70,7 @@ TEST_F(TestJSONValues, DefaultConstructor)
 {
     JSONValues j;
 
-    EXPECT_EQ(j.to_json(), nlohmann::json());
+    EXPECT_EQ(j.to_json(JSONValues::stringify), nlohmann::json());
     EXPECT_TRUE(j.to_python().is_none());
 }
 
@@ -103,24 +103,28 @@ TEST_F(TestJSONValues, ToJSONFromPython)
     py::dict py_input = mk_py_dict();
 
     JSONValues j{py_input};
-    auto result = j.to_json();
+    auto result = j.to_json(JSONValues::stringify);
 
     EXPECT_EQ(result, expected_results);
 }
 
 TEST_F(TestJSONValues, ToJSONFromPythonUnserializable)
 {
+    std::string dec_val{"2.2"};
+    auto expected_results     = mk_json();
+    expected_results["other"] = dec_val;
+
     py::dict py_input = mk_py_dict();
-    py_input["other"] = mk_decimal();
+    py_input["other"] = mk_decimal(dec_val);
 
     JSONValues j{py_input};
-    EXPECT_THROW(j.to_json(), std::runtime_error);
+    EXPECT_EQ(j.to_json(JSONValues::stringify), expected_results);
 }
 
 TEST_F(TestJSONValues, ToJSONFromJSON)
 {
     JSONValues j{mk_json()};
-    auto result = j.to_json();
+    auto result = j.to_json(JSONValues::stringify);
 
     EXPECT_EQ(result, mk_json());
 }
@@ -304,7 +308,7 @@ TEST_F(TestJSONValues, SetValueNewKeyJSON)
 
     JSONValues values{mk_json()};
     auto new_values = values.set_value("/other", mk_json());
-    EXPECT_EQ(new_values.to_json(), expected_results);
+    EXPECT_EQ(new_values.to_json(JSONValues::stringify), expected_results);
 }
 
 TEST_F(TestJSONValues, SetValueExistingKeyJSON)
@@ -315,7 +319,7 @@ TEST_F(TestJSONValues, SetValueExistingKeyJSON)
 
     JSONValues values{mk_json()};
     auto new_values = values.set_value("/this", mk_json());
-    EXPECT_EQ(new_values.to_json(), expected_results);
+    EXPECT_EQ(new_values.to_json(JSONValues::stringify), expected_results);
 }
 
 TEST_F(TestJSONValues, SetValueNewKeyJSONWithUnserializable)
@@ -388,7 +392,7 @@ TEST_F(TestJSONValues, SetValueNewKeyJSONDefaultConstructed)
 
     JSONValues values;
     auto new_values = values.set_value("/other", mk_json());
-    EXPECT_EQ(new_values.to_json(), expected_results);
+    EXPECT_EQ(new_values.to_json(JSONValues::stringify), expected_results);
 }
 
 TEST_F(TestJSONValues, SetValueJSONValues)
@@ -400,7 +404,7 @@ TEST_F(TestJSONValues, SetValueJSONValues)
     JSONValues values1{mk_json()};
     JSONValues values2{mk_json()};
     auto new_values = values1.set_value("/other", values2);
-    EXPECT_EQ(new_values.to_json(), expected_results);
+    EXPECT_EQ(new_values.to_json(JSONValues::stringify), expected_results);
 }
 
 TEST_F(TestJSONValues, SetValueJSONValuesWithUnserializable)
@@ -434,7 +438,7 @@ TEST_F(TestJSONValues, GetJSON)
             }
 
             EXPECT_TRUE(json_doc.contains(jp)) << "Path: '" << path << "' not found in json";
-            EXPECT_EQ(value.get_json(path), json_doc[jp]);
+            EXPECT_EQ(value.get_json(path, JSONValues::stringify), json_doc[jp]);
         }
     }
 }
@@ -446,7 +450,7 @@ TEST_F(TestJSONValues, GetJSONError)
     {
         for (const auto& path : paths)
         {
-            EXPECT_THROW(value.get_json(path), std::runtime_error);
+            EXPECT_THROW(value.get_json(path, JSONValues::stringify), std::runtime_error);
         }
     }
 }
@@ -503,7 +507,7 @@ TEST_F(TestJSONValues, SubscriptOpt)
                 jp = json::json_pointer(path);
             }
 
-            EXPECT_EQ(jv.to_json(), json_doc[jp]);
+            EXPECT_EQ(jv.to_json(JSONValues::stringify), json_doc[jp]);
         }
     }
 }
