@@ -126,12 +126,14 @@ void patch_object(py::object& obj, const std::string& path, const py::object& va
     }
 }
 
-void validate_path(const std::string& path)
+std::string validate_path(const std::string& path)
 {
     if (path.empty() || path[0] != '/')
     {
-        throw std::runtime_error("Invalid path: " + path);
+        return "/" + path;
     }
+
+    return path;
 }
 }  // namespace
 
@@ -203,14 +205,14 @@ nlohmann::json JSONValues::to_json(unserializable_handler_fn_t unserializable_ha
 
 JSONValues JSONValues::operator[](const std::string& path) const
 {
-    validate_path(path);
+    auto validated_path = validate_path(path);
 
-    if (path == "/")
+    if (validated_path == "/")
     {
         return *this;  // Return a copy of the object
     }
 
-    nlohmann::json::json_pointer node_json_ptr(path);
+    nlohmann::json::json_pointer node_json_ptr(validated_path);
     if (!m_serialized_values.contains(node_json_ptr))
     {
         throw std::runtime_error(MRC_CONCAT_STR("Path: '" << path << "' not found in json"));
@@ -221,7 +223,7 @@ JSONValues JSONValues::operator[](const std::string& path) const
     python_map_t py_objects;
     for (const auto& [py_path, obj] : m_py_objects)
     {
-        if (py_path.find(path) == 0)
+        if (py_path.find(validated_path) == 0)
         {
             py_objects[py_path] = obj;
         }
@@ -249,11 +251,9 @@ nlohmann::json JSONValues::stringify(const pybind11::object& obj, const std::str
 
 JSONValues JSONValues::set_value(const std::string& path, const pybind11::object& value) const
 {
-    validate_path(path);
-
     AcquireGIL gil;
     py::object py_obj = this->to_python();
-    patch_object(py_obj, path, value);
+    patch_object(py_obj, validate_path(path), value);
     return {py_obj};
 }
 
@@ -266,11 +266,9 @@ JSONValues JSONValues::set_value(const std::string& path, nlohmann::json value) 
 
     if (!has_unserializable())
     {
-        validate_path(path);
-
         // The add operation will update an existing value if it exists, or add a new value if it does not
         // ref: https://datatracker.ietf.org/doc/html/rfc6902#section-4.1
-        nlohmann::json patch{{"op", "add"}, {"path", path}, {"value", value}};
+        nlohmann::json patch{{"op", "add"}, {"path", validate_path(path)}, {"value", value}};
         nlohmann::json patches = nlohmann::json::array({std::move(patch)});
         auto new_values        = m_serialized_values.patch(std::move(patches));
         return {std::move(new_values)};

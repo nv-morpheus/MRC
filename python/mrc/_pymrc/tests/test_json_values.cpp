@@ -493,8 +493,15 @@ TEST_F(TestJSONValues, GetPythonError)
 TEST_F(TestJSONValues, SubscriptOpt)
 {
     using namespace nlohmann;
-    const auto json_doc            = mk_json();
-    std::vector<std::string> paths = {"/", "/this", "/this/is", "/alphabet", "/ncc", "/cost"};
+    const auto json_doc             = mk_json();
+    std::vector<std::string> values = {"", "this", "this/is", "alphabet", "ncc", "cost"};
+    std::vector<std::string> paths;
+    for (const auto& value : values)
+    {
+        paths.push_back(value);
+        paths.push_back("/" + value);
+    }
+
     for (const auto& value : {JSONValues{mk_json()}, JSONValues{mk_py_dict()}})
     {
         for (const auto& path : paths)
@@ -502,9 +509,15 @@ TEST_F(TestJSONValues, SubscriptOpt)
             auto jv = value[path];
 
             json::json_pointer jp;
-            if (path != "/")
+            if (!path.empty() && path != "/")
             {
-                jp = json::json_pointer(path);
+                std::string json_path = path;
+                if (json_path[0] != '/')
+                {
+                    json_path = "/"s + json_path;
+                }
+
+                jp = json::json_pointer(json_path);
             }
 
             EXPECT_EQ(jv.to_json(JSONValues::stringify), json_doc[jp]);
