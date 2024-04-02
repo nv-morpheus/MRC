@@ -34,8 +34,8 @@ function(morpheus_utils_configure_UCXX)
     INSTALL_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     CPM_ARGS
-      GIT_REPOSITORY          https://github.com/pentschev/ucxx.git
-      GIT_TAG                 mrc-all
+      GIT_REPOSITORY          https://github.com/rapidsai/ucxx.git
+      GIT_TAG                 branch-24.06
       GIT_SHALLOW             TRUE
       SOURCE_SUBDIR           cpp
       OPTIONS                 "UCXX_ENABLE_RMM ON"
