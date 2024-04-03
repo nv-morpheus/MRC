@@ -32,6 +32,7 @@
 #include <array>
 #include <cfloat>
 #include <climits>
+#include <cstddef>  // for size_t
 #include <map>
 #include <memory>
 #include <string>
@@ -157,6 +158,47 @@ TEST_F(TestUtils, CastFromPyObjectSerializeErrors)
     // Test with object in a nested dict
     py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = o))), "other"_a = 2);
     EXPECT_THROW(pymrc::cast_from_pyobject(d), py::type_error);
+}
+
+TEST_F(TestUtils, CastFromPyObjectUnserializableHandlerFn)
+{
+    // Test to verify that cast_from_pyobject calls the unserializable_handler_fn when encountering an object that it
+    // does not know how to serialize
+
+    bool handler_called{false};
+    pymrc::unserializable_handler_fn_t handler_fn = [&handler_called](const py::object& source,
+                                                                      const std::string& path) {
+        handler_called = true;
+        return nlohmann::json(py::cast<float>(source));
+    };
+
+    // decimal.Decimal is not serializable
+    py::object Decimal = py::module_::import("decimal").attr("Decimal");
+    py::object o       = Decimal("1.0");
+    EXPECT_EQ(pymrc::cast_from_pyobject(o, handler_fn), nlohmann::json(1.0));
+    EXPECT_TRUE(handler_called);
+}
+
+TEST_F(TestUtils, CastFromPyObjectUnserializableHandlerFnNestedObj)
+{
+    std::size_t handler_call_count{0};
+
+    // Test with object in a nested dict
+    pymrc::unserializable_handler_fn_t handler_fn = [&handler_call_count](const py::object& source,
+                                                                          const std::string& path) {
+        ++handler_call_count;
+        return nlohmann::json(py::cast<float>(source));
+    };
+
+    // decimal.Decimal is not serializable
+    py::object Decimal = py::module_::import("decimal").attr("Decimal");
+    py::object o       = Decimal("1.0");
+
+    py::dict d("a"_a = py::dict("b"_a = py::dict("c"_a = py::dict("d"_a = o))), "other"_a = o);
+    nlohmann::json expected_results = {{"a", {{"b", {{"c", {{"d", 1.0}}}}}}}, {"other", 1.0}};
+
+    EXPECT_EQ(pymrc::cast_from_pyobject(d, handler_fn), expected_results);
+    EXPECT_EQ(handler_call_count, 2);
 }
 
 TEST_F(TestUtils, GetTypeName)
