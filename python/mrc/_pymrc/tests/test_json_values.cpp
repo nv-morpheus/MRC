@@ -138,6 +138,9 @@ TEST_F(TestJSONValues, ToPythonRootUnserializable)
 
     EXPECT_TRUE(result.equal(py_dec));
     EXPECT_TRUE(result.is(py_dec));  // Ensure we stored the object
+
+    nlohmann::json expexted_json("**pymrc_placeholder"s);
+    EXPECT_EQ(j.view_json(), expexted_json);
 }
 
 TEST_F(TestJSONValues, ToPythonSimpleDict)
