@@ -180,9 +180,8 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         m_tasks_to_delete.push_back(pos);
         // This has to be done within scope lock to make sure this coroutine task completes before the
         // task container object destructs -- if it was waiting on .empty() to become true.
+        m_size.fetch_sub(1, std::memory_order::relaxed);
     }
-
-    m_size.fetch_sub(1, std::memory_order::relaxed);
 
     if (not m_next_tasks.empty())
     {
