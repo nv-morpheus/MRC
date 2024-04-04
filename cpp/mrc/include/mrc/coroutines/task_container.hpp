@@ -139,6 +139,9 @@ class TaskContainer
      */
     auto gc_internal() -> std::size_t;
 
+    /**
+     * Starts the next taks in the queue.
+     */
     void start_next_task();
 
     /**
