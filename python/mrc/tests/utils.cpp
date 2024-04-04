@@ -17,6 +17,8 @@
 
 #include "pymrc/utils.hpp"
 
+#include "pymrc/utilities/json_values.hpp"  // for JSONValues
+
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -41,6 +43,11 @@ struct RequireGilInDestructor
     }
 };
 
+pymrc::JSONValues roundtrip_cast(pymrc::JSONValues v)
+{
+    return v;
+}
+
 PYBIND11_MODULE(utils, py_mod)
 {
     py_mod.doc() = R"pbdoc()pbdoc";
@@ -60,6 +67,8 @@ PYBIND11_MODULE(utils, py_mod)
         py::arg("msg") = "");
 
     py::class_<RequireGilInDestructor>(py_mod, "RequireGilInDestructor").def(py::init<>());
+
+    py_mod.def("roundtrip_cast", &roundtrip_cast, py::arg("v"));
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
