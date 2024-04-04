@@ -38,7 +38,6 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     auto on                 = std::make_shared<mrc::coroutines::TestScheduler>();
     auto task_container     = mrc::coroutines::TaskContainer(on, 2);
-    int32_t completed_tasks = 0;
 
     auto start_time = on->time();
 
