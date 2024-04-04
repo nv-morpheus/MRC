@@ -135,32 +135,25 @@ def test_get_module_constructor():
         registry.get_module_constructor("SimpleModule", "default")
 
 
-@pytest.mark.parametrize("config", [{"a": "b"}, {"now": datetime.now()}], ids=["serializable", "unserializable"])
-def test_module_config(config: dict):
+@pytest.mark.parametrize("config,name", [({"a": "b"}, "serializable"), ({"now": datetime.now()}, "unserializable")])
+def test_module_config(config: dict, name: str):
     """
     Repro test for #461
     """
-    module_name = "test_py_mod_config"
+    module_name = f"test_py_mod_config_{name}"
     registry = mrc.ModuleRegistry
 
     def module_initializer(builder: mrc.Builder):
-        print("mi 0", flush=True)
         source_mod = builder.load_module("SourceModule", "mrc_unittest", "ModuleSourceTest_mod1", config)
-        print("mi 1", flush=True)
         builder.register_module_output("source", source_mod.output_port("source"))
-        print("mi 2", flush=True)
 
     def init_wrapper(builder: mrc.Builder):
-        print(0, flush=True)
         # Retrieve the module constructor
         fn_constructor = registry.get_module_constructor(module_name, "mrc_unittest")
-        print(1, flush=True)
+
         # Instantiate a version of the module
         source_module = fn_constructor("ModuleSourceTest_mod1", config)
-        print(2, flush=True)
-
         builder.init_module(source_module)
-        print(3, flush=True)
 
     # Register the module
     registry.register_module(module_name, "mrc_unittest", VERSION, module_initializer)
