@@ -59,7 +59,10 @@ pybind11::cpp_function ModuleRegistryProxy::get_module_constructor(const std::st
 {
     auto fn_constructor    = modules::ModuleRegistry::get_module_constructor(name, registry_namespace);
     auto py_module_wrapper = [fn_constructor](std::string module_name, pybind11::dict config) {
-        auto json_config = cast_from_pyobject(config);
+        auto json_config = cast_from_pyobject(config, [](const pybind11::object&, const std::string& path) {
+            DVLOG(10) << "Could not serialize object at path: " << path;
+            return nlohmann::json();  // Return a null json object if we can't convert
+        });
         return fn_constructor(std::move(module_name), std::move(json_config));
     };
 

@@ -459,7 +459,10 @@ std::shared_ptr<mrc::modules::SegmentModule> BuilderProxy::load_module_from_regi
     std::string module_name,
     py::dict config)
 {
-    auto json_config = cast_from_pyobject(config);
+    auto json_config = cast_from_pyobject(config, [](const py::object&, const std::string& path) {
+        DVLOG(10) << "Could not serialize object at path: " << path;
+        return nlohmann::json();  // Return a null json object if we can't convert
+    });
 
     return self.load_module_from_registry(module_id, registry_namespace, std::move(module_name), std::move(json_config));
 }

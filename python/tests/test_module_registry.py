@@ -135,12 +135,12 @@ def test_get_module_constructor():
         registry.get_module_constructor("SimpleModule", "default")
 
 
-@pytest.mark.parametrize("config,name", [({"a": "b"}, "serializable"), ({"now": datetime.now()}, "unserializable")])
-def test_module_config(config: dict, name: str):
+def test_module_config():
     """
     Repro test for #461
     """
-    module_name = f"test_py_mod_config_{name}"
+    config = {"now": datetime.now()}
+    module_name = f"test_py_mod_config_unserializable"
     registry = mrc.ModuleRegistry
 
     def module_initializer(builder: mrc.Builder):
