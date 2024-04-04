@@ -44,9 +44,6 @@ void TestScheduler::resume(std::coroutine_handle<> handle) noexcept
 
 mrc::coroutines::Task<> TestScheduler::yield()
 {
-    using namespace std::chrono_literals;
-
-    // offset from current time to ensure scheduler progresses.
     co_return co_await TestScheduler::Operation{this, m_time};
 }
 
