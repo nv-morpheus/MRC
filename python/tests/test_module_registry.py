@@ -15,6 +15,7 @@
 
 import logging
 import random
+from datetime import datetime
 
 import pytest
 
@@ -132,6 +133,48 @@ def test_get_module_constructor():
 
     with pytest.raises(Exception):
         registry.get_module_constructor("SimpleModule", "default")
+
+
+@pytest.mark.parametrize("config", [{"a": "b"}, {"now": datetime.now()}], ids=["serializable", "unserializable"])
+def test_module_config(config: dict):
+    """
+    Repro test for #461
+    """
+    module_name = "test_py_mod_config"
+    registry = mrc.ModuleRegistry
+
+    def module_initializer(builder: mrc.Builder):
+        print("mi 0", flush=True)
+        source_mod = builder.load_module("SourceModule", "mrc_unittest", "ModuleSourceTest_mod1", config)
+        print("mi 1", flush=True)
+        builder.register_module_output("source", source_mod.output_port("source"))
+        print("mi 2", flush=True)
+
+    def init_wrapper(builder: mrc.Builder):
+        print(0, flush=True)
+        # Retrieve the module constructor
+        fn_constructor = registry.get_module_constructor(module_name, "mrc_unittest")
+        print(1, flush=True)
+        # Instantiate a version of the module
+        source_module = fn_constructor("ModuleSourceTest_mod1", config)
+        print(2, flush=True)
+
+        builder.init_module(source_module)
+        print(3, flush=True)
+
+    # Register the module
+    registry.register_module(module_name, "mrc_unittest", VERSION, module_initializer)
+
+    pipeline = mrc.Pipeline()
+    pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
+
+    options = mrc.Options()
+    options.topology.user_cpuset = "0-1"
+
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipeline)
+    executor.start()
+    executor.join()
 
 
 def test_module_intitialize():
