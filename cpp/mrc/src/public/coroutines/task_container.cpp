@@ -30,9 +30,10 @@
 
 namespace mrc::coroutines {
 
-TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e) :
+TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simultaneous_tasks) :
   m_scheduler_lifetime(std::move(e)),
-  m_scheduler(m_scheduler_lifetime.get())
+  m_scheduler(m_scheduler_lifetime.get()),
+  m_max_simultaneous_tasks(max_simultaneous_tasks)
 {
     if (m_scheduler_lifetime == nullptr)
     {
@@ -65,8 +66,12 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
     auto task = make_cleanup_task(std::move(user_task), pos);
     *pos      = std::move(task);
 
-    // Start executing from the cleanup task to schedule the user's task onto the thread pool.
-    pos->value().resume();
+    m_next_tasks.push(pos);
+
+    if (m_max_simultaneous_tasks > 0 and m_size <= m_max_simultaneous_tasks)
+    {
+        start_next_task();
+    }
 }
 
 auto TaskContainer::garbage_collect() -> std::size_t
@@ -133,6 +138,14 @@ auto TaskContainer::gc_internal() -> std::size_t
     return deleted;
 }
 
+void TaskContainer::start_next_task()
+{
+    auto pos = m_next_tasks.back();
+    m_next_tasks.pop();
+    // Start executing from the cleanup task to schedule the user's task onto the thread pool.
+    pos->value().resume();
+}
+
 auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos) -> Task<void>
 {
     // Immediately move the task onto the executor.
@@ -160,6 +173,11 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
     // This has to be done within scope lock to make sure this coroutine task completes before the
     // task container object destructs -- if it was waiting on .empty() to become true.
     m_size.fetch_sub(1, std::memory_order::relaxed);
+
+    if (not m_next_tasks.empty()) {
+        start_next_task();
+    }
+
     co_return;
 }
 

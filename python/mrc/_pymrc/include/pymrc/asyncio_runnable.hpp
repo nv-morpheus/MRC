@@ -209,12 +209,6 @@ class AsyncioRunnable : public AsyncSink<InputT>,
                                                              std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
 
     std::stop_source m_stop_source;
-
-    /**
-     * @brief A semaphore used to control the number of outstanding operations. Acquire one before
-     * beginning a task, and release it when finished.
-     */
-    std::counting_semaphore<8> m_task_tickets{8};
 };
 
 template <typename InputT, typename OutputT>
@@ -282,14 +276,12 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    coroutines::TaskContainer outstanding_tasks(scheduler);
+    coroutines::TaskContainer outstanding_tasks(scheduler, 8);
 
     ExceptionCatcher catcher{};
 
     while (not m_stop_source.stop_requested() and not catcher.has_exception())
     {
-        m_task_tickets.acquire();
-
         InputT data;
 
         auto read_status = co_await this->read_async(data);
@@ -335,8 +327,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     {
         catcher.push_exception(std::current_exception());
     }
-
-    m_task_tickets.release();
 }
 
 template <typename InputT, typename OutputT>

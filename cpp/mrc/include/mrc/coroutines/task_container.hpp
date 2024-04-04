@@ -46,6 +46,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <vector>
 
 namespace mrc::coroutines {
@@ -60,7 +61,7 @@ class TaskContainer
      * @param e Tasks started in the container are scheduled onto this executor.  For tasks created
      *           from a coro::io_scheduler, this would usually be that coro::io_scheduler instance.
      */
-    TaskContainer(std::shared_ptr<Scheduler> e);
+    TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simultaneous_tasks = -1);
 
     TaskContainer(const TaskContainer&)                    = delete;
     TaskContainer(TaskContainer&&)                         = delete;
@@ -138,6 +139,8 @@ class TaskContainer
      */
     auto gc_internal() -> std::size_t;
 
+    void start_next_task();
+
     /**
      * Encapsulate the users tasks in a cleanup task which marks itself for deletion upon
      * completion.  Simply co_await the users task until its completed and then mark the given
@@ -166,6 +169,10 @@ class TaskContainer
     std::shared_ptr<Scheduler> m_scheduler_lifetime{nullptr};
     /// This is used internally since io_scheduler cannot pass itself in as a shared_ptr.
     Scheduler* m_scheduler{nullptr};
+    /// tasks to be processed in order of start
+    std::queue<decltype(m_tasks.end())> m_next_tasks;
+    /// maximum number of tasks to be run simultaneously
+    int32_t m_max_simultaneous_tasks;
 
     friend Scheduler;
 };
