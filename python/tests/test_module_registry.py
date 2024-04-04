@@ -140,7 +140,7 @@ def test_module_config():
     Repro test for #461
     """
     config = {"now": datetime.now()}
-    module_name = f"test_py_mod_config_unserializable"
+    module_name = "test_py_mod_config_unserializable"
     registry = mrc.ModuleRegistry
 
     def module_initializer(builder: mrc.Builder):
