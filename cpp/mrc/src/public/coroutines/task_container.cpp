@@ -54,21 +54,23 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
 {
     m_size.fetch_add(1, std::memory_order::relaxed);
 
-    std::scoped_lock lk{m_mutex};
-
-    if (cleanup == GarbageCollectPolicy::yes)
     {
-        gc_internal();
+        std::scoped_lock lk{m_mutex};
+
+        if (cleanup == GarbageCollectPolicy::yes)
+        {
+            gc_internal();
+        }
+
+        // Store the task inside a cleanup task for self deletion.
+        auto pos  = m_tasks.emplace(m_tasks.end(), std::nullopt);
+        auto task = make_cleanup_task(std::move(user_task), pos);
+        *pos      = std::move(task);
+
+        m_next_tasks.push(pos);
     }
 
-    // Store the task inside a cleanup task for self deletion.
-    auto pos  = m_tasks.emplace(m_tasks.end(), std::nullopt);
-    auto task = make_cleanup_task(std::move(user_task), pos);
-    *pos      = std::move(task);
-
-    m_next_tasks.push(pos);
-
-    if (m_max_simultaneous_tasks > 0 and m_size <= m_max_simultaneous_tasks)
+    if (m_max_simultaneous_tasks <= 0 or m_size <= m_max_simultaneous_tasks)
     {
         start_next_task();
     }
@@ -140,8 +142,13 @@ auto TaskContainer::gc_internal() -> std::size_t
 
 void TaskContainer::start_next_task()
 {
-    auto pos = m_next_tasks.back();
-    m_next_tasks.pop();
+    auto pos = [this]() {
+        std::scoped_lock lk{m_mutex};
+        auto pos = m_next_tasks.front();
+        m_next_tasks.pop();
+        return pos;
+    }();
+
     // Start executing from the cleanup task to schedule the user's task onto the thread pool.
     pos->value().resume();
 }
@@ -168,13 +175,17 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         LOG(ERROR) << "coro::task_container user_task had unhandle exception, not derived from std::exception.\n";
     }
 
-    std::scoped_lock lk{m_mutex};
-    m_tasks_to_delete.push_back(pos);
-    // This has to be done within scope lock to make sure this coroutine task completes before the
-    // task container object destructs -- if it was waiting on .empty() to become true.
+    {
+        std::scoped_lock lk{m_mutex};
+        m_tasks_to_delete.push_back(pos);
+        // This has to be done within scope lock to make sure this coroutine task completes before the
+        // task container object destructs -- if it was waiting on .empty() to become true.
+    }
+
     m_size.fetch_sub(1, std::memory_order::relaxed);
 
-    if (not m_next_tasks.empty()) {
+    if (not m_next_tasks.empty())
+    {
         start_next_task();
     }
 
