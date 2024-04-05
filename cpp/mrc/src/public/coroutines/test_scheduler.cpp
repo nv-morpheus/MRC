@@ -57,7 +57,8 @@ mrc::coroutines::Task<> TestScheduler::yield_until(std::chrono::time_point<std::
     co_return co_await TestScheduler::Operation{this, time};
 }
 
-std::chrono::time_point<std::chrono::steady_clock> TestScheduler::time() {
+std::chrono::time_point<std::chrono::steady_clock> TestScheduler::time()
+{
     return m_time;
 }
 

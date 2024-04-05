@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include "mrc/coroutines/scheduler.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/task_container.hpp"
 #include "mrc/coroutines/test_scheduler.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+#include <coroutine>
 #include <memory>
-#include <thread>
+#include <vector>
 
 class TestCoroTaskContainer : public ::testing::Test
 {};
@@ -36,8 +36,8 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 {
     using namespace std::chrono_literals;
 
-    auto on                 = std::make_shared<mrc::coroutines::TestScheduler>();
-    auto task_container     = mrc::coroutines::TaskContainer(on, 2);
+    auto on             = std::make_shared<mrc::coroutines::TestScheduler>();
+    auto task_container = mrc::coroutines::TaskContainer(on, 2);
 
     auto start_time = on->time();
 
@@ -59,8 +59,7 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     task.resume();
 
-    while (on->resume_next()) {
-    }
+    while (on->resume_next()) {}
 
     mrc::coroutines::sync_wait(task);
 
