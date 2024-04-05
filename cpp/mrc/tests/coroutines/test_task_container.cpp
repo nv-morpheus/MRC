@@ -15,17 +15,19 @@
  * limitations under the License.
  */
 
-#include "mrc/coroutines/scheduler.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/coroutines/task.hpp"
 #include "mrc/coroutines/task_container.hpp"
 #include "mrc/coroutines/test_scheduler.hpp"
-#include "mrc/coroutines/when_all.hpp"
 
 #include <gtest/gtest.h>
 
+#include <chrono>     // for time_point, duration
+#include <coroutine>  // for coroutine_handle, suspe...
 #include <memory>
+#include <ratio>  // for ratio
 #include <thread>
+#include <vector>  // for vector
 
 class TestCoroTaskContainer : public ::testing::Test
 {};
