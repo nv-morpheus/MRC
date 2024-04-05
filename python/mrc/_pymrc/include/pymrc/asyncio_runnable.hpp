@@ -263,9 +263,16 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
         loop.attr("close")();
     }
 
-    // Need to drop the output edges
-    mrc::node::SourceProperties<OutputT>::release_edge_connection();
-    mrc::node::SinkProperties<InputT>::release_edge_connection();
+    // Sync all progress engines if there are more than one
+    ctx.barrier();
+
+    // Only drop the output edges if we are rank 0
+    if (ctx.rank() == 0)
+    {
+        // Need to drop the output edges
+        mrc::node::SourceProperties<OutputT>::release_edge_connection();
+        mrc::node::SinkProperties<InputT>::release_edge_connection();
+    }
 
     if (exception != nullptr)
     {
