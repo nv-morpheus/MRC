@@ -25,7 +25,6 @@
 
 #include <cstdint>  // for uint32_t
 #include <cstdlib>  // for atoi
-#include <iostream>
 #include <stdexcept>
 #include <utility>  // for move
 

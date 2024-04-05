@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include <sstream>
+// for ostringstream
+#include <sstream>  // IWYU pragma: keep
 #include <string>
 #include <vector>
 

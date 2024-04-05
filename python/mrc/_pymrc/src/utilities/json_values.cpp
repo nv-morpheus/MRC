@@ -22,7 +22,6 @@
 
 #include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR, split_string_to_array
 
-#include <boost/algorithm/string.hpp>  // for split
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 
@@ -33,13 +32,6 @@
 #include <stdexcept>   // for runtime_error
 #include <utility>     // for move
 #include <vector>      // for vector
-
-// We already have <boost/algorithm/string.hpp> included we don't need these others, it is also the only public header
-// with a definition for boost::is_any_of, so even if we replaced string.hpp with these others we would still need to
-// include string.hpp or a detail/ header
-// IWYU pragma: no_include <boost/algorithm/string/classification.hpp>
-// IWYU pragma: no_include <boost/algorithm/string/split.hpp>
-// IWYU pragma: no_include <boost/iterator/iterator_facade.hpp>
 
 namespace py = pybind11;
 using namespace std::string_literals;
