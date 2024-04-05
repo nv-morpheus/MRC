@@ -37,11 +37,11 @@
  */
 
 #pragma once
-
 #include "mrc/coroutines/task.hpp"
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <list>
 #include <memory>
 #include <mutex>
