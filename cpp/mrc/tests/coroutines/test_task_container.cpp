@@ -36,8 +36,8 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 {
     using namespace std::chrono_literals;
 
-    auto on                 = std::make_shared<mrc::coroutines::TestScheduler>();
-    auto task_container     = mrc::coroutines::TaskContainer(on, 2);
+    auto on             = std::make_shared<mrc::coroutines::TestScheduler>();
+    auto task_container = mrc::coroutines::TaskContainer(on, 2);
 
     auto start_time = on->time();
 
@@ -50,9 +50,21 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
         execution_times.emplace_back(on->time());
     };
 
+    std::vector<std::thread> threads;
+
     for (auto i = 0; i < 4; i++)
     {
-        task_container.start(delay(on, execution_times));
+        threads.emplace_back([&]() {
+            for (auto i = 0; i < 4; i++)
+            {
+                task_container.start(delay(on, execution_times));
+            }
+        });
+    }
+
+    for (auto& thread : threads)
+    {
+        thread.join();
     }
 
     auto task = task_container.garbage_collect_and_yield_until_empty();
@@ -63,9 +75,10 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     mrc::coroutines::sync_wait(task);
 
-    ASSERT_EQ(execution_times.size(), 4);
-    ASSERT_EQ(execution_times[0], start_time + 100ms);
-    ASSERT_EQ(execution_times[1], start_time + 100ms);
-    ASSERT_EQ(execution_times[2], start_time + 200ms);
-    ASSERT_EQ(execution_times[3], start_time + 200ms);
+    ASSERT_EQ(execution_times.size(), threads.size() * 4);
+
+    for (auto i = 0; i < execution_times.size(); i++)
+    {
+        ASSERT_EQ(execution_times[i], start_time + (i / 2 + 1) * 100ms);
+    }
 }
