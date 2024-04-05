@@ -23,9 +23,11 @@
 #include <pybind11/pybind11.h>  // for PYBIND11_EXPORT, pybind11::object, type_caster
 
 #include <cstddef>  // for size_t
-#include <string>
-// IWYU wants us to use the pybind11.h for the PYBIND11_EXPORT macro, but we already have it in pytypes.h
-// IWYU pragma: no_include <pybind11/pybind11.h>
+#include <map>      // for map
+#include <string>   // for string
+#include <utility>  // for move
+// IWYU pragma: no_include <pybind11/cast.h>
+// IWYU pragma: no_include <pybind11/pytypes.h>
 
 namespace mrc::pymrc {
 
