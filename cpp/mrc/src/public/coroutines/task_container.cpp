@@ -77,13 +77,13 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
 
 auto TaskContainer::garbage_collect() -> std::size_t
 {
-    auto lock = std::unique_lock(m_mutex);
+    auto lock = std::scoped_lock(m_mutex);
     return gc_internal();
 }
 
 auto TaskContainer::size() -> std::size_t
 {
-    auto lock = std::unique_lock(m_mutex);
+    auto lock = std::scoped_lock(m_mutex);
     return m_size;
 }
 
@@ -94,7 +94,7 @@ auto TaskContainer::empty() -> bool
 
 auto TaskContainer::capacity() -> std::size_t
 {
-    auto lock = std::unique_lock(m_mutex);
+    auto lock = std::scoped_lock(m_mutex);
     return m_tasks.size();
 }
 
