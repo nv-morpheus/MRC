@@ -39,7 +39,6 @@
 #pragma once
 #include "mrc/coroutines/task.hpp"
 
-#include <atomic>
 #include <cstddef>
 #include <list>
 #include <memory>

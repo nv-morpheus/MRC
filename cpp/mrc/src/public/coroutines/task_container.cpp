@@ -67,7 +67,9 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
     *pos      = std::move(task);
     m_next_tasks.push(pos);
 
-    if (m_max_concurrent_tasks == 0 or m_size <= m_max_concurrent_tasks)
+    auto current_task_count = m_size - m_next_tasks.size();
+
+    if (m_max_concurrent_tasks == 0 or current_task_count <= m_max_concurrent_tasks)
     {
         try_start_next_task(std::move(lock));
     }
@@ -108,7 +110,6 @@ auto TaskContainer::garbage_collect_and_yield_until_empty() -> Task<void>
 TaskContainer::TaskContainer(Scheduler& e) : m_scheduler(&e) {}
 auto TaskContainer::gc_internal() -> std::size_t
 {
-
     if (m_tasks_to_delete.empty())
     {
         return 0;
@@ -126,7 +127,7 @@ auto TaskContainer::gc_internal() -> std::size_t
 
         m_tasks.erase(pos);
     }
-    
+
     m_tasks_to_delete.clear();
 
     return delete_count;
@@ -170,7 +171,7 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         // don't crash if they throw something that isn't derived from std::exception
         LOG(ERROR) << "coro::task_container user_task had unhandle exception, not derived from std::exception.\n";
     }
-    
+
     auto lock = std::unique_lock(m_mutex);
     m_tasks_to_delete.push_back(pos);
     // This has to be done within scope lock to make sure this coroutine task completes before the

@@ -21,6 +21,7 @@
 #include "mrc/coroutines/test_scheduler.hpp"
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <chrono>
 #include <coroutine>
