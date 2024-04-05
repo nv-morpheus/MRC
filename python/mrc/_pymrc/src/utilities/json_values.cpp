@@ -20,7 +20,7 @@
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utils.hpp"
 
-#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR
+#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR, split_string_to_array
 
 #include <boost/algorithm/string.hpp>  // for split
 #include <glog/logging.h>
@@ -48,9 +48,7 @@ namespace {
 
 std::vector<std::string> split_path(const std::string& path)
 {
-    std::vector<std::string> path_parts;
-    boost::split(path_parts, path, boost::is_any_of("/"));
-    return path_parts;
+    return mrc::split_string_to_array(path, "/"s);
 }
 
 struct PyFoundObject

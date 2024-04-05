@@ -17,6 +17,8 @@
 
 #include "./parse_ints.hpp"
 
+#include "mrc/utils/string_utils.hpp"  // for split_string_to_array
+
 #include <glog/logging.h>
 
 #include <iostream>
@@ -31,17 +33,6 @@ int convert_string2_int(const std::string& str)
     return x;
 }
 
-std::vector<std::string> split_string_to_array(const std::string& str, char splitter)
-{
-    std::vector<std::string> tokens;
-    std::stringstream ss(str);
-    std::string temp;
-    while (getline(ss, temp, splitter))  // split into new "lines" based on character
-    {
-        tokens.push_back(temp);
-    }
-    return tokens;
-}
 }  // namespace
 
 namespace mrc {
@@ -49,10 +40,10 @@ namespace mrc {
 std::vector<int> parse_ints(const std::string& data)
 {
     std::vector<int> result;
-    std::vector<std::string> tokens = split_string_to_array(data, ',');
+    std::vector<std::string> tokens = split_string_to_array(data, ",");
     for (auto& token : tokens)
     {
-        std::vector<std::string> range = split_string_to_array(token, '-');
+        std::vector<std::string> range = split_string_to_array(token, "-");
         if (range.size() == 1)
         {
             result.push_back(convert_string2_int(range[0]));

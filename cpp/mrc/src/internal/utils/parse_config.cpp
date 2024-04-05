@@ -19,6 +19,8 @@
 
 #include "./parse_ints.hpp"
 
+#include "mrc/utils/string_utils.hpp"  // for split_string_to_array
+
 #include <glog/logging.h>
 
 #include <cstdint>  // for uint32_t
@@ -26,21 +28,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <utility>  // for move
-
-namespace {
-
-std::vector<std::string> split_string_on(std::string str, char delim)
-{
-    std::vector<std::string> tokens;
-    std::istringstream f(str);
-    std::string s;
-    while (std::getline(f, s, delim))
-    {
-        tokens.push_back(s);
-    }
-    return tokens;
-}
-}  // namespace
 
 namespace mrc {
 
@@ -50,9 +37,9 @@ ConfigurationMap parse_config(std::string config_str)
 
     bool left_wildcard = false;
 
-    for (const auto& entry : split_string_on(config_str, ';'))
+    for (const auto& entry : split_string_to_array(config_str, ";"))
     {
-        auto tokens = split_string_on(entry, ':');
+        auto tokens = split_string_to_array(entry, ":");
 
         int concurrency = 1;
         std::vector<std::string> s;
@@ -76,7 +63,7 @@ ConfigurationMap parse_config(std::string config_str)
             concurrency = std::atoi(tokens[1].c_str());
         case 1:
             // parse segments
-            s = split_string_on(tokens[0], ',');
+            s = split_string_to_array(tokens[0], ",");
             segments.insert(s.begin(), s.end());
             break;
 
@@ -86,7 +73,7 @@ ConfigurationMap parse_config(std::string config_str)
                 "<segment_set>:<concurrency=1>:<group_set:*>;[repeated]");
         }
 
-        config.push_back(std::make_tuple(std::move(segments), concurrency, std::move(groups)));
+        config.emplace_back(std::move(segments), concurrency, std::move(groups));
     }
 
     return config;

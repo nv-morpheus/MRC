@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "mrc/utils/string_utils.hpp"
 
-#include <sstream>
-#include <string>
-#include <vector>
-
-// Concats multiple strings together using ostringstream. Use with MRC_CONCAT_STR("Start [" << my_int << "]")
-#define MRC_CONCAT_STR(strs) ((std::ostringstream&)(std::ostringstream() << strs)).str()
+#include <boost/algorithm/string.hpp>  // for split
 
 namespace mrc {
-
-std::vector<std::string> split_string_to_array(const std::string& str, const std::string& delimiter);
+std::vector<std::string> split_string_to_array(const std::string& str, const std::string& delimiter)
+{
+    std::vector<std::string> results;
+    boost::split(results, str, boost::is_any_of(delimiter));
+    return results;
+}
 
 }  // namespace mrc
