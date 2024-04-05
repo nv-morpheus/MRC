@@ -70,9 +70,9 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
         m_next_tasks.push(pos);
     }
 
-    if (m_max_simultaneous_tasks <= 0 or m_size <= m_max_simultaneous_tasks)
+    if (m_max_simultaneous_tasks == 0 or m_size <= m_max_simultaneous_tasks)
     {
-        start_next_task();
+        try_start_next_task();
     }
 }
 
@@ -140,16 +140,22 @@ auto TaskContainer::gc_internal() -> std::size_t
     return deleted;
 }
 
-void TaskContainer::start_next_task()
+void TaskContainer::try_start_next_task()
 {
-    auto pos = [this]() {
-        std::scoped_lock lk{m_mutex};
-        auto pos = m_next_tasks.front();
-        m_next_tasks.pop();
-        return pos;
-    }();
+    auto lock = std::unique_lock(m_mutex);
 
-    // Start executing from the cleanup task to schedule the user's task onto the thread pool.
+    if (m_next_tasks.empty())
+    {
+        // no tasks to process
+        return;
+    }
+
+    auto pos = m_next_tasks.front();
+    m_next_tasks.pop();
+
+    // release the lock before starting the task
+    lock.unlock();
+
     pos->value().resume();
 }
 
@@ -183,10 +189,7 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         m_size.fetch_sub(1, std::memory_order::relaxed);
     }
 
-    if (not m_next_tasks.empty())
-    {
-        start_next_task();
-    }
+    try_start_next_task();
 
     co_return;
 }

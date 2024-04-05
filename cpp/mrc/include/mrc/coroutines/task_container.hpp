@@ -61,7 +61,7 @@ class TaskContainer
      * @param e Tasks started in the container are scheduled onto this executor.  For tasks created
      *           from a coro::io_scheduler, this would usually be that coro::io_scheduler instance.
      */
-    TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simultaneous_tasks = -1);
+    TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simultaneous_tasks = 0);
 
     TaskContainer(const TaskContainer&)                    = delete;
     TaskContainer(TaskContainer&&)                         = delete;
@@ -140,9 +140,9 @@ class TaskContainer
     auto gc_internal() -> std::size_t;
 
     /**
-     * Starts the next taks in the queue.
+     * Starts the next taks in the queue if one is available and max concurrent tasks has not yet been met.
      */
-    void start_next_task();
+    void try_start_next_task();
 
     /**
      * Encapsulate the users tasks in a cleanup task which marks itself for deletion upon
@@ -175,7 +175,7 @@ class TaskContainer
     /// tasks to be processed in order of start
     std::queue<decltype(m_tasks.end())> m_next_tasks;
     /// maximum number of tasks to be run simultaneously
-    int32_t m_max_simultaneous_tasks;
+    std::size_t m_max_simultaneous_tasks;
 
     friend Scheduler;
 };

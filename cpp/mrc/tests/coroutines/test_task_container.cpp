@@ -59,7 +59,8 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     task.resume();
 
-    while (on->resume_next()) {}
+    while (on->resume_next()) {
+    }
 
     mrc::coroutines::sync_wait(task);
 
