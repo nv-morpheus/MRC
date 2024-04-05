@@ -25,6 +25,8 @@
 #include <chrono>
 #include <coroutine>
 #include <memory>
+#include <ratio>
+#include <thread>
 #include <vector>
 
 class TestCoroTaskContainer : public ::testing::Test
