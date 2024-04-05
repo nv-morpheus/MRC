@@ -38,8 +38,13 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 {
     using namespace std::chrono_literals;
 
+    const int32_t num_threads          = 16;
+    const int32_t num_tasks_per_thread = 16;
+    const int32_t num_tasks            = num_threads * num_tasks_per_thread;
+    const int32_t max_concurrent_tasks = 2;
+
     auto on             = std::make_shared<mrc::coroutines::TestScheduler>();
-    auto task_container = mrc::coroutines::TaskContainer(on, 2);
+    auto task_container = mrc::coroutines::TaskContainer(on, max_concurrent_tasks);
 
     auto start_time = on->time();
 
@@ -54,10 +59,10 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     std::vector<std::thread> threads;
 
-    for (auto i = 0; i < 4; i++)
+    for (auto i = 0; i < num_threads; i++)
     {
         threads.emplace_back([&]() {
-            for (auto i = 0; i < 4; i++)
+            for (auto i = 0; i < num_tasks_per_thread; i++)
             {
                 task_container.start(delay(on, execution_times));
             }
@@ -77,10 +82,10 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     mrc::coroutines::sync_wait(task);
 
-    ASSERT_EQ(execution_times.size(), threads.size() * 4);
+    ASSERT_EQ(execution_times.size(), num_tasks);
 
     for (auto i = 0; i < execution_times.size(); i++)
     {
-        ASSERT_EQ(execution_times[i], start_time + (i / 2 + 1) * 100ms);
+        ASSERT_EQ(execution_times[i], start_time + (i / max_concurrent_tasks + 1) * 100ms);
     }
 }

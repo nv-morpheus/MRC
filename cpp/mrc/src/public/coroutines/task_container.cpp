@@ -30,10 +30,10 @@
 
 namespace mrc::coroutines {
 
-TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simultaneous_tasks) :
+TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_concurrent_tasks) :
   m_scheduler_lifetime(std::move(e)),
   m_scheduler(m_scheduler_lifetime.get()),
-  m_max_simultaneous_tasks(max_simultaneous_tasks)
+  m_max_concurrent_tasks(max_concurrent_tasks)
 {
     if (m_scheduler_lifetime == nullptr)
     {
@@ -44,75 +44,61 @@ TaskContainer::TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_simul
 TaskContainer::~TaskContainer()
 {
     // This will hang the current thread.. but if tasks are not complete thats also pretty bad.
-    while (!this->empty())
+    while (not empty())
     {
-        this->garbage_collect();
+        garbage_collect();
     }
 }
 
 auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) -> void
 {
-    m_size.fetch_add(1, std::memory_order::relaxed);
+    auto lock = std::unique_lock(m_mutex);
 
+    m_size += 1;
+
+    if (cleanup == GarbageCollectPolicy::yes)
     {
-        std::scoped_lock lk{m_mutex};
-
-        if (cleanup == GarbageCollectPolicy::yes)
-        {
-            gc_internal();
-        }
-
-        // Store the task inside a cleanup task for self deletion.
-        auto pos  = m_tasks.emplace(m_tasks.end(), std::nullopt);
-        auto task = make_cleanup_task(std::move(user_task), pos);
-        *pos      = std::move(task);
-
-        m_next_tasks.push(pos);
+        gc_internal();
     }
 
-    if (m_max_simultaneous_tasks == 0 or m_size <= m_max_simultaneous_tasks)
+    // Store the task inside a cleanup task for self deletion.
+    auto pos  = m_tasks.emplace(m_tasks.end(), std::nullopt);
+    auto task = make_cleanup_task(std::move(user_task), pos);
+    *pos      = std::move(task);
+    m_next_tasks.push(pos);
+
+    if (m_max_concurrent_tasks == 0 or m_size <= m_max_concurrent_tasks)
     {
-        try_start_next_task();
+        try_start_next_task(std::move(lock));
     }
 }
 
 auto TaskContainer::garbage_collect() -> std::size_t
 {
-    std::scoped_lock lk{m_mutex};
+    auto lock = std::unique_lock(m_mutex);
     return gc_internal();
 }
 
-auto TaskContainer::delete_task_size() const -> std::size_t
+auto TaskContainer::size() -> std::size_t
 {
-    std::atomic_thread_fence(std::memory_order::acquire);
-    return m_tasks_to_delete.size();
+    auto lock = std::unique_lock(m_mutex);
+    return m_size;
 }
 
-auto TaskContainer::delete_tasks_empty() const -> bool
-{
-    std::atomic_thread_fence(std::memory_order::acquire);
-    return m_tasks_to_delete.empty();
-}
-
-auto TaskContainer::size() const -> std::size_t
-{
-    return m_size.load(std::memory_order::relaxed);
-}
-
-auto TaskContainer::empty() const -> bool
+auto TaskContainer::empty() -> bool
 {
     return size() == 0;
 }
 
-auto TaskContainer::capacity() const -> std::size_t
+auto TaskContainer::capacity() -> std::size_t
 {
-    std::atomic_thread_fence(std::memory_order::acquire);
+    auto lock = std::unique_lock(m_mutex);
     return m_tasks.size();
 }
 
 auto TaskContainer::garbage_collect_and_yield_until_empty() -> Task<void>
 {
-    while (!empty())
+    while (not empty())
     {
         garbage_collect();
         co_await m_scheduler->yield();
@@ -122,28 +108,32 @@ auto TaskContainer::garbage_collect_and_yield_until_empty() -> Task<void>
 TaskContainer::TaskContainer(Scheduler& e) : m_scheduler(&e) {}
 auto TaskContainer::gc_internal() -> std::size_t
 {
-    std::size_t deleted{0};
-    if (!m_tasks_to_delete.empty())
+
+    if (m_tasks_to_delete.empty())
     {
-        for (const auto& pos : m_tasks_to_delete)
-        {
-            // Destroy the cleanup task and the user task.
-            if (pos->has_value())
-            {
-                pos->value().destroy();
-            }
-            m_tasks.erase(pos);
-        }
-        deleted = m_tasks_to_delete.size();
-        m_tasks_to_delete.clear();
+        return 0;
     }
-    return deleted;
+
+    std::size_t delete_count = m_tasks_to_delete.size();
+
+    for (const auto& pos : m_tasks_to_delete)
+    {
+        // Destroy the cleanup task and the user task.
+        if (pos->has_value())
+        {
+            pos->value().destroy();
+        }
+
+        m_tasks.erase(pos);
+    }
+    
+    m_tasks_to_delete.clear();
+
+    return delete_count;
 }
 
-void TaskContainer::try_start_next_task()
+void TaskContainer::try_start_next_task(std::unique_lock<std::mutex> lock)
 {
-    auto lock = std::unique_lock(m_mutex);
-
     if (m_next_tasks.empty())
     {
         // no tasks to process
@@ -180,16 +170,14 @@ auto TaskContainer::make_cleanup_task(Task<void> user_task, task_position_t pos)
         // don't crash if they throw something that isn't derived from std::exception
         LOG(ERROR) << "coro::task_container user_task had unhandle exception, not derived from std::exception.\n";
     }
+    
+    auto lock = std::unique_lock(m_mutex);
+    m_tasks_to_delete.push_back(pos);
+    // This has to be done within scope lock to make sure this coroutine task completes before the
+    // task container object destructs -- if it was waiting on .empty() to become true.
+    m_size -= 1;
 
-    {
-        std::scoped_lock lk{m_mutex};
-        m_tasks_to_delete.push_back(pos);
-        // This has to be done within scope lock to make sure this coroutine task completes before the
-        // task container object destructs -- if it was waiting on .empty() to become true.
-        m_size.fetch_sub(1, std::memory_order::relaxed);
-    }
-
-    try_start_next_task();
+    try_start_next_task(std::move(lock));
 
     co_return;
 }
