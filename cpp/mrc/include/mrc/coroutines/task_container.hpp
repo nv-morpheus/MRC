@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,15 +37,14 @@
  */
 
 #pragma once
-
 #include "mrc/coroutines/task.hpp"
 
-#include <atomic>
 #include <cstddef>
 #include <list>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <vector>
 
 namespace mrc::coroutines {
@@ -60,7 +59,7 @@ class TaskContainer
      * @param e Tasks started in the container are scheduled onto this executor.  For tasks created
      *           from a coro::io_scheduler, this would usually be that coro::io_scheduler instance.
      */
-    TaskContainer(std::shared_ptr<Scheduler> e);
+    TaskContainer(std::shared_ptr<Scheduler> e, std::size_t max_concurrent_tasks = 0);
 
     TaskContainer(const TaskContainer&)                    = delete;
     TaskContainer(TaskContainer&&)                         = delete;
@@ -94,29 +93,19 @@ class TaskContainer
     auto garbage_collect() -> std::size_t;
 
     /**
-     * @return The number of tasks that are awaiting deletion.
-     */
-    auto delete_task_size() const -> std::size_t;
-
-    /**
-     * @return True if there are no tasks awaiting deletion.
-     */
-    auto delete_tasks_empty() const -> bool;
-
-    /**
      * @return The number of active tasks in the container.
      */
-    auto size() const -> std::size_t;
+    auto size() -> std::size_t;
 
     /**
      * @return True if there are no active tasks in the container.
      */
-    auto empty() const -> bool;
+    auto empty() -> bool;
 
     /**
      * @return The capacity of this task manager before it will need to grow in size.
      */
-    auto capacity() const -> std::size_t;
+    auto capacity() -> std::size_t;
 
     /**
      * Will continue to garbage collect and yield until all tasks are complete.  This method can be
@@ -139,6 +128,11 @@ class TaskContainer
     auto gc_internal() -> std::size_t;
 
     /**
+     * Starts the next taks in the queue if one is available and max concurrent tasks has not yet been met.
+     */
+    void try_start_next_task(std::unique_lock<std::mutex> lock);
+
+    /**
      * Encapsulate the users tasks in a cleanup task which marks itself for deletion upon
      * completion.  Simply co_await the users task until its completed and then mark the given
      * position within the task manager as being deletable.  The scheduler's next iteration
@@ -156,7 +150,7 @@ class TaskContainer
     /// thread pools for indeterminate lifetime requests.
     std::mutex m_mutex{};
     /// The number of alive tasks.
-    std::atomic<std::size_t> m_size{};
+    std::size_t m_size{};
     /// Maintains the lifetime of the tasks until they are completed.
     std::list<std::optional<Task<void>>> m_tasks{};
     /// The set of tasks that have completed and need to be deleted.
@@ -166,6 +160,10 @@ class TaskContainer
     std::shared_ptr<Scheduler> m_scheduler_lifetime{nullptr};
     /// This is used internally since io_scheduler cannot pass itself in as a shared_ptr.
     Scheduler* m_scheduler{nullptr};
+    /// tasks to be processed in order of start
+    std::queue<decltype(m_tasks.end())> m_next_tasks;
+    /// maximum number of tasks to be run simultaneously
+    std::size_t m_max_concurrent_tasks;
 
     friend Scheduler;
 };

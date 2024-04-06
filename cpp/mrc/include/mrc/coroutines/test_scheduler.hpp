@@ -81,6 +81,13 @@ class TestScheduler : public Scheduler
     mrc::coroutines::Task<> yield_until(std::chrono::time_point<std::chrono::steady_clock> time) override;
 
     /**
+     * Returns the time according to the scheduler. Time may be progressed by resume_next, resume_for, and resume_until.
+     *
+     * @return the current time according to the scheduler.
+     */
+    std::chrono::time_point<std::chrono::steady_clock> time();
+
+    /**
      * Immediately resumes the next-in-queue coroutine handle.
      *
      *  @return true if more coroutines exist in the queue after resuming, false otherwise.

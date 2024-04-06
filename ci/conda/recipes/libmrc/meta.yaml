@@ -58,7 +58,7 @@ requirements:
     - gtest =1.14
     - libhwloc =2.9.2
     - librmm {{ rapids_version }}
-    - nlohmann_json =3.9
+    - nlohmann_json =3.11
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen =0.10
     - python {{ python }}
@@ -90,12 +90,12 @@ outputs:
         - libgrpc =1.59
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
-        - nlohmann_json =3.9
+        - nlohmann_json =3.11
         - ucx =1.15
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - cuda-version {{ cuda_version }}.*
-        - nlohmann_json =3.9
+        - nlohmann_json =3.11
         - ucx =1.15
         - cuda-cudart
         - boost-cpp =1.84
