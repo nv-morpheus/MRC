@@ -69,7 +69,7 @@ auto TaskContainer::start(Task<void>&& user_task, GarbageCollectPolicy cleanup) 
 
     auto current_task_count = m_size - m_next_tasks.size();
 
-    if (m_max_concurrent_tasks == 0 or current_task_count <= m_max_concurrent_tasks)
+    if (m_max_concurrent_tasks == 0 or current_task_count < m_max_concurrent_tasks)
     {
         try_start_next_task(std::move(lock));
     }

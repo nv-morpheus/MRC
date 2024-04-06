@@ -87,6 +87,6 @@ TEST_F(TestCoroTaskContainer, MaxSimultaneousTasks)
 
     for (auto i = 0; i < execution_times.size(); i++)
     {
-        ASSERT_EQ(execution_times[i], start_time + (i / max_concurrent_tasks + 1) * 100ms);
+        ASSERT_EQ(execution_times[i], start_time + (i / max_concurrent_tasks + 1) * 100ms) << "Failed at index " << i;
     }
 }
