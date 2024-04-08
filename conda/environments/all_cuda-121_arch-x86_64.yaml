@@ -23,7 +23,7 @@ dependencies:
 - cuda-tools=12.1
 - cuda-version=12.1
 - cxx-compiler
-- doxygen=1.10.0
+- doxygen=1.9.2
 - flake8
 - gcovr=5.2
 - gdb
