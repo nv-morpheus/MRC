@@ -20,6 +20,7 @@ on:
     branches:
       - 'branch-*'
       - 'main'
+      - 'pull-request/**'
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -58,6 +59,10 @@ jobs:
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
       # CI pipe allows for an empty value
       pr_info: ''
+      workflow: ${{ github.workflow || 'undef' }}
+      label: ${{ github.event.pull_request.head.label || 'undef' }}
+      head_ref: ${{ github.head_ref || 'undef' }}
+      ref: ${{ github.ref || 'undef' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}

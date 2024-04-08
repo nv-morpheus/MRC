@@ -72,7 +72,7 @@ mkdir -p ${WORKSPACE_TMP}
 
 function print_env_vars() {
     rapids-logger "Environ:"
-    env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|TOKEN" | sort
+    env | grep -v -E "AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|TOKEN" | grep "MRC_CI" | sort
 }
 
 function update_conda_env() {

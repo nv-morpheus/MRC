@@ -43,6 +43,22 @@ on:
         description: 'The JSON string containing the PR information'
         required: true
         type: string
+      workflow:
+        description: 'The workflow file to run'
+        required: false
+        type: string
+      label:
+        description: 'The label to use when uploading the conda package. Leave empty to disable uploading'
+        required: false
+        type: string
+      head_ref:
+        description: 'The head ref of the PR'
+        required: false
+        type: string
+      ref:
+        description: 'The ref of the PR'
+        required: false
+        type: string
     secrets:
       CODECOV_TOKEN:
         required: true
@@ -64,6 +80,10 @@ env:
   RAPIDS_CONDA_RETRY_MAX: "5"
   WORKSPACE: "${{ github.workspace }}/mrc"
   WORKSPACE_TMP: "${{ github.workspace }}/tmp"
+  MRC_CI_WORKFLOW: "${{ inputs.workflow }}"
+  MRC_CI_label: "${{ inputs.label }}"
+  MRC_CI_head_ref: "${{ inputs.head_ref }}"
+  MRC_CI_ref: "${{ inputs.ref }}"
 
 permissions:
   actions: none
@@ -113,224 +133,3 @@ jobs:
         shell: bash
         run: ./mrc/ci/scripts/github/checks.sh
 
-  build:
-    name: Build
-    runs-on: linux-amd64-cpu16
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-    strategy:
-      fail-fast: true
-      matrix:
-        build_cc: ["gcc", "clang"]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: Build:linux:x86_64
-        shell: bash
-        env:
-          BUILD_CC: ${{ matrix.build_cc }}
-        run: ./mrc/ci/scripts/github/build.sh
-
-  test:
-    name: Test
-    needs: [build]
-    runs-on: linux-amd64-gpu-v100-latest-1
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.test_container }}
-      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
-      env:
-        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
-        PARALLEL_LEVEL: '10'
-    strategy:
-      fail-fast: true
-      matrix:
-        build_cc: ["gcc", "clang"]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: Test:linux:x86_64
-        shell: bash
-        env:
-          BUILD_CC: ${{ matrix.build_cc }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: ./mrc/ci/scripts/github/test.sh
-
-  codecov:
-    name: Code Coverage
-    runs-on: linux-amd64-gpu-v100-latest-1
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      env:
-        BUILD_CC: "gcc-coverage"
-        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
-        PARALLEL_LEVEL: '10'
-      image: ${{ inputs.test_container }}
-      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: Build
-        shell: bash
-        run: ./mrc/ci/scripts/github/build.sh
-
-      - name: Test with Codecov
-        shell: bash
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: ./mrc/ci/scripts/github/test_codecov.sh
-
-  documentation:
-    name: Documentation
-    needs: [build]
-    runs-on: linux-amd64-cpu4
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: build_docs
-        shell: bash
-        run: ./mrc/ci/scripts/github/docs.sh
-
-  benchmark:
-    name: Benchmark
-    needs: [build]
-    runs-on: linux-amd64-cpu4
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-      options: --cap-add=sys_nice
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: pre_benchmark
-        shell: bash
-        run: ./mrc/ci/scripts/github/pre_benchmark.sh
-      - name: benchmark
-        shell: bash
-        run: ./mrc/ci/scripts/github/benchmark.sh
-      - name: post_benchmark
-        shell: bash
-        run: ./mrc/ci/scripts/github/post_benchmark.sh
-
-
-  package:
-    name: Package
-    if: ${{ inputs.conda_run_build }}
-    needs: [benchmark, documentation, test]
-    runs-on: linux-amd64-cpu16
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-    strategy:
-      fail-fast: true
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-          fetch-depth: 0
-
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
-
-      - name: conda
-        shell: bash
-        env:
-          CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
-          SCRIPT_ARGS: "${{ inputs.conda_upload_label != '' && 'upload' || '' }}"
-          CONDA_PKG_LABEL: "${{ inputs.conda_upload_label }}"
-        run: ./mrc/ci/scripts/github/conda.sh $SCRIPT_ARGS

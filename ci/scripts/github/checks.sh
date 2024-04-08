@@ -18,23 +18,4 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
-fetch_base_branch
-
-update_conda_env
-
-rapids-logger "Configuring CMake"
-git submodule update --init --recursive
-CMAKE_CLANG_OPTIONS="-DCMAKE_C_COMPILER:FILEPATH=$(which clang) -DCMAKE_CXX_COMPILER:FILEPATH=$(which clang++) -DCMAKE_CUDA_COMPILER:FILEPATH=$(which nvcc)"
-cmake -B build -G Ninja ${CMAKE_CLANG_OPTIONS} ${CMAKE_BUILD_ALL_FEATURES} .
-
-rapids-logger "Building targets that generate source code"
-cmake --build build --target mrc_style_checks --parallel ${PARALLEL_LEVEL}
-
-rapids-logger "Checking versions"
-${MRC_ROOT}/ci/scripts/version_checks.sh
-
-rapids-logger "Running C++ style checks"
-${MRC_ROOT}/ci/scripts/cpp_checks.sh
-
-rapids-logger "Checking copyright headers"
-python ${MRC_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}
+print_env_vars
