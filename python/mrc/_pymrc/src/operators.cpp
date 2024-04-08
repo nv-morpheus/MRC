@@ -17,19 +17,30 @@
 
 #include "pymrc/operators.hpp"
 
+#include "pymrc/node.hpp"
 #include "pymrc/types.hpp"
 #include "pymrc/utilities/acquire_gil.hpp"
 #include "pymrc/utilities/function_wrappers.hpp"
 
+#include "mrc/core/utils.hpp"
+#include "mrc/runnable/context.hpp"
+
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/future_status.hpp>
+#include <boost/fiber/future/promise.hpp>
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pyerrors.h>
 #include <rxcpp/rx.hpp>
 
+#include <chrono>
 #include <exception>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -163,6 +174,192 @@ PythonOperator OperatorsProxy::flatten()
                         },
                         [sink]() {
                             // Forward
+                            sink.on_completed();
+                        });
+                });
+            }};
+}
+
+AsyncOperatorHandler::AsyncOperatorHandler()
+{
+    pybind11::gil_scoped_acquire acquire;
+    m_asyncio = py::module_::import("asyncio");
+}
+
+void AsyncOperatorHandler::wait_completed() const
+{
+    while (m_outstanding > 0)
+    {
+        boost::this_fiber::yield();
+    }
+}
+
+void AsyncOperatorHandler::wait_error()
+{
+    m_cancelled = true;
+    wait_completed();
+}
+
+void AsyncOperatorHandler::process_async_task(PyObjectHolder task, PyObjectSubscriber sink)
+{
+    if (m_cancelled)
+    {
+        return;
+    }
+
+    ++m_outstanding;
+
+    runnable::Context::get_runtime_context().launch_fiber([this, sink, task]() {
+        auto unwinder = Unwinder([this]() {
+            --m_outstanding;
+        });
+
+        using namespace std::chrono_literals;
+
+        auto yielded = this->future_from_async_task(task);
+
+        while (yielded.wait_for(0s) != boost::fibers::future_status::ready)
+        {
+            boost::this_fiber::yield();
+        }
+
+        if (not sink.is_subscribed())
+        {
+            return;
+        }
+
+        try
+        {
+            sink.on_next(yielded.get());
+        } catch (pybind11::error_already_set& ex)
+        {
+            sink.on_error(std::current_exception());
+        }
+    });
+}
+
+void AsyncOperatorHandler::process_async_generator(PyObjectHolder asyncgen, PyObjectSubscriber sink)
+{
+    if (m_cancelled)
+    {
+        return;
+    }
+
+    ++m_outstanding;
+
+    runnable::Context::get_runtime_context().launch_fiber([this, sink, asyncgen]() {
+        auto unwinder = Unwinder([this]() {
+            --m_outstanding;
+        });
+        while (sink.is_subscribed())
+        {
+            using namespace std::chrono_literals;
+
+            auto gil            = std::make_unique<pybind11::gil_scoped_acquire>();
+            PyObjectHolder task = asyncgen.attr("__anext__")();
+            gil.reset();
+            auto yielded = this->future_from_async_task(task);
+
+            while (yielded.wait_for(0s) != boost::fibers::future_status::ready)
+            {
+                boost::this_fiber::yield();
+
+                if (not sink.is_subscribed())
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                sink.on_next(yielded.get());
+            } catch (pybind11::error_already_set& ex)
+            {
+                if (ex.matches(PyExc_StopAsyncIteration))
+                {
+                    return;
+                }
+                sink.on_error(std::current_exception());
+            }
+        }
+    });
+}
+
+boost::fibers::future<PyObjectHolder> AsyncOperatorHandler::future_from_async_task(PyObjectHolder task)
+{
+    py::gil_scoped_acquire acquire;
+
+    auto& ctx    = runnable::Context::get_runtime_context().as<PythonNodeContext>();
+    auto loop    = ctx.get_asyncio_event_loop();
+    auto future  = m_asyncio.attr("run_coroutine_threadsafe")(task, loop);
+    auto promise = std::make_unique<boost::fibers::promise<PyObjectHolder>>();
+
+    auto result_future = promise->get_future();
+
+    future.attr("add_done_callback")(py::cpp_function([result = std::move(promise)](py::object future) {
+        try
+        {
+            auto acquire = std::make_unique<py::gil_scoped_acquire>();
+            auto value   = future.attr("result")();
+            acquire.reset();
+            result->set_value(std::move(py::reinterpret_borrow<py::object>(value)));
+        } catch (std::exception& ex)
+        {
+            result->set_exception(std::current_exception());
+        }
+    }));
+
+    return result_future;
+}
+
+PythonOperator OperatorsProxy::flat_map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
+{
+    return {"flat_map_async", [=](PyObjectObservable source) {
+                return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    auto async_handler = std::make_unique<AsyncOperatorHandler>();
+                    source.subscribe(
+                        sink,
+                        [sink, flatmap_fn, &async_handler = *async_handler](PyHolder value) {
+                            auto acquire  = std::make_unique<py::gil_scoped_acquire>();
+                            auto asyncgen = flatmap_fn(std::move(value));
+                            acquire.reset();
+                            async_handler.process_async_generator(asyncgen, sink);
+                        },
+                        [sink, &async_handler = *async_handler](std::exception_ptr ex) {
+                            // Forward
+                            async_handler.wait_error();
+                            sink.on_error(std::current_exception());
+                        },
+                        [sink, &async_handler = *async_handler]() {
+                            // Forward
+                            async_handler.wait_completed();
+                            sink.on_completed();
+                        });
+                });
+            }};
+}
+
+PythonOperator OperatorsProxy::map_async(PyFuncHolder<PyObjectHolder(pybind11::object)> flatmap_fn)
+{
+    return {"map_async", [=](PyObjectObservable source) {
+                return rxcpp::observable<>::create<PyHolder>([=](PyObjectSubscriber sink) {
+                    auto async_handler = std::make_unique<AsyncOperatorHandler>();
+                    source.subscribe(
+                        sink,
+                        [sink, flatmap_fn, &async_handler = *async_handler](PyHolder value) {
+                            auto acquire = std::make_unique<py::gil_scoped_acquire>();
+                            auto task    = flatmap_fn(std::move(value));
+                            acquire.reset();
+                            async_handler.process_async_task(task, sink);
+                        },
+                        [sink, &async_handler = *async_handler](std::exception_ptr ex) {
+                            // Forward
+                            async_handler.wait_error();
+                            sink.on_error(std::current_exception());
+                        },
+                        [sink, &async_handler = *async_handler]() {
+                            // Forward
+                            async_handler.wait_completed();
                             sink.on_completed();
                         });
                 });

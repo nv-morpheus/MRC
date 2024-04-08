@@ -33,14 +33,19 @@
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
 #include "mrc/runnable/context.hpp"
+#include "mrc/runnable/runner.hpp"  // for Runner
 
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
+#include <stdint.h>  // for uint32_t
 
+#include <atomic>
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <thread>  // for thread
 #include <utility>
 
 // Avoid forward declaring template specialization base classes
@@ -48,6 +53,12 @@
 // IWYU pragma: no_forward_declare mrc::edge::ConvertingEdgeWritable
 
 namespace mrc {
+
+namespace runnable {
+
+class IEngine;
+
+}
 
 namespace edge {
 
@@ -310,14 +321,48 @@ class PythonSinkComponent : public node::RxSinkComponent<InputT>,
     using base_t::base_t;
 };
 
-template <typename InputT, typename OutputT, typename ContextT = mrc::runnable::Context>
-class PythonNode : public node::RxNode<InputT, OutputT, ContextT>,
+class PythonNodeLoopHandle
+{
+  public:
+    PythonNodeLoopHandle();
+    ~PythonNodeLoopHandle();
+
+    uint32_t inc_ref();
+    uint32_t dec_ref();
+
+    PyHolder get_asyncio_event_loop();
+
+  private:
+    uint32_t m_references = 0;
+    PyHolder m_loop;
+    std::atomic<bool> m_loop_ct = false;
+    std::thread m_loop_thread;
+};
+
+class PythonNodeContext : public mrc::runnable::Context
+{
+  public:
+    PythonNodeContext(const mrc::runnable::Runner& runner,
+                      mrc::runnable::IEngine& engine,
+                      std::size_t rank,
+                      std::size_t size);
+    ~PythonNodeContext() override;
+
+    PyHolder get_asyncio_event_loop();
+
+  private:
+    // TODO(cwharris): this should be a thread-specific pointer,
+    std::unique_ptr<PythonNodeLoopHandle> m_loop_handle;
+};
+
+template <typename InputT, typename OutputT>
+class PythonNode : public node::RxNode<InputT, OutputT, PythonNodeContext>,
                    public pymrc::AutoRegSourceAdapter<OutputT>,
                    public pymrc::AutoRegSinkAdapter<InputT>,
                    public pymrc::AutoRegIngressPort<OutputT>,
                    public pymrc::AutoRegEgressPort<InputT>
 {
-    using base_t = node::RxNode<InputT, OutputT>;
+    using base_t = node::RxNode<InputT, OutputT, PythonNodeContext>;
 
   public:
     using typename base_t::stream_fn_t;

@@ -385,7 +385,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node(mrc::seg
                                                                         const std::string& name,
                                                                         pybind11::args operators)
 {
-    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    // auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    auto node = self.make_node_explicit<PythonNode<PyHolder, PyHolder>>(name);
 
     node->object().make_stream(
         [operators = PyObjectHolder(std::move(operators))](const PyObjectObservable& input) -> PyObjectObservable {
@@ -407,7 +408,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
         "make_node_full(name, sub_fn) is deprecated and will be removed in a future version. Use "
         "make_node(name, mrc.core.operators.build(sub_fn)) instead.");
 
-    auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    // auto node = self.make_node<PyHolder, PyHolder, PythonNode>(name);
+    auto node = self.make_node_explicit<PythonNode<PyHolder, PyHolder>>(name);
 
     node->object().make_stream([sub_fn](const PyObjectObservable& input) -> PyObjectObservable {
         return rxcpp::observable<>::create<PyHolder>([input, sub_fn](pymrc::PyObjectSubscriber output) {

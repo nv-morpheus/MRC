@@ -17,15 +17,19 @@
 
 #pragma once
 
-#include <glog/logging.h>
+#include "mrc/types.hpp"  // for Future
 
-#include <cstddef>
-#include <exception>
-#include <sstream>
-#include <string>
+#include <glog/logging.h>  // for CHECK, COMPACT_GOOGLE_LOG_FATAL, LogMessag...
+
+#include <cstddef>     // for size_t
+#include <exception>   // for exception_ptr
+#include <functional>  // for function
+#include <sstream>     // for stringstream
+#include <string>      // for allocator, string
 
 namespace mrc::runnable {
 
+class IEngine;
 class Runner;
 enum class EngineType;
 
@@ -41,7 +45,7 @@ class Context
 {
   public:
     Context() = delete;
-    Context(std::size_t rank, std::size_t size);
+    Context(const Runner& runner, IEngine& engine, std::size_t rank, std::size_t size);
     virtual ~Context() = default;
 
     EngineType execution_context() const;
@@ -53,6 +57,8 @@ class Context
     void unlock();
     void barrier();
     void yield();
+
+    Future<void> launch_fiber(std::function<void()> task);
 
     const std::string& info() const;
 
@@ -69,7 +75,7 @@ class Context
     void set_exception(std::exception_ptr exception_ptr);
 
   protected:
-    void init(const Runner& runner);
+    void start();
     bool status() const;
     void finish();
     virtual void init_info(std::stringstream& ss);
@@ -79,7 +85,8 @@ class Context
     std::size_t m_size;
     std::string m_info{"Uninitialized Context"};
     std::exception_ptr m_exception_ptr{nullptr};
-    const Runner* m_runner{nullptr};
+    const Runner& m_runner;
+    IEngine& m_engine;
 
     virtual void do_lock()                          = 0;
     virtual void do_unlock()                        = 0;

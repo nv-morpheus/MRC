@@ -17,16 +17,17 @@
 
 #include "mrc/runnable/context.hpp"
 
-#include "mrc/runnable/runner.hpp"
+#include "mrc/runnable/runner.hpp"  // for Runner
 
-#include <boost/fiber/fss.hpp>
-#include <glog/logging.h>
+#include <boost/fiber/fss.hpp>           // for fiber_specific_ptr
+#include <boost/fiber/future/async.hpp>  // for async
+#include <glog/logging.h>                // for COMPACT_GOOGLE_LOG_FATAL
 
-#include <cstddef>
-#include <exception>
-#include <sstream>
-#include <string>
-#include <utility>
+#include <cstddef>    // for size_t
+#include <exception>  // for exception_ptr, current_excep...
+#include <sstream>    // for operator<<, basic_ostream
+#include <string>     // for char_traits, operator<<, string
+#include <utility>    // for move
 
 namespace mrc::runnable {
 
@@ -47,7 +48,12 @@ struct FiberLocalContext
 
 }  // namespace
 
-Context::Context(std::size_t rank, std::size_t size) : m_rank(rank), m_size(size) {}
+Context::Context(const Runner& runner, IEngine& engine, std::size_t rank, std::size_t size) :
+  m_runner(runner),
+  m_engine(engine),
+  m_rank(rank),
+  m_size(size)
+{}
 
 EngineType Context::execution_context() const
 {
@@ -93,7 +99,23 @@ void Context::yield()
     do_yield();
 }
 
-void Context::init(const Runner& runner)
+Future<void> Context::launch_fiber(std::function<void()> task)
+{
+    return boost::fibers::async([this, task]() {
+        auto& fiber_local = FiberLocalContext::get();
+        fiber_local.reset(new FiberLocalContext());
+        fiber_local->m_context = this;
+        try
+        {
+            task();
+        } catch (...)
+        {
+            set_exception(std::current_exception());
+        }
+    });
+}
+
+void Context::start()
 {
     auto& fiber_local = FiberLocalContext::get();
     fiber_local.reset(new FiberLocalContext());
@@ -102,8 +124,6 @@ void Context::init(const Runner& runner)
     std::stringstream ss;
     this->init_info(ss);
     m_info = ss.str();
-
-    m_runner = &runner;
 }
 
 void Context::finish()
@@ -127,7 +147,7 @@ void Context::set_exception(std::exception_ptr exception_ptr)
         if (m_exception_ptr == nullptr)
         {
             m_exception_ptr = std::move(std::current_exception());
-            m_runner->kill();
+            m_runner.kill();
         }
     }
 }

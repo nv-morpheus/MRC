@@ -22,6 +22,7 @@
 #include "mrc/core/fiber_meta_data.hpp"
 #include "mrc/core/fiber_pool.hpp"
 #include "mrc/core/task_queue.hpp"
+#include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/types.hpp"
 
@@ -54,6 +55,7 @@ class IEngine
     virtual Future<void> launch_task(std::function<void()> task) = 0;
 
     friend Runner;
+    friend Context;
 };
 
 /**

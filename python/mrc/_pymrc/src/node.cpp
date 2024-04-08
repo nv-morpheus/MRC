@@ -17,4 +17,107 @@
 
 #include "pymrc/node.hpp"
 
-namespace mrc::pymrc {}  // namespace mrc::pymrc
+#include "pymrc/executor.hpp"
+
+#include <pybind11/gil.h>
+#include <pybind11/pybind11.h>  // for module_
+
+#include <memory>
+#include <thread>
+
+namespace mrc {
+
+namespace runnable {
+
+class IEngine;
+
+}
+
+namespace pymrc {
+
+PythonNodeLoopHandle::PythonNodeLoopHandle()
+{
+    pybind11::gil_scoped_acquire acquire;
+
+    auto asyncio = pybind11::module_::import("asyncio");
+
+    auto setup_debugging = create_gil_initializer();
+
+    m_loop        = asyncio.attr("new_event_loop")();
+    m_loop_ct     = false;
+    m_loop_thread = std::thread([loop = m_loop, &ct = m_loop_ct, setup_debugging = std::move(setup_debugging)]() {
+        setup_debugging();
+
+        while (not ct)
+        {
+            {
+                // run event loop once
+                pybind11::gil_scoped_acquire acquire;
+                loop.attr("stop")();
+                loop.attr("run_forever")();
+            }
+
+            std::this_thread::yield();
+        }
+
+        pybind11::gil_scoped_acquire acquire;
+        auto shutdown = loop.attr("shutdown_asyncgens")();
+        loop.attr("run_until_complete")(shutdown);
+        loop.attr("close")();
+    });
+}
+
+PythonNodeLoopHandle::~PythonNodeLoopHandle()
+{
+    if (m_loop_thread.joinable())
+    {
+        m_loop_ct = true;
+        m_loop_thread.join();
+    }
+}
+
+uint32_t PythonNodeLoopHandle::inc_ref()
+{
+    return ++m_references;
+}
+
+uint32_t PythonNodeLoopHandle::dec_ref()
+{
+    return --m_references;
+}
+
+PyHolder PythonNodeLoopHandle::get_asyncio_event_loop()
+{
+    return m_loop;
+}
+
+PythonNodeContext::PythonNodeContext(const mrc::runnable::Runner& runner,
+                                     mrc::runnable::IEngine& engine,
+                                     std::size_t rank,
+                                     std::size_t size) :
+  mrc::runnable::Context(runner, engine, rank, size)
+{
+    if (m_loop_handle == nullptr)
+    {
+        m_loop_handle = std::make_unique<PythonNodeLoopHandle>();
+    }
+
+    m_loop_handle->inc_ref();
+}
+
+PythonNodeContext::~PythonNodeContext()
+{
+    if (m_loop_handle != nullptr and m_loop_handle->dec_ref() == 0)
+    {
+        m_loop_handle.reset();
+    }
+}
+
+PyHolder PythonNodeContext::get_asyncio_event_loop()
+{
+    return m_loop_handle->get_asyncio_event_loop();
+}
+
+}  // namespace pymrc
+
+}  // namespace mrc
