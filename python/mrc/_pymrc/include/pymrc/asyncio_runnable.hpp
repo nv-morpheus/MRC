@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,15 +205,10 @@ class AsyncioRunnable : public AsyncSink<InputT>,
      * @brief Value's read from the sink's channel are fed to this function and yields from the
      * resulting generator are written to the source's channel.
      */
-    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value) = 0;
+    virtual mrc::coroutines::AsyncGenerator<OutputT> on_data(InputT&& value,
+                                                             std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
 
     std::stop_source m_stop_source;
-
-    /**
-     * @brief A semaphore used to control the number of outstanding operations. Acquire one before
-     * beginning a task, and release it when finished.
-     */
-    std::counting_semaphore<8> m_task_tickets{8};
 };
 
 template <typename InputT, typename OutputT>
@@ -242,7 +237,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
         }
 
         // Need to create a loop
-        LOG(INFO) << "AsyncioRunnable::run() > Creating new event loop";
+        DVLOG(10) << "AsyncioRunnable::run() > Creating new event loop";
 
         // Gets (or more likely, creates) an event loop and runs it forever until stop is called
         loop = asyncio.attr("new_event_loop")();
@@ -255,7 +250,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 
         auto py_awaitable = coro::BoostFibersMainPyAwaitable(this->main_task(scheduler));
 
-        LOG(INFO) << "AsyncioRunnable::run() > Calling run_until_complete() on main_task()";
+        DVLOG(10) << "AsyncioRunnable::run() > Calling run_until_complete() on main_task()";
 
         try
         {
@@ -268,9 +263,16 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
         loop.attr("close")();
     }
 
-    // Need to drop the output edges
-    mrc::node::SourceProperties<OutputT>::release_edge_connection();
-    mrc::node::SinkProperties<InputT>::release_edge_connection();
+    // Sync all progress engines if there are more than one
+    ctx.barrier();
+
+    // Only drop the output edges if we are rank 0
+    if (ctx.rank() == 0)
+    {
+        // Need to drop the output edges
+        mrc::node::SourceProperties<OutputT>::release_edge_connection();
+        mrc::node::SinkProperties<InputT>::release_edge_connection();
+    }
 
     if (exception != nullptr)
     {
@@ -281,14 +283,12 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    coroutines::TaskContainer outstanding_tasks(scheduler);
+    coroutines::TaskContainer outstanding_tasks(scheduler, 8);
 
     ExceptionCatcher catcher{};
 
     while (not m_stop_source.stop_requested() and not catcher.has_exception())
     {
-        m_task_tickets.acquire();
-
         InputT data;
 
         auto read_status = co_await this->read_async(data);
@@ -316,7 +316,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     try
     {
         // Call the on_data function
-        auto on_data_gen = this->on_data(std::move(value));
+        auto on_data_gen = this->on_data(std::move(value), on);
 
         auto iter = co_await on_data_gen.begin();
 
@@ -334,8 +334,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     {
         catcher.push_exception(std::current_exception());
     }
-
-    m_task_tickets.release();
 }
 
 template <typename InputT, typename OutputT>

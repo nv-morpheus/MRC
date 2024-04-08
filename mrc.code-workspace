@@ -4,12 +4,17 @@
         // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
         // List of extensions which should be recommended for users of this workspace.
         "recommendations": [
+            "eeyore.yapf",
+            "esbenp.prettier-vscode",
             "josetr.cmake-language-support-vscode",
             "llvm-vs-code-extensions.vscode-clangd",
             "matepek.vscode-catch2-test-adapter",
+            "ms-python.flake8",
+            "ms-python.isort",
+            "ms-python.pylint",
             "ms-vscode.cmake-tools",
             "stkb.rewrap",
-            "twxs.cmake"
+            "twxs.cmake",
         ],
         // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
         "unwantedRecommendations": [
@@ -53,6 +58,10 @@
                     // }
                 ],
                 "stopAtEntry": false,
+                "symbolLoadInfo": {
+                    "exceptionList": "libmrc*.so",
+                    "loadAll": false
+                },
                 "type": "cppdbg"
             },
             {
@@ -187,13 +196,14 @@
             "editor.semanticHighlighting.enabled": true,
             "editor.suggest.insertMode": "replace",
             "editor.tabSize": 4,
-            "editor.wordBasedSuggestions": false,
+            "editor.wordBasedSuggestions": "off",
             "editor.wordWrapColumn": 120
         },
         "[python]": {
             "editor.codeActionsOnSave": {
-                "source.organizeImports": true
+                "source.organizeImports": "explicit"
             },
+            "editor.defaultFormatter": "eeyore.yapf",
             "editor.formatOnSave": true,
             "editor.tabSize": 4
         },
@@ -202,7 +212,9 @@
             "-DMRC_PYTHON_INPLACE_BUILD:BOOL=ON" // Allow inplace build for python. Use `pip install -e .` from the python folder to install
         ],
         "cmake.format.allowOptionalArgumentIndentation": true,
-        "editor.rulers": [120],
+        "editor.rulers": [
+            120
+        ],
         "files.insertFinalNewline": true,
         "files.trimTrailingWhitespace": true,
         "files.watcherExclude": {
@@ -212,8 +224,14 @@
             "**/.hg/store/**": true,
             "**/node_modules/*/**": true
         },
+        "flake8.args": [
+            "--style=${workspaceFolder}/python/setup.cfg"
+        ],
         "isort.args": [
             "--settings-file=${workspaceFolder}/python/setup.cfg"
+        ],
+        "pylint.args": [
+            "--rcfile=${workspaceFolder}/python/.pylintrc"
         ],
         "python.analysis.extraPaths": [
             "python"
@@ -221,18 +239,6 @@
         "python.autoComplete.extraPaths": [
             "./python"
         ],
-        "python.formatting.provider": "yapf",
-        "python.formatting.yapfArgs": [
-            "--style=${workspaceFolder}/python/setup.cfg"
-        ],
-        "python.linting.flake8Args": [
-            "--config=${workspaceFolder}/python/setup.cfg"
-        ],
-        "python.linting.flake8Enabled": true,
-        "python.linting.pylintArgs": [
-            "--rcfile=${workspaceFolder}/python/.pylintrc"
-        ],
-        "python.linting.pylintEnabled": true,
         "python.testing.cwd": "${workspaceFolder}/python",
         "python.testing.pytestArgs": [
             "-s"
@@ -288,6 +294,9 @@
             }
         },
         "testMate.cpp.log.logpanel": true,
-        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x"
+        "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}_*.x",
+        "yapf.args": [
+            "--style=${workspaceFolder}/python/setup.cfg"
+        ]
     }
 }

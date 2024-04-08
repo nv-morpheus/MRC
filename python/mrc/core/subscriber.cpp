@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/gil.h>         // IWYU pragma: keep(for call_guard)
+#include <pybind11/gil.h>         // IWYU pragma: keep
 #include <pybind11/pybind11.h>
 #include <rxcpp/rx.hpp>
 

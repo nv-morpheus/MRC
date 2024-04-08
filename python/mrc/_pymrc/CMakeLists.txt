@@ -1,5 +1,5 @@
 # =============================================================================
-# Copyright (c) 2020-2023, NVIDIA CORPORATION.
+# Copyright (c) 2020-2024, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -37,6 +37,7 @@ add_library(pymrc
   src/utilities/acquire_gil.cpp
   src/utilities/deserializers.cpp
   src/utilities/function_wrappers.cpp
+  src/utilities/json_values.cpp
   src/utilities/object_cache.cpp
   src/utilities/object_wrappers.cpp
   src/utilities/serializers.cpp
@@ -73,7 +74,7 @@ rapids_cmake_install_lib_dir(lib_dir)
 install(
   TARGETS pymrc
   DESTINATION ${lib_dir}
-  EXPORT ${PROJECT_NAME}-core-exports
+  EXPORT ${PROJECT_NAME}-exports
   COMPONENT Python
 )
 

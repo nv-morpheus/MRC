@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,8 @@
 # limitations under the License.
 
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
-{% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
 {% set py_version = environ.get('CONDA_PY', '3.10') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '11.8').split('.')[:2]) %}
-{% set cuda_major = cuda_version.split('.')[0] %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '12.1').split('.')[:2]) %}
 
 package:
   name: libmrc-split
@@ -40,39 +38,32 @@ requirements:
     - {{ compiler("c") }}
     - {{ compiler("cuda") }}
     - {{ compiler("cxx") }}
-    - autoconf >=2.69
     - ccache
-    - cmake >=3.24
-    - cuda-cudart-dev # Needed by CMake to compile a test application
+    - cmake =3.27
     - libtool
-    - ninja
+    - ninja =1.11
     - numactl-libs-cos7-x86_64
-    - pkg-config 0.29.*
+    - pkg-config =0.29
     - sysroot_linux-64 >=2.17
   host:
     # Libraries necessary to build. Keep sorted!
-    - boost-cpp
-    - cuda-cudart-dev
-    - cuda-nvml-dev
-    - doxygen 1.9.2.*
-    - flatbuffers 2.0.*
-    - gflags
-    - glog
-    - gmock 1.13.*
-    - libgrpc
-    - gtest 1.13.*
-    - libabseil
-    - libhwloc 2.9.2
-    - libprotobuf
+    - boost-cpp =1.84
+    - cuda-cudart-dev {{ cuda_version }}.*
+    - cuda-nvml-dev {{ cuda_version }}.*
+    - cuda-nvrtc-dev {{ cuda_version }}.*
+    - cuda-version {{ cuda_version }}.*
+    - doxygen 1.10.0
+    - glog =0.6
+    - libgrpc =1.59
+    - gtest =1.14
+    - libhwloc =2.9.2
     - librmm {{ rapids_version }}
-    - nlohmann_json 3.9.1
+    - nlohmann_json =3.11
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
-    - pybind11-stubgen 0.10
+    - pybind11-stubgen =0.10
     - python {{ python }}
-    - scikit-build >=0.17
-    - ucx
-    # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
-    - cudatoolkit {{ cuda_version }}.*
+    - scikit-build =0.17
+    - ucx =1.15
 
 outputs:
   - name: libmrc
@@ -88,32 +79,26 @@ outputs:
         - {{ compiler("c") }}
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
-        - cmake >=3.24
+        - cmake =3.27
         - numactl-libs-cos7-x86_64
-        - sysroot_linux-64 2.17
+        - sysroot_linux-64 =2.17
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
-        - boost-cpp
-        - cuda-cudart # Needed to allow pin_compatible to work
-        - glog
-        - libgrpc
-        - libabseil # Needed for transitive run_exports from libgrpc. Does not need a version
-        - libhwloc 2.9.2
-        - libprotobuf # Needed for transitive run_exports from libgrpc. Does not need a version
+        - boost-cpp =1.84
+        - cuda-version # Needed to allow pin_compatible to work
+        - glog =0.6
+        - libgrpc =1.59
+        - libhwloc =2.9.2
         - librmm {{ rapids_version }}
-        - nlohmann_json 3.9.*
-        - ucx
-        # Need to specify cudatoolkit to get correct version. Remove once all libraries migrate to cuda-toolkit
-        - cudatoolkit {{ cuda_version }}.*
+        - nlohmann_json =3.11
+        - ucx =1.15
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
-        - {{ pin_compatible('cuda-cudart', min_pin='x.x', max_pin='x') }}
-        - {{ pin_compatible('nlohmann_json', max_pin='x.x')}}
-        - {{ pin_compatible('ucx', max_pin='x.x')}}
-        - boost-cpp # Needed to use pin_run_as_build
-      run_constrained:
-        # Since we dont explicitly require this but other packages might, constrain the versions
-        - {{ pin_compatible('cudatoolkit', min_pin='x.x', max_pin='x') }}
+        - cuda-version {{ cuda_version }}.*
+        - nlohmann_json =3.11
+        - ucx =1.15
+        - cuda-cudart
+        - boost-cpp =1.84
     test:
       script: test_libmrc.sh
       files:

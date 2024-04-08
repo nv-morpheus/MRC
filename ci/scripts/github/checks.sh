@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +35,6 @@ ${MRC_ROOT}/ci/scripts/version_checks.sh
 
 rapids-logger "Running C++ style checks"
 ${MRC_ROOT}/ci/scripts/cpp_checks.sh
-
-rapids-logger "Runing Python style checks"
-${MRC_ROOT}/ci/scripts/python_checks.sh
 
 rapids-logger "Checking copyright headers"
 python ${MRC_ROOT}/ci/scripts/copyright.py --verify-apache-v2 --git-diff-commits ${CHANGE_TARGET} ${GIT_COMMIT}
