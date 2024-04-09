@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>  // for EXPECT_EQ
 
+#include <string>
 #include <vector>
 
 namespace mrc {
