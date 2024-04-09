@@ -36,9 +36,9 @@ ConfigurationMap parse_config(std::string config_str)
 
     bool left_wildcard = false;
 
-    for (const auto& entry : split_string_to_array(config_str, ";"))
+    for (const auto& entry : split_string_to_vector(config_str, ";"))
     {
-        auto tokens = split_string_to_array(entry, ":");
+        auto tokens = split_string_to_vector(entry, ":");
 
         int concurrency = 1;
         std::vector<std::string> s;
@@ -62,7 +62,7 @@ ConfigurationMap parse_config(std::string config_str)
             concurrency = std::atoi(tokens[1].c_str());
         case 1:
             // parse segments
-            s = split_string_to_array(tokens[0], ",");
+            s = split_string_to_vector(tokens[0], ",");
             segments.insert(s.begin(), s.end());
             break;
 

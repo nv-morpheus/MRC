@@ -26,7 +26,7 @@
 // IWYU pragma: no_include <boost/iterator/iterator_facade.hpp>
 
 namespace mrc {
-std::vector<std::string> split_string_to_array(const std::string& str, const std::string& delimiter)
+std::vector<std::string> split_string_to_vector(const std::string& str, const std::string& delimiter)
 {
     std::vector<std::string> results;
     boost::split(results, str, boost::is_any_of(delimiter));

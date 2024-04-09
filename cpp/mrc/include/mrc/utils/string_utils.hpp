@@ -27,6 +27,13 @@
 
 namespace mrc {
 
-std::vector<std::string> split_string_to_array(const std::string& str, const std::string& delimiter);
+/**
+ * @brief Splits a string into an vector of strings based on a delimiter.
+ *
+ * @param str The string to split.
+ * @param delimiter The delimiter to split the string on.
+ * @return std::vector<std::string> vector array of strings.
+ */
+std::vector<std::string> split_string_to_vector(const std::string& str, const std::string& delimiter);
 
 }  // namespace mrc

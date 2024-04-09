@@ -40,10 +40,10 @@ namespace mrc {
 std::vector<int> parse_ints(const std::string& data)
 {
     std::vector<int> result;
-    std::vector<std::string> tokens = split_string_to_array(data, ",");
+    std::vector<std::string> tokens = split_string_to_vector(data, ",");
     for (auto& token : tokens)
     {
-        std::vector<std::string> range = split_string_to_array(token, "-");
+        std::vector<std::string> range = split_string_to_vector(token, "-");
         if (range.size() == 1)
         {
             result.push_back(convert_string2_int(range[0]));

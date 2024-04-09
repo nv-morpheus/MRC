@@ -40,7 +40,7 @@ namespace {
 
 std::vector<std::string> split_path(const std::string& path)
 {
-    return mrc::split_string_to_array(path, "/"s);
+    return mrc::split_string_to_vector(path, "/"s);
 }
 
 struct PyFoundObject
