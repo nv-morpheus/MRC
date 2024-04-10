@@ -17,7 +17,7 @@
 
 #include "./test_mrc.hpp"  // IWYU pragma: associated
 
-#include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/string_utils.hpp"  // for split_string_to_vector
 
 #include <gtest/gtest.h>  // for EXPECT_EQ
 
