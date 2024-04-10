@@ -154,6 +154,7 @@ add_library(libmrc
   src/public/runnable/types.cpp
   src/public/runtime/remote_descriptor.cpp
   src/public/utils/bytes_to_string.cpp
+  src/public/utils/string_utils.cpp
   src/public/utils/thread_utils.cpp
   src/public/utils/type_utils.cpp
 )
@@ -196,7 +197,7 @@ target_compile_definitions(libmrc
     $<$<BOOL:${MRC_BUILD_BENCHMARKS}>:MRC_ENABLE_BENCHMARKING>
 )
 
-if (MRC_ENABLE_CODECOV)
+if(MRC_ENABLE_CODECOV)
   target_compile_definitions(libmrc INTERFACE "MRC_CODECOV_ENABLED")
 endif()
 
@@ -206,7 +207,6 @@ set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # ##################################################################################################
 # - install targets --------------------------------------------------------------------------------
-
 rapids_cmake_install_lib_dir(lib_dir)
 include(CPack)
 include(GNUInstallDirs)
@@ -226,7 +226,6 @@ install(
 
 # ##################################################################################################
 # - subdirectories ---------------------------------------------------------------------------------
-
 if(MRC_BUILD_TESTS)
   add_subdirectory(tests)
 
@@ -239,7 +238,6 @@ endif()
 
 # ##################################################################################################
 # - install export ---------------------------------------------------------------------------------
-
 set(doc_string
   [=[
 Provide targets for mrc.
