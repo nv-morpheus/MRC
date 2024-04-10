@@ -111,6 +111,7 @@
 
 # pybind11
 { "include": [ "@<pybind11/detail/.*.h>", private, "<pybind11/pybind11.h>", "public" ] },
+{ "include": [ "@\"pybind11/detail/.*.h\"", private, "\"pybind11/pybind11.h\"", "public" ] },
 
 
 { "symbol": ["pybind11", "private", "<pybind11/cast.h>", "public"] },
