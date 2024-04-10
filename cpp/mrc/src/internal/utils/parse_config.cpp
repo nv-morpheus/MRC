@@ -19,7 +19,7 @@
 
 #include "./parse_ints.hpp"
 
-#include "mrc/utils/string_utils.hpp"  // for split_string_to_array
+#include "mrc/utils/string_utils.hpp"  // for split_string_to_vector
 
 #include <glog/logging.h>
 
