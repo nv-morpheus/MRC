@@ -70,7 +70,7 @@ jobs:
 
   checks:
     needs: [prepare]
-    if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
+    if: ${{ !fromJSON(needs.prepare.outputs.has_skip_ci_label) && fromJSON(needs.prepare.outputs.is_pr )}}
     secrets: inherit
     uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
     with:
