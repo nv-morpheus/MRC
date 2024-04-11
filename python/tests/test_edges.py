@@ -257,6 +257,16 @@ def add_broadcast(seg: mrc.Builder, *upstream: mrc.SegmentObject):
     return node
 
 
+def add_round_robin_router(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node = mrc.core.node.RoundRobinRouter(seg, "RoundRobinRouter")
+
+    for u in upstream:
+        seg.make_edge(u, node)
+
+    return node
+
+
 # THIS TEST IS CAUSING ISSUES WHEN RUNNING ALL TESTS TOGETHER
 
 # @dataclasses.dataclass
@@ -503,6 +513,79 @@ def test_multi_source_to_broadcast_to_multi_sink(run_segment,
                  is_component=sink2_component,
                  suffix="2",
                  expected_vals_fn=double_on_next)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("sink1_component,sink2_component",
+                         gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink2_py"])
+@pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
+@pytest.mark.parametrize(
+    "source_type,sink1_type,sink2_type",
+    gen_parameters("source",
+                   "sink1",
+                   "sink2",
+                   is_fail_fn=fail_if_more_derived_type,
+                   values={
+                       "base": m.Base, "derived": m.DerivedA
+                   }))
+def test_source_to_round_robin_router_to_sinks(run_segment,
+                                               sink1_component: bool,
+                                               sink2_component: bool,
+                                               source_cpp: bool,
+                                               sink1_cpp: bool,
+                                               sink2_cpp: bool,
+                                               source_type: type,
+                                               sink1_type: type,
+                                               sink2_type: type):
+
+    def segment_init(seg: mrc.Builder):
+
+        source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=False)
+        broadcast = add_round_robin_router(seg, source)
+        add_sink(seg,
+                 broadcast,
+                 is_cpp=sink1_cpp,
+                 data_type=sink1_type,
+                 is_component=sink1_component,
+                 suffix="1",
+                 count=3)
+        add_sink(seg,
+                 broadcast,
+                 is_cpp=sink2_cpp,
+                 data_type=sink2_type,
+                 is_component=sink2_component,
+                 suffix="2",
+                 count=2)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("sink1_component,sink2_component",
+                         gen_parameters("sink1", "sink2", is_fail_fn=lambda x: False))
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("sink1_cpp", [True, False], ids=["sink1_cpp", "sink1_py"])
+@pytest.mark.parametrize("sink2_cpp", [True, False], ids=["sink2_cpp", "sink2_py"])
+def test_multi_source_to_round_robin_router_to_multi_sink(run_segment,
+                                                          sink1_component: bool,
+                                                          sink2_component: bool,
+                                                          source_cpp: bool,
+                                                          sink1_cpp: bool,
+                                                          sink2_cpp: bool):
+
+    def segment_init(seg: mrc.Builder):
+
+        source1 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
+        source2 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="2")
+        broadcast = add_round_robin_router(seg, source1, source2)
+        add_sink(seg, broadcast, is_cpp=sink1_cpp, data_type=m.Base, is_component=sink1_component, suffix="1")
+        add_sink(seg, broadcast, is_cpp=sink2_cpp, data_type=m.Base, is_component=sink2_component, suffix="2")
 
     results = run_segment(segment_init)
 

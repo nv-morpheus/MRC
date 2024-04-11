@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/time.hpp"
 
 #include <coroutine>
 #include <cstddef>
@@ -43,12 +44,19 @@ class Scheduler : public std::enable_shared_from_this<Scheduler>
     /**
      * @brief Suspends the current function and resumes it according to the scheduler's implementation.
      */
-    [[nodiscard]] virtual Task<> schedule() = 0;
+    [[nodiscard]] virtual Task<> yield() = 0;
 
     /**
-     * @brief Suspends the current function and resumes it according to the scheduler's implementation.
+     * @brief Suspends the current function for a given duration and resumes it according to the schedulers's
+     * implementation.
      */
-    [[nodiscard]] virtual Task<> yield() = 0;
+    [[nodiscard]] virtual Task<> yield_for(std::chrono::milliseconds amount) = 0;
+
+    /**
+     * @brief Suspends the current function until a given time point and resumes it according to the schedulers's
+     * implementation.
+     */
+    [[nodiscard]] virtual Task<> yield_until(time_point_t time) = 0;
 };
 
 }  // namespace mrc::coroutines

@@ -70,7 +70,7 @@ jobs:
 
   checks:
     needs: [prepare]
-    if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
+    if: ${{ !fromJSON(needs.prepare.outputs.has_skip_ci_label) && fromJSON(needs.prepare.outputs.is_pr )}}
     secrets: inherit
     uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
     with:
@@ -89,9 +89,9 @@ jobs:
       # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
       conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
       # Build container
-      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240209
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240214
       # Test container
-      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240209
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
     secrets:

@@ -11,6 +11,7 @@
 
 # boost
 { "include": ["@<boost/fiber/future/detail/.*>", "private", "<boost/fiber/future/future.hpp>", "public"] },
+{ "include": ["@<boost/algorithm/string/detail/.*>", "private", "<boost/algorithm/string.hpp>",  "public"] },
 
 # cuda
 { "include": ["<cuda_runtime_api.h>", "private", "<cuda_runtime.h>", "public"] },
@@ -33,6 +34,7 @@
 { "symbol": ["@grpc::.*", "private", "<grpcpp/grpcpp.h>", "public"] },
 
 # nlohmann json
+{ "include": ["<nlohmann/json_fwd.hpp>", "public", "<nlohmann/json.hpp>", "public"] },
 { "include": ["<nlohmann/detail/iterators/iter_impl.hpp>", "private", "<nlohmann/json.hpp>", "public"] },
 { "include": ["<nlohmann/detail/iterators/iteration_proxy.hpp>", "private", "<nlohmann/json.hpp>", "public"] },
 { "include": ["<nlohmann/detail/json_ref.hpp>", "private", "<nlohmann/json.hpp>", "public"] },
@@ -108,7 +110,9 @@
 { "symbol": ["nlohmann::json", "private", "<nlohmann/json_fwd.hpp>", "public"] },
 
 # pybind11
-{ "include": [ "<pybind11/detail/common.h>", private, "<pybind11/pybind11.h>", "public" ] },
+{ "include": [ "@<pybind11/detail/.*.h>", private, "<pybind11/pybind11.h>", "public" ] },
+{ "include": [ "@\"pybind11/detail/.*.h\"", private, "\"pybind11/pybind11.h\"", "public" ] },
+
 
 { "symbol": ["pybind11", "private", "<pybind11/cast.h>", "public"] },
 { "symbol": ["pybind11", "private", "<pybind11/embed.h>", "public"] },

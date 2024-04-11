@@ -23,7 +23,7 @@ dependencies:
 - cuda-tools=12.1
 - cuda-version=12.1
 - cxx-compiler
-- doxygen=1.10.0
+- doxygen=1.9.2
 - flake8
 - gcovr=5.2
 - gdb
@@ -39,7 +39,7 @@ dependencies:
 - libxml2=2.11.6
 - llvmdev=16
 - ninja=1.11
-- nlohmann_json=3.9
+- nlohmann_json=3.11
 - numactl-libs-cos7-x86_64
 - numpy=1.24
 - pkg-config=0.29

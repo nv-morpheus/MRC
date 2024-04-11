@@ -38,8 +38,8 @@ MRC includes both Python and C++ bindings and supports installation via [conda](
 
 ### Prerequisites
 
-- Pascal architecture (Compute capability 6.0) or better
-- NVIDIA driver `450.80.02` or higher
+- Volta architecture (Compute capability 7.0) or better
+- [CUDA 12.1](https://developer.nvidia.com/cuda-12-1-0-download-archive)
 - [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
 - If using Docker:
   - [Docker](https://docs.docker.com/get-docker/)
