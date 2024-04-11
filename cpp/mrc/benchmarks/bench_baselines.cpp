@@ -19,7 +19,6 @@
 #include "mrc/benchmarking/util.hpp"
 
 #include <benchmark/benchmark.h>
-#include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
 #include <chrono>

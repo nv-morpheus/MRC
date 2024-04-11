@@ -17,6 +17,7 @@
 
 #include "mrc/coroutines/test_scheduler.hpp"
 
+#include <chrono>
 #include <compare>
 
 namespace mrc::coroutines {
@@ -56,8 +57,15 @@ mrc::coroutines::Task<> TestScheduler::yield_until(std::chrono::time_point<std::
     co_return co_await TestScheduler::Operation{this, time};
 }
 
+std::chrono::time_point<std::chrono::steady_clock> TestScheduler::time()
+{
+    return m_time;
+}
+
 bool TestScheduler::resume_next()
 {
+    using namespace std::chrono_literals;
+
     if (m_queue.empty())
     {
         return false;
@@ -68,6 +76,11 @@ bool TestScheduler::resume_next()
     m_queue.pop();
 
     m_time = handle.second;
+
+    if (not m_queue.empty())
+    {
+        m_time = m_queue.top().second;
+    }
 
     handle.first.resume();
 
