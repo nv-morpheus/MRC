@@ -113,7 +113,8 @@ template <typename T>
 class AsyncSink : public mrc::node::WritableProvider<T>,
                   public mrc::node::ReadableAcceptor<T>,
                   public mrc::node::SinkChannelOwner<T>,
-                  public pymrc::AutoRegSinkAdapter<T>
+                  public pymrc::AutoRegSinkAdapter<T>,
+                  public pymrc::AutoRegEgressPort<T>
 {
   protected:
     AsyncSink() :
@@ -144,7 +145,8 @@ template <typename T>
 class AsyncSource : public mrc::node::WritableAcceptor<T>,
                     public mrc::node::ReadableProvider<T>,
                     public mrc::node::SourceChannelOwner<T>,
-                    public pymrc::AutoRegSourceAdapter<T>
+                    public pymrc::AutoRegSourceAdapter<T>,
+                    public pymrc::AutoRegIngressPort<T>
 {
   protected:
     AsyncSource() :
