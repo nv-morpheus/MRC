@@ -18,6 +18,8 @@
 #pragma once
 
 #include "pymrc/asyncio_scheduler.hpp"
+#include "pymrc/edge_adapter.hpp"
+#include "pymrc/node.hpp"
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include <boost/fiber/future/async.hpp>
@@ -110,7 +112,9 @@ class BoostFutureAwaitableOperation
 template <typename T>
 class AsyncSink : public mrc::node::WritableProvider<T>,
                   public mrc::node::ReadableAcceptor<T>,
-                  public mrc::node::SinkChannelOwner<T>
+                  public mrc::node::SinkChannelOwner<T>,
+                  public pymrc::AutoRegSinkAdapter<T>,
+                  public pymrc::AutoRegEgressPort<T>
 {
   protected:
     AsyncSink() :
@@ -140,7 +144,9 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
 template <typename T>
 class AsyncSource : public mrc::node::WritableAcceptor<T>,
                     public mrc::node::ReadableProvider<T>,
-                    public mrc::node::SourceChannelOwner<T>
+                    public mrc::node::SourceChannelOwner<T>,
+                    public pymrc::AutoRegSourceAdapter<T>,
+                    public pymrc::AutoRegIngressPort<T>
 {
   protected:
     AsyncSource() :
