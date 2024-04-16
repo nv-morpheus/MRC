@@ -1,3 +1,9 @@
+# MRC 24.03.01 (16 Apr 2024)
+
+## 🐛 Bug Fixes
+
+- Add auto register helpers to AsyncSink and AsyncSource ([#473](https://github.com/nv-morpheus/MRC/pull/473)) [@dagardner-nv](https://github.com/dagardner-nv)
+
 # MRC 24.03.00 (7 Apr 2024)
 
 ## 🚨 Breaking Changes
