@@ -38,6 +38,7 @@ add_executable(test_mrc
   test_node.cpp
   test_pipeline.cpp
   test_segment.cpp
+  test_string_utils.cpp
   test_thread.cpp
   test_type_utils.cpp
 )

@@ -63,7 +63,7 @@ dependencies:
           - librmm=24.02
           - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc
           - ninja=1.11
-          - nlohmann_json=3.9
+          - nlohmann_json=3.11
           - numactl-libs-cos7-x86_64
           - pkg-config=0.29
           - pybind11-stubgen=0.10
@@ -130,7 +130,7 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - doxygen=1.10.0
+          - doxygen=1.9.2
           - python-graphviz
 
   python:
