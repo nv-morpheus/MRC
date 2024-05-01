@@ -30,7 +30,6 @@
 #include <array>
 #include <cstddef>
 #include <memory>
-#include <utility>
 
 namespace test::nodes {
 

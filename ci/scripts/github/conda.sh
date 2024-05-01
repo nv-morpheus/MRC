@@ -16,6 +16,7 @@
 
 set -e
 
+CI_SCRIPT_ARGS="$@"
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
 # Its important that we are in the base environment for the build
@@ -39,4 +40,15 @@ conda info
 rapids-logger "Building Conda Package"
 
 # Run the conda build and upload
-${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh upload
+${MRC_ROOT}/ci/conda/recipes/run_conda_build.sh "${CI_SCRIPT_ARGS}"
+
+if [[ " ${CI_SCRIPT_ARGS} " =~ " upload " ]]; then
+   rapids-logger "Building Conda Package... Done"
+else
+   # if we didn't receive the upload argument, we can still upload the artifact to S3
+   tar cfj "${WORKSPACE_TMP}/conda.tar.bz" "${RAPIDS_CONDA_BLD_OUTPUT_DIR}"
+   ls -lh ${WORKSPACE_TMP}/
+
+   rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
+   upload_artifact "${WORKSPACE_TMP}/conda.tar.bz"
+fi

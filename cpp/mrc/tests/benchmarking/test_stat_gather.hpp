@@ -29,14 +29,12 @@
 #include <rxcpp/rx.hpp>
 
 #include <cstddef>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <random>
 #include <set>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc {
 class TestSegmentResources;

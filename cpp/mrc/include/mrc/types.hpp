@@ -24,33 +24,40 @@
 
 namespace mrc {
 
+// Suppress naming conventions in this file to allow matching std and boost libraries
+// NOLINTBEGIN(readability-identifier-naming)
+
 // Typedefs
 template <typename T>
-using Promise = userspace_threads::promise<T>;  // NOLINT(readability-identifier-naming)
+using Promise = userspace_threads::promise<T>;
 
 template <typename T>
-using Future = userspace_threads::future<T>;  // NOLINT(readability-identifier-naming)
+using Future = userspace_threads::future<T>;
 
 template <typename T>
-using SharedFuture = userspace_threads::shared_future<T>;  // NOLINT(readability-identifier-naming)
+using SharedFuture = userspace_threads::shared_future<T>;
 
-using Mutex = userspace_threads::mutex;  // NOLINT(readability-identifier-naming)
+using Mutex = userspace_threads::mutex;
 
-using CondV = userspace_threads::cv;  // NOLINT(readability-identifier-naming)
+using RecursiveMutex = userspace_threads::recursive_mutex;
 
-using MachineID  = std::uint64_t;  // NOLINT(readability-identifier-naming)
-using InstanceID = std::uint64_t;  // NOLINT(readability-identifier-naming)
-using TagID      = std::uint64_t;  // NOLINT(readability-identifier-naming)
+using CondV = userspace_threads::cv;
+
+using MachineID  = std::uint64_t;
+using InstanceID = std::uint64_t;
+using TagID      = std::uint64_t;
 
 template <typename T>
-using Handle = std::shared_ptr<T>;  // NOLINT(readability-identifier-naming)
+using Handle = std::shared_ptr<T>;
 
-using SegmentID      = std::uint16_t;  // NOLINT(readability-identifier-naming)
-using SegmentRank    = std::uint16_t;  // NOLINT(readability-identifier-naming)
-using SegmentAddress = std::uint32_t;  // NOLINT(readability-identifier-naming) // id + rank
+using SegmentID      = std::uint16_t;
+using SegmentRank    = std::uint16_t;
+using SegmentAddress = std::uint32_t;  // id + rank
 
-using PortName    = std::string;    // NOLINT(readability-identifier-naming)
-using PortID      = std::uint16_t;  // NOLINT(readability-identifier-naming)
-using PortAddress = std::uint64_t;  // NOLINT(readability-identifier-naming)  // id + rank + port
+using PortName    = std::string;
+using PortID      = std::uint16_t;
+using PortAddress = std::uint64_t;  // id + rank + port
+
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace mrc

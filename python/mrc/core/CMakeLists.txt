@@ -16,6 +16,7 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "core")
 
 mrc_add_pybind11_module(common SOURCE_FILES common.cpp)
+mrc_add_pybind11_module(coro SOURCE_FILES coro.cpp)
 mrc_add_pybind11_module(executor SOURCE_FILES executor.cpp)
 mrc_add_pybind11_module(logging SOURCE_FILES logging.cpp)
 mrc_add_pybind11_module(node SOURCE_FILES node.cpp)

@@ -27,6 +27,7 @@
 #include "internal/runtime/partition.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
@@ -41,7 +42,6 @@
 #include <optional>
 #include <ostream>
 #include <utility>
-#include <vector>
 
 namespace mrc::pubsub {
 

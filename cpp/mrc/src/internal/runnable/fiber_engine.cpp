@@ -21,8 +21,6 @@
 #include "mrc/runnable/types.hpp"
 #include "mrc/types.hpp"
 
-#include <boost/fiber/future/future.hpp>
-
 #include <utility>
 
 namespace mrc::runnable {

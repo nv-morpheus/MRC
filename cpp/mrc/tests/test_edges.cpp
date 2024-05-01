@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,10 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
+#include "mrc/edge/edge.hpp"  // for Edge
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
+#include "mrc/edge/edge_holder.hpp"  // for EdgeHolder
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
@@ -28,6 +30,7 @@
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/operators/with_latest_from.hpp"
 #include "mrc/node/operators/zip.hpp"
@@ -46,7 +49,6 @@
 #include <functional>
 #include <initializer_list>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <ostream>
 #include <queue>
@@ -823,6 +825,21 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
 }
 
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
+
+    source->run();
+    sink1->run();
+}
+
 TEST_F(TestEdges, SourceToBroadcastToSink)
 {
     auto source    = std::make_shared<node::TestSource<int>>();
@@ -1389,5 +1406,38 @@ TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
     sink->run();
 
     EXPECT_TRUE(node->stream_fn_called);
+}
+
+template <typename T>
+class TestEdgeHolder : public edge::EdgeHolder<T>
+{
+  public:
+    bool has_active_connection() const
+    {
+        return this->check_active_connection(false);
+    }
+
+    void call_release_edge_connection()
+    {
+        this->release_edge_connection();
+    }
+
+    void call_init_owned_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_owned_edge(std::move(edge));
+    }
+};
+
+TEST_F(TestEdges, EdgeHolderIsConnected)
+{
+    TestEdgeHolder<int> edge_holder;
+    auto edge = std::make_shared<edge::Edge<int>>();
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_release_edge_connection();
+    EXPECT_FALSE(edge_holder.has_active_connection());
 }
 }  // namespace mrc

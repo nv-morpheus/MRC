@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,13 +30,14 @@ option(MRC_BUILD_PYTHON "Enable building the python bindings for MRC" ON)
 option(MRC_BUILD_TESTS "Whether or not to build MRC tests" ON)
 option(MRC_ENABLE_CODECOV "Enable gcov code coverage" OFF)
 option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
+option(MRC_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
 option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies must be installed first in the conda
   environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(MRC_RAPIDS_VERSION "23.06" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "24.02" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
@@ -78,7 +79,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 23.07.00
+  VERSION 24.06.00
   LANGUAGES C CXX
 )
 

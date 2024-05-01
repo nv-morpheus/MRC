@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,12 @@
 
 # Keep all source files sorted!!!
 add_executable(test_mrc
+  coroutines/test_async_generator.cpp
   coroutines/test_event.cpp
+  coroutines/test_io_scheduler.cpp
   coroutines/test_latch.cpp
   coroutines/test_ring_buffer.cpp
+  coroutines/test_task_container.cpp
   coroutines/test_task.cpp
   modules/test_mirror_tap_module.cpp
   modules/test_mirror_tap_orchestrator.cpp
@@ -35,6 +38,7 @@ add_executable(test_mrc
   test_node.cpp
   test_pipeline.cpp
   test_segment.cpp
+  test_string_utils.cpp
   test_thread.cpp
   test_type_utils.cpp
 )

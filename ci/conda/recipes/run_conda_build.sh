@@ -95,11 +95,11 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 23.06}")
+   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 24.02}")
 fi
 
-# And default channels
-CONDA_ARGS_ARRAY+=("-c" "rapidsai" "-c" "nvidia/label/cuda-11.8.0" "-c" "nvidia" "-c" "conda-forge" "-c" "main")
+# And default channels (should match dependencies.yaml)
+CONDA_ARGS_ARRAY+=("-c" "conda-forge" "-c" "rapidsai" "-c" "rapidsai-nightly" "-c" "nvidia")
 
 # Set GIT_VERSION to set the project version inside of meta.yaml
 export GIT_VERSION="$(get_version)"
