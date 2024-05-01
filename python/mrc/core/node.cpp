@@ -20,6 +20,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -57,6 +58,26 @@ PYBIND11_MODULE(node, py_mod)
 
             return node;
         }));
+
+    py::class_<mrc::segment::Object<node::ZipBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
+            // std::shared_ptr<mrc::segment::ObjectProperties> node;
+
+            if (count == 2)
+            {
+                return builder.construct_object<node::Zip<PyObjectHolder, PyObjectHolder>>(name)->as<node::ZipBase>();
+            }
+            else
+            {
+                py::print("Unsupported count!");
+                throw std::runtime_error("Unsupported count!");
+            }
+        }))
+        .def("get_sink", [](mrc::segment::Object<node::ZipBase>& self, size_t index) {
+            return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+        });
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

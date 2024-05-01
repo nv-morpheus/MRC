@@ -164,7 +164,7 @@ std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name
 
 void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
-    this->ns_push(smodule);
+    this->module_push(smodule);
     VLOG(2) << "Initializing module: " << m_namespace_prefix;
     smodule->m_module_instance_registered_namespace = m_namespace_prefix;
     smodule->initialize(*this);
@@ -177,7 +177,8 @@ void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule>
         // Just save to a vector to keep it alive
         m_modules.push_back(persist);
     }
-    this->ns_pop();
+
+    this->module_pop(smodule);
 }
 
 void BuilderDefinition::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
@@ -366,6 +367,24 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         // Save by the original name
         m_egress_ports[local_name] = egress_port;
     }
+
+    // Now register any child objects
+    auto children = object->get_children();
+
+    if (!children.empty())
+    {
+        // Push the namespace for this object
+        this->ns_push(local_name);
+
+        for (auto& [child_name, child_object] : children)
+        {
+            // Add the child object
+            this->add_object(child_name, child_object);
+        }
+
+        // Pop the namespace for this object
+        this->ns_pop(local_name);
+    }
 }
 
 std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_base(const std::string& name)
@@ -402,20 +421,43 @@ std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(con
     };
 }
 
-void BuilderDefinition::ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule)
+std::string BuilderDefinition::module_push(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
     m_module_stack.push_back(smodule);
-    m_namespace_stack.push_back(smodule->component_prefix());
-    m_namespace_prefix =
-        std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return this->ns_push(smodule->component_prefix());
 }
 
-void BuilderDefinition::ns_pop()
+std::string BuilderDefinition::module_pop(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
+    CHECK_EQ(smodule, m_module_stack.back())
+        << "Namespace stack mismatch. Expected " << m_module_stack.back()->component_prefix() << " but got "
+        << smodule->component_prefix();
+
     m_module_stack.pop_back();
+
+    return this->ns_pop(smodule->component_prefix());
+}
+
+std::string BuilderDefinition::ns_push(const std::string& name)
+{
+    m_namespace_stack.push_back(name);
+    m_namespace_prefix =
+        std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return m_namespace_prefix;
+}
+
+std::string BuilderDefinition::ns_pop(const std::string& name)
+{
+    CHECK_EQ(name, m_namespace_stack.back())
+        << "Namespace stack mismatch. Expected " << m_namespace_stack.back() << " but got " << name;
+
     m_namespace_stack.pop_back();
     m_namespace_prefix =
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return m_namespace_prefix;
 }
 
 }  // namespace mrc::segment

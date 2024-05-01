@@ -20,6 +20,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <boost/fiber/mutex.hpp>
@@ -30,91 +31,6 @@
 #include <utility>
 
 namespace mrc::node {
-
-// template <typename... TypesT>
-// class ParameterPackIndexer
-// {
-//   public:
-//     ParameterPackIndexer(TypesT... ts) : ParameterPackIndexer(std::make_index_sequence<sizeof...(TypesT)>{}, ts...)
-//     {}
-
-//     std::tuple<std::tuple<TypesT, std::size_t>...> tup;
-
-//   private:
-//     template <std::size_t... Is>
-//     ParameterPackIndexer(std::index_sequence<Is...> const& /*unused*/, TypesT... ts) : tup{std::make_tuple(ts,
-//     Is)...}
-//     {}
-// };
-
-// template <typename TargetT, typename ListHeadT, typename... ListTailsT>
-// constexpr size_t getTypeIndexInTemplateList()
-// {
-//     if constexpr (std::is_same<TargetT, ListHeadT>::value)
-//     {
-//         return 0;
-//     }
-//     else
-//     {
-//         return 1 + getTypeIndexInTemplateList<TargetT, ListTailsT...>();
-//     }
-// }
-
-namespace detail {
-struct Surely
-{
-    template <class... T>
-    auto operator()(const T&... t) const -> decltype(std::make_tuple(t.value()...))
-    {
-        return std::make_tuple(t.value()...);
-    }
-};
-}  // namespace detail
-
-// template <class... T>
-// inline auto surely(const std::tuple<T...>& tpl) -> decltype(rxcpp::util::apply(tpl, detail::surely()))
-// {
-//     return rxcpp::util::apply(tpl, detail::surely());
-// }
-
-template <class... T>
-inline auto surely2(const std::tuple<T...>& tpl)
-{
-    return std::apply([](auto... args) {
-        return std::make_tuple(args.value()...);
-    });
-}
-
-// template <typename... TypesT>
-// static auto surely2(const std::tuple<TypesT...>& tpl, std::index_sequence<Is...>)
-// {
-//     return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
-// }
-
-// template <size_t i, typename T>
-// struct IndexTypePair
-// {
-//     static constexpr size_t index{i};
-//     using Type = T;
-// };
-
-// template <typename... T>
-// struct make_index_type_tuple_helper
-// {
-//     template <typename V>
-//     struct idx;
-
-//     template <size_t... Indices>
-//     struct idx<std::index_sequence<Indices...>>
-//     {
-//         using tuple_type = std::tuple<IndexTypePair<Indices, T>...>;
-//     };
-
-//     using tuple_type = typename idx<std::make_index_sequence<sizeof...(T)>>::tuple_type;
-// };
-
-// template <typename... T>
-// using make_index_type_tuple = typename make_index_type_tuple_helper<T...>::tuple_type;
 
 template <typename... TypesT>
 class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
@@ -128,9 +44,7 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
   public:
     CombineLatest() :
       m_upstream_holders(build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{}))
-    {
-        // auto a = build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{});
-    }
+    {}
 
     virtual ~CombineLatest() = default;
 
@@ -193,9 +107,9 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
         // Check if we should push the new value
         if (m_values_set == sizeof...(TypesT))
         {
-            // std::tuple<TypesT...> new_val = surely2(m_state);
+            std::tuple<TypesT...> new_val = utils::tuple_surely(m_state);
 
-            // status = this->get_writable_edge()->await_write(std::move(new_val));
+            status = this->get_writable_edge()->await_write(std::move(new_val));
         }
 
         return status;
@@ -209,6 +123,9 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
 
         if (m_completions == sizeof...(TypesT))
         {
+            // Clear the held tuple to remove any dangling values
+            m_state = std::tuple<std::optional<TypesT>...>();
+
             WritableAcceptor<std::tuple<TypesT...>>::release_edge_connection();
         }
     }
