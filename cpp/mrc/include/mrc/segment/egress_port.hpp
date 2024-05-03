@@ -59,6 +59,7 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
 
   public:
     EgressPort(SegmentAddress address, PortName name) :
+      ObjectProperties(ObjectPropertiesState::create<node::RxSinkBase<T>>()),
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_sink(std::make_unique<node::RxNode<T>>())

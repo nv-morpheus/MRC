@@ -219,10 +219,6 @@ class BuilderProxy
                                                                                const std::string& name,
                                                                                pybind11::args operators);
 
-    // static void make_edge(mrc::segment::IBuilder& self,
-    //                       std::shared_ptr<mrc::segment::ObjectProperties> source,
-    //                       std::shared_ptr<mrc::segment::ObjectProperties> sink);
-
     static void make_edge(mrc::segment::IBuilder& self,
                           std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
                                        std::shared_ptr<mrc::edge::IWritableAcceptorBase>,

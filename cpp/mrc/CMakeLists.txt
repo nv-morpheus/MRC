@@ -130,6 +130,7 @@ add_library(libmrc
   src/public/cuda/sync.cpp
   src/public/edge/edge_adapter_registry.cpp
   src/public/edge/edge_builder.cpp
+  src/public/exceptions/checks.cpp
   src/public/exceptions/exception_catcher.cpp
   src/public/manifold/manifold.cpp
   src/public/memory/buffer_view.cpp
@@ -141,6 +142,7 @@ add_library(libmrc
   src/public/modules/sample_modules.cpp
   src/public/modules/segment_modules.cpp
   src/public/node/port_registry.cpp
+  src/public/node/rx_source.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp
   src/public/options/options.cpp

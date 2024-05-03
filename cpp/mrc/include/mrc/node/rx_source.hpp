@@ -104,4 +104,9 @@ void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
     subscription.unsubscribe();
 }
 
+extern template class RxSource<int, runnable::Context>;
+extern template class RxSource<float, runnable::Context>;
+extern template class RxSource<double, runnable::Context>;
+extern template class RxSource<std::string, runnable::Context>;
+
 }  // namespace mrc::node

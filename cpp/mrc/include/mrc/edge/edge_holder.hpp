@@ -211,6 +211,13 @@ class MultiEdgeHolder
         edge_pair.init_owned_edge(std::move(edge));
     }
 
+    void init_connected_edge(KeyT key, std::shared_ptr<Edge<T>> edge)
+    {
+        auto& edge_pair = this->get_edge_pair(key, true);
+
+        edge_pair.init_connected_edge(std::move(edge));
+    }
+
     bool has_edge_connection(const KeyT& key) const
     {
         return m_edges.contains(key);

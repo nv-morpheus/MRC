@@ -20,6 +20,7 @@
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -806,6 +807,54 @@ TEST_F(TestSegment, EnsureMove)
         });
 
         segment.make_edge(src, sink);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
+}
+
+TEST_F(TestSegment, ChildObjects)
+{
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<std::string>("src", [](rxcpp::subscriber<std::string>& s) {
+            if (s.is_subscribed())
+            {
+                std::string data{"this should be moved"};
+                s.on_next(std::move(data));
+
+                EXPECT_EQ(data, ""s);
+            }
+            else
+            {
+                FAIL() << "is_subscrived returned a false";
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::DynamicRouter<std::string, std::string>>(
+            "router",
+            [](const std::string& s) {
+                return s.size() % 2 == 0 ? "even"s : "odd"s;
+            });
+
+        MRC_CHECK2("test"s == "test2"s) << "Uh oh";
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<std::string>("sink1", [](std::string x) {
+            EXPECT_EQ(x, "this should be moved"s);
+        });
+
+        auto sink2 = segment.make_sink<std::string>("sink2", [](std::string x) {
+            EXPECT_EQ(x, "this should be moved"s);
+        });
+
+        segment.make_edge(router->get_child("even"), sink1);
+        segment.make_edge(router->get_child("odd"), sink2);
     };
 
     auto segdef = Segment::create("segment_test", init);

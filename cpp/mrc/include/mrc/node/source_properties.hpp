@@ -201,34 +201,34 @@ class MultiReadableProvider : public virtual MultiSourceProperties<KeyT, T>,
 {
   public:
   protected:
-    bool has_writable_edge(const KeyT& key) const override
+    bool has_readable_edge(const KeyT& key) const override
     {
         return MultiSourceProperties<KeyT, T>::has_edge_connection(key);
     }
 
-    void release_writable_edge(const KeyT& key) override
+    void release_readable_edge(const KeyT& key) override
     {
         return MultiSourceProperties<KeyT, T>::release_edge_connection(key);
     }
 
-    void release_writable_edges() override
+    void release_readable_edges() override
     {
         return MultiSourceProperties<KeyT, T>::release_edge_connections();
     }
 
-    size_t writable_edge_count() const override
+    size_t readable_edge_count() const override
     {
         return MultiSourceProperties<KeyT, T>::edge_connection_count();
     }
 
-    std::vector<KeyT> writable_edge_keys() const override
+    std::vector<KeyT> readable_edge_keys() const override
     {
         return MultiSourceProperties<KeyT, T>::edge_connection_keys();
     }
 
-    std::shared_ptr<edge::WritableEdgeHandle> get_readable_edge_handle(KeyT key) const override
+    std::shared_ptr<edge::ReadableEdgeHandle> get_readable_edge_handle(KeyT key) const override
     {
-        return edge::WritableEdgeHandle::from_typeless(MultiSourceProperties<KeyT, T>::get_edge_connection(key));
+        return edge::ReadableEdgeHandle::from_typeless(MultiSourceProperties<KeyT, T>::get_edge_connection(key));
     }
 };
 

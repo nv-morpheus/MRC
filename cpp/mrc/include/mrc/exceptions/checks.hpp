@@ -17,35 +17,18 @@
 
 #pragma once
 
-#include "mrc/segment/object.hpp"
+#include <string>
 
-#include <glog/logging.h>
+namespace mrc::exceptions {
 
-#include <memory>
-#include <ostream>
-#include <utility>
+void throw_failed_check_exception(const std::string& file,
+                                  const std::string& function,
+                                  unsigned int line,
+                                  const std::string& msg = "");
 
-namespace mrc::segment {
+#define MRC_CHECK2(condition)                                                                     \
+    for (std::stringstream ss; (condition);                                                       \
+         ::mrc::exceptions::throw_failed_check_exception(__FILE__, __func__, __LINE__, ss.str())) \
+    ss
 
-template <typename ResourceT>
-class Component final : public Object<ResourceT>
-{
-  public:
-    Component(std::unique_ptr<ResourceT> resource) :
-      ObjectProperties(ObjectPropertiesState::create<ResourceT>()),
-      Object<ResourceT>(),
-      m_resource(std::move(resource))
-    {}
-    ~Component() final = default;
-
-  private:
-    ResourceT* get_object() const final
-    {
-        CHECK(m_resource);
-        return m_resource.get();
-    }
-
-    std::unique_ptr<ResourceT> m_resource;
-};
-
-}  // namespace mrc::segment
+}  // namespace mrc::exceptions

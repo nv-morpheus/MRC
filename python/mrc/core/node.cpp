@@ -17,10 +17,13 @@
 
 #include "pymrc/node.hpp"
 
+#include "pymrc/utilities/function_wrappers.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -67,6 +70,54 @@ PYBIND11_MODULE(node, py_mod)
 
             return node;
         }));
+
+    // py::class_<mrc::segment::Object<node::ZipBase<std::tuple<int>>>,
+    //            mrc::segment::ObjectProperties,
+    //            std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
+    //     .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
+    //         // std::shared_ptr<mrc::segment::ObjectProperties> node;
+
+    //         if (count == 2)
+    //         {
+    //             return builder.construct_object<node::Zip<PyObjectHolder,
+    //             PyObjectHolder>>(name)->as<node::ZipBase>();
+    //         }
+    //         else
+    //         {
+    //             py::print("Unsupported count!");
+    //             throw std::runtime_error("Unsupported count!");
+    //         }
+    //     }))
+    //     .def("get_sink", [](mrc::segment::Object<node::ZipBase>& self, size_t index) {
+    //         return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+    //     });
+
+    py::class_<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>>>(py_mod, "Router")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, OnDataFunction key_fn) {
+            return builder.construct_object<node::DynamicRouter<std::string, py::object>>(
+                name,
+                [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
+                    return std::string(py::str(key_fn_cap(data)));
+                });
+        }))
+        .def("add_source",
+             [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
+                 std::string key_str = py::str(key);
+
+                 // Add the source to the router
+                 self.object().add_source(key_str);
+
+                 // Then return the child
+                 return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
+             })
+        .def("get_source",
+             [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
+                 std::string key_str = py::str(key);
+
+                 return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
+             });
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

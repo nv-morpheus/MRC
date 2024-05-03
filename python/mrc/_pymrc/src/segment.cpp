@@ -494,26 +494,6 @@ py::dict BuilderProxy::get_current_module_config(mrc::segment::IBuilder& self)
     return cast_from_json(json_config);
 }
 
-// void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
-//                              std::shared_ptr<mrc::segment::ObjectProperties> source,
-//                              std::shared_ptr<mrc::segment::ObjectProperties> sink)
-// {
-//     if (source->is_writable_acceptor() && sink->is_writable_provider())
-//     {
-//         mrc::make_edge_typeless(source->writable_acceptor_base(), sink->writable_provider_base());
-//     }
-//     else if (source->is_readable_provider() && sink->is_readable_acceptor())
-//     {
-//         mrc::make_edge_typeless(source->readable_provider_base(), sink->readable_acceptor_base());
-//     }
-//     else
-//     {
-//         throw std::runtime_error(
-//             "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
-//             "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
-//     }
-// }
-
 void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
                              std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
                                           std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
@@ -522,44 +502,6 @@ void BuilderProxy::make_edge(mrc::segment::IBuilder& self,
                                           std::shared_ptr<mrc::edge::IWritableProviderBase>,
                                           std::shared_ptr<mrc::edge::IReadableAcceptorBase>> sink)
 {
-    // auto source_check = [](auto obj, bool is_writable) {
-    //     return std::visit(mrc::dispatch{
-    //                           [is_writable](std::shared_ptr<mrc::segment::ObjectProperties> node) {
-    //                               return is_writable ? node->is_writable_acceptor() : node->is_readable_provider();
-    //                           },
-    //                           [is_writable](std::shared_ptr<mrc::edge::IWritableAcceptorBase> edge) {
-    //                               return is_writable;
-    //                           },
-    //                           [is_writable](std::shared_ptr<mrc::edge::IReadableProviderBase> edge) {
-    //                               return !is_writable;
-    //                           },
-    //                       },
-    //                       obj);
-    // };
-
-    // auto sink_check = [](auto obj, bool is_writable) {
-    //     return std::visit(mrc::dispatch{
-    //                           [is_writable](std::shared_ptr<mrc::segment::ObjectProperties> node) {
-    //                               return is_writable ? node->is_writable_provider() : node->is_readable_acceptor();
-    //                           },
-    //                           [is_writable](std::shared_ptr<mrc::edge::IWritableProviderBase> edge) {
-    //                               return is_writable;
-    //                           },
-    //                           [is_writable](std::shared_ptr<mrc::edge::IReadableAcceptorBase> edge) {
-    //                               return !is_writable;
-    //                           },
-    //                       },
-    //                       obj);
-    // };
-
-    // using source_variant_t = std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
-    //                                       std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
-    //                                       std::shared_ptr<mrc::edge::IReadableProviderBase>>;
-
-    // using sink_variant_t = std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
-    //                                     std::shared_ptr<mrc::edge::IWritableProviderBase>,
-    //                                     std::shared_ptr<mrc::edge::IReadableAcceptorBase>>;
-
     struct Dispatcher
     {
         std::string base_error =

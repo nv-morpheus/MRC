@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <exception>
 #include <mutex>
 #include <queue>
-
-#pragma once
 
 namespace mrc {
 

@@ -165,7 +165,7 @@ OnErrorFunction::cpp_fn_t OnErrorFunction::build_cpp_function(pybind11::function
     };
 }
 
-OnDataFunction::cpp_fn_t OnDataFunction::build_cpp_function(pybind11::function&& py_fn) const
+UnaryFunction::cpp_fn_t UnaryFunction::build_cpp_function(pybind11::function&& py_fn) const
 {
     if (!py_fn)
     {

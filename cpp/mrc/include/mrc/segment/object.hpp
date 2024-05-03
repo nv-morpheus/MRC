@@ -19,39 +19,156 @@
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
+#include "mrc/exceptions/checks.hpp"
 #include "mrc/node/forward.hpp"
+#include "mrc/node/node_parent.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 #include "mrc/node/type_traits.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runnable/runnable.hpp"
 #include "mrc/segment/forward.hpp"
+#include "mrc/type_traits.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 
+#include <concepts>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
+#include <typeindex>
+#include <utility>
 
 namespace mrc::segment {
 
-struct ObjectProperties
+template <typename ObjectT>
+class SharedObject;
+
+template <typename ObjectT>
+class ReferencedObject;
+
+struct ObjectPropertiesState
 {
+    std::string name;
+
+    std::string type_name;
+
+    bool is_sink;
+    bool is_source;
+
+    // std::optional<std::type_index> sink_type             = std::nullopt;
+    // std::optional<std::type_index> sink_type_no_holder   = std::nullopt;
+    // std::optional<std::type_index> source_type           = std::nullopt;
+    // std::optional<std::type_index> source_type_no_holder = std::nullopt;
+
+    bool is_writable_acceptor;
+    bool is_writable_provider;
+    bool is_readable_acceptor;
+    bool is_readable_provider;
+
+    bool is_runnable;
+
+    template <typename ObjectT>
+    static std::shared_ptr<ObjectPropertiesState> create()
+    {
+        auto state = std::shared_ptr<ObjectPropertiesState>(new ObjectPropertiesState());
+
+        state->type_name = std::string(::mrc::type_name<ObjectT>());
+
+        state->is_sink   = std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
+        state->is_source = std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
+
+        // if constexpr (is_base_of_template_v<node::SinkProperties, ObjectT>)
+        // {
+        //     using sink_t = typename ObjectT::sink_type_t;
+
+        //     state->sink_type_no_holder = deduce_type_index<sink_t>(true);
+        //     state->sink_type           = deduce_type_index<sink_t>(false);
+        // }
+        // else
+        // {
+        //     CHECK(!state->is_sink) << "Object is a sink but does not have sink properties";
+        // }
+
+        // if constexpr (is_base_of_template_v<node::SourceProperties, ObjectT>)
+        // {
+        //     using source_t = typename ObjectT::source_type_t;
+
+        //     state->source_type_no_holder = deduce_type_index<source_t>(true);
+        //     state->source_type           = deduce_type_index<source_t>(false);
+        // }
+        // else
+        // {
+        //     CHECK(!state->is_source) << "Object is a source but does not have source properties";
+        // }
+
+        state->is_writable_acceptor = std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
+        state->is_writable_provider = std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
+        state->is_readable_acceptor = std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
+        state->is_readable_provider = std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
+
+        state->is_runnable = std::is_base_of_v<runnable::Runnable, ObjectT>;
+
+        return state;
+    }
+
+  private:
+    ObjectPropertiesState() = default;
+};
+
+class ObjectProperties
+{
+  public:
     virtual ~ObjectProperties() = 0;
 
-    virtual void set_name(const std::string& name) = 0;
-    virtual std::string name() const               = 0;
-    virtual std::string type_name() const          = 0;
+    virtual void set_name(const std::string& name)
+    {
+        m_state->name = name;
+    }
 
-    virtual bool is_sink() const   = 0;
-    virtual bool is_source() const = 0;
+    virtual std::string name() const
+    {
+        return m_state->name;
+    }
 
-    virtual std::type_index sink_type(bool ignore_holder = false) const   = 0;
+    virtual std::string type_name() const
+    {
+        return m_state->type_name;
+    }
+
+    virtual bool is_sink() const
+    {
+        return m_state->is_sink;
+    }
+
+    virtual bool is_source() const
+    {
+        return m_state->is_source;
+    }
+
+    virtual std::type_index sink_type(bool ignore_holder = false) const = 0;
+
     virtual std::type_index source_type(bool ignore_holder = false) const = 0;
 
-    virtual bool is_writable_acceptor() const = 0;
-    virtual bool is_writable_provider() const = 0;
-    virtual bool is_readable_acceptor() const = 0;
-    virtual bool is_readable_provider() const = 0;
+    bool is_writable_acceptor() const
+    {
+        return m_state->is_writable_acceptor;
+    }
+    bool is_writable_provider() const
+    {
+        return m_state->is_writable_provider;
+    }
+    bool is_readable_acceptor() const
+    {
+        return m_state->is_readable_acceptor;
+    }
+    bool is_readable_provider() const
+    {
+        return m_state->is_readable_provider;
+    }
 
     virtual edge::IWritableAcceptorBase& writable_acceptor_base() = 0;
     virtual edge::IWritableProviderBase& writable_provider_base() = 0;
@@ -70,10 +187,27 @@ struct ObjectProperties
     template <typename T>
     edge::IReadableAcceptor<T>& readable_acceptor_typed();
 
-    virtual bool is_runnable() const = 0;
+    virtual bool is_runnable() const
+    {
+        return m_state->is_runnable;
+    }
 
     virtual runnable::LaunchOptions& launch_options()             = 0;
     virtual const runnable::LaunchOptions& launch_options() const = 0;
+
+    virtual std::shared_ptr<ObjectProperties> get_child(const std::string& name) const           = 0;
+    virtual const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const = 0;
+
+  protected:
+    ObjectProperties(std::shared_ptr<ObjectPropertiesState> state) : m_state(std::move(state)) {}
+
+    std::shared_ptr<const ObjectPropertiesState> get_state() const
+    {
+        return m_state;
+    }
+
+  private:
+    std::shared_ptr<ObjectPropertiesState> m_state;
 };
 
 inline ObjectProperties::~ObjectProperties() = default;
@@ -146,37 +280,56 @@ edge::IReadableProvider<T>& ObjectProperties::readable_provider_typed()
     return *readable_provider;
 }
 
-// Object
+// template <typename T>
+// std::type_index deduce_type_index(bool ignore_holder)
+// {
+//     if (ignore_holder)
+//     {
+//         if constexpr (is_smart_ptr_v<T>)
+//         {
+//             return std::type_index(typeid(typename T::element_type));
+//         }
+//     }
 
+//     return std::type_index(typeid(T));
+// }
+
+// Object
 template <typename ObjectT>
-class Object : public virtual ObjectProperties
+class Object : public virtual ObjectProperties, public std::enable_shared_from_this<Object<ObjectT>>
 {
   public:
+    // Object(const Object& other) : m_name(other.m_name), m_launch_options(other.m_launch_options) {}
+    // Object(Object&&)                 = delete;
+    // Object& operator=(const Object&) = delete;
+    // Object& operator=(Object&&)      = delete;
+
     ObjectT& object();
+    const ObjectT& object() const;
 
-    std::string name() const final;
-    std::string type_name() const final;
+    // std::string name() const final;
+    // std::string type_name() const final;
 
-    bool is_source() const final;
-    bool is_sink() const final;
+    // bool is_source() const final;
+    // bool is_sink() const final;
 
     std::type_index sink_type(bool ignore_holder) const final;
     std::type_index source_type(bool ignore_holder) const final;
 
-    bool is_writable_acceptor() const final;
-    bool is_writable_provider() const final;
-    bool is_readable_acceptor() const final;
-    bool is_readable_provider() const final;
+    // bool is_writable_acceptor() const final;
+    // bool is_writable_provider() const final;
+    // bool is_readable_acceptor() const final;
+    // bool is_readable_provider() const final;
 
     edge::IWritableAcceptorBase& writable_acceptor_base() final;
     edge::IWritableProviderBase& writable_provider_base() final;
     edge::IReadableAcceptorBase& readable_acceptor_base() final;
     edge::IReadableProviderBase& readable_provider_base() final;
 
-    bool is_runnable() const final
-    {
-        return static_cast<bool>(std::is_base_of_v<runnable::Runnable, ObjectT>);
-    }
+    // bool is_runnable() const final
+    // {
+    //     return static_cast<bool>(std::is_base_of_v<runnable::Runnable, ObjectT>);
+    // }
 
     runnable::LaunchOptions& launch_options() final
     {
@@ -198,15 +351,119 @@ class Object : public virtual ObjectProperties
         return m_launch_options;
     }
 
+    std::shared_ptr<ObjectProperties> get_child(const std::string& name) const override
+    {
+        this->sync_children(name);
+
+        MRC_CHECK2(!m_children.contains(name)) << "Child " << name << " not found in " << this->name();
+
+        return m_children.at(name);
+    }
+
+    const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const override
+    {
+        this->sync_children();
+
+        return m_children;
+    }
+
+    template <typename U>
+        requires std::derived_from<ObjectT, U>
+    std::shared_ptr<ReferencedObject<U>> as() const
+    {
+        auto shared_object = std::make_shared<ReferencedObject<U>>(*const_cast<Object*>(this));
+
+        return shared_object;
+    }
+
   protected:
-    // Move to protected to allow only the IBuilder to set the name
-    void set_name(const std::string& name) override;
+    Object() : ObjectProperties(ObjectPropertiesState::create<ObjectT>())
+    {
+        LOG(INFO) << "Creating Object '" << this->name() << "' with type: " << this->type_name();
+    }
+
+    template <typename U>
+        requires std::derived_from<U, ObjectT>
+    Object(const Object<U>& other) :
+      ObjectProperties(other),
+      m_launch_options(other.m_launch_options),
+      m_children(other.m_children)
+    {
+        LOG(INFO) << "Copying Object '" << this->name() << "' from type: " << other.type_name()
+                  << " to type: " << this->type_name();
+    }
+
+    void sync_children(std::optional<std::string> child_name = std::nullopt) const
+    {
+        if constexpr (is_base_of_template<node::DynamicNodeParent, ObjectT>::value)
+        {
+            using child_node_t = typename ObjectT::child_node_t;
+
+            // Get a map of the name/reference pairs from the NodeParent
+            auto children_ref_pairs = this->object().get_children_refs(child_name);
+
+            // Remove any children that are not in the new list
+            for (auto it = m_children.begin(); it != m_children.end();)
+            {
+                if (children_ref_pairs.find(it->first) == children_ref_pairs.end())
+                {
+                    it = m_children.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            // Now loop and add any new children
+            for (const auto& [name, child_ref] : children_ref_pairs)
+            {
+                if (m_children.find(name) == m_children.end())
+                {
+                    auto child_obj = std::make_shared<SharedObject<child_node_t>>(this->shared_from_this(), child_ref);
+
+                    child_obj->set_name(name);
+
+                    m_children.emplace(name, std::move(child_obj));
+                }
+            }
+        }
+
+        if constexpr (is_base_of_template<node::NodeParent, ObjectT>::value)
+        {
+            using child_types_t = typename ObjectT::child_types_t;
+
+            // Get the name/reference pairs from the NodeParent
+            auto children_ref_pairs = this->object().get_children_refs();
+
+            // Finally, convert the tuple of name/ChildObject pairs into a map
+            utils::tuple_for_each(
+                children_ref_pairs,
+                [this]<typename ChildIndexT>(std::pair<std::string, std::reference_wrapper<ChildIndexT>>& pair,
+                                             size_t idx) {
+                    auto child_obj = std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(), pair.second);
+
+                    child_obj->set_name(pair.first);
+
+                    m_children.emplace(pair.first, std::move(child_obj));
+                });
+        }
+    }
+
+    // // Move to protected to allow only the IBuilder to set the name
+    // void set_name(const std::string& name) override;
 
   private:
-    std::string m_name{};
-
     virtual ObjectT* get_object() const = 0;
+
     runnable::LaunchOptions m_launch_options;
+
+    mutable std::map<std::string, std::shared_ptr<ObjectProperties>> m_children;
+    // std::map<std::string, std::function<std::shared_ptr<ObjectProperties>()>> m_create_children_fns;
+
+    // Allows converting to base classes
+    template <typename U>
+    friend class Object;
 };
 
 template <typename ObjectT>
@@ -223,34 +480,47 @@ ObjectT& Object<ObjectT>::object()
 }
 
 template <typename ObjectT>
-void Object<ObjectT>::set_name(const std::string& name)
+const ObjectT& Object<ObjectT>::object() const
 {
-    m_name = name;
+    auto* node = get_object();
+    if (node == nullptr)
+    {
+        LOG(ERROR) << "Error accessing the Object API; Nodes are moved from the Segment API to the Executor "
+                      "when the pipeline is started.";
+        throw exceptions::MrcRuntimeError("Object API is unavailable - expected if the Pipeline is running.");
+    }
+    return *node;
 }
 
-template <typename ObjectT>
-std::string Object<ObjectT>::name() const
-{
-    return m_name;
-}
+// template <typename ObjectT>
+// void Object<ObjectT>::set_name(const std::string& name)
+// {
+//     m_name = name;
+// }
 
-template <typename ObjectT>
-std::string Object<ObjectT>::type_name() const
-{
-    return std::string(::mrc::type_name<ObjectT>());
-}
+// template <typename ObjectT>
+// std::string Object<ObjectT>::name() const
+// {
+//     return m_name;
+// }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_source() const
-{
-    return std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
-}
+// template <typename ObjectT>
+// std::string Object<ObjectT>::type_name() const
+// {
+//     return std::string(::mrc::type_name<ObjectT>());
+// }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_sink() const
-{
-    return std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
-}
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_source() const
+// {
+//     return std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
+// }
+
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_sink() const
+// {
+//     return std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
+// }
 
 template <typename ObjectT>
 std::type_index Object<ObjectT>::sink_type(bool ignore_holder) const
@@ -276,83 +546,130 @@ std::type_index Object<ObjectT>::source_type(bool ignore_holder) const
     return base->source_type(ignore_holder);
 }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_writable_acceptor() const
-{
-    return std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
-}
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_writable_acceptor() const
+// {
+//     return std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
+// }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_writable_provider() const
-{
-    return std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
-}
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_writable_provider() const
+// {
+//     return std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
+// }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_readable_acceptor() const
-{
-    return std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
-}
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_readable_acceptor() const
+// {
+//     return std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
+// }
 
-template <typename ObjectT>
-bool Object<ObjectT>::is_readable_provider() const
-{
-    return std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
-}
+// template <typename ObjectT>
+// bool Object<ObjectT>::is_readable_provider() const
+// {
+//     return std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
+// }
 
 template <typename ObjectT>
 edge::IWritableAcceptorBase& Object<ObjectT>::writable_acceptor_base()
 {
-    if constexpr (!std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a IIngressAcceptorBase";
-        throw exceptions::MrcRuntimeError("Object is not a IIngressAcceptorBase");
-    }
+    // if constexpr (!std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>)
+    // {
+    //     LOG(ERROR) << type_name() << " is not a IIngressAcceptorBase";
+    //     throw exceptions::MrcRuntimeError("Object is not a IIngressAcceptorBase");
+    // }
 
     auto* base = dynamic_cast<edge::IWritableAcceptorBase*>(get_object());
-    CHECK(base);
+    CHECK(base) << type_name() << " is not a IIngressAcceptorBase";
     return *base;
 }
 
 template <typename ObjectT>
 edge::IWritableProviderBase& Object<ObjectT>::writable_provider_base()
 {
-    if constexpr (!std::is_base_of_v<edge::IWritableProviderBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a IIngressProviderBase";
-        throw exceptions::MrcRuntimeError("Object is not a IIngressProviderBase");
-    }
+    // if constexpr (!std::is_base_of_v<edge::IWritableProviderBase, ObjectT>)
+    // {
+    //     LOG(ERROR) << type_name() << " is not a IIngressProviderBase";
+    //     throw exceptions::MrcRuntimeError("Object is not a IIngressProviderBase");
+    // }
 
     auto* base = dynamic_cast<edge::IWritableProviderBase*>(get_object());
-    CHECK(base);
+    CHECK(base) << type_name() << " is not a IWritableProviderBase";
     return *base;
 }
 
 template <typename ObjectT>
 edge::IReadableAcceptorBase& Object<ObjectT>::readable_acceptor_base()
 {
-    if constexpr (!std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a IEgressAcceptorBase";
-        throw exceptions::MrcRuntimeError("Object is not a IEgressAcceptorBase");
-    }
+    // if constexpr (!std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>)
+    // {
+    //     LOG(ERROR) << type_name() << " is not a IEgressAcceptorBase";
+    //     throw exceptions::MrcRuntimeError("Object is not a IEgressAcceptorBase");
+    // }
 
     auto* base = dynamic_cast<edge::IReadableAcceptorBase*>(get_object());
-    CHECK(base);
+    CHECK(base) << type_name() << " is not a IReadableAcceptorBase";
     return *base;
 }
 
 template <typename ObjectT>
 edge::IReadableProviderBase& Object<ObjectT>::readable_provider_base()
 {
-    if constexpr (!std::is_base_of_v<edge::IReadableProviderBase, ObjectT>)
-    {
-        LOG(ERROR) << type_name() << " is not a IEgressProviderBase";
-        throw exceptions::MrcRuntimeError("Object is not a IEgressProviderBase");
-    }
+    // if constexpr (!std::is_base_of_v<edge::IReadableProviderBase, ObjectT>)
+    // {
+    //     LOG(ERROR) << type_name() << " is not a IEgressProviderBase";
+    //     throw exceptions::MrcRuntimeError("Object is not a IEgressProviderBase");
+    // }
 
     auto* base = dynamic_cast<edge::IReadableProviderBase*>(get_object());
-    CHECK(base);
+    CHECK(base) << type_name() << " is not a IReadableProviderBase";
     return *base;
 }
+
+template <typename ObjectT>
+class SharedObject final : public Object<ObjectT>
+{
+  public:
+    SharedObject(std::shared_ptr<const ObjectProperties> owner, std::reference_wrapper<ObjectT> resource) :
+      ObjectProperties(ObjectPropertiesState::create<ObjectT>()),
+      m_owner(std::move(owner)),
+      m_resource(std::move(resource))
+    {}
+    ~SharedObject() final = default;
+
+  private:
+    ObjectT* get_object() const final
+    {
+        return &m_resource.get();
+    }
+
+    std::shared_ptr<const ObjectProperties> m_owner;
+    std::reference_wrapper<ObjectT> m_resource;
+};
+
+template <typename ObjectT>
+class ReferencedObject final : public Object<ObjectT>
+{
+  public:
+    template <typename U>
+        requires std::derived_from<U, ObjectT>
+    ReferencedObject(Object<U>& other) :
+      ObjectProperties(other),
+      Object<ObjectT>(other),
+      m_owner(other.shared_from_this()),
+      m_resource(other.object())
+    {}
+
+    ~ReferencedObject() final = default;
+
+  private:
+    ObjectT* get_object() const final
+    {
+        return &m_resource.get();
+    }
+
+    std::shared_ptr<const ObjectProperties> m_owner;
+    std::reference_wrapper<ObjectT> m_resource;
+};
+
 }  // namespace mrc::segment

@@ -82,7 +82,7 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
 {
   public:
     using cpp_fn_t       = std::function<ReturnT(ArgsT...)>;
-    using return_t       = std::conditional_t<std::is_same<ReturnT, void>::value, pybind11::detail::void_type, ReturnT>;
+    using return_t       = std::conditional_t<std::is_same_v<ReturnT, void>, pybind11::detail::void_type, ReturnT>;
     using function_ptr_t = ReturnT (*)(ArgsT...);
 
     // Default construct with an empty object. Needed by pybind11 casters
@@ -210,12 +210,12 @@ struct OnCompleteFunction : public PyFuncHolder<void()>
 
 // OnDataFunction, like other lambdas for operators, takes normal pybind11::object. This is because these functions will
 // be interfacing directly with user python code and is never holding the objects in memory after the call is made
-struct OnDataFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
+struct UnaryFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
 {
   public:
     using base_t = PyFuncHolder<pybind11::object(pybind11::object)>;
 
-    OnDataFunction() = default;
+    UnaryFunction() = default;
 
     static constexpr auto Signature = pybind11::detail::_("Callable[[object], object]");
 
@@ -224,6 +224,9 @@ struct OnDataFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
 
     cpp_fn_t build_cpp_function(pybind11::function&& py_fn) const override;
 };
+
+struct OnDataFunction : public UnaryFunction
+{};
 
 #pragma GCC visibility pop
 
@@ -383,6 +386,10 @@ class type_caster<mrc::pymrc::OnErrorFunction> : public PyFuncWrapperCasterBase<
 
 template <>
 class type_caster<mrc::pymrc::OnCompleteFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnCompleteFunction>
+{};
+
+template <>
+class type_caster<mrc::pymrc::UnaryFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::UnaryFunction>
 {};
 
 template <>
