@@ -52,6 +52,9 @@ class ReferencedObject;
 
 struct ObjectPropertiesState
 {
+    // Will be set by the builder class when the object is added to a segment
+    bool is_initialized{false};
+
     std::string name;
 
     std::string type_name;
@@ -122,12 +125,26 @@ struct ObjectPropertiesState
 class ObjectProperties
 {
   public:
-    virtual ~ObjectProperties() = 0;
+    virtual ~ObjectProperties() = default;
 
-    virtual void set_name(const std::string& name)
+    void initialize(std::string name)
     {
+        MRC_CHECK2(!this->get_state()->is_initialized) << "Object '" << name << "' is already initialized.";
+
+        // Set our name first
         m_state->name = name;
+
+        // Initialize the children
+        this->init_children();
+
+        // Set the initialized flag
+        m_state->is_initialized = true;
     }
+
+    // virtual void set_name(const std::string& name)
+    // {
+    //     m_state->name = name;
+    // }
 
     virtual std::string name() const
     {
@@ -207,10 +224,10 @@ class ObjectProperties
     }
 
   private:
+    virtual void init_children() = 0;
+
     std::shared_ptr<ObjectPropertiesState> m_state;
 };
-
-inline ObjectProperties::~ObjectProperties() = default;
 
 template <typename T>
 edge::IWritableAcceptor<T>& ObjectProperties::writable_acceptor_typed()
@@ -353,17 +370,13 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
 
     std::shared_ptr<ObjectProperties> get_child(const std::string& name) const override
     {
-        this->sync_children(name);
-
-        MRC_CHECK2(!m_children.contains(name)) << "Child " << name << " not found in " << this->name();
+        MRC_CHECK2(m_children.contains(name)) << "Child " << name << " not found in " << this->name();
 
         return m_children.at(name);
     }
 
     const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const override
     {
-        this->sync_children();
-
         return m_children;
     }
 
@@ -393,39 +406,27 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
                   << " to type: " << this->type_name();
     }
 
-    void sync_children(std::optional<std::string> child_name = std::nullopt) const
+    // // Move to protected to allow only the IBuilder to set the name
+    // void set_name(const std::string& name) override;
+
+  private:
+    virtual ObjectT* get_object() const = 0;
+
+    void init_children() override
     {
         if constexpr (is_base_of_template<node::DynamicNodeParent, ObjectT>::value)
         {
             using child_node_t = typename ObjectT::child_node_t;
 
             // Get a map of the name/reference pairs from the NodeParent
-            auto children_ref_pairs = this->object().get_children_refs(child_name);
-
-            // Remove any children that are not in the new list
-            for (auto it = m_children.begin(); it != m_children.end();)
-            {
-                if (children_ref_pairs.find(it->first) == children_ref_pairs.end())
-                {
-                    it = m_children.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
+            auto children_ref_pairs = this->object().get_children_refs();
 
             // Now loop and add any new children
             for (const auto& [name, child_ref] : children_ref_pairs)
             {
-                if (m_children.find(name) == m_children.end())
-                {
-                    auto child_obj = std::make_shared<SharedObject<child_node_t>>(this->shared_from_this(), child_ref);
+                auto child_obj = std::make_shared<SharedObject<child_node_t>>(this->shared_from_this(), child_ref);
 
-                    child_obj->set_name(name);
-
-                    m_children.emplace(name, std::move(child_obj));
-                }
+                m_children.emplace(name, std::move(child_obj));
             }
         }
 
@@ -443,22 +444,14 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
                                              size_t idx) {
                     auto child_obj = std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(), pair.second);
 
-                    child_obj->set_name(pair.first);
-
                     m_children.emplace(pair.first, std::move(child_obj));
                 });
         }
     }
 
-    // // Move to protected to allow only the IBuilder to set the name
-    // void set_name(const std::string& name) override;
-
-  private:
-    virtual ObjectT* get_object() const = 0;
-
     runnable::LaunchOptions m_launch_options;
 
-    mutable std::map<std::string, std::shared_ptr<ObjectProperties>> m_children;
+    std::map<std::string, std::shared_ptr<ObjectProperties>> m_children;
     // std::map<std::string, std::function<std::shared_ptr<ObjectProperties>()>> m_create_children_fns;
 
     // Allows converting to base classes

@@ -29,8 +29,10 @@
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
+#include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <sstream>
@@ -95,29 +97,25 @@ PYBIND11_MODULE(node, py_mod)
     py::class_<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>>>(py_mod, "Router")
-        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, OnDataFunction key_fn) {
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           std::vector<std::string> router_keys,
+                           OnDataFunction key_fn) {
             return builder.construct_object<node::DynamicRouter<std::string, py::object>>(
                 name,
+                router_keys,
                 [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
                     return std::string(py::str(key_fn_cap(data)));
                 });
         }))
-        .def("add_source",
-             [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
-                 std::string key_str = py::str(key);
+        .def(
+            "get_source",
+            [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
+                std::string key_str = py::str(key);
 
-                 // Add the source to the router
-                 self.object().add_source(key_str);
-
-                 // Then return the child
-                 return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
-             })
-        .def("get_source",
-             [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
-                 std::string key_str = py::str(key);
-
-                 return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
-             });
+                return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
+            },
+            py::arg("key"));
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

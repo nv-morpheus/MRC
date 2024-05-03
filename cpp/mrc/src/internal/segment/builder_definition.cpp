@@ -341,8 +341,8 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
 
     m_objects[local_name] = object;
 
-    // Now set the name on the object
-    object->set_name(global_name);
+    // Now initialize the object with the name (this will generate children as well)
+    object->initialize(global_name);
 
     if (object->is_runnable())
     {

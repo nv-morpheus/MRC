@@ -243,7 +243,9 @@ class TaggedRouter : public Router<KeyT, std::pair<KeyT, T>, T>
 };
 
 template <typename KeyT, typename InputT>
-class DynamicRouterComponent : public ForwardingWritableProvider<InputT>, public MultiWritableAcceptor<KeyT, InputT>
+class DynamicRouterComponent : public ForwardingWritableProvider<InputT>,
+                               public MultiWritableAcceptor<KeyT, InputT>,
+                               public DynamicNodeParent<edge::IWritableAcceptor<InputT>>
 {
   public:
     using this_t   = DynamicRouterComponent<KeyT, InputT>;
@@ -251,19 +253,13 @@ class DynamicRouterComponent : public ForwardingWritableProvider<InputT>, public
     using input_t  = InputT;
     using key_fn_t = std::function<key_t(const input_t&)>;
 
-    DynamicRouterComponent(key_fn_t key_fn) : m_key_fn(std::move(key_fn)) {}
-
-    std::shared_ptr<edge::IWritableAcceptor<input_t>> add_source(const KeyT& key) const
+    DynamicRouterComponent(std::vector<key_t> route_keys, key_fn_t key_fn) : m_key_fn(std::move(key_fn))
     {
-        if (!m_downstreams.contains(key))
+        // Create a downstream for each key
+        for (const auto& key : route_keys)
         {
-            // Get non-const reference to this to allow for const_cast
-            auto* non_const_this = const_cast<this_t*>(this);
-
-            non_const_this->m_downstreams[key] = std::make_shared<Downstream>(*non_const_this, key);
+            m_downstreams[key] = std::make_shared<Downstream>(*this, key);
         }
-
-        return m_downstreams.at(key);
     }
 
     std::shared_ptr<edge::IWritableAcceptor<input_t>> get_source(const KeyT& key) const
@@ -278,9 +274,23 @@ class DynamicRouterComponent : public ForwardingWritableProvider<InputT>, public
 
     void drop_source(const key_t& key)
     {
+        // TODO(MDD): Do we want to even support this?
         m_downstreams.erase(key);
 
         // MultiSourceProperties<key_t, input_t>::release_writable_edge(key);
+    }
+
+    std::map<std::string, std::reference_wrapper<typename this_t::child_node_t>> get_children_refs(
+        std::optional<std::string> child_name = std::nullopt) const override
+    {
+        std::map<std::string, std::reference_wrapper<typename this_t::child_node_t>> children;
+
+        for (const auto& [key, downstream] : m_downstreams)
+        {
+            children.emplace(key, std::ref(*downstream));
+        }
+
+        return children;
     }
 
   protected:
@@ -342,19 +352,15 @@ class DynamicRouter : public WritableProvider<InputT>,
     using input_t  = InputT;
     using key_fn_t = std::function<key_t(const input_t&)>;
 
-    DynamicRouter(key_fn_t key_fn) : m_key_fn(std::move(key_fn))
+    DynamicRouter(std::vector<key_t> route_keys, key_fn_t key_fn) : m_key_fn(std::move(key_fn))
     {
         SinkChannelOwner<InputT>::set_channel(std::make_unique<mrc::channel::BufferedChannel<input_t>>());
-    }
 
-    std::shared_ptr<edge::IWritableAcceptor<input_t>> add_source(const KeyT& key)
-    {
-        if (!m_downstreams.contains(key))
+        // Create a downstream for each key
+        for (const auto& key : route_keys)
         {
             m_downstreams[key] = std::make_shared<Downstream>(*this, key);
         }
-
-        return m_downstreams.at(key);
     }
 
     std::shared_ptr<edge::IWritableAcceptor<input_t>> get_source(const KeyT& key) const
@@ -369,6 +375,7 @@ class DynamicRouter : public WritableProvider<InputT>,
 
     void drop_source(const key_t& key)
     {
+        // TODO(MDD): Do we want to even support this?
         m_downstreams.erase(key);
 
         // MultiSourceProperties<key_t, input_t>::release_writable_edge(key);
@@ -377,12 +384,6 @@ class DynamicRouter : public WritableProvider<InputT>,
     std::map<std::string, std::reference_wrapper<typename this_t::child_node_t>> get_children_refs(
         std::optional<std::string> child_name = std::nullopt) const override
     {
-        // Lazy add if its being requested
-        if (child_name.has_value() && !m_downstreams.contains(child_name.value()))
-        {
-            const_cast<this_t*>(this)->add_source(child_name.value());
-        }
-
         std::map<std::string, std::reference_wrapper<typename this_t::child_node_t>> children;
 
         for (const auto& [key, downstream] : m_downstreams)

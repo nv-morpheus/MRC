@@ -835,13 +835,12 @@ TEST_F(TestSegment, ChildObjects)
             s.on_completed();
         });
 
-        auto router = segment.construct_object<node::DynamicRouter<std::string, std::string>>(
+        auto router = segment.construct_object<node::DynamicRouterComponent<std::string, std::string>>(
             "router",
+            std::vector<std::string>{"even", "odd"},
             [](const std::string& s) {
                 return s.size() % 2 == 0 ? "even"s : "odd"s;
             });
-
-        MRC_CHECK2("test"s == "test2"s) << "Uh oh";
 
         segment.make_edge(src, router);
 
