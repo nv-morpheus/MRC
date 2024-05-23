@@ -54,7 +54,7 @@ requirements:
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
     - glog =0.7
-    - libgrpc =1.59
+    - libgrpc =1.62
     - gtest =1.14
     - libhwloc =2.9.2
     - librmm {{ rapids_version }}
@@ -87,7 +87,7 @@ outputs:
         - boost-cpp =1.84
         - cuda-version # Needed to allow pin_compatible to work
         - glog =0.7
-        - libgrpc =1.59
+        - libgrpc =1.62
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
         - nlohmann_json =3.11
