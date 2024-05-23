@@ -53,7 +53,7 @@ requirements:
     - cuda-nvrtc-dev {{ cuda_version }}.*
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
-    - glog =0.6
+    - glog =0.7
     - libgrpc =1.59
     - gtest =1.14
     - libhwloc =2.9.2
@@ -86,7 +86,7 @@ outputs:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp =1.84
         - cuda-version # Needed to allow pin_compatible to work
-        - glog =0.6
+        - glog =0.7
         - libgrpc =1.59
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
