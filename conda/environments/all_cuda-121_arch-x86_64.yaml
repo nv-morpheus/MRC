@@ -27,13 +27,13 @@ dependencies:
 - flake8
 - gcovr=5.2
 - gdb
-- glog=0.6
+- glog=0.7
 - gtest=1.14
 - gxx=11.2
 - include-what-you-use=0.20
 - libclang-cpp=16
 - libclang=16
-- libgrpc=1.59
+- libgrpc=1.62
 - libhwloc=2.9.2
 - librmm=24.06
 - libxml2=2.11.6

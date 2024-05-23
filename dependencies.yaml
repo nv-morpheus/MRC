@@ -55,10 +55,10 @@ dependencies:
           - cmake=3.27
           - cuda-nvcc
           - cxx-compiler
-          - glog=0.6
+          - glog=0.7
           - gtest=1.14
           - gxx=11.2
-          - libgrpc=1.59
+          - libgrpc=1.62
           - libhwloc=2.9.2
           - librmm=24.06
           - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc

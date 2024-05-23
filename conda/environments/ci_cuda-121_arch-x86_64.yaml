@@ -20,11 +20,11 @@ dependencies:
 - cxx-compiler
 - doxygen=1.9.2
 - gcovr=5.2
-- glog=0.6
+- glog=0.7
 - gtest=1.14
 - gxx=11.2
 - include-what-you-use=0.20
-- libgrpc=1.59
+- libgrpc=1.62
 - libhwloc=2.9.2
 - librmm=24.06
 - libxml2=2.11.6
