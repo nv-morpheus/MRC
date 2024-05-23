@@ -21,6 +21,7 @@ cd mrc/
 git checkout ${GIT_BRANCH}
 git pull
 git checkout ${GIT_COMMIT}
+git fetch --tags
 
 export MRC_ROOT=$(pwd)
 export WORKSPACE=${MRC_ROOT}
