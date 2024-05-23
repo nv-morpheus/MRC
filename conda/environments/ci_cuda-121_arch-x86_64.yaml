@@ -26,7 +26,7 @@ dependencies:
 - include-what-you-use=0.20
 - libgrpc=1.59
 - libhwloc=2.9.2
-- librmm=24.02
+- librmm=24.06
 - libxml2=2.11.6
 - ninja=1.11
 - nlohmann_json=3.11
