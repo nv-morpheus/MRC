@@ -68,7 +68,7 @@ dependencies:
           - pkg-config=0.29
           - pybind11-stubgen=0.10
           - scikit-build=0.17
-          - ucx=1.16
+          - ucx=1.15
 
   checks:
     common:
