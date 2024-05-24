@@ -63,7 +63,7 @@ requirements:
     - pybind11-stubgen =0.10
     - python {{ python }}
     - scikit-build =0.17
-    - ucx =1.15
+    - ucx =1.16
 
 outputs:
   - name: libmrc
@@ -91,12 +91,12 @@ outputs:
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
         - nlohmann_json =3.11
-        - ucx =1.15
+        - ucx =1.16
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - cuda-version {{ cuda_version }}.*
         - nlohmann_json =3.11
-        - ucx =1.15
+        - ucx =1.16
         - cuda-cudart
         - boost-cpp =1.84
     test:
