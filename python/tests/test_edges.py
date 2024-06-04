@@ -252,12 +252,15 @@ def add_broadcast(seg: mrc.Builder, *upstream: mrc.SegmentObject):
     return node
 
 
-def add_router(seg: mrc.Builder, *upstream: mrc.SegmentObject, key_fn: typing.Callable[[typing.Any], str] = None):
+def add_router(seg: mrc.Builder,
+               *upstream: mrc.SegmentObject,
+               router_keys: list[str],
+               key_fn: typing.Callable[[typing.Any], str] = None):
 
     if (key_fn is None):
         key_fn = lambda _: "a"
 
-    node = mrc.core.node.Router(seg, "Router", key_fn=key_fn)
+    node = mrc.core.node.Router(seg, "Router", router_keys=router_keys, key_fn=key_fn)
 
     for i, u in enumerate(upstream):
         seg.make_edge(u, node)
@@ -689,7 +692,7 @@ def test_source_to_router_to_multi_sink(run_segment, source_cpp: bool):
             return "a"
 
         source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
-        router = add_router(seg, source, key_fn=determine_key)
+        router = add_router(seg, source, router_keys=["a", "b", "c"], key_fn=determine_key)
         add_sink(seg, router.get_source("a"), is_cpp=False, data_type=m.Base, is_component=False, suffix="a")
         add_sink(seg, router.get_source("b"), is_cpp=False, data_type=m.Base, is_component=False, suffix="b")
         add_sink(seg, router.get_source("c"), is_cpp=False, data_type=m.Base, is_component=False, suffix="c")

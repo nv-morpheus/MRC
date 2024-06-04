@@ -101,13 +101,18 @@ PYBIND11_MODULE(node, py_mod)
                            std::string name,
                            std::vector<std::string> router_keys,
                            OnDataFunction key_fn) {
-            return builder.construct_object<node::DynamicRouter<std::string, py::object>>(
-                name,
-                router_keys,
-                [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
-                    return std::string(py::str(key_fn_cap(data)));
-                });
-        }))
+                 return builder.construct_object<node::DynamicRouter<std::string, py::object>>(
+                     name,
+                     router_keys,
+                     [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
+                         return std::string(py::str(key_fn_cap(data)));
+                     });
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("router_keys"),
+             py::arg("key_fn"))
         .def(
             "get_source",
             [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {

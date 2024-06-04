@@ -361,12 +361,13 @@ def test_ingress_egress_custom_type_construction():
 
 def test_dynamic_port_get_ingress_egress():
 
-    def gen_data():
-        yield 1
-        yield 2
-        yield 3
-
     def init1(builder: mrc.Builder):
+
+        def gen_data():
+            yield 1
+            yield 2
+            yield 3
+
         source = builder.make_source("source", gen_data)
         egress = builder.get_egress("b")
 
@@ -375,7 +376,7 @@ def test_dynamic_port_get_ingress_egress():
     def init2(builder: mrc.Builder):
 
         def on_next(input):
-            pass
+            print(input)
 
         def on_error():
             pass
