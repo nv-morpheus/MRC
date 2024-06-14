@@ -20,7 +20,7 @@ function(morpheus_utils_configure_UCXX)
   list(APPEND CMAKE_MESSAGE_CONTEXT "UCXX")
 
   morpheus_utils_assert_cpm_initialized()
-  set(UCXX_VERSION "0.37.00" CACHE STRING "Which version of UCXX to use.")
+  set(UCXX_VERSION "0.38.00" CACHE STRING "Which version of UCXX to use.")
 
   find_package(ucx REQUIRED)
 
@@ -34,8 +34,8 @@ function(morpheus_utils_configure_UCXX)
     INSTALL_EXPORT_SET
       ${PROJECT_NAME}-core-exports
     CPM_ARGS
-      GIT_REPOSITORY          https://github.com/pentschev/ucxx.git
-      GIT_TAG                 mrc-all
+      GIT_REPOSITORY          https://github.com/rapidsai/ucxx.git
+      GIT_TAG                 branch-0.38
       GIT_SHALLOW             TRUE
       SOURCE_SUBDIR           cpp
       OPTIONS                 "UCXX_ENABLE_RMM ON"

@@ -120,7 +120,7 @@ class DataPlaneResources2
 {
   public:
     DataPlaneResources2();
-    ~DataPlaneResources2();
+    virtual ~DataPlaneResources2();
 
     void set_instance_id(uint64_t instance_id);
     bool has_instance_id() const;
@@ -222,6 +222,8 @@ class DataPlaneResources2
     channel::Egress<std::unique_ptr<runtime::RemoteDescriptor2>>& get_inbound_channel() const;
 
   private:
+    virtual std::shared_ptr<runtime::RemoteDescriptorImpl2> get_descriptor(uint64_t object_id);
+
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
 
     std::shared_ptr<ucxx::Context> m_context;

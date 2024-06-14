@@ -39,9 +39,8 @@
 #include "internal/ucx/registration_cache.hpp"
 
 #include "mrc/channel/status.hpp"
-#include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
-#include "mrc/codable/fundamental_types.hpp"
+#include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/codable/type_traits.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/adaptors.hpp"
@@ -82,7 +81,6 @@
 #include <optional>
 #include <ostream>
 #include <stop_token>
-#include <thread>
 #include <utility>
 
 using namespace mrc;
@@ -91,7 +89,7 @@ using namespace mrc::memory::literals;
 class DataPlaneResources2Tester : public data_plane::DataPlaneResources2
 {
   public:
-    std::shared_ptr<runtime::RemoteDescriptorImpl2> get_descriptor(uint64_t object_id)
+    std::shared_ptr<runtime::RemoteDescriptorImpl2> get_descriptor(uint64_t object_id) override
     {
         return m_remote_descriptor_by_id[object_id];
     }

@@ -327,6 +327,15 @@ std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::
     m_endpoints_by_address[address] = endpoint;
     m_endpoints_by_id[instance_id]  = endpoint;
 
+    auto close_request = endpoint->close();
+
+    endpoint->cancelInflightRequests();
+
+    while (close_request->isCompleted() == false)
+    {
+        this->progress();
+    }
+
     DVLOG(10) << "Created endpoint with address: " << address;
 
     return endpoint;

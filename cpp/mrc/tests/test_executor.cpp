@@ -116,6 +116,8 @@ class TestExecutor : public ::testing::Test
                     // #endif
                 }
 
+                VLOG(10) << "Sent all messages";
+
                 s.on_completed();
             });
 
