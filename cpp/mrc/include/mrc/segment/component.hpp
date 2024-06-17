@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,11 @@ class Component final : public Object<ResourceT>
   public:
     Component(std::unique_ptr<ResourceT> resource) : m_resource(std::move(resource)) {}
     ~Component() final = default;
+
+    void destroy() final
+    {
+        m_resource.reset();
+    }
 
   private:
     ResourceT* get_object() const final

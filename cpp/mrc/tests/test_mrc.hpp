@@ -40,6 +40,14 @@ namespace mrc {
     #define SKIP_IF_CODE_COV()
 #endif
 
+// Similar to EXPECT_DEBUG_DEATH, this macro is used when a given statement is expected to abort in debug mode,
+// but throw an exception in release
+#ifdef NDEBUG
+    #define EXPECT_DEATH_OR_THROW(statement, regex, exception) EXPECT_THROW(statement, exception);
+#else
+    #define EXPECT_DEATH_OR_THROW(statement, regex, exception) EXPECT_DEATH(statement, regex);
+#endif
+
 // class that records when it's moved/copied
 struct CopyMoveCounter
 {

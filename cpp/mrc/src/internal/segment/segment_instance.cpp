@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -329,6 +329,14 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";
     return nullptr;
+}
+
+void SegmentInstance::shutdown()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    DVLOG(10) << m_name << " - " << info() << " - shutting down segment";
+    do_service_kill();
+    m_builder->shutdown();
 }
 
 }  // namespace mrc::segment
