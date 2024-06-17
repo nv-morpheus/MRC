@@ -18,6 +18,8 @@
 #pragma once
 
 #include "pymrc/asyncio_scheduler.hpp"
+#include "pymrc/edge_adapter.hpp"
+#include "pymrc/node.hpp"
 #include "pymrc/utilities/object_wrappers.hpp"
 
 #include <boost/fiber/future/async.hpp>
@@ -110,7 +112,9 @@ class BoostFutureAwaitableOperation
 template <typename T>
 class AsyncSink : public mrc::node::WritableProvider<T>,
                   public mrc::node::ReadableAcceptor<T>,
-                  public mrc::node::SinkChannelOwner<T>
+                  public mrc::node::SinkChannelOwner<T>,
+                  public pymrc::AutoRegSinkAdapter<T>,
+                  public pymrc::AutoRegEgressPort<T>
 {
   protected:
     AsyncSink() :
@@ -140,7 +144,9 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
 template <typename T>
 class AsyncSource : public mrc::node::WritableAcceptor<T>,
                     public mrc::node::ReadableProvider<T>,
-                    public mrc::node::SourceChannelOwner<T>
+                    public mrc::node::SourceChannelOwner<T>,
+                    public pymrc::AutoRegSourceAdapter<T>,
+                    public pymrc::AutoRegIngressPort<T>
 {
   protected:
     AsyncSource() :
@@ -209,12 +215,6 @@ class AsyncioRunnable : public AsyncSink<InputT>,
                                                              std::shared_ptr<mrc::coroutines::Scheduler> on) = 0;
 
     std::stop_source m_stop_source;
-
-    /**
-     * @brief A semaphore used to control the number of outstanding operations. Acquire one before
-     * beginning a task, and release it when finished.
-     */
-    std::counting_semaphore<8> m_task_tickets{8};
 };
 
 template <typename InputT, typename OutputT>
@@ -269,9 +269,16 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
         loop.attr("close")();
     }
 
-    // Need to drop the output edges
-    mrc::node::SourceProperties<OutputT>::release_edge_connection();
-    mrc::node::SinkProperties<InputT>::release_edge_connection();
+    // Sync all progress engines if there are more than one
+    ctx.barrier();
+
+    // Only drop the output edges if we are rank 0
+    if (ctx.rank() == 0)
+    {
+        // Need to drop the output edges
+        mrc::node::SourceProperties<OutputT>::release_edge_connection();
+        mrc::node::SinkProperties<InputT>::release_edge_connection();
+    }
 
     if (exception != nullptr)
     {
@@ -282,14 +289,12 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
 template <typename InputT, typename OutputT>
 coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<mrc::coroutines::Scheduler> scheduler)
 {
-    coroutines::TaskContainer outstanding_tasks(scheduler);
+    coroutines::TaskContainer outstanding_tasks(scheduler, 8);
 
     ExceptionCatcher catcher{};
 
     while (not m_stop_source.stop_requested() and not catcher.has_exception())
     {
-        m_task_tickets.acquire();
-
         InputT data;
 
         auto read_status = co_await this->read_async(data);
@@ -335,8 +340,6 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     {
         catcher.push_exception(std::current_exception());
     }
-
-    m_task_tickets.release();
 }
 
 template <typename InputT, typename OutputT>

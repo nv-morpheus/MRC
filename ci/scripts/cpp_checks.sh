@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,19 +84,21 @@ if [[ -n "${MRC_MODIFIED_FILES}" ]]; then
       shopt -s extglob
       IWYU_MODIFIED_FILES=( "${MRC_MODIFIED_FILES[@]/*.@(h|hpp|cu)/}" )
 
-      # Get the list of compiled files relative to this directory
-      WORKING_PREFIX="${PWD}/"
-      COMPILED_FILES=( $(jq -r .[].file ${BUILD_DIR}/compile_commands.json | sort -u ) )
-      COMPILED_FILES=( "${COMPILED_FILES[@]/#$WORKING_PREFIX/}" )
-      COMBINED_FILES=("${COMPILED_FILES[@]}")
-      COMBINED_FILES+=("${IWYU_MODIFIED_FILES[@]}")
+      if [[ -n "${IWYU_MODIFIED_FILES}" ]]; then
+         # Get the list of compiled files relative to this directory
+         WORKING_PREFIX="${PWD}/"
+         COMPILED_FILES=( $(jq -r .[].file ${BUILD_DIR}/compile_commands.json | sort -u ) )
+         COMPILED_FILES=( "${COMPILED_FILES[@]/#$WORKING_PREFIX/}" )
+         COMBINED_FILES=("${COMPILED_FILES[@]}")
+         COMBINED_FILES+=("${IWYU_MODIFIED_FILES[@]}")
 
-      # Find the intersection between compiled files and modified files
-      IWYU_MODIFIED_FILES=( $(printf '%s\0' "${COMBINED_FILES[@]}" | sort -z | uniq -d -z | xargs -0n1) )
+         # Find the intersection between compiled files and modified files
+         IWYU_MODIFIED_FILES=( $(printf '%s\0' "${COMBINED_FILES[@]}" | sort -z | uniq -d -z | xargs -0n1) )
 
-      NUM_PROC=$(get_num_proc)
-      IWYU_OUTPUT=`${IWYU_TOOL} -p ${BUILD_DIR} -j ${NUM_PROC} ${IWYU_MODIFIED_FILES[@]} 2>&1`
-      IWYU_RETVAL=$?
+         NUM_PROC=$(get_num_proc)
+         IWYU_OUTPUT=`${IWYU_TOOL} -p ${BUILD_DIR} -j ${NUM_PROC} ${IWYU_MODIFIED_FILES[@]} 2>&1`
+         IWYU_RETVAL=$?
+      fi
    fi
 else
    echo "No modified C++ files to check"

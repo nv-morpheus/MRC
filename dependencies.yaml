@@ -130,7 +130,7 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - doxygen=1.10.0
+          - doxygen=1.9.2
           - python-graphviz
 
   python:
