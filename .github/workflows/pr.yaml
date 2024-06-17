@@ -45,9 +45,11 @@ permissions:
 jobs:
   pr-builder:
     needs:
+      - build_branch
       - checks
-      - prepare
       - ci_pipe
+      - prepare
+
     secrets: inherit
     uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
   prepare:
@@ -73,7 +75,6 @@ jobs:
     uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
     with:
       enable_check_generated_files: false
-      ignored_pr_jobs: build_branch
 
   ci_pipe:
     name: CI Pipeline
