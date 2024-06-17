@@ -19,6 +19,8 @@ on:
   push:
     branches:
       - 'pull-request/**'
+      - 'branch-*'
+      - 'main'
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
@@ -59,6 +61,7 @@ jobs:
         uses: rapidsai/shared-action-workflows/get-pr-info@branch-23.08
         if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     outputs:
+      is_pr: ${{ startsWith(github.ref_name, 'pull-request/') }}
       has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
       has_skip_ci_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'skip-ci') || false }}
       pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
@@ -89,6 +92,28 @@ jobs:
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
+      NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
+
+  buid_branch:
+    name: Buiuld Branch
+    uses: ./.github/workflows/ci_pipe.yml
+    if: ${{ startsWith(github.ref_name, 'branch-') || github.ref_name == 'main' }}
+    with:
+      # Run checks for branch-* but not main
+      run_check: ${{ startsWith(github.ref_name, 'branch-') }}
+      # Always perform a conda-build for main/dev branches
+      conda_run_build: true
+      # Use 'main' for main branch and 'dev' for all other branches
+      conda_upload_label: ${{ (github.ref_name == 'main') && 'main' || 'dev' }}
+      # Build container
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240214
+      # Test container
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
+      # CI pipe allows for an empty value
+      pr_info: ''
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
