@@ -73,6 +73,7 @@ jobs:
     uses: rapidsai/shared-workflows/.github/workflows/checks.yaml@branch-24.02
     with:
       enable_check_generated_files: false
+      ignored_pr_jobs: build_branch
 
   ci_pipe:
     name: CI Pipeline
