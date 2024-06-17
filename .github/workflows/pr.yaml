@@ -24,7 +24,7 @@ on:
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  group: '${{ github.workflow }} @ ${{ github.ref }}'
   cancel-in-progress: true
 
 permissions:
@@ -45,9 +45,11 @@ permissions:
 jobs:
   pr-builder:
     needs:
+      - build_branch
       - checks
-      - prepare
       - ci_pipe
+      - prepare
+
     secrets: inherit
     uses: rapidsai/shared-workflows/.github/workflows/pr-builder.yaml@branch-24.02
   prepare:
@@ -62,8 +64,6 @@ jobs:
         if: ${{ startsWith(github.ref_name, 'pull-request/') }}
     outputs:
       is_pr: ${{ startsWith(github.ref_name, 'pull-request/') }}
-      is_main_branch: ${{ github.ref_name == 'main' }}
-      is_dev_branch: ${{ startsWith(github.ref_name, 'branch-') }}
       has_conda_build_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'conda-build') || false }}
       has_skip_ci_label: ${{ steps.get-pr-info.outcome == 'success' && contains(fromJSON(steps.get-pr-info.outputs.pr-info).labels.*.name, 'skip-ci') || false }}
       pr_info: ${{ steps.get-pr-info.outcome == 'success' && steps.get-pr-info.outputs.pr-info || '' }}
@@ -83,17 +83,39 @@ jobs:
     if: ${{ ! fromJSON(needs.prepare.outputs.has_skip_ci_label) }}
     with:
       # Run checks for any PR branch
-      run_check: ${{ fromJSON(needs.prepare.outputs.is_pr) }}
+      run_check: true
       # Run conda-build for main/dev branches and PRs with the conda-build label
-      conda_run_build: ${{ !fromJSON(needs.prepare.outputs.is_pr) || fromJSON(needs.prepare.outputs.has_conda_build_label) }}
+      conda_run_build: ${{ fromJSON(needs.prepare.outputs.has_conda_build_label) }}
       # Update conda package only for non PR branches. Use 'main' for main branch and 'dev' for all other branches
-      conda_upload_label: ${{ !fromJSON(needs.prepare.outputs.is_pr) && (fromJSON(needs.prepare.outputs.is_main_branch) && 'main' || 'dev') || '' }}
+      conda_upload_label: false
       # Build container
       container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240214
       # Test container
       test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
       # Info about the PR. Empty for non PR branches. Useful for extracting PR number, title, etc.
       pr_info: ${{ needs.prepare.outputs.pr_info }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
+      NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
+
+  build_branch:
+    name: Build Branch
+    uses: ./.github/workflows/ci_pipe.yml
+    if: ${{ startsWith(github.ref_name, 'branch-') || github.ref_name == 'main' }}
+    with:
+      # Run checks for branch-* but not main
+      run_check: ${{ startsWith(github.ref_name, 'branch-') }}
+      # Always perform a conda-build for main/dev branches
+      conda_run_build: true
+      # Use 'main' for main branch and 'dev' for all other branches
+      conda_upload_label: ${{ (github.ref_name == 'main') && 'main' || 'dev' }}
+      # Build container
+      container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-build-240214
+      # Test container
+      test_container: nvcr.io/ea-nvidia-morpheus/morpheus:mrc-ci-test-240214
+      # CI pipe allows for an empty value
+      pr_info: ''
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
