@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,7 +95,7 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 24.02}")
+   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 24.06}")
 fi
 
 # And default channels (should match dependencies.yaml)
