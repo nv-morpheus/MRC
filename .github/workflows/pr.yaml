@@ -97,8 +97,8 @@ jobs:
       CONDA_TOKEN: ${{ secrets.CONDA_TOKEN }}
       NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
 
-  buid_branch:
-    name: Buiuld Branch
+  build_branch:
+    name: Build Branch
     uses: ./.github/workflows/ci_pipe.yml
     if: ${{ startsWith(github.ref_name, 'branch-') || github.ref_name == 'main' }}
     with:
