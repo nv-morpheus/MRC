@@ -30,6 +30,7 @@
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/runnable/runnable.hpp"
 #include "mrc/utils/type_utils.hpp"
+#include "rxcpp/operators/rx-observe_on.hpp"
 
 #include <glog/logging.h>
 #include <rxcpp/operators/rx-buffer_time_count.hpp>
@@ -39,6 +40,7 @@
 #include <memory>
 #include <mutex>
 
+namespace mrc::node {
 template <typename T, typename ContextT>
 class DynamicBatcher : public mrc::node::WritableProvider<T>,
                        public mrc::node::ReadableAcceptor<T>,
@@ -81,9 +83,11 @@ private:
           s.on_completed();
         });
 
+    // DVLOG(1) << "DynamicBatcher: m_duration: " << m_duration.count() << std::endl;
+
     // Buffer the items from the input observable
     auto buffered_observable = input_observable.buffer_with_time_or_count(
-        m_duration, m_max_count, rxcpp::observe_on_new_thread());
+        m_duration, m_max_count, rxcpp::observe_on_event_loop());
 
     // Subscribe to the buffered observable
     buffered_observable.subscribe(
@@ -122,6 +126,7 @@ private:
   }
 
   std::stop_source m_stop_source;
-  size_t m_max_count;
+  int m_max_count;
   std::chrono::milliseconds m_duration;
 };
+} // namespace mrc::node
