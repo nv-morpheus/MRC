@@ -20,6 +20,7 @@
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/dynamic_batcher.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -1120,6 +1121,48 @@ TEST_F(TestSegment, SegmentGetEgressNotEgressError)
         FAIL() << "Expected std::invalid_argument";
     }
     */
+}
+
+TEST_F(TestSegment, SegmentDynamicBatcher)
+{
+    unsigned int iterations{3};
+    std::atomic<unsigned int> sink1_results{0};
+    float sink2_results{0};
+    std::mutex mux;
+
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [&](rxcpp::subscriber<int>& s) {
+            for (size_t i = 0; i < iterations && s.is_subscribed(); i++)
+            {
+                s.on_next(1);
+                s.on_next(2);
+                s.on_next(3);
+            }
+
+            s.on_completed();
+        });
+
+        auto dynamic_batcher = segment.construct_object<node::DynamicBatcher<int, runnable::Context>>("dynamic_batcher", 2, std::chrono::milliseconds(100));
+
+        segment.make_edge(src, dynamic_batcher);
+
+        auto sink = segment.make_sink<std::vector<int>>("sink", [&](std::vector<int> x) {
+            DVLOG(1) << "Sink got vector" << std::endl;
+            for (auto i : x)
+            {
+                DVLOG(1) << "Sink got value: " << i << std::endl;
+                // sink1_results.fetch_add(i, std::memory_order_relaxed);
+            }
+        });
+
+        segment.make_edge(dynamic_batcher, sink);
+    };
+
+    auto segdef = Segment::create("dynamic_batcher_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
 }
 
 }  // namespace mrc

@@ -122,7 +122,7 @@ enable_language(CUDA)
 set(MRC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Set a default build type if none was specified
-rapids_cmake_build_type(Release)
+rapids_cmake_build_type(Debug)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
