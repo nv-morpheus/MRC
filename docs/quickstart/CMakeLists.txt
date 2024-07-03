@@ -28,7 +28,7 @@ list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../external/utili
 include(morpheus_utils/load)
 
 project(mrc-quickstart
-  VERSION 24.06.00
+  VERSION 24.10.00
   LANGUAGES C CXX
 )
 
