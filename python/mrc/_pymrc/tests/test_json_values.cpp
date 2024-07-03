@@ -138,6 +138,9 @@ TEST_F(TestJSONValues, ToPythonRootUnserializable)
 
     EXPECT_TRUE(result.equal(py_dec));
     EXPECT_TRUE(result.is(py_dec));  // Ensure we stored the object
+
+    nlohmann::json expexted_json("**pymrc_placeholder"s);
+    EXPECT_EQ(j.view_json(), expexted_json);
 }
 
 TEST_F(TestJSONValues, ToPythonSimpleDict)
@@ -541,4 +544,18 @@ TEST_F(TestJSONValues, Stringify)
 {
     auto dec_val = mk_decimal("2.2"s);
     EXPECT_EQ(JSONValues::stringify(dec_val, "/"s), nlohmann::json("2.2"s));
+}
+
+TEST_F(TestJSONValues, CastPyToJSONValues)
+{
+    auto py_dict = mk_py_dict();
+    auto j       = py_dict.cast<JSONValues>();
+    EXPECT_TRUE(j.to_python().equal(py_dict));
+}
+
+TEST_F(TestJSONValues, CastJSONValuesToPy)
+{
+    auto j       = JSONValues{mk_json()};
+    auto py_dict = py::cast(j);
+    EXPECT_TRUE(py_dict.equal(j.to_python()));
 }
