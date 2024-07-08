@@ -94,10 +94,10 @@ class EncoderBase
   public:
     //  Public constructor is necessary here to allow using statement. Not really a concern since the object isnt very
     //  useful in the base class
-    EncoderBase(LocalSerializedWrapper& encoded_object, memory::memory_block_provider& block_provider);
+    EncoderBase(DescriptorObjectHandler& encoded_object);
 
   protected:
-    size_t write_descriptor(memory::const_buffer_view view, DescriptorKind kind);
+    void write_descriptor(memory::const_buffer_view view);
 
     // std::optional<idx_t> register_memory_view(memory::const_buffer_view view, bool force_register = false)
     // {
@@ -127,8 +127,7 @@ class EncoderBase
     //     // m_storage.copy_to_buffer(buffer_idx, std::move(view));
     // }
 
-    LocalSerializedWrapper& m_encoded_object;
-    memory::memory_block_provider& m_block_provider;
+    DescriptorObjectHandler& m_encoded_object;
 };
 
 template <typename T>
@@ -140,15 +139,13 @@ class Encoder2 final : public EncoderBase
   private:
     void serialize2(const T& obj, const EncodingOptions& opts = {})
     {
-        auto obj_idx = m_encoded_object.push_current_object_idx(typeid(T));
         detail::serialize2(obj, *this, opts);
-        m_encoded_object.pop_current_object_idx(obj_idx);
     }
 
     template <typename U>
     Encoder2<U> rebind()
     {
-        return Encoder2<U>(m_encoded_object, m_block_provider);
+        return Encoder2<U>(m_encoded_object);
     }
 
     friend T;
@@ -191,13 +188,11 @@ void encode2(const T& obj, Encoder2<U>& encoder, EncodingOptions opts = {})
 
 // This method is used for top level calls to encode
 template <typename T>
-std::unique_ptr<LocalSerializedWrapper> encode2(const T& obj,
-                                                std::shared_ptr<memory::memory_block_provider> block_provider,
-                                                EncodingOptions opts = {})
+std::unique_ptr<DescriptorObjectHandler> encode2(const T& obj, EncodingOptions opts = {})
 {
-    auto encoded_object = std::make_unique<LocalSerializedWrapper>();
+    auto encoded_object = std::make_unique<DescriptorObjectHandler>();
 
-    Encoder2<T> encoder(*encoded_object, *block_provider);
+    Encoder2<T> encoder(*encoded_object);
     encode2(obj, encoder, std::move(opts));
 
     auto encoded_string = encoded_object->proto().DebugString();

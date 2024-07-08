@@ -387,7 +387,7 @@ uint64_t DataPlaneResources2::get_next_object_id()
 }
 
 uint64_t DataPlaneResources2::register_remote_decriptor(
-    std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor)
+    std::shared_ptr<runtime::Descriptor2> remote_descriptor)
 {
     auto object_id = get_next_object_id();
     remote_descriptor->encoded_object().set_object_id(object_id);

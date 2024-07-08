@@ -42,23 +42,23 @@ class Decoder2;
 namespace detail {
 
 template <typename T>
-auto serialize(sfinae::full_concept c, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::full_concept c, const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
     -> MRC_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(obj, enc, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l4_concept c, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l4_concept c, const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
     -> MRC_AUTO_RETURN_TYPE(codable_protocol<T>::serialize(obj, enc), void);
 
 template <typename T>
-auto serialize(sfinae::l3_concept c, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l3_concept c, const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
     -> MRC_AUTO_RETURN_TYPE(enc.serialize(obj, opts), void);
 
 template <typename T>
-auto serialize(sfinae::l2_concept c, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+auto serialize(sfinae::l2_concept c, const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
     -> MRC_AUTO_RETURN_TYPE(enc.serialize(obj), void);
 
 template <typename T>
-void serialize(sfinae::error error, const T& obj, Encoder<T>& enc, const EncodingOptions& opts)
+void serialize(sfinae::error error, const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
 {
     static_assert(sfinae::invalid_concept<T>::error, "object is not encodable");
 }
@@ -86,15 +86,15 @@ void serialize(sfinae::error error, const T& obj, Encoder<T>& enc, const Encodin
 // }
 
 template <typename T>
-auto deserialize(sfinae::full_concept c, const Decoder<T>& encoding, std::size_t object_idx)
-    -> MRC_AUTO_RETURN_TYPE(codable_protocol<T>::deserialize(encoding, object_idx), T);
+auto deserialize(sfinae::full_concept c, const Decoder2<T>& encoding)
+    -> MRC_AUTO_RETURN_TYPE(codable_protocol<T>::deserialize(encoding), T);
 
 template <typename T>
-auto deserialize(sfinae::l4_concept c, const Decoder<T>& encoding, std::size_t object_idx)
-    -> MRC_AUTO_RETURN_TYPE(T::deserialize(encoding, object_idx), T);
+auto deserialize(sfinae::l4_concept c, const Decoder2<T>& encoding)
+    -> MRC_AUTO_RETURN_TYPE(T::deserialize(encoding), T);
 
 template <typename T>
-sfinae::error deserialize(sfinae::error error, const Decoder<T>& encoding, std::size_t object_idx)
+sfinae::error deserialize(sfinae::error error, const Decoder2<T>& encoding)
 {
     static_assert(sfinae::invalid_concept<T>::error, "object is not decodable");
     return {};
@@ -122,7 +122,7 @@ template <typename T>
 struct is_protocol_encodable<T,
                              std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().serialize(
                                                                  std::declval<T&>(),
-                                                                 std::declval<Encoder<T>&>(),
+                                                                 std::declval<Encoder2<T>&>(),
                                                                  std::declval<const EncodingOptions&>())),
                                                              void>>> : std::true_type
 {};
@@ -131,14 +131,14 @@ template <typename T>
 struct is_protocol_encodable<
     T,
     std::enable_if_t<std::is_same_v<
-        decltype(std::declval<codable_protocol<T>&>().serialize(std::declval<T&>(), std::declval<Encoder<T>&>())),
+        decltype(std::declval<codable_protocol<T>&>().serialize(std::declval<T&>(), std::declval<Encoder2<T>&>())),
         void>>> : std::true_type
 {};
 
 template <typename T>
 struct is_member_encodable<
     T,
-    std::enable_if_t<std::is_same_v<decltype(std::declval<const T&>().serialize(std::declval<Encoder<T>&>(),
+    std::enable_if_t<std::is_same_v<decltype(std::declval<const T&>().serialize(std::declval<Encoder2<T>&>(),
                                                                                 std::declval<const EncodingOptions&>())),
                                     void>>> : std::true_type
 {};
@@ -146,7 +146,7 @@ struct is_member_encodable<
 template <typename T>
 struct is_member_encodable<
     T,
-    std::enable_if_t<std::is_same_v<decltype(std::declval<const T&>().serialize(std::declval<Encoder<T>&>())), void>>>
+    std::enable_if_t<std::is_same_v<decltype(std::declval<const T&>().serialize(std::declval<Encoder2<T>&>())), void>>>
   : std::true_type
 {};
 
@@ -159,8 +159,7 @@ inline constexpr bool is_member_encodable_v = is_member_encodable<T>::value;  //
 template <typename T>
 struct is_protocol_decodable<T,
                              std::enable_if_t<std::is_same_v<decltype(std::declval<codable_protocol<T>&>().deserialize(
-                                                                 std::declval<const Decoder<T>&>(),
-                                                                 std::declval<std::size_t>())),
+                                                                 std::declval<const Decoder2<T>&>())),
                                                              T>>> : std::true_type
 {};
 
@@ -168,7 +167,7 @@ template <typename T>
 struct is_static_decodable<
     T,
     std::enable_if_t<
-        std::is_same_v<decltype(T::deserialize(std::declval<const Decoder<T>&>(), std::declval<std::size_t>())), T>>>
+        std::is_same_v<decltype(T::deserialize(std::declval<const Decoder2<T>&>())), T>>>
   : std::true_type
 {};
 
@@ -244,15 +243,15 @@ auto serialize2(const T& obj, Encoder2<T>& enc, const EncodingOptions& opts)
 };
 
 template <protocol_decodable T>
-auto deserialize2(const Decoder2<T>& decoder, size_t object_idx)
+auto deserialize2(const Decoder2<T>& decoder)
 {
-    return codable_protocol<T>::deserialize(decoder, object_idx);
+    return codable_protocol<T>::deserialize(decoder);
 };
 
 template <static_decodable T>
-auto deserialize2(const Decoder2<T>& decoder, size_t object_idx)
+auto deserialize2(const Decoder2<T>& decoder)
 {
-    return T::deserialize(decoder, object_idx);
+    return T::deserialize(decoder);
 };
 
 }  // namespace detail

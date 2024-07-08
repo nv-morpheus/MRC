@@ -23,50 +23,33 @@ namespace mrc::codable {
 
 using namespace mrc::memory::literals;
 
-EncoderBase::EncoderBase(LocalSerializedWrapper& encoded_object, memory::memory_block_provider& block_provider) :
-  m_encoded_object(encoded_object),
-  m_block_provider(block_provider)
+EncoderBase::EncoderBase(DescriptorObjectHandler& encoded_object) :
+  m_encoded_object(encoded_object)
 {}
 
-size_t EncoderBase::write_descriptor(memory::const_buffer_view view, DescriptorKind kind)
+void EncoderBase::write_descriptor(memory::const_buffer_view view)
 {
-    if (kind == DescriptorKind::Default)
-    {
-        // Choose which one based on size
-        if (view.bytes() < 64_KiB)
-        {
-            return this->write_descriptor(view, DescriptorKind::Eager);
-        }
+    MessageKind kind = (view.bytes() < 64_KiB) ? MessageKind::Eager : MessageKind::Deferred;
 
-        return this->write_descriptor(view, DescriptorKind::Deferred);
-    }
-
-    protos::MemoryDescriptor& desc = m_encoded_object.add_descriptor();
-
-    auto desc_idx = m_encoded_object.descriptors_size() - 1;
+    protos::Payload* payload = m_encoded_object.proto().add_payloads();
+    payload->set_memory_kind(encode_memory_type(view.kind()));
 
     switch (kind)
     {
-    case DescriptorKind::Eager: {
-        auto* eager_desc = desc.mutable_eager_desc();
+    case MessageKind::Eager: {
+        auto* eager_msg = payload->mutable_eager_msg();
 
-        eager_desc->set_data(view.data(), view.bytes());
+        eager_msg->set_data(view.data(), view.bytes());
 
-        return desc_idx;
+        return;
     }
-    case DescriptorKind::Deferred: {
-        // Add a payload
-        auto* payload = m_encoded_object.proto().add_payloads();
+    case MessageKind::Deferred: {
+        auto* deferred_msg = payload->mutable_deferred_msg();
 
-        payload->set_address(reinterpret_cast<uintptr_t>(view.data()));
-        payload->set_bytes(view.bytes());
-        payload->set_memory_kind(encode_memory_type(view.kind()));
+        deferred_msg->set_address(reinterpret_cast<uintptr_t>(view.data()));
+        deferred_msg->set_bytes(view.bytes());
 
-        auto* deferred_desc = desc.mutable_deferred_desc();
-
-        deferred_desc->set_payload_idx(m_encoded_object.payloads().size() - 1);
-
-        return desc_idx;
+        return;
     }
     default:
         throw std::runtime_error("Unknown descriptor kind");

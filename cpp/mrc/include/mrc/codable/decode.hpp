@@ -81,12 +81,12 @@ class DecoderBase
   public:
     //  Public constructor is necessary here to allow using statement. Not really a concern since the object isnt very
     //  useful in the base class
-    DecoderBase(const LocalSerializedWrapper& encoded_object);
+    DecoderBase(const DescriptorObjectHandler& encoded_object);
 
   protected:
-    void read_descriptor(size_t offset, memory::buffer_view dst_view) const;
+    void read_descriptor(memory::buffer_view dst_view) const;
 
-    std::size_t descriptor_size(size_t offset) const;
+    std::size_t descriptor_size() const;
 
     // /**
     //  * @brief Hash of std::type_index for the object at idx
@@ -131,7 +131,7 @@ class DecoderBase
     //     return m_storage.host_memory_resource();
     // }
 
-    const LocalSerializedWrapper& m_encoded_object;
+    const DescriptorObjectHandler& m_encoded_object;
 };
 
 template <typename T>
@@ -141,12 +141,10 @@ struct Decoder2 final : public DecoderBase
     using DecoderBase::DecoderBase;
 
   private:
-    T deserialize(std::size_t object_idx) const
+    T deserialize() const
     {
-        auto obj_idx = m_encoded_object.push_current_object_idx(typeid(T));
-        T value      = detail::deserialize2<T>(*this, object_idx);
-        m_encoded_object.pop_current_object_idx(obj_idx);
-
+        T value = detail::deserialize2<T>(*this);
+        m_encoded_object.increment_payload_idx();
         return value;
     }
 
@@ -162,7 +160,7 @@ struct Decoder2 final : public DecoderBase
     friend codable_protocol<T>;
 
     template <typename U, typename V>
-    friend U decode2(const Decoder2<V>& encoder, std::size_t object_idx);
+    friend U decode2(const Decoder2<V>& encoder);
 };
 
 template <typename T>
@@ -174,26 +172,26 @@ auto decode(const IDecodableStorage& encoded, std::size_t object_idx = 0)
 
 // This method for nested calls to decode2
 template <typename T, typename U>
-T decode2(const Decoder2<U>& decoder, std::size_t object_idx)
+T decode2(const Decoder2<U>& decoder)
 {
     static_assert(is_decodable_v<T>, "Must use an encodable object");
 
     if constexpr (std::is_same_v<T, U>)
     {
-        return decoder.deserialize(object_idx);
+        return decoder.deserialize();
     }
     else
     {
         // Rebind the type
-        return decoder.template rebind<T>().deserialize(object_idx);
+        return decoder.template rebind<T>().deserialize();
     }
 }
 
 template <typename T>
-T decode2(const LocalSerializedWrapper& encoded, std::size_t object_idx = 0)
+T decode2(const DescriptorObjectHandler& encoded)
 {
     Decoder2<T> decoder(encoded);
-    return decode2<T>(decoder, object_idx);
+    return decode2<T>(decoder);
 }
 
 }  // namespace mrc::codable

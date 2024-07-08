@@ -196,7 +196,7 @@ class DataPlaneResources2
                                                  ucs_memory_type_t mem_type);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
-    uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
+    uint64_t register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> remote_descriptor);
     uint64_t registered_remote_descriptor_count();
     uint64_t registered_remote_descriptor_token_count(uint64_t object_id);
 
@@ -227,7 +227,7 @@ class DataPlaneResources2
     boost::fibers::condition_variable m_remote_descriptors_cv{};
 
   protected:
-    std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
+    std::map<uint64_t, std::shared_ptr<runtime::Descriptor2>> m_remote_descriptor_by_id;
 };
 
 }  // namespace mrc::data_plane
