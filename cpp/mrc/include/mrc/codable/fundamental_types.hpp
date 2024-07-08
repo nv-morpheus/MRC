@@ -37,7 +37,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
         auto index = encoder.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
-    static void serialize(const T& t, Encoder2<T>& encoder, const EncodingOptions& opts)
+    static void serialize(const T& t, Encoder2<T>& encoder)
     {
         encoder.write_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
@@ -85,7 +85,7 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         }
     }
 
-    static void serialize(const std::string& str, Encoder2<T>& encoder, const EncodingOptions& opts)
+    static void serialize(const std::string& str, Encoder2<T>& encoder)
     {
         MessageKind kind = MessageKind::Default;
 

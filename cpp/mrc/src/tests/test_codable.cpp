@@ -34,7 +34,6 @@
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/codable/protobuf_message.hpp"   // IWYU pragma: keep
-#include "mrc/codable/type_traits.hpp"
 #include "mrc/memory/codable/buffer.hpp"  // IWYU pragma: keep
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -139,29 +138,25 @@ class TestCodable : public ::testing::Test
 
 TEST_F(TestCodable, Objects)
 {
-    static_assert(codable::is_encodable<CodableObject>::value, "should be encodable");
-    static_assert(codable::is_encodable<CodableObjectWithOptions>::value, "should be encodable");
-    static_assert(codable::is_encodable<CodableViaExternalStruct>::value, "should be encodable");
-    static_assert(!codable::is_encodable<NotCodableObject>::value, "should NOT be encodable");
-    // the following will fail to compile
-    // static_assert(codable::is_encodable<NotCodableObject>::value, "should NOT be encodable");
+    static_assert(codable::encodable<CodableObject>::value, "should be encodable");
+    static_assert(codable::encodable<CodableObjectWithOptions>::value, "should be encodable");
+    static_assert(codable::encodable<CodableViaExternalStruct>::value, "should be encodable");
+    static_assert(!codable::encodable<NotCodableObject>::value, "should NOT be encodable");
 
-    static_assert(codable::is_decodable<CodableObject>::value, "should be decodable");
-    static_assert(codable::is_decodable<CodableObjectWithOptions>::value, "should be decodable");
-    static_assert(!codable::is_decodable<CodableViaExternalStruct>::value, "should NOT be decodable");
-    static_assert(!codable::is_decodable<NotCodableObject>::value, "should NOT be decodable");
-    // the following will fail to compile
-    // static_assert(codable::is_decodable<CodableViaExternalStruct>::value, "should NOT be decodable");
+    static_assert(codable::decodable<CodableObject>::value, "should be decodable");
+    static_assert(codable::decodable<CodableObjectWithOptions>::value, "should be decodable");
+    static_assert(!codable::decodable<CodableViaExternalStruct>::value, "should NOT be decodable");
+    static_assert(!codable::decodable<NotCodableObject>::value, "should NOT be decodable");
 
-    static_assert(is_codable<CodableObject>::value, "fully codable");
-    static_assert(is_codable<CodableObjectWithOptions>::value, "fully codable");
-    static_assert(!is_codable<CodableViaExternalStruct>::value, "half codable");
-    static_assert(!is_codable<NotCodableObject>::value, "not codable");
+    static_assert(codable<CodableObject>::value, "fully codable");
+    static_assert(codable<CodableObjectWithOptions>::value, "fully codable");
+    static_assert(!codable<CodableViaExternalStruct>::value, "half codable");
+    static_assert(!codable<NotCodableObject>::value, "not codable");
 }
 
 TEST_F(TestCodable, String)
 {
-    static_assert(is_codable<std::string>::value, "should be codable");
+    static_assert(codable<std::string>::value, "should be codable");
 
     std::string str = "Hello MRC";
     auto str_block  = m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(
@@ -190,7 +185,7 @@ void populate(int size, int* ptr)
 
 TEST_F(TestCodable, Buffer)
 {
-    static_assert(is_codable<mrc::memory::buffer>::value, "should be codable");
+    static_assert(codable<mrc::memory::buffer>::value, "should be codable");
 
     // Uncomment when local copy is working!
     // auto encodable_storage = m_runtime->partition(0).make_codable_storage();
@@ -214,7 +209,7 @@ TEST_F(TestCodable, Buffer)
 
 TEST_F(TestCodable, Double)
 {
-    static_assert(is_codable<double>::value, "should be codable");
+    static_assert(codable<double>::value, "should be codable");
 
     auto encodable_storage = m_runtime->partition(0).make_codable_storage();
 
@@ -229,8 +224,8 @@ TEST_F(TestCodable, Double)
 
 TEST_F(TestCodable, Composite)
 {
-    static_assert(is_codable<std::string>::value, "should be codable");
-    static_assert(is_codable<std::uint64_t>::value, "should be codable");
+    static_assert(codable<std::string>::value, "should be codable");
+    static_assert(codable<std::uint64_t>::value, "should be codable");
 
     std::string str   = "Hello Mrc";
     std::uint64_t ans = 42;
@@ -252,7 +247,7 @@ TEST_F(TestCodable, Composite)
 
 TEST_F(TestCodable, EncodedObjectProto)
 {
-    static_assert(codable::is_encodable<mrc::codable::protos::EncodedObject>::value, "should be encodable");
-    static_assert(codable::is_decodable<mrc::codable::protos::EncodedObject>::value, "should be decodable");
-    static_assert(is_codable<mrc::codable::protos::EncodedObject>::value, "should be codable");
+    static_assert(codable::encodable<mrc::codable::protos::EncodedObject>::value, "should be encodable");
+    static_assert(codable::decodable<mrc::codable::protos::EncodedObject>::value, "should be decodable");
+    static_assert(codable<mrc::codable::protos::EncodedObject>::value, "should be codable");
 }

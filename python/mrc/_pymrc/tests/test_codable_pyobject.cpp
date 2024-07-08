@@ -23,7 +23,8 @@
 #include "pymrc/types.hpp"
 
 #include "mrc/codable/codable_protocol.hpp"
-#include "mrc/codable/type_traits.hpp"
+#include "mrc/codable/decode.hpp"
+#include "mrc/codable/encode.hpp"
 
 #include <gtest/gtest.h>
 #include <pybind11/pytypes.h>
@@ -45,7 +46,6 @@
 // #include "mrc/codable/encoded_object.hpp"
 // #include "mrc/codable/encoding_options.hpp"
 // #include "mrc/codable/storage_forwarder.hpp"
-// #include "mrc/codable/type_traits.hpp"
 // #include "mrc/protos/codable.pb.h"
 
 // #include <gtest/gtest.h>
@@ -67,14 +67,14 @@ PYMRC_TEST_CLASS(CodablePyobject);
 
 TEST_F(TestCodablePyobject, PyObject)
 {
-    static_assert(is_codable_v<pymrc::PyHolder>, "pybind11::object should be codable.");
-    static_assert(is_codable_v<py::object>, "pybind11::object should be codable.");
-    static_assert(is_decodable_v<py::object>, "pybind11::object should be decodable.");
-    static_assert(is_decodable_v<pymrc::PyHolder>, "pybind11::object should be decodable.");
-    static_assert(!is_codable_v<PyObject>,
+    static_assert(codable<pymrc::PyHolder>, "pybind11::object should be codable.");
+    static_assert(codable<py::object>, "pybind11::object should be codable.");
+    static_assert(decodable<py::object>, "pybind11::object should be decodable.");
+    static_assert(decodable<pymrc::PyHolder>, "pybind11::object should be decodable.");
+    static_assert(!codable<PyObject>,
                   "No support for directly coding cpython objects -- "
                   "use pybind11::object or mrc::PyHolder");
-    static_assert(!is_decodable_v<PyObject>,
+    static_assert(!decodable<PyObject>,
                   "No support for directly coding cpython objects -- "
                   "use pybind11::object or mrc::PyHolder");
 }

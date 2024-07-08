@@ -20,8 +20,8 @@
 #include "mrc/codable/api.hpp"
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/encoded_object_proto.hpp"
+#include "mrc/codable/encoding_options.hpp"
 #include "mrc/codable/memory.hpp"
-#include "mrc/codable/type_traits.hpp"
 #include "mrc/codable/types.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/utils/sfinae_concept.hpp"
@@ -33,6 +33,22 @@
 namespace mrc::codable {
 
 template <typename T>
+class Encoder2;
+
+template <typename T>
+concept protocol_encodable = requires(const T& t, Encoder2<T>& encoder) {
+    { codable_protocol<T>::serialize(t, encoder) } -> std::same_as<void>;
+};
+
+template <typename T>
+concept member_encodable = requires(const T& t, Encoder2<T>& encoder) {
+    { t.serialize(encoder) } -> std::same_as<void>;
+};
+
+template <typename T>
+concept encodable = protocol_encodable<T> || member_encodable<T>;
+
+template <typename T>
 class Encoder final
 {
   public:
@@ -41,7 +57,7 @@ class Encoder final
     void serialize(const T& obj, const EncodingOptions& opts = {})
     {
         auto parent = m_storage.push_context(typeid(T));
-        detail::serialize(sfinae::full_concept{}, obj, *this, opts);
+        // detail::serialize(sfinae::full_concept{}, obj, *this, opts);
         m_storage.pop_context(parent);
     }
 
@@ -99,34 +115,6 @@ class EncoderBase
   protected:
     void write_descriptor(memory::const_buffer_view view);
 
-    // std::optional<idx_t> register_memory_view(memory::const_buffer_view view, bool force_register = false)
-    // {
-    //     // return m_storage.register_memory_view(std::move(view), force_register);
-    //     return -1;
-    // }
-
-    // idx_t copy_to_eager_descriptor(memory::const_buffer_view view)
-    // {
-    //     return m_encoded_object.add_eager_descriptor(view);
-    // }
-
-    idx_t add_meta_data(const google::protobuf::Message& meta_data)
-    {
-        // return m_storage.add_meta_data(meta_data);
-        return -1;
-    }
-
-    // idx_t create_memory_buffer(std::size_t bytes)
-    // {
-    //     // return m_storage.create_memory_buffer(bytes);
-    //     return -1;
-    // }
-
-    // void copy_to_buffer(idx_t buffer_idx, memory::const_buffer_view view)
-    // {
-    //     // m_storage.copy_to_buffer(buffer_idx, std::move(view));
-    // }
-
     DescriptorObjectHandler& m_encoded_object;
 };
 
@@ -137,10 +125,15 @@ class Encoder2 final : public EncoderBase
     using EncoderBase::EncoderBase;
 
   private:
-    void serialize2(const T& obj, const EncodingOptions& opts = {})
+    auto serialize(const T& obj) requires protocol_encodable<T>
     {
-        detail::serialize2(obj, *this, opts);
-    }
+        return codable_protocol<T>::serialize(obj, *this);
+    };
+
+    auto serialize(const T& obj) requires member_encodable<T>
+    {
+        return obj.serialize(*this);
+    };
 
     template <typename U>
     Encoder2<U> rebind()
@@ -152,7 +145,7 @@ class Encoder2 final : public EncoderBase
     friend codable_protocol<T>;
 
     template <typename U, typename V>
-    friend void encode2(const U& obj, Encoder2<V>& encoder, EncodingOptions opts);
+    friend void encode2(const U& obj, Encoder2<V>& encoder);
 };
 
 template <typename T>
@@ -171,29 +164,29 @@ void encode(const T& obj, IEncodableStorage* storage, EncodingOptions opts = {})
 
 // This method for nested calls to encode2
 template <typename T, typename U>
-void encode2(const T& obj, Encoder2<U>& encoder, EncodingOptions opts = {})
+void encode2(const T& obj, Encoder2<U>& encoder)
 {
-    static_assert(is_encodable_v<T>, "Must use an encodable object");
+    static_assert(encodable<T>, "Must use an encodable object");
 
     if constexpr (std::is_same_v<T, U>)
     {
-        encoder.serialize2(obj, std::move(opts));
+        encoder.serialize(obj);
     }
     else
     {
         // Rebind the type
-        encoder.template rebind<T>().serialize2(obj, std::move(opts));
+        encoder.template rebind<T>().serialize(obj);
     }
 }
 
 // This method is used for top level calls to encode
 template <typename T>
-std::unique_ptr<DescriptorObjectHandler> encode2(const T& obj, EncodingOptions opts = {})
+std::unique_ptr<DescriptorObjectHandler> encode2(const T& obj)
 {
     auto encoded_object = std::make_unique<DescriptorObjectHandler>();
 
     Encoder2<T> encoder(*encoded_object);
-    encode2(obj, encoder, std::move(opts));
+    encode2(obj, encoder);
 
     auto encoded_string = encoded_object->proto().DebugString();
 

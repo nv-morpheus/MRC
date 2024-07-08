@@ -41,7 +41,6 @@
 #include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/fundamental_types.hpp"
-#include "mrc/codable/type_traits.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
@@ -142,21 +141,20 @@ struct codable_protocol<std::vector<T>>
                           const mrc::codable::EncodingOptions& opts)
     {
         // First put in the size
-        mrc::codable::encode2(obj.size(), encoder, opts);
+        mrc::codable::encode2(obj.size(), encoder);
 
         // Now encode each object
         for (const auto& o : obj)
         {
-            mrc::codable::encode2(o, encoder, opts);
+            mrc::codable::encode2(o, encoder);
         }
     }
 
     static void serialize(const std::vector<T>& obj,
-                          mrc::codable::Encoder2<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts)
+                          mrc::codable::Encoder2<std::vector<T>>& encoder)
     {
         // First put in the size
-        mrc::codable::encode2(obj.size(), encoder, opts);
+        mrc::codable::encode2(obj.size(), encoder);
 
         if constexpr (std::is_fundamental_v<T>)
         {
@@ -168,7 +166,7 @@ struct codable_protocol<std::vector<T>>
             // Now encode each object
             for (const auto& o : obj)
             {
-                mrc::codable::encode2(o, encoder, opts);
+                mrc::codable::encode2(o, encoder);
             }
         }
     }
@@ -265,11 +263,11 @@ class TransferObject
         return m_name == other.m_name && m_value == other.m_value && m_data == other.m_data;
     }
 
-    void serialize(mrc::codable::Encoder2<TransferObject>& encoder, const mrc::codable::EncodingOptions& opts) const
+    void serialize(mrc::codable::Encoder2<TransferObject>& encoder) const
     {
-        mrc::codable::encode2(m_name, encoder, opts);
-        mrc::codable::encode2(m_value, encoder, opts);
-        mrc::codable::encode2(m_data, encoder, opts);
+        mrc::codable::encode2(m_name, encoder);
+        mrc::codable::encode2(m_value, encoder);
+        mrc::codable::encode2(m_data, encoder);
     }
 
     static TransferObject deserialize(const mrc::codable::Decoder2<TransferObject>& decoder)
@@ -690,7 +688,7 @@ TEST_F(TestNetwork, Arena)
 
 TEST_F(TestNetwork, TransferFullDescriptors)
 {
-    static_assert(codable::is_static_decodable_v<TransferObject>);
+    static_assert(codable::member_decodable<TransferObject>);
 
     TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
 
