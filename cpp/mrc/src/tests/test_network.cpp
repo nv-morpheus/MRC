@@ -288,6 +288,55 @@ class TransferObject
     std::vector<u_int8_t> m_data;
 };
 
+class ComplexObject
+{
+  public:
+    ComplexObject() = default;
+    ComplexObject(std::string name, int value, TransferObject obj, std::vector<u_int8_t>&& data) :
+      m_name(std::move(name)),
+      m_value(value),
+      m_obj(std::move(obj)),
+      m_data(std::move(data))
+    {}
+
+    // int a() const { return m_a; }
+    // int b() const { return m_b; }
+
+    // void set_a(int a) { m_a = a; }
+    // void set_b(int b) { m_b = b; }
+
+    bool operator==(const ComplexObject& other) const
+    {
+        return m_name == other.m_name && m_value == other.m_value && m_obj == other.m_obj && m_data == other.m_data;
+    }
+
+    void serialize(mrc::codable::Encoder2<ComplexObject>& encoder) const
+    {
+        mrc::codable::encode2(m_name, encoder);
+        mrc::codable::encode2(m_value, encoder);
+        mrc::codable::encode2(m_obj, encoder);
+        mrc::codable::encode2(m_data, encoder);
+    }
+
+    static ComplexObject deserialize(const mrc::codable::Decoder2<ComplexObject>& decoder)
+    {
+        ComplexObject obj;
+
+        obj.m_name  = mrc::codable::decode2<std::string, ComplexObject>(decoder);
+        obj.m_value = mrc::codable::decode2<int, ComplexObject>(decoder);
+        obj.m_obj   = mrc::codable::decode2<TransferObject, ComplexObject>(decoder);
+        obj.m_data  = mrc::codable::decode2<std::vector<u_int8_t>, ComplexObject>(decoder);
+
+        return obj;
+    }
+
+  private:
+    std::string m_name;
+    int m_value{0};
+    TransferObject m_obj;
+    std::vector<u_int8_t> m_data;
+};
+
 TEST_F(TestNetwork, Arena)
 {
     std::shared_ptr<mrc::memory::memory_resource> mr;
@@ -688,9 +737,10 @@ TEST_F(TestNetwork, Arena)
 
 TEST_F(TestNetwork, TransferFullDescriptors)
 {
+    static_assert(codable::member_decodable<ComplexObject>);
     static_assert(codable::member_decodable<TransferObject>);
 
-    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
+    ComplexObject send_data = {"test", 42, {"test", 42, std::vector<u_int8_t>(1_KiB)}, std::vector<u_int8_t>(1_KiB)};
 
     auto send_data_copy = send_data;
 

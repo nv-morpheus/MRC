@@ -41,6 +41,8 @@ void DecoderBase::read_descriptor(memory::buffer_view dst_view) const
 
         std::memcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes());
     }
+
+    m_encoded_object.increment_payload_idx();
 }
 
 std::size_t DecoderBase::descriptor_size() const

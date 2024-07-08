@@ -116,16 +116,12 @@ struct Decoder2 final : public DecoderBase
   private:
     auto deserialize() const requires protocol_decodable<T>
     {
-        T value = codable_protocol<T>::deserialize(*this);
-        m_encoded_object.increment_payload_idx();
-        return value;
+        return codable_protocol<T>::deserialize(*this);
     };
 
     auto deserialize() const requires member_decodable<T>
     {
-        T value = T::deserialize(*this);
-        m_encoded_object.increment_payload_idx();
-        return value;
+        return T::deserialize(*this);
     };
 
     template <typename U>
