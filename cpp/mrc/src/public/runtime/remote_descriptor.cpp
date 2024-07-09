@@ -385,14 +385,13 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
     data_plane_resources.wait_requests(requests);
 
     // For the remote descriptor message, send decrement to the remote resources
-    remote_descriptor::RemoteDescriptorDecrementMessage dec_message;
+    remote_descriptor::DescriptorPullCompletionMessage dec_message;
     dec_message.object_id = descriptor->proto().object_id();
-    dec_message.tokens    = descriptor->proto().tokens();
 
     // TODO(Peter): Define `ucxx::AmReceiverCallbackInfo` at central place, must be known by all MRC processes.
     // Send a decrement message using custom AM receiver callback
     auto decrement_request = ep->amSend(&dec_message,
-                                        sizeof(remote_descriptor::RemoteDescriptorDecrementMessage),
+                                        sizeof(remote_descriptor::DescriptorPullCompletionMessage),
                                         UCS_MEMORY_TYPE_HOST,
                                         ucxx::AmReceiverCallbackInfo("MRC", 0));
 
@@ -405,7 +404,6 @@ void Descriptor2::setup_remote_payloads()
 
     // Transfer the info object
     remote_object.set_instance_id(m_data_plane_resources.get_instance_id());
-    remote_object.set_tokens(std::numeric_limits<uint64_t>::max());
 
     // Loop over all local payloads and convert them to remote payloads
 
@@ -432,7 +430,10 @@ void Descriptor2::setup_remote_payloads()
         deferred_msg->set_memory_block_size(ucx_block->bytes());
         deferred_msg->set_remote_key(ucx_block->packed_remote_keys());
     }
+}
 
+void Descriptor2::register_remote_descriptor()
+{
     m_data_plane_resources.register_remote_decriptor(shared_from_this());
 }
 }  // namespace mrc::runtime

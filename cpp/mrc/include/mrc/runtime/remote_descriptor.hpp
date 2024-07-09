@@ -427,9 +427,6 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
     memory::buffer serialize(std::shared_ptr<memory::memory_resource> mr);
 
     template <typename T>
-    memory::buffer_view serialize(memory::buffer_view buffer);
-
-    template <typename T>
     [[nodiscard]] const T deserialize() const;
 
     static std::shared_ptr<Descriptor2> create(std::any value, data_plane::DataPlaneResources2& data_plane_resources);
@@ -442,6 +439,7 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
         m_encoded_object(std::move(encoded_object)), m_data_plane_resources(data_plane_resources) {}
 
     void setup_remote_payloads();
+    void register_remote_descriptor();
 
     std::any m_value;
 
@@ -453,27 +451,16 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 template <typename T>
 memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> mr)
 {
-    m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<T>(m_value)));
+    if (!m_encoded_object)
+    {
+        m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<T>(m_value)));
+        this->setup_remote_payloads();
+    }
 
-    setup_remote_payloads();
+    this->register_remote_descriptor();
 
     // Allocate enough bytes to hold the encoded object
     auto buffer = memory::buffer(m_encoded_object->proto().ByteSizeLong(), mr);
-
-    if (!m_encoded_object->proto().SerializeToArray(buffer.data(), buffer.bytes()))
-    {
-        LOG(FATAL) << "Failed to serialize EncodedObjectProto to bytes";
-    }
-
-    return buffer;
-}
-
-template <typename T>
-memory::buffer_view Descriptor2::serialize(memory::buffer_view buffer)
-{
-    m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<T>(m_value)));
-
-    setup_remote_payloads();
 
     if (!m_encoded_object->proto().SerializeToArray(buffer.data(), buffer.bytes()))
     {

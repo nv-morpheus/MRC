@@ -196,9 +196,9 @@ class DataPlaneResources2
                                                  ucs_memory_type_t mem_type);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
-    uint64_t register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> remote_descriptor);
+    uint64_t register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
     uint64_t registered_remote_descriptor_count();
-    uint64_t registered_remote_descriptor_token_count(uint64_t object_id);
+    uint64_t registered_remote_descriptor_ptr_count(uint64_t object_id);
 
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
@@ -212,7 +212,8 @@ class DataPlaneResources2
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
-    std::atomic<uint64_t> m_next_object_id{0};
+    // An object_id of 0 (default protobuf int field value) signifies an unregistered descriptor
+    std::atomic<uint64_t> m_next_object_id{1};
 
     // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
     // std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>>>
@@ -220,14 +221,14 @@ class DataPlaneResources2
 
     uint64_t get_next_object_id();
 
-    void decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message);
+    void complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
 
     uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
     boost::fibers::mutex m_remote_descriptors_mutex{};
     boost::fibers::condition_variable m_remote_descriptors_cv{};
 
   protected:
-    std::map<uint64_t, std::shared_ptr<runtime::Descriptor2>> m_remote_descriptor_by_id;
+    std::map<uint64_t, std::vector<std::shared_ptr<runtime::Descriptor2>>> m_descriptor_by_id;
 };
 
 }  // namespace mrc::data_plane

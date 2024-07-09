@@ -161,22 +161,22 @@ DataPlaneResources2::DataPlaneResources2()
     DVLOG(10) << "initialize the registration cache for this context";
     m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
 
-    auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
+    auto pull_complete_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
         auto status = req->getStatus();
         if (status != UCS_OK)
         {
-            LOG(ERROR) << "Error calling decrement_callback, request failed with status " << status << "("
+            LOG(ERROR) << "Error calling pull_complete_callback, request failed with status " << status << "("
                        << ucs_status_string(status) << ")";
         }
 
-        auto* dec_message = reinterpret_cast<remote_descriptor::RemoteDescriptorDecrementMessage*>(
+        auto* message = reinterpret_cast<remote_descriptor::DescriptorPullCompletionMessage*>(
             req->getRecvBuffer()->data());
 
-        decrement_tokens(dec_message);
+        complete_remote_pull(message);
     });
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
-        decrement_callback);
+        pull_complete_callback);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -386,44 +386,54 @@ uint64_t DataPlaneResources2::get_next_object_id()
     return m_next_object_id++;
 }
 
-uint64_t DataPlaneResources2::register_remote_decriptor(
-    std::shared_ptr<runtime::Descriptor2> remote_descriptor)
+uint64_t DataPlaneResources2::register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
 {
-    auto object_id = get_next_object_id();
-    remote_descriptor->encoded_object().set_object_id(object_id);
+    // If the descriptor has an object_id > 0, the descriptor has already been registered and should not be re-registered
+    auto object_id = descriptor->encoded_object().object_id();
+    if (object_id > 0)
+    {
+        m_descriptor_by_id[object_id].push_back(descriptor);
+        return object_id;
+    }
+
+    object_id = get_next_object_id();
+    descriptor->encoded_object().set_object_id(object_id);
     {
         std::unique_lock lock(m_remote_descriptors_mutex);
         m_remote_descriptors_cv.wait(lock, [this] {
-            return m_remote_descriptor_by_id.size() < m_max_remote_descriptors;
+            return m_descriptor_by_id.size() < m_max_remote_descriptors;
         });
-        m_remote_descriptor_by_id[object_id] = remote_descriptor;
+        m_descriptor_by_id[object_id].push_back(descriptor);
     }
     return object_id;
 }
 
 uint64_t DataPlaneResources2::registered_remote_descriptor_count()
 {
-    return m_remote_descriptor_by_id.size();
+    return m_descriptor_by_id.size();
 }
 
-uint64_t DataPlaneResources2::registered_remote_descriptor_token_count(uint64_t object_id)
+uint64_t DataPlaneResources2::registered_remote_descriptor_ptr_count(uint64_t object_id)
 {
-    return m_remote_descriptor_by_id.at(object_id)->encoded_object().tokens();
+    return m_descriptor_by_id.at(object_id).size();
 }
 
-void DataPlaneResources2::decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message)
+void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message)
 {
-    if (dec_message->tokens > 0)
+    // If the mapping between object_id to descriptor shared ptrs exists, then there exists >= 1 shared ptrs
+    if (m_descriptor_by_id.find(message->object_id) != m_descriptor_by_id.end())
     {
-        auto remote_descriptor = m_remote_descriptor_by_id[dec_message->object_id];
-        auto tokens            = remote_descriptor->encoded_object().tokens();
-        tokens -= dec_message->tokens;
-        remote_descriptor->encoded_object().set_tokens(tokens);
-        if (tokens == 0)
+        // Once we've completed pulling of a descriptor, we remove a descriptor shared ptr from the vector
+        // When the vector becomes empty, there will be no more shared ptrs pointing to the descriptor object,
+        // it will be destructed accordingly.
+        // We should also remove that mapping as the object_id corresponding to that mapping will not be reused.
+        auto& descriptors = m_descriptor_by_id[message->object_id];
+        descriptors.pop_back();
+        if (descriptors.size() == 0)
         {
             {
                 std::unique_lock lock(m_remote_descriptors_mutex);
-                m_remote_descriptor_by_id.erase(dec_message->object_id);
+                m_descriptor_by_id.erase(message->object_id);
             }
             m_remote_descriptors_cv.notify_one();
         }
