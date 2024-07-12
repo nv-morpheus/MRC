@@ -628,11 +628,11 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     static_assert(codable::member_decodable<ComplexObject>);
     static_assert(codable::member_decodable<TransferObject>);
 
-    ComplexObject send_data = {"test", 42, {"test", 42, std::vector<u_int8_t>(1_KiB)}, std::vector<u_int8_t>(1_KiB)};
+    ComplexObject send_data = {"test", 42, {"test", 42, std::vector<u_int8_t>(8_KiB)}, std::vector<u_int8_t>(8_KiB)};
 
     auto send_data_copy = send_data;
 
-    auto send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
 
     // Check that no remote payloads are yet registered with `DataPlaneResources2`.
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
@@ -665,9 +665,8 @@ TEST_F(TestNetwork, TransferFullDescriptors)
                                            receive_request->getRecvBuffer()->getSize(),
                                            mrc::memory::memory_kind::host);
 
-    auto recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
-
-    auto recv_descriptor_object_id = recv_descriptor->encoded_object().object_id();
+    std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
+    uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
 
     EXPECT_EQ(send_descriptor_object_id, recv_descriptor_object_id);
 
@@ -707,12 +706,12 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     // Create initial data
     static_assert(codable::decodable<TransferObject>);
 
-    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(1_KiB)};
+    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(8_KiB)};
 
     auto send_data_copy = send_data;
 
     // Create a descriptor
-    auto send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
 
     // Check that no remote payloads are yet registered with `DataPlaneResources2`.
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
@@ -728,10 +727,10 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     send_descriptor = nullptr;
 
     auto processRequest = [this, &send_data, send_descriptor_object_id](auto& resources_recv,
-                                                                               auto& endpoint_recv,
-                                                                               auto& endpoint_send,
-                                                                               auto& serialized_data,
-                                                                               auto expected_tokens) {
+                                                                        auto& endpoint_recv,
+                                                                        auto& endpoint_send,
+                                                                        auto& serialized_data,
+                                                                        auto expected_ptrs) {
         auto receive_request = resources_recv->am_recv_async(endpoint_send);
         auto send_request    = m_resources->am_send_async(endpoint_recv, serialized_data);
 
@@ -750,21 +749,21 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
         auto buffer_view = memory::buffer_view(receive_request->getRecvBuffer()->data(),
                                               receive_request->getRecvBuffer()->getSize(),
                                               mrc::memory::memory_kind::host);
-        auto recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
-        auto recv_descriptor_object_id = recv_descriptor->encoded_object().object_id();
+        std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
+        uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
 
-        if (expected_tokens > 0)
+        if (expected_ptrs > 0)
         {
             // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case
             // it fails to complete. Wait for remote decrement messages.
-            while (m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id) != expected_tokens)
+            while (m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id) != expected_ptrs)
             {
                 m_resources->progress();
                 resources_recv->progress();
             }
 
             // Redundant with the above, but clarify intent.
-            EXPECT_EQ(m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id), expected_tokens);
+            EXPECT_EQ(m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id), expected_ptrs);
         }
         else
         {

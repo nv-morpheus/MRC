@@ -167,11 +167,11 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
         // Allocate the memory needed for this and prevent it from going out-of-scope before request completes
         buffers.emplace_back(deferred_remote_msg.bytes(), mr);
 
-        // now issue the request
-        requests.push_back(data_plane_resources.memory_recv_async(ep,
-                                                                  buffers.back(),
-                                                                  deferred_remote_msg.address(),
-                                                                  deferred_remote_msg.remote_key().data()));
+        // // now issue the request
+        // requests.push_back(data_plane_resources.memory_recv_async(ep,
+        //                                                           buffers.back(),
+        //                                                           deferred_remote_msg.address(),
+        //                                                           deferred_remote_msg.remote_key().data()));
 
         deferred_msg->set_address(reinterpret_cast<uintptr_t>(buffers.back().data()));
         deferred_msg->set_bytes(buffers.back().bytes());
@@ -348,8 +348,6 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
         LOG(FATAL) << "Failed to parse EncodedObjectProto from bytes";
     }
 
-    auto mr = memory::malloc_memory_resource::instance();
-
     std::vector<std::shared_ptr<ucxx::Request>> requests;
     std::vector<memory::buffer> buffers;
 
@@ -357,7 +355,7 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
     auto ep = data_plane_resources.find_endpoint(descriptor->proto().instance_id());
 
     // Loop over all remote payloads and convert them to local payloads
-    for (const auto& remote_payload : descriptor->proto().payloads())
+    for (auto& remote_payload : *descriptor->proto().mutable_payloads())
     {
         // If payload is an EagerMessage, we do not need to do any pulling
         if (remote_payload.has_eager_msg())
@@ -366,19 +364,19 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
         }
 
         // Get the DeferredMessage of the remote payload
-        auto deferred_remote_msg = remote_payload.deferred_msg();
+        auto* deferred_remote_msg = remote_payload.mutable_deferred_msg();
 
         // Allocate the memory needed for this and prevent it from going out-of-scope before request completes
-        buffers.emplace_back(deferred_remote_msg.bytes(), mr);
+        auto mr = memory::malloc_memory_resource::instance();
+        buffers.emplace_back(deferred_remote_msg->bytes(), mr);
 
-        // now issue the request
         requests.push_back(data_plane_resources.memory_recv_async(ep,
                                                                   buffers.back(),
-                                                                  deferred_remote_msg.address(),
-                                                                  deferred_remote_msg.remote_key().data()));
+                                                                  deferred_remote_msg->address(),
+                                                                  deferred_remote_msg->remote_key()));
 
-        deferred_remote_msg.set_address(reinterpret_cast<uintptr_t>(buffers.back().data()));
-        deferred_remote_msg.set_bytes(buffers.back().bytes());
+        deferred_remote_msg->set_address(reinterpret_cast<uintptr_t>(buffers.back().data()));
+        deferred_remote_msg->set_bytes(buffers.back().bytes());
     }
 
     // Now, we need to wait for all requests to be complete
@@ -395,7 +393,9 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
                                         UCS_MEMORY_TYPE_HOST,
                                         ucxx::AmReceiverCallbackInfo("MRC", 0));
 
-    return std::shared_ptr<Descriptor2>(new Descriptor2(std::move(descriptor), data_plane_resources));
+    auto instance = std::shared_ptr<Descriptor2>(new Descriptor2(std::move(descriptor), data_plane_resources));
+    instance->m_local_buffers = std::move(buffers);
+    return instance;
 }
 
 void Descriptor2::setup_remote_payloads()
@@ -417,18 +417,12 @@ void Descriptor2::setup_remote_payloads()
 
         auto* deferred_msg = payload.mutable_deferred_msg();
 
-        auto ucx_block = m_data_plane_resources.registration_cache().lookup(deferred_msg->address());
+        // Need to register the memory
+        auto ucx_block = m_data_plane_resources.registration_cache3().add_block(deferred_msg->address(),
+                                                                                deferred_msg->bytes());
 
-        if (!ucx_block.has_value())
-        {
-            // Need to register the memory
-            ucx_block = m_data_plane_resources.registration_cache().add_block(deferred_msg->address(),
-                                                                            deferred_msg->bytes());
-        }
-
-        deferred_msg->set_memory_block_address(reinterpret_cast<std::uint64_t>(ucx_block->data()));
-        deferred_msg->set_memory_block_size(ucx_block->bytes());
-        deferred_msg->set_remote_key(ucx_block->packed_remote_keys());
+        auto serializedRemoteKey = ucx_block->createRemoteKey()->serialize();
+        deferred_msg->set_remote_key(serializedRemoteKey);
     }
 }
 

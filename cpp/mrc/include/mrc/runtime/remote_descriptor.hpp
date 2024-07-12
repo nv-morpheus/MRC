@@ -427,7 +427,7 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
     memory::buffer serialize(std::shared_ptr<memory::memory_resource> mr);
 
     template <typename T>
-    [[nodiscard]] const T deserialize() const;
+    [[nodiscard]] const T deserialize();
 
     static std::shared_ptr<Descriptor2> create(std::any value, data_plane::DataPlaneResources2& data_plane_resources);
     static std::shared_ptr<Descriptor2> create(memory::buffer_view view, data_plane::DataPlaneResources2& data_plane_resources);
@@ -443,6 +443,8 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 
     std::any m_value;
 
+    std::vector<memory::buffer> m_local_buffers;
+
     std::unique_ptr<codable::DescriptorObjectHandler> m_encoded_object;
 
     data_plane::DataPlaneResources2& m_data_plane_resources;
@@ -453,7 +455,7 @@ memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> m
 {
     if (!m_encoded_object)
     {
-        m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<T>(m_value)));
+        m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
         this->setup_remote_payloads();
     }
 
@@ -471,12 +473,11 @@ memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> m
 }
 
 template <typename T>
-[[nodiscard]] const T Descriptor2::deserialize() const
+[[nodiscard]] const T Descriptor2::deserialize()
 {
-    return m_value.has_value() ? std::move(std::any_cast<T>(m_value)) :
-                                 std::move(mrc::codable::decode2<T>(*m_encoded_object));
+    T return_value = m_value.has_value() ? std::move(std::any_cast<T>(m_value)) :
+                                           std::move(mrc::codable::decode2<T>(*m_encoded_object));
+    m_value.reset();
+    return std::move(return_value);
 }
-
-
-
 }  // namespace mrc::runtime

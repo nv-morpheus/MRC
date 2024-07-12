@@ -159,7 +159,7 @@ DataPlaneResources2::DataPlaneResources2()
     m_address = m_worker->getAddress();
 
     DVLOG(10) << "initialize the registration cache for this context";
-    m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
+    m_registration_cache3 = std::make_shared<ucx::RegistrationCache3>(m_context);
 
     auto pull_complete_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
         auto status = req->getStatus();
@@ -202,6 +202,11 @@ std::string DataPlaneResources2::address() const
 ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
 {
     return *m_registration_cache;
+}
+
+ucx::RegistrationCache3& DataPlaneResources2::registration_cache3() const
+{
+    return *m_registration_cache3;
 }
 
 std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::WorkerAddress& address,
@@ -288,32 +293,20 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_send_async(std::share
 std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                                       memory::buffer_view buffer_view,
                                                                       uintptr_t remote_addr,
-                                                                      const void* packed_rkey_data)
+                                                                      const std::string& serialized_rkey)
 {
-    return this->memory_recv_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, packed_rkey_data);
+    return this->memory_recv_async(endpoint, buffer_view.data(), buffer_view.bytes(), remote_addr, serialized_rkey);
 }
 
 std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                                       void* addr,
                                                                       std::size_t bytes,
                                                                       uintptr_t remote_addr,
-                                                                      const void* packed_rkey_data)
+                                                                      const std::string& serialized_rkey)
 {
-    ucp_rkey_h rkey;
-
-    // Unpack the key
-    auto rc = ucp_ep_rkey_unpack(endpoint->getHandle(), packed_rkey_data, &rkey);
-    CHECK_EQ(rc, UCS_OK);
-
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->memGet(addr,
-                                    bytes,
-                                    remote_addr,
-                                    rkey,
-                                    false,
-                                    [rkey](ucs_status_t status, std::shared_ptr<void> user_data) {
-                                        ucp_rkey_destroy(rkey);
-                                    });
+    auto rkey = ucxx::createRemoteKeyFromSerialized(endpoint, serialized_rkey);
+    auto request = endpoint->memGet(addr, bytes, rkey);
 
     return request;
 }

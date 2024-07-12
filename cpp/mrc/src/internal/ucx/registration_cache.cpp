@@ -129,4 +129,36 @@ void RegistrationCache2::unregister_memory(ucp_mem_h handle, void* rbuffer)
         }
     }
 }
+
+RegistrationCache3::RegistrationCache3(std::shared_ptr<ucxx::Context> context) : m_context(std::move(context))
+{
+    CHECK(m_context);
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(void* addr, std::size_t bytes)
+{
+    DCHECK(addr && bytes);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    m_memory_handle_by_address[addr] = m_context->createMemoryHandle(bytes, addr);
+    return m_memory_handle_by_address[addr];
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uintptr_t addr, std::size_t bytes)
+{
+    return this->add_block(reinterpret_cast<void*>(addr), bytes);
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::lookup(const void* addr) const noexcept
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    if (m_memory_handle_by_address.find(addr) != m_memory_handle_by_address.end())
+    {
+        return m_memory_handle_by_address.at(addr);
+    }
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::lookup(uintptr_t addr) const noexcept
+{
+    return this->lookup(reinterpret_cast<const void*>(addr));
+}
 }  // namespace mrc::ucx
