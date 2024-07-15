@@ -417,12 +417,17 @@ void Descriptor2::setup_remote_payloads()
 
         auto* deferred_msg = payload.mutable_deferred_msg();
 
-        // Need to register the memory
-        auto ucx_block = m_data_plane_resources.registration_cache3().add_block(deferred_msg->address(),
-                                                                                deferred_msg->bytes());
+        auto ucx_block = m_data_plane_resources.registration_cache3().lookup(deferred_msg->address());
 
-        auto serializedRemoteKey = ucx_block->createRemoteKey()->serialize();
-        deferred_msg->set_remote_key(serializedRemoteKey);
+        if (!ucx_block.has_value())
+        {
+            // Need to register the memory
+            ucx_block = m_data_plane_resources.registration_cache3().add_block(deferred_msg->address(),
+                                                                               deferred_msg->bytes());
+        }
+
+        auto remoteKey = ucx_block.value()->createRemoteKey();
+        deferred_msg->set_remote_key(remoteKey->serialize());
     }
 }
 

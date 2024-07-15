@@ -178,9 +178,8 @@ class RegistrationCache2 final
 /**
  * @brief UCX Registration Cache
  *
- * UCX memory registration object that will both register/deregister memory as well as cache the set of local and remote
- * keys for each registration. The cache can be queried for the original memory block by providing any valid address
- * contained in the contiguous block.
+ * UCX memory registration object that will both register/deregister memory. The cache can be queried for the original
+ * memory block by providing the starting address of the contiguous block.
  */
 class RegistrationCache3 final
 {
@@ -201,38 +200,19 @@ class RegistrationCache3 final
     std::shared_ptr<ucxx::MemoryHandle> add_block(uintptr_t addr, std::size_t bytes);
 
     /**
-     * @brief Deregister a contiguous block of memory from the ucx context and remove the cache entry
-     *
-     * @param addr
-     * @param bytes
-     * @return std::size_t
-     */
-    std::size_t drop_block(const void* addr, std::size_t bytes);
-
-    std::size_t drop_block(uintptr_t addr, std::size_t bytes);
-
-    /**
      * @brief Look up the memory registration details for a given address.
      *
-     * This method queries the registration cache to find the UcxMemoryBlock containing the original address and size as
-     * well as the local and remote keys associated with the memory block.
-     *
-     * Any address contained within a registered block can be used to query the UcxMemoryBlock
+     * This method queries the registration cache to find the MemoryHanlde containing the original address and size as
+     * well as the serialized remote keys associated with the memory block.
      *
      * @param addr
-     * @return const MemoryBlock&
+     * @return std::shared_ptr<ucxx::MemoryHandle>
      */
-    std::shared_ptr<ucxx::MemoryHandle> lookup(const void* addr) const noexcept;
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(const void* addr) const noexcept;
 
-    std::shared_ptr<ucxx::MemoryHandle> lookup(uintptr_t addr) const noexcept;
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uintptr_t addr) const noexcept;
 
   private:
-    ucp_mem_h register_memory(const void* address, std::size_t bytes);
-
-    std::tuple<ucp_mem_h, void*, std::size_t> register_memory_with_rkey(const void* address, std::size_t bytes);
-
-    void unregister_memory(ucp_mem_h handle, void* rbuffer = nullptr);
-
     mutable std::mutex m_mutex;
     const std::shared_ptr<ucxx::Context> m_context;
     std::map<const void*, std::shared_ptr<ucxx::MemoryHandle>> m_memory_handle_by_address;

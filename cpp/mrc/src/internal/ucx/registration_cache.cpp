@@ -148,16 +148,17 @@ std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uintptr_t addr
     return this->add_block(reinterpret_cast<void*>(addr), bytes);
 }
 
-std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::lookup(const void* addr) const noexcept
+std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(const void* addr) const noexcept
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     if (m_memory_handle_by_address.find(addr) != m_memory_handle_by_address.end())
     {
         return m_memory_handle_by_address.at(addr);
     }
+    return std::nullopt;
 }
 
-std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::lookup(uintptr_t addr) const noexcept
+std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(uintptr_t addr) const noexcept
 {
     return this->lookup(reinterpret_cast<const void*>(addr));
 }

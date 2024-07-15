@@ -628,7 +628,7 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     static_assert(codable::member_decodable<ComplexObject>);
     static_assert(codable::member_decodable<TransferObject>);
 
-    ComplexObject send_data = {"test", 42, {"test", 42, std::vector<u_int8_t>(8_KiB)}, std::vector<u_int8_t>(8_KiB)};
+    ComplexObject send_data = {"test", 42, {"test", 42, std::vector<u_int8_t>(64_KiB)}, std::vector<u_int8_t>(8_KiB)};
 
     auto send_data_copy = send_data;
 
@@ -706,7 +706,7 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     // Create initial data
     static_assert(codable::decodable<TransferObject>);
 
-    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(8_KiB)};
+    TransferObject send_data = {"test", 42, std::vector<u_int8_t>(64_KiB)};
 
     auto send_data_copy = send_data;
 
