@@ -25,7 +25,7 @@
 
 namespace mrc::ucx {
 
-ucs_memory_type_t to_ucs_memory_type(memory::memory_kind kind)
+inline ucs_memory_type_t to_ucs_memory_type(memory::memory_kind kind)
 {
     switch (kind)
     {

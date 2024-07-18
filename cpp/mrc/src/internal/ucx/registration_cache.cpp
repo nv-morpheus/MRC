@@ -16,6 +16,7 @@
  */
 
 #include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/utils.hpp"
 
 #include <ucp/api/ucp.h>
 #include <ucxx/api.h>
@@ -135,17 +136,17 @@ RegistrationCache3::RegistrationCache3(std::shared_ptr<ucxx::Context> context) :
     CHECK(m_context);
 }
 
-std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(void* addr, std::size_t bytes)
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(void* addr, std::size_t bytes, memory::memory_kind memory_type)
 {
     DCHECK(addr && bytes);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    m_memory_handle_by_address[addr] = m_context->createMemoryHandle(bytes, addr);
+    m_memory_handle_by_address[addr] = m_context->createMemoryHandle(bytes, addr, ucx::to_ucs_memory_type(memory_type));
     return m_memory_handle_by_address[addr];
 }
 
-std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uintptr_t addr, std::size_t bytes)
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type)
 {
-    return this->add_block(reinterpret_cast<void*>(addr), bytes);
+    return this->add_block(reinterpret_cast<void*>(addr), bytes, memory_type);
 }
 
 std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(const void* addr) const noexcept

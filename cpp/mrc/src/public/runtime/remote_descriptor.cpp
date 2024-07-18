@@ -27,8 +27,8 @@
 
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
-#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 #include "mrc/memory/resources/memory_resource.hpp"
+#include "mrc/memory/resources/memory_resource_alloc.hpp"
 #include "mrc/protos/codable.pb.h"
 
 #include <ucp/api/ucp.h>
@@ -367,7 +367,7 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
         auto* deferred_remote_msg = remote_payload.mutable_deferred_msg();
 
         // Allocate the memory needed for this and prevent it from going out-of-scope before request completes
-        auto mr = memory::malloc_memory_resource::instance();
+        auto mr = memory::fetch_memory_resource_instance(mrc::codable::decode_memory_type(remote_payload.memory_kind()));
         buffers.emplace_back(deferred_remote_msg->bytes(), mr);
 
         requests.push_back(data_plane_resources.memory_recv_async(ep,
@@ -423,7 +423,8 @@ void Descriptor2::setup_remote_payloads()
         {
             // Need to register the memory
             ucx_block = m_data_plane_resources.registration_cache3().add_block(deferred_msg->address(),
-                                                                               deferred_msg->bytes());
+                                                                               deferred_msg->bytes(),
+                                                                               mrc::codable::decode_memory_type(payload.memory_kind()));
         }
 
         auto remoteKey = ucx_block.value()->createRemoteKey();

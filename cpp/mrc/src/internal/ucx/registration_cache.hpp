@@ -21,6 +21,8 @@
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/memory_block.hpp"
 
+#include "mrc/memory/memory_kind.hpp"
+
 #include <glog/logging.h>
 
 #include <cstdint>
@@ -195,9 +197,9 @@ class RegistrationCache3 final
      * @param addr
      * @param bytes
      */
-    std::shared_ptr<ucxx::MemoryHandle> add_block(void* addr, std::size_t bytes);
+    std::shared_ptr<ucxx::MemoryHandle> add_block(void* addr, std::size_t bytes, memory::memory_kind memory_type);
 
-    std::shared_ptr<ucxx::MemoryHandle> add_block(uintptr_t addr, std::size_t bytes);
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type);
 
     /**
      * @brief Look up the memory registration details for a given address.

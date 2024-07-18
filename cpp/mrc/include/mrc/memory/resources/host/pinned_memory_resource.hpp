@@ -22,10 +22,20 @@
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 
+#include <memory>
+
 namespace mrc::memory {
 
 class pinned_memory_resource final : public memory_resource
 {
+  public:
+    static std::shared_ptr<pinned_memory_resource> instance()
+    {
+        static std::shared_ptr<pinned_memory_resource> instance = std::make_shared<pinned_memory_resource>();
+        return instance;
+    }
+
+  private:
     void* do_allocate(std::size_t bytes) final
     {
         // don't allocate anything if the user requested zero bytes

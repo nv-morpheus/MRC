@@ -17,6 +17,8 @@
 
 #include "mrc/codable/decode.hpp"
 
+#include <cuda_runtime.h>
+
 namespace mrc::codable {
 
 DecoderBase::DecoderBase(const DescriptorObjectHandler& encoded_object) : m_encoded_object(encoded_object) {}
@@ -26,20 +28,30 @@ void DecoderBase::read_descriptor(memory::buffer_view dst_view) const
     // Get the next unprocessed payload
     const auto& payload = m_encoded_object.get_current_payload();
 
-    CHECK_EQ(payload.memory_kind(), mrc::codable::protos::MemoryKind::Host) << "Only host memory is "
-                                                                               "supported at this time";
-
     if (payload.has_eager_msg())
     {
         const auto& eager_msg = payload.eager_msg();
 
+        // Eager messages will always be host to host memcopy
         std::memcpy(dst_view.data(), eager_msg.data().data(), eager_msg.data().size());
     }
     else
     {
         const auto& deferred_msg = payload.deferred_msg();
-
-        std::memcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes());
+        switch (payload.memory_kind())
+        {
+            case protos::MemoryKind::Host:
+            case protos::MemoryKind::Pinned:
+                std::memcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes());
+                break;
+            case protos::MemoryKind::Device:
+                cudaMemcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes(), cudaMemcpyDeviceToHost);
+                break;
+            case protos::MemoryKind::Managed:
+                cudaMemcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes(), cudaMemcpyDefault);
+            default:
+                LOG(FATAL) << "unhandled protos::MemoryKind";
+        };
     }
 
     m_encoded_object.increment_payload_idx();

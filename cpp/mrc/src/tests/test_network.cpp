@@ -71,6 +71,8 @@
 #include <ucs/memory/memory_type.h>
 #include <ucxx/api.h>
 
+#include <cuda_runtime.h>
+
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -138,20 +140,6 @@ template <typename T>
 struct codable_protocol<std::vector<T>>
 {
     static void serialize(const std::vector<T>& obj,
-                          mrc::codable::Encoder<std::vector<T>>& encoder,
-                          const mrc::codable::EncodingOptions& opts)
-    {
-        // First put in the size
-        mrc::codable::encode2(obj.size(), encoder);
-
-        // Now encode each object
-        for (const auto& o : obj)
-        {
-            mrc::codable::encode2(o, encoder);
-        }
-    }
-
-    static void serialize(const std::vector<T>& obj,
                           mrc::codable::Encoder2<std::vector<T>>& encoder)
     {
         // First put in the size
@@ -172,22 +160,6 @@ struct codable_protocol<std::vector<T>>
         }
     }
 
-    static std::vector<T> deserialize(const Decoder<std::vector<T>>& decoder)
-    {
-        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(), decoder.type_index_hash_for_object(object_idx));
-
-        // auto count = mrc::codable::decode2<size_t>(decoder, object_idx);
-
-        auto object = std::vector<T>(10);
-
-        // auto idx   = decoder.start_idx_for_object(object_idx);
-        // auto bytes = decoder.buffer_size(idx);
-
-        // decoder.copy_from_buffer({object.data(), count * sizeof(T), memory::memory_kind::host});
-
-        return object;
-    }
-
     static std::vector<T> deserialize(const Decoder2<std::vector<T>>& decoder)
     {
         // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
@@ -203,9 +175,34 @@ struct codable_protocol<std::vector<T>>
     }
 };
 
+// Serialization methods meant for testing device allocated memory
+template <>
+struct codable_protocol<unsigned char*>
+{
+    static void serialize(const unsigned char* obj,
+                          mrc::codable::Encoder2<unsigned char*>& encoder)
+    {
+        size_t size = 64_KiB;  // Assuming a fixed size for this example
+        mrc::codable::encode2(size, encoder);
+
+        encoder.write_descriptor({obj, size * sizeof(unsigned char), memory::memory_kind::device});
+    }
+
+    static unsigned char* deserialize(const Decoder2<unsigned char*>& decoder)
+    {
+        size_t size = mrc::codable::decode2<size_t>(decoder);
+
+        unsigned char* object;
+        cudaMalloc((void**)&object, size * sizeof(unsigned char));
+
+        decoder.read_descriptor({object, size * sizeof(unsigned char), memory::memory_kind::device});
+
+        return object;
+    }
+};
+
 }  // namespace mrc::codable
 
-// TODO: Add logging to constructor, destructor to determine lifetime of object
 class TransferObject
 {
   public:
@@ -687,6 +684,82 @@ TEST_F(TestNetwork, TransferFullDescriptors)
     auto recv_data = recv_descriptor->deserialize<decltype(send_data)>();
 
     EXPECT_EQ(send_data, recv_data);
+}
+
+TEST_F(TestNetwork, TransferFullDescriptorsDevice)
+{
+    static_assert(codable::member_decodable<ComplexObject>);
+    static_assert(codable::member_decodable<TransferObject>);
+
+    const size_t data_size = 64_KiB;
+    std::vector<u_int8_t> send_data_host(data_size);
+
+    u_int8_t* send_data_device;
+    cudaMalloc(&send_data_device, send_data_host.size() * sizeof(u_int8_t));
+    cudaMemcpy(send_data_device, send_data_host.data(), send_data_host.size() * sizeof(u_int8_t), cudaMemcpyHostToDevice);
+
+    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_device), *m_resources);
+
+    // Check that no remote payloads are yet registered with `DataPlaneResources2`.
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+
+    // Get the serialized data
+    auto serialized_data           = send_descriptor->serialize<u_int8_t*>(memory::malloc_memory_resource::instance());
+    auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
+
+    // Check that there is exactly 1 registered descriptor
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 1);
+    EXPECT_EQ(m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id), 1);
+
+    send_descriptor = nullptr;
+
+    auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
+    auto send_request    = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
+
+    while (!send_request->isCompleted() || !receive_request->isCompleted())
+    {
+        m_resources->progress();
+    }
+
+    // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
+    // invalid once `DataPlaneResources2` releases it.
+    std::weak_ptr<runtime::Descriptor2> registered_send_descriptor = m_resources->get_descriptor(send_descriptor_object_id);
+    EXPECT_NE(registered_send_descriptor.lock(), nullptr);
+
+    // Create a descriptor from the received data
+    auto buffer_view = memory::buffer_view(receive_request->getRecvBuffer()->data(),
+                                           receive_request->getRecvBuffer()->getSize(),
+                                           mrc::memory::memory_kind::host);
+
+    std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
+    uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
+
+    EXPECT_EQ(send_descriptor_object_id, recv_descriptor_object_id);
+
+    // TODO(Peter): This is now completely async and we must progress the worker, we need a timeout in case it fails to
+    // complete.
+    // Wait for remote decrement messages.
+    while (registered_send_descriptor.lock() != nullptr)
+        m_resources->progress();
+
+    // Redundant with the above, but clarify intent.
+    EXPECT_EQ(registered_send_descriptor.lock(), nullptr);
+
+    // Check all remote payloads have been deregistered, including the one previously transferred.
+    EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
+    EXPECT_THROW(m_resources->registered_remote_descriptor_ptr_count(send_descriptor_object_id), std::out_of_range);
+
+    // Finally, get the value
+    auto recv_data_device = recv_descriptor->deserialize<decltype(send_data_device)>();
+
+    std::vector<u_int8_t> recv_data_host(data_size);
+    cudaMemcpy(recv_data_host.data(), recv_data_device, data_size * sizeof(u_int8_t), cudaMemcpyDeviceToHost);
+
+    EXPECT_EQ(send_data_host, recv_data_host);
+
+    // Free device memory
+    cudaFree(send_data_device);
+    cudaFree(recv_data_device);
 }
 
 TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
