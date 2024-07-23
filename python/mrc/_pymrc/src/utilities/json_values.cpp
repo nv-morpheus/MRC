@@ -187,7 +187,7 @@ nlohmann::json JSONValues::to_json(unserializable_handler_fn_t unserializable_ha
 
     if (!patches.empty())
     {
-        json_doc.patch_inplace(patches);
+        return json_doc.patch(patches);
     }
 
     return json_doc;
