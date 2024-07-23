@@ -37,6 +37,16 @@ files:
     output: none
     includes:
       - checks
+ 
+  py_build:
+    output: none
+    includes:
+      - build
+
+  py_test:
+    output: none
+    includes:
+      - testing
 
 channels:
   - conda-forge
@@ -69,6 +79,9 @@ dependencies:
           - pybind11-stubgen=0.10
           - scikit-build=0.17
           - ucx=1.15
+      - output_types: [requirements]
+        packages:
+          - pybind11-stubgen==0.10.5
 
   checks:
     common:
@@ -100,9 +113,9 @@ dependencies:
 
   testing:
     common:
-      - output_types: [conda]
+      - output_types: [requirements, conda]
         packages:
-          - pytest
+          - pytest<8
           - pytest-asyncio
           - pytest-timeout
 
