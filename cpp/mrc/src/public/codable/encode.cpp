@@ -37,11 +37,14 @@ void EncoderBase::write_descriptor(memory::const_buffer_view view)
     switch (kind)
     {
     case MessageKind::Eager: {
-        auto* eager_msg = payload->mutable_eager_msg();
+        if (view.kind() == memory::memory_kind::host)
+        {
+            auto* eager_msg = payload->mutable_eager_msg();
 
-        eager_msg->set_data(view.data(), view.bytes());
+            eager_msg->set_data(view.data(), view.bytes());
 
-        return;
+            return;
+        }
     }
     case MessageKind::Deferred: {
         auto* deferred_msg = payload->mutable_deferred_msg();

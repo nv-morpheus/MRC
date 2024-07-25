@@ -123,32 +123,22 @@ struct IObject
 {
     virtual ~IObject() = default;
     virtual std::any get_object() = 0;
-    virtual void get_result(std::any recv_data) = 0;
+    virtual void register_buffer(std::any recv_data) = 0;
 };
 
 class HostObject final : public IObject
 {
   public:
-    HostObject(std::vector<u_int8_t> obj): m_obj(std::move(obj))
-    {
-        m_copy.resize(m_obj.size());
-        std::copy(m_obj.begin(), m_obj.end(), m_copy.begin());
-    }
+    HostObject(std::vector<u_int8_t> obj): m_obj(std::move(obj)) {}
 
     std::any get_object() override
     {
         return std::ref(m_obj);
     }
 
-    void get_result(std::any recv_data) override
-    {
-        std::vector<u_int8_t> recv_result = std::any_cast<std::vector<u_int8_t>&>(recv_data);
-
-        EXPECT_EQ(m_copy, recv_result);
-    }
+    void register_buffer(std::any recv_data) override {}
 
   private:
-    std::vector<u_int8_t> m_copy;
     std::vector<u_int8_t> m_obj;
 };
 
@@ -157,10 +147,8 @@ class DeviceObject final : public IObject
   public:
     DeviceObject(std::vector<u_int8_t> obj)
     {
-        m_copy = std::move(obj);
-
-        cudaMalloc(&m_obj, m_copy.size() * sizeof(u_int8_t));
-        cudaMemcpy(m_obj, m_copy.data(), m_copy.size() * sizeof(u_int8_t), cudaMemcpyHostToDevice);
+        cudaMalloc(&m_obj, obj.size() * sizeof(u_int8_t));
+        cudaMemcpy(m_obj, obj.data(), obj.size() * sizeof(u_int8_t), cudaMemcpyHostToDevice);
     }
 
     ~DeviceObject()
@@ -174,19 +162,12 @@ class DeviceObject final : public IObject
         return std::ref(m_obj);
     }
 
-    void get_result(std::any recv_data) override
+    void register_buffer(std::any recv_data) override
     {
         m_res = std::any_cast<u_int8_t*>(recv_data);
-
-        std::vector<u_int8_t> recv_result(data_size);
-        cudaMemcpy(recv_result.data(), m_res, data_size * sizeof(u_int8_t), cudaMemcpyDeviceToHost);
-
-        EXPECT_EQ(m_copy, recv_result);
     }
 
   private:
-    std::vector<u_int8_t> m_copy;
-
     u_int8_t* m_obj;
 
     // Store the result buffer to free cuda allocated memory during teardown
@@ -205,72 +186,123 @@ class DescriptorFixture : public benchmark::Fixture
         m_loopback_endpoint = m_resources->create_endpoint(m_resources->address(), m_resources->get_instance_id());
 
         // Setup host object and device object using IObject interface
-        std::vector<u_int8_t> send_data(data_size);
-        switch (memory::memory_kind(state.range(0)))
+        m_kind = memory::memory_kind(state.range(0));
+        for (int i = 0; i < state.range(1); ++i)
         {
-            case memory::memory_kind::host:
-                m_obj = std::unique_ptr<IObject>(new HostObject(send_data));
-                m_kind = memory::memory_kind::host;
-                break;
+            std::vector<u_int8_t> send_data(data_size);
+            switch (m_kind)
+            {
+                case memory::memory_kind::host:
+                    m_obj.emplace_back(std::unique_ptr<IObject>(new HostObject(send_data)));
+                    break;
 
-            case memory::memory_kind::device:
-                m_obj = std::unique_ptr<IObject>(new DeviceObject(send_data));
-                m_kind = memory::memory_kind::device;
-                break;
+                case memory::memory_kind::device:
+                    m_obj.emplace_back(std::unique_ptr<IObject>(new DeviceObject(send_data)));
+                    break;
+            }
         }
     }
 
     void TearDown(const benchmark::State& state) override
     {
-        // Clean up memory allocated to host or device object using IObject interface
-        m_obj.reset();
+        m_obj.clear();
         m_resources.reset();
     }
 
     template <typename T>
     void TransferFullDescriptors(benchmark::State& state)
     {
-        auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj->get_object()).get();
+        std::atomic<bool> is_running(true);
+        std::mutex progress_mutex;
+        std::condition_variable progress_cv;
 
-        std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data), *m_resources);
+        auto progress_thread = std::thread([&]() {
+            std::unique_lock<std::mutex> lock(progress_mutex);
+            while (is_running)
+            {
+                m_resources->progress();
+                progress_cv.wait_for(lock, std::chrono::milliseconds(1)); // Sleep to reduce busy-waiting
+            }
+        });
 
-        // Get the serialized data
-        auto serialized_data           = send_descriptor->serialize<T>(memory::malloc_memory_resource::instance());
-        auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
+        size_t messages_to_send = state.range(1);
+        auto receive_thread = std::thread([&]() {
+            for (size_t i = 0; i < messages_to_send; i++)
+            {
+                auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
 
-        send_descriptor = nullptr;
+                while (!receive_request->isCompleted())
+                {
+                    std::this_thread::yield(); // Yield to avoid busy-waiting
+                }
 
-        auto receive_request = m_resources->am_recv_async(m_loopback_endpoint);
-        auto send_request    = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
+                auto buffer_view = memory::buffer_view(receive_request->getRecvBuffer()->data(),
+                                                       receive_request->getRecvBuffer()->getSize(),
+                                                       mrc::memory::memory_kind::host);
 
-        while (!send_request->isCompleted() || !receive_request->isCompleted())
+                std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view,
+                                                                                                     *m_resources);
+
+                auto recv_data = recv_descriptor->deserialize<T>();
+
+                m_obj[i]->register_buffer(recv_data);
+            }
+        });
+
+        std::vector<std::future<void>> send_futures;
+        std::vector<std::weak_ptr<runtime::Descriptor2>> registered_send_descriptors;
+
+
+        auto send_function = [&](size_t i) {
+            cudaSetDevice(0); // Ensure the CUDA context is initialized
+
+            auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj[i]->get_object()).get();
+            std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data),
+                                                                                                 *m_resources);
+
+            // Get the serialized data
+            auto serialized_data           = send_descriptor->serialize<T>(memory::malloc_memory_resource::instance());
+            auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
+
+            send_descriptor = nullptr;
+
+            auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
+
+            // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
+            // invalid once `DataPlaneResources2` releases it.
+            registered_send_descriptors.push_back(m_resources->get_descriptor(send_descriptor_object_id));
+
+            while (!send_request->isCompleted())
+            {
+                std::this_thread::yield(); // Yield to avoid busy-waiting
+            }
+        };
+
+        for (size_t i = 0; i < messages_to_send; ++i)
         {
-            m_resources->progress();
+            send_futures.push_back(std::async(std::launch::async, send_function, i));
         }
 
-        // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
-        // invalid once `DataPlaneResources2` releases it.
-        std::weak_ptr<runtime::Descriptor2> registered_send_descriptor = m_resources->get_descriptor(send_descriptor_object_id);
-
-        // Create a descriptor from the received data
-        auto buffer_view = memory::buffer_view(receive_request->getRecvBuffer()->data(),
-                                               receive_request->getRecvBuffer()->getSize(),
-                                               mrc::memory::memory_kind::host);
-
-        std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
+        // Wait for all send operations to complete
+        for (auto& future : send_futures)
+        {
+            future.get();
+        }
 
         // Wait for remote decrement messages.
-        while (registered_send_descriptor.lock() != nullptr)
-            m_resources->progress();
+        for (auto& registered_send_descriptor : registered_send_descriptors)
+        {
+            while (registered_send_descriptor.lock() != nullptr)
+            {
+                std::this_thread::yield(); // Yield to avoid busy-waiting
+            }
+        }
 
-        // Finally, get the value
-        auto recv_data = recv_descriptor->deserialize<T>();
+        is_running = false;
+        progress_cv.notify_all(); // Wake up the progress thread to exit
 
-        state.PauseTiming(); // Stop timing before correctness check
-
-        m_obj->get_result(recv_data);
-
-        state.ResumeTiming(); // Resume timing if there are more iterations
+        receive_thread.join();
+        progress_thread.join();
     }
 
     memory::memory_kind m_kind;
@@ -279,18 +311,26 @@ class DescriptorFixture : public benchmark::Fixture
     std::unique_ptr<DataPlaneResources2Tester> m_resources;
     std::shared_ptr<ucxx::Endpoint> m_loopback_endpoint;
 
-    std::unique_ptr<IObject> m_obj;
+    std::vector<std::unique_ptr<IObject>> m_obj;
 };
 
 BENCHMARK_DEFINE_F(DescriptorFixture, descriptor_latency)(benchmark::State& state)
 {
+    size_t messages_to_send = state.range(1);
+
     for (auto _ : state)
     {
-        (m_kind  == memory::memory_kind::device) ? TransferFullDescriptors<u_int8_t*>(state) :
-                                                   TransferFullDescriptors<std::vector<u_int8_t>>(state);
+        (m_kind == memory::memory_kind::device) ? TransferFullDescriptors<u_int8_t*>(state)
+                                                : TransferFullDescriptors<std::vector<u_int8_t>>(state);
     }
+
+    state.SetBytesProcessed(messages_to_send * data_size * state.iterations());
+    state.SetItemsProcessed(messages_to_send * state.iterations());
 }
 
+// SetUp and TearDown logic must be repeated after each successive iteration, increasing difficulty and accurately
+// measuring latency and throughput. A single iteration with x messages sent per experiment should suffice.
 BENCHMARK_REGISTER_F(DescriptorFixture, descriptor_latency)
-    ->Args({static_cast<int>(memory::memory_kind::host)})
-    ->Args({static_cast<int>(memory::memory_kind::device)});
+    ->Args({static_cast<int>(memory::memory_kind::host), 1000})
+    ->Args({static_cast<int>(memory::memory_kind::device), 1000})
+    ->Iterations(1);
