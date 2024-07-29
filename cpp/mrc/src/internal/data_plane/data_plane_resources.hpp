@@ -199,7 +199,7 @@ class DataPlaneResources2
                                                  ucs_memory_type_t mem_type);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
-    uint64_t register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
+    uint64_t register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
     uint64_t registered_remote_descriptor_count();
     uint64_t registered_remote_descriptor_ptr_count(uint64_t object_id);
 

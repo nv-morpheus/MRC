@@ -331,6 +331,9 @@ BENCHMARK_DEFINE_F(DescriptorFixture, descriptor_latency)(benchmark::State& stat
 // SetUp and TearDown logic must be repeated after each successive iteration, increasing difficulty and accurately
 // measuring latency and throughput. A single iteration with x messages sent per experiment should suffice.
 BENCHMARK_REGISTER_F(DescriptorFixture, descriptor_latency)
-    ->Args({static_cast<int>(memory::memory_kind::host), 1000})
-    ->Args({static_cast<int>(memory::memory_kind::device), 1000})
+    ->ArgsProduct({
+        {static_cast<int>(memory::memory_kind::host),
+         static_cast<int>(memory::memory_kind::device)}, // memory type
+        benchmark::CreateRange(1, 1000, /*multi=*/10),   // number of messages to send
+    })
     ->Iterations(1);

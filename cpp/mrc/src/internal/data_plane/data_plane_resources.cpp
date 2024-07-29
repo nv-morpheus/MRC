@@ -379,7 +379,7 @@ uint64_t DataPlaneResources2::get_next_object_id()
     return m_next_object_id++;
 }
 
-uint64_t DataPlaneResources2::register_remote_decriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
+uint64_t DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
 {
     // If the descriptor has an object_id > 0, the descriptor has already been registered and should not be re-registered
     auto object_id = descriptor->encoded_object().object_id();

@@ -279,7 +279,7 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
 
     auto remote_descriptor = std::shared_ptr<RemoteDescriptorImpl2>(
         new RemoteDescriptorImpl2(std::move(remote_object)));
-    // data_plane_resources.register_remote_decriptor(remote_descriptor);
+    // data_plane_resources.register_remote_descriptor(remote_descriptor);
 
     return remote_descriptor;
 }
@@ -434,6 +434,6 @@ void Descriptor2::setup_remote_payloads()
 
 void Descriptor2::register_remote_descriptor()
 {
-    m_data_plane_resources.register_remote_decriptor(shared_from_this());
+    m_data_plane_resources.register_remote_descriptor(shared_from_this());
 }
 }  // namespace mrc::runtime
