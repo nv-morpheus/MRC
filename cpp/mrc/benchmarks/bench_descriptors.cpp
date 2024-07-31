@@ -179,6 +179,8 @@ class DescriptorFixture : public benchmark::Fixture
   public:
     void SetUp(const benchmark::State& state) override
     {
+        cudaSetDevice(0); // Ensure the CUDA context is initialized
+
         m_resources = std::make_unique<DataPlaneResources2Tester>();
 
         m_resources->set_instance_id(42);
@@ -249,13 +251,14 @@ class DescriptorFixture : public benchmark::Fixture
             }
         });
 
-        std::vector<std::future<void>> send_futures;
+        // Store send_requests to check for completion after all messages are sent to achieve async sending
+        std::vector<std::shared_ptr<ucxx::Request>> send_requests;
+        std::vector<memory::buffer> serialized_buffers;
+
         std::vector<std::weak_ptr<runtime::Descriptor2>> registered_send_descriptors;
 
-
-        auto send_function = [&](size_t i) {
-            cudaSetDevice(0); // Ensure the CUDA context is initialized
-
+        for (size_t i = 0; i < messages_to_send; ++i)
+        {
             auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj[i]->get_object()).get();
             std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data),
                                                                                                  *m_resources);
@@ -266,27 +269,22 @@ class DescriptorFixture : public benchmark::Fixture
 
             send_descriptor = nullptr;
 
-            auto send_request = m_resources->am_send_async(m_loopback_endpoint, serialized_data);
+            send_requests.push_back(m_resources->am_send_async(m_loopback_endpoint, serialized_data));
+            serialized_buffers.push_back(std::move(serialized_data));
 
             // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
             // invalid once `DataPlaneResources2` releases it.
             registered_send_descriptors.push_back(m_resources->get_descriptor(send_descriptor_object_id));
-
-            while (!send_request->isCompleted())
-            {
-                std::this_thread::yield(); // Yield to avoid busy-waiting
-            }
-        };
-
-        for (size_t i = 0; i < messages_to_send; ++i)
-        {
-            send_futures.push_back(std::async(std::launch::async, send_function, i));
         }
 
         // Wait for all send operations to complete
-        for (auto& future : send_futures)
+        // This operation here is redundant due to the registered_send_descriptors loop, keep for clarity sake
+        for (auto& request : send_requests)
         {
-            future.get();
+            while (!request->isCompleted())
+            {
+                std::this_thread::yield(); // Yield to avoid busy-waiting
+            }
         }
 
         // Wait for remote decrement messages.
