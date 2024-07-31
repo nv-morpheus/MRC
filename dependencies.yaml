@@ -60,7 +60,7 @@ dependencies:
           - gxx=11.2
           - libgrpc=1.59
           - libhwloc=2.9.2
-          - librmm=24.02
+          - librmm=24.08
           - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc
           - ninja=1.11
           - nlohmann_json=3.11
