@@ -3,7 +3,7 @@ files:
   all:
     output: conda
     matrix:
-      cuda: ["12.1"]
+      cuda: ["12.4"]
       arch: [x86_64]
     includes:
       - build
@@ -21,7 +21,7 @@ files:
   ci:
     output: conda
     matrix:
-      cuda: ["12.1"]
+      cuda: ["12.4"]
       arch: [x86_64]
     includes:
       - build
@@ -55,13 +55,13 @@ dependencies:
           - cmake=3.27
           - cuda-nvcc
           - cxx-compiler
-          - glog=0.6
+          - glog>=0.7.1,<0.8
           - gtest=1.14
           - gxx=11.2
-          - libgrpc=1.59
+          - libgrpc=1.62.2
           - libhwloc=2.9.2
           - librmm=24.08
-          - libxml2=2.11.6 # 2.12 has a bug preventing round-trip serialization in hwloc
+          - libxml2>=2.12.6,<3
           - ninja=1.11
           - nlohmann_json=3.11
           - numactl-libs-cos7-x86_64
@@ -137,17 +137,17 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - python=3.10
+          - python=3.11
 
   cudatoolkit:
     specific:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.1"
+              cuda: "12.4"
             packages:
-              - cuda-cudart-dev=12.1
-              - cuda-nvml-dev=12.1
-              - cuda-nvrtc-dev=12.1
-              - cuda-tools=12.1
-              - cuda-version=12.1
+              - cuda-cudart-dev=12.4
+              - cuda-nvml-dev=12.4
+              - cuda-nvrtc-dev=12.4
+              - cuda-tools=12.4
+              - cuda-version=12.4
