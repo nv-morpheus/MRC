@@ -45,13 +45,13 @@ RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
-COPY ./conda/environments/all_cuda-121_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-121_arch-x86_64.yaml
+COPY ./conda/environments/all_cuda-124_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-124_arch-x86_64.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
     sudo -g conda -u $USERNAME \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-121_arch-x86_64.yaml && \
+    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-124_arch-x86_64.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
