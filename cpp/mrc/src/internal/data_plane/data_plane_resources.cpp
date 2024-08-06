@@ -28,6 +28,7 @@
 #include "internal/ucx/worker.hpp"
 
 #include "mrc/memory/literals.hpp"
+#include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 
 #include <ucp/api/ucp.h>
 #include <ucs/memory/memory_type.h>
@@ -177,6 +178,25 @@ DataPlaneResources2::DataPlaneResources2()
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
         pull_complete_callback);
+
+    auto recv_process_message = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
+        auto status = req->getStatus();
+        if (status != UCS_OK)
+        {
+            LOG(ERROR) << "Error calling recv_process_message, request failed with status " << status << "("
+                       << ucs_status_string(status) << ")";
+        }
+
+        auto mr = memory::malloc_memory_resource::instance();
+        auto buffer = memory::buffer(req->getRecvBuffer()->getSize(), mr);
+
+        std::memcpy(buffer.data(), req->getRecvBuffer()->data(), req->getRecvBuffer()->getSize());
+
+        process_message(std::make_shared<memory::buffer>(std::move(buffer)));
+    });
+    m_worker->registerAmReceiverCallback(
+        ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(1)),
+        recv_process_message);
 
     // flush any work that needs to be done by the workers
     this->flush();
@@ -361,7 +381,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_pt
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type);
+    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type, ucxx::AmReceiverCallbackInfo("MRC", 1));
 
     return request;
 }
@@ -377,6 +397,22 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_pt
 uint64_t DataPlaneResources2::get_next_object_id()
 {
     return m_next_object_id++;
+}
+
+coroutines::Task<std::shared_ptr<memory::buffer>> DataPlaneResources2::await_recv()
+{
+    co_await m_descriptor_event;
+
+    std::unique_lock lock(m_remote_descriptors_mutex);
+    auto buffer = m_recv_buffers.front();
+    m_recv_buffers.pop();
+
+    if (m_recv_buffers.empty())
+    {
+        m_descriptor_event.reset();
+    }
+
+    co_return buffer;
 }
 
 uint64_t DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
@@ -433,25 +469,17 @@ void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPull
     }
 }
 
+void DataPlaneResources2::process_message(std::shared_ptr<memory::buffer> buffer)
+{
+    std::unique_lock lock(m_event_mutex);
+    m_recv_buffers.push(buffer);
+    m_descriptor_event.set();
+}
+
 void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
 {
     m_max_remote_descriptors = max_remote_descriptors;
     m_remote_descriptors_cv.notify_all();
 }
-
-// std::shared_ptr<ucxx::Request> DataPlaneResources2::receive_async2(void* addr,
-//                                                             std::size_t bytes,
-//                                                             std::uint64_t tag,
-//                                                             std::uint64_t mask)
-// {
-
-//     ucxx::Endpoint endpoint(m_worker, m_worker->address());
-
-//     auto request = endpoint.amRecv();
-
-//     request.
-
-//     return request;
-// }
 
 }  // namespace mrc::data_plane
