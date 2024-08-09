@@ -463,6 +463,7 @@ void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPull
             {
                 std::unique_lock lock(m_remote_descriptors_mutex);
                 m_descriptor_by_id.erase(message->object_id);
+                m_registration_cache3->remove_descriptor(message->object_id);
             }
             m_remote_descriptors_cv.notify_one();
         }

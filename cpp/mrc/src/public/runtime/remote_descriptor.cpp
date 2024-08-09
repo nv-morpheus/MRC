@@ -417,12 +417,13 @@ void Descriptor2::setup_remote_payloads()
 
         auto* deferred_msg = payload.mutable_deferred_msg();
 
-        auto ucx_block = m_data_plane_resources.registration_cache3().lookup(deferred_msg->address());
+        auto ucx_block = m_data_plane_resources.registration_cache3().lookup(remote_object.object_id(), deferred_msg->address());
 
         if (!ucx_block.has_value())
         {
             // Need to register the memory
-            ucx_block = m_data_plane_resources.registration_cache3().add_block(deferred_msg->address(),
+            ucx_block = m_data_plane_resources.registration_cache3().add_block(remote_object.object_id(),
+                                                                               deferred_msg->address(),
                                                                                deferred_msg->bytes(),
                                                                                mrc::codable::decode_memory_type(payload.memory_kind()));
         }

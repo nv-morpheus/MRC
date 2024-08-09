@@ -453,13 +453,20 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 template <typename T>
 memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> mr)
 {
+    // Temporary logic until TypedDescriptor is introduced
     if (!m_encoded_object)
     {
         m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
+
+        this->register_remote_descriptor();
+
         this->setup_remote_payloads();
     }
+    else
+    {
+        this->register_remote_descriptor();
+    }
 
-    this->register_remote_descriptor();
 
     // Allocate enough bytes to hold the encoded object
     auto buffer = memory::buffer(m_encoded_object->proto().ByteSizeLong(), mr);

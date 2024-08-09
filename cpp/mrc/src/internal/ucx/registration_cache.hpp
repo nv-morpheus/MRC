@@ -197,9 +197,9 @@ class RegistrationCache3 final
      * @param addr
      * @param bytes
      */
-    std::shared_ptr<ucxx::MemoryHandle> add_block(void* addr, std::size_t bytes, memory::memory_kind memory_type);
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uint64_t obj_id, void* addr, std::size_t bytes, memory::memory_kind memory_type);
 
-    std::shared_ptr<ucxx::MemoryHandle> add_block(uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type);
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uint64_t obj_id, uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type);
 
     /**
      * @brief Look up the memory registration details for a given address.
@@ -210,13 +210,17 @@ class RegistrationCache3 final
      * @param addr
      * @return std::shared_ptr<ucxx::MemoryHandle>
      */
-    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(const void* addr) const noexcept;
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uint64_t obj_id, const void* addr) const noexcept;
 
-    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uintptr_t addr) const noexcept;
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uint64_t obj_id, uintptr_t addr) const noexcept;
+
+    void remove_descriptor(uint64_t obj_id);
 
   private:
     mutable std::mutex m_mutex;
     const std::shared_ptr<ucxx::Context> m_context;
-    std::map<const void*, std::shared_ptr<ucxx::MemoryHandle>> m_memory_handle_by_address;
+
+    // <descriptor object_id : <address : MemoryHandle>>
+    std::map<uint64_t, std::map<const void*, std::shared_ptr<ucxx::MemoryHandle>>> m_memory_handle_by_address;
 };
 }  // namespace mrc::ucx
