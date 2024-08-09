@@ -233,6 +233,11 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                 {
                     subscriber.on_next(std::move(next_val));
                 }
+                else
+                {
+                    DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
+                    break;
+                }
             }
 
         } catch (const std::exception& e)
