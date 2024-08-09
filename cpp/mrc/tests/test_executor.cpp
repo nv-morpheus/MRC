@@ -446,11 +446,13 @@ TEST_F(TestExecutor, MultiNode)
     auto options_2 = make_options();
 
     options_1->architect_url("127.0.0.1:13337");
+    // options_1->topology().user_cpuset("0-1");
     options_1->enable_server(true);
     // options_1->config_request("seg_1,seg_3");
 
     options_2->architect_url("127.0.0.1:13337");
     options_2->topology().user_cpuset("1");
+    // options_2->topology().user_cpuset("2-3");
     // options_2->config_request("seg_2,seg_4");
 
     Executor machine_1(std::move(options_1));
@@ -498,6 +500,7 @@ TEST_F(TestExecutor, MultiNodeA)
     auto options_1 = make_options();
 
     options_1->architect_url("127.0.0.1:13337");
+    // options_1->topology().user_cpuset("0-1");
     options_1->enable_server(true);
 
     Executor machine_1(std::move(options_1));
@@ -523,6 +526,7 @@ TEST_F(TestExecutor, MultiNodeB)
 
     options_2->architect_url("127.0.0.1:13337");
     options_2->topology().user_cpuset("1");
+    // options_2->topology().user_cpuset("2-3");
 
     Executor machine_2(std::move(options_2));
 

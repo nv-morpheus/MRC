@@ -327,15 +327,6 @@ std::shared_ptr<ucxx::Endpoint> DataPlaneResources2::create_endpoint(const ucx::
     m_endpoints_by_address[address] = endpoint;
     m_endpoints_by_id[instance_id]  = endpoint;
 
-    auto close_request = endpoint->close();
-
-    endpoint->cancelInflightRequests();
-
-    while (close_request->isCompleted() == false)
-    {
-        this->progress();
-    }
-
     DVLOG(10) << "Created endpoint with address: " << address;
 
     return endpoint;
@@ -638,4 +629,8 @@ channel::Egress<std::unique_ptr<runtime::RemoteDescriptor2>>& DataPlaneResources
 //     return request;
 // }
 
+std::shared_ptr<runtime::RemoteDescriptorImpl2> DataPlaneResources2::get_descriptor(uint64_t object_id)
+{
+    return m_remote_descriptor_by_id.at(object_id);
+}
 }  // namespace mrc::data_plane
