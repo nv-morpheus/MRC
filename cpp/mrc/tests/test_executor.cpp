@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "mrc/codable/codable_protocol.hpp"
 #include "mrc/codable/fundamental_types.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/node/rx_node.hpp"
@@ -58,6 +59,96 @@
 
 namespace mrc {
 
+class TrackTimings
+{
+  public:
+    TrackTimings()
+    {
+        this->add_timing();
+    }
+
+    ~TrackTimings() {}
+
+    void add_timing()
+    {
+        m_timings.push_back(std::chrono::duration_cast<std::chrono::duration<double>>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count());
+    }
+
+    std::vector<double> calc_latencies()
+    {
+        std::vector<double> latencies;
+        for (std::size_t i = 1; i < m_timings.size(); i++)
+        {
+            auto diff = m_timings[i] - m_timings[i - 1];
+            latencies.push_back(diff);
+        }
+        return latencies;
+    }
+
+    double avg_latency_ms()
+    {
+        auto latencies = calc_latencies();
+        double sum     = 0;
+        for (auto latency : latencies)
+        {
+            sum += latency;
+        }
+        return (sum / latencies.size()) * 1000.0;
+    }
+
+    void print_timings()
+    {
+        LOG(INFO) << "Average latency: " << avg_latency_ms() << " ms";
+    }
+
+    std::vector<double> m_timings;
+};
+
+namespace codable {
+template <>
+struct codable_protocol<TrackTimings>
+{
+    static void serialize(const TrackTimings& obj,
+                          mrc::codable::Encoder<TrackTimings>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        // First put in the size
+        // mrc::codable::encode2(obj.m_timings, encoder, opts);
+    }
+
+    static void serialize(const TrackTimings& obj,
+                          mrc::codable::Encoder2<TrackTimings>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        // First put in the size
+        mrc::codable::encode2(obj.m_timings, encoder, opts);
+    }
+
+    static TrackTimings deserialize(const Decoder<TrackTimings>& decoder, std::size_t object_idx)
+    {
+        DCHECK_EQ(std::type_index(typeid(TrackTimings)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+
+        auto object = TrackTimings();
+
+        return object;
+    }
+
+    static TrackTimings deserialize(const Decoder2<TrackTimings>& decoder, std::size_t object_idx)
+    {
+        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
+        // decoder.type_index_hash_for_object(object_idx));
+
+        auto object = TrackTimings();
+
+        object.m_timings = mrc::codable::decode2<std::vector<double>>(decoder, object_idx);
+
+        return object;
+    }
+};
+}  // namespace codable
+
 class TestExecutor : public ::testing::Test
 {
   protected:
@@ -79,7 +170,7 @@ class TestExecutor : public ::testing::Test
 
     static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
-        using transfer_t = std::vector<int>;
+        using transfer_t = TrackTimings;
 
         auto pipeline = mrc::make_pipeline();
 
@@ -109,7 +200,7 @@ class TestExecutor : public ::testing::Test
 
                 for (int i = 0; i < 100; i++)
                 {
-                    s.on_next(transfer_t(1_MiB / sizeof(transfer_t::value_type), i));
+                    s.on_next(transfer_t());
 
                     // #ifndef NDEBUG
                     //                     boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
@@ -124,30 +215,54 @@ class TestExecutor : public ::testing::Test
             auto egress = s.get_egress<transfer_t>("my_int2");
             s.make_edge(src, egress);
         });
-        // pipeline->make_segment("seg_2",
-        //                        segment::IngressPorts<int>({"my_int2"}),
-        //                        segment::EgressPorts<int>({"my_int3"}),
-        //                        [](segment::IBuilder& s) {
-        //                            // pure pass-thru
-        //                            auto in  = s.get_ingress<int>("my_int2");
-        //                            auto out = s.get_egress<int>("my_int3");
-        //                            s.make_edge(in, out);
-        //                        });
-        // pipeline->make_segment("seg_3",
-        //                        segment::IngressPorts<int>({"my_int3"}),
-        //                        segment::EgressPorts<int>({"my_int4"}),
-        //                        [](segment::IBuilder& s) {
-        //                            // pure pass-thru
-        //                            auto in  = s.get_ingress<int>("my_int3");
-        //                            auto out = s.get_egress<int>("my_int4");
-        //                            s.make_edge(in, out);
-        //                        });
-        pipeline->make_segment("seg_4", segment::IngressPorts<transfer_t>({"my_int2"}), [](segment::IBuilder& s) {
+        pipeline->make_segment(
+            "seg_2",
+            segment::IngressPorts<transfer_t>({"my_int2"}),
+            segment::EgressPorts<transfer_t>({"my_int3"}),
+            [](segment::IBuilder& s) {
+                // pure pass-thru
+                auto in = s.get_ingress<transfer_t>("my_int2");
+
+                auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t {
+                                                        // VLOG(10) << "In seg_2";
+                                                        value.add_timing();
+
+                                                        return value;
+                                                    }));
+
+                auto out = s.get_egress<transfer_t>("my_int3");
+                s.make_edge(in, node);
+                s.make_edge(node, out);
+            });
+
+        pipeline->make_segment(
+            "seg_3",
+            segment::IngressPorts<transfer_t>({"my_int3"}),
+            segment::EgressPorts<transfer_t>({"my_int4"}),
+            [](segment::IBuilder& s) {
+                // pure pass-thru
+                auto in = s.get_ingress<transfer_t>("my_int3");
+
+                auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t {
+                                                        // VLOG(10) << "In seg_3";
+                                                        value.add_timing();
+
+                                                        return value;
+                                                    }));
+
+                auto out = s.get_egress<transfer_t>("my_int4");
+                s.make_edge(in, node);
+                s.make_edge(node, out);
+            });
+        pipeline->make_segment("seg_4", segment::IngressPorts<transfer_t>({"my_int4"}), [](segment::IBuilder& s) {
             // pure pass-thru
-            auto in   = s.get_ingress<transfer_t>("my_int2");
+            auto in   = s.get_ingress<transfer_t>("my_int4");
             auto sink = s.make_sink<transfer_t>("rx_sink", rxcpp::make_observer_dynamic<transfer_t>([&](transfer_t x) {
+                                                    x.add_timing();
+
                                                     // Write to the log
-                                                    VLOG(10) << "Got value: " << x.size() << " " << x[0];
+                                                    // VLOG(10) << "Got value";
+                                                    x.print_timings();
                                                 }));
             s.make_edge(in, sink);
         });
@@ -440,6 +555,41 @@ TEST_F(TestExecutor, LifeCycleArchitect)
     executor.join();
 }
 
+TEST_F(TestExecutor, SingleNode)
+{
+    auto options_1 = make_options();
+
+    // options_1->architect_url("127.0.0.1:13337");
+    // options_1->enable_server(true);
+    // options_1->config_request("seg_1,seg_3");
+
+    Executor machine_1(std::move(options_1));
+
+    auto pipeline_1 = make_pipeline();
+
+    auto start_1 = boost::fibers::async([&] {
+        machine_1.start();
+    });
+
+    start_1.get();
+
+    // the only thing that matter in this scenario is that machine_1 is the last to join
+    // since it owns the oracle server
+
+    // todo(ryan) - write tests that have all machines stop together, or have them stop in
+    // discrete groups (similar to below) - the test below is more rigorous in that it test
+    // 3 updates: a start, an incomplete update where 1 machines goes away while the other
+    // is paused, and a final shutdown.
+    // really, we should add a test that removes 1 machine while the other stays up, then
+    // creates a new machine to replace the one that went away and see a resumption of pipeline
+    // functionality, then do the shutdown.
+
+    // machine_2.stop();
+    // machine_1.stop();
+
+    machine_1.join();
+}
+
 TEST_F(TestExecutor, MultiNode)
 {
     auto options_1 = make_options();
@@ -464,8 +614,11 @@ TEST_F(TestExecutor, MultiNode)
     auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
     auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
 
+    mapping_1.get_segment("seg_2").set_enabled(false);
     mapping_1.get_segment("seg_4").set_enabled(false);
+
     mapping_2.get_segment("seg_1").set_enabled(false);
+    mapping_2.get_segment("seg_3").set_enabled(false);
 
     auto start_1 = boost::fibers::async([&] {
         machine_1.start();
@@ -509,6 +662,7 @@ TEST_F(TestExecutor, MultiNodeA)
 
     auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
 
+    mapping_1.get_segment("seg_2").set_enabled(false);
     mapping_1.get_segment("seg_4").set_enabled(false);
 
     auto start_1 = boost::fibers::async([&] {
@@ -535,6 +689,7 @@ TEST_F(TestExecutor, MultiNodeB)
     auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
 
     mapping_2.get_segment("seg_1").set_enabled(false);
+    mapping_2.get_segment("seg_3").set_enabled(false);
 
     auto start_2 = boost::fibers::async([&] {
         machine_2.start();
