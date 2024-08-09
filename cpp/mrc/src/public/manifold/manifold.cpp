@@ -25,6 +25,8 @@
 #include "mrc/types.hpp"
 #include "mrc/utils/ranges.hpp"
 
+#include <glog/logging.h>
+
 #include <map>
 #include <mutex>
 #include <set>
@@ -175,7 +177,7 @@ void ManifoldBase::start()
     runnable::LaunchOptions launch_options;
     launch_options.engine_factory_name = "main";
     launch_options.pe_count            = 1;
-    launch_options.engines_per_pe      = 1;  // TODO(MDD): Restore to 8 after testing
+    launch_options.engines_per_pe      = 8;  // TODO(MDD): Restore to 8 after testing
 
     m_router_runner =
         this->runnable().launch_control().prepare_launcher(launch_options, std::move(m_router_node))->ignition();
@@ -254,7 +256,7 @@ void ManifoldBase::update_inputs()
     // TODO(MDD): Delete this function
 }
 
-void ManifoldBase::update_outputs(){
+void ManifoldBase::update_outputs() {
     // TODO(MDD): Delete this function
 };
 

@@ -222,7 +222,7 @@ DataPlaneResources2::DataPlaneResources2() :
     DVLOG(10) << "Created worker with address: " << this->address();
 
     DVLOG(10) << "initialize the registration cache for this context";
-    m_registration_cache = std::make_shared<ucx::RegistrationCache2>(m_context);
+    m_registration_cache = std::make_shared<ucx::RegistrationCache3>(m_context);
 
     auto decrement_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
         if (req->getStatus() != UCS_OK)
@@ -310,7 +310,7 @@ std::string DataPlaneResources2::address() const
     return encode64(m_address->getString());
 }
 
-ucx::RegistrationCache2& DataPlaneResources2::registration_cache() const
+ucx::RegistrationCache3& DataPlaneResources2::registration_cache() const
 {
     return *m_registration_cache;
 }
@@ -422,7 +422,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(
     std::shared_ptr<ucxx::Endpoint> endpoint,
     memory::buffer_view buffer_view,
     uintptr_t remote_addr,
-    const void* packed_rkey_data,
+    const std::string& serialized_rkey,
     ucxx::RequestCallbackUserFunction callback_function,
     ucxx::RequestCallbackUserData callback_data)
 {
@@ -430,7 +430,7 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(
                                    buffer_view.data(),
                                    buffer_view.bytes(),
                                    remote_addr,
-                                   packed_rkey_data,
+                                   serialized_rkey,
                                    std::move(callback_function),
                                    std::move(callback_data));
 }
@@ -440,32 +440,14 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(
     void* addr,
     std::size_t bytes,
     uintptr_t remote_addr,
-    const void* packed_rkey_data,
+    const std::string& serialized_rkey,
     ucxx::RequestCallbackUserFunction callback_function,
     ucxx::RequestCallbackUserData callback_data)
 {
-    ucp_rkey_h rkey;
-
-    // Unpack the key
-    auto rc = ucp_ep_rkey_unpack(endpoint->getHandle(), packed_rkey_data, &rkey);
-    CHECK_EQ(rc, UCS_OK);
+    auto rkey = ucxx::createRemoteKeyFromSerialized(endpoint, serialized_rkey);
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->memGet(
-        addr,
-        bytes,
-        remote_addr,
-        rkey,
-        false,
-        [rkey, callback_function](ucs_status_t status, std::shared_ptr<void> user_data) {
-            ucp_rkey_destroy(rkey);
-
-            if (callback_function)
-            {
-                callback_function(status, std::move(user_data));
-            }
-        },
-        std::move(callback_data));
+    auto request = endpoint->memGet(addr, bytes, rkey, 0, false, std::move(callback_function), std::move(callback_data));
 
     return request;
 }

@@ -52,28 +52,34 @@
 #include <mutex>
 #include <ostream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+
+using namespace mrc::memory::literals;
 
 namespace mrc {
 
 class TrackTimings
 {
   public:
-    TrackTimings()
+    TrackTimings() {}
+
+    TrackTimings(size_t id, size_t payload_size) : id(id), m_payload(payload_size / sizeof(int), 42)
     {
-        this->add_timing();
+        this->add_timing("Created");
     }
 
     ~TrackTimings() {}
 
-    void add_timing()
+    void add_timing(std::string name)
     {
-        m_timings.push_back(std::chrono::duration_cast<std::chrono::duration<double>>(
-                                std::chrono::system_clock::now().time_since_epoch())
-                                .count());
+        m_timings.push_back({std::chrono::duration_cast<std::chrono::duration<double>>(
+                                 std::chrono::system_clock::now().time_since_epoch())
+                                 .count(),
+                             std::move(name)});
     }
 
     std::vector<double> calc_latencies()
@@ -81,7 +87,7 @@ class TrackTimings
         std::vector<double> latencies;
         for (std::size_t i = 1; i < m_timings.size(); i++)
         {
-            auto diff = m_timings[i] - m_timings[i - 1];
+            auto diff = std::get<0>(m_timings[i]) - std::get<0>(m_timings[i - 1]);
             latencies.push_back(diff);
         }
         return latencies;
@@ -100,10 +106,23 @@ class TrackTimings
 
     void print_timings()
     {
+        std::ostringstream oss;
+        oss << "Timings: ";
+        for (std::size_t i = 1; i < m_timings.size(); i++)
+        {
+            auto diff = (std::get<0>(m_timings[i]) - std::get<0>(m_timings[i - 1])) * 1000.0;
+            oss << std::get<1>(m_timings[i - 1]) << "->" << std::get<1>(m_timings[i]) << "=" << diff << ", ";
+        }
+
+        LOG(INFO) << oss.str();
         LOG(INFO) << "Average latency: " << avg_latency_ms() << " ms";
+        LOG(INFO) << "Total time: " << (std::get<0>(m_timings.back()) - std::get<0>(m_timings.front())) * 1000.0
+                  << " ms";
     }
 
-    std::vector<double> m_timings;
+    size_t id{0};
+    std::vector<std::tuple<double, std::string>> m_timings;
+    std::vector<int> m_payload;
 };
 
 namespace codable {
@@ -122,8 +141,11 @@ struct codable_protocol<TrackTimings>
                           mrc::codable::Encoder2<TrackTimings>& encoder,
                           const mrc::codable::EncodingOptions& opts)
     {
-        // First put in the size
+        const_cast<TrackTimings&>(obj).add_timing("Serialize");
+
+        mrc::codable::encode2(obj.id, encoder, opts);
         mrc::codable::encode2(obj.m_timings, encoder, opts);
+        mrc::codable::encode2(obj.m_payload, encoder, opts);
     }
 
     static TrackTimings deserialize(const Decoder<TrackTimings>& decoder, std::size_t object_idx)
@@ -142,7 +164,11 @@ struct codable_protocol<TrackTimings>
 
         auto object = TrackTimings();
 
-        object.m_timings = mrc::codable::decode2<std::vector<double>>(decoder, object_idx);
+        object.id        = mrc::codable::decode2<size_t>(decoder, object_idx);
+        object.m_timings = mrc::codable::decode2<std::vector<std::tuple<double, std::string>>>(decoder, object_idx);
+        object.m_payload = mrc::codable::decode2<std::vector<int>>(decoder, object_idx);
+
+        object.add_timing("Deserialize");
 
         return object;
     }
@@ -170,7 +196,8 @@ class TestExecutor : public ::testing::Test
 
     static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
-        using transfer_t = TrackTimings;
+        const size_t msg_count = 10;
+        using transfer_t       = TrackTimings;
 
         auto pipeline = mrc::make_pipeline();
 
@@ -198,9 +225,13 @@ class TestExecutor : public ::testing::Test
             auto src = s.make_source<transfer_t>("rx_source", [](rxcpp::subscriber<transfer_t> s) {
                 using namespace mrc::memory::literals;
 
-                for (int i = 0; i < 100; i++)
+                LOG(INFO) << "///////////////// Starting /////////////////";
+
+                for (size_t i = 0; i < msg_count; i++)
                 {
-                    s.on_next(transfer_t());
+                    // boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
+
+                    s.on_next(transfer_t(i, 1_MiB));
 
                     // #ifndef NDEBUG
                     //                     boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
@@ -215,54 +246,61 @@ class TestExecutor : public ::testing::Test
             auto egress = s.get_egress<transfer_t>("my_int2");
             s.make_edge(src, egress);
         });
-        pipeline->make_segment(
-            "seg_2",
-            segment::IngressPorts<transfer_t>({"my_int2"}),
-            segment::EgressPorts<transfer_t>({"my_int3"}),
-            [](segment::IBuilder& s) {
-                // pure pass-thru
-                auto in = s.get_ingress<transfer_t>("my_int2");
+        // pipeline->make_segment(
+        //     "seg_2",
+        //     segment::IngressPorts<transfer_t>({"my_int2"}),
+        //     segment::EgressPorts<transfer_t>({"my_int3"}),
+        //     [](segment::IBuilder& s) {
+        //         // pure pass-thru
+        //         auto in = s.get_ingress<transfer_t>("my_int2");
 
-                auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t {
-                                                        // VLOG(10) << "In seg_2";
-                                                        value.add_timing();
+        //         auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t
+        //         {
+        //                                                 // VLOG(10) << "In seg_2";
+        //                                                 value.add_timing("Node2_Body");
 
-                                                        return value;
-                                                    }));
+        //                                                 return value;
+        //                                             }));
 
-                auto out = s.get_egress<transfer_t>("my_int3");
-                s.make_edge(in, node);
-                s.make_edge(node, out);
-            });
+        //         auto out = s.get_egress<transfer_t>("my_int3");
+        //         s.make_edge(in, node);
+        //         s.make_edge(node, out);
+        //     });
 
-        pipeline->make_segment(
-            "seg_3",
-            segment::IngressPorts<transfer_t>({"my_int3"}),
-            segment::EgressPorts<transfer_t>({"my_int4"}),
-            [](segment::IBuilder& s) {
-                // pure pass-thru
-                auto in = s.get_ingress<transfer_t>("my_int3");
+        // pipeline->make_segment(
+        //     "seg_3",
+        //     segment::IngressPorts<transfer_t>({"my_int3"}),
+        //     segment::EgressPorts<transfer_t>({"my_int4"}),
+        //     [](segment::IBuilder& s) {
+        //         // pure pass-thru
+        //         auto in = s.get_ingress<transfer_t>("my_int3");
 
-                auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t {
-                                                        // VLOG(10) << "In seg_3";
-                                                        value.add_timing();
+        //         auto node = s.make_node<transfer_t>("node", rxcpp::operators::map([](transfer_t value) -> transfer_t
+        //         {
+        //                                                 // VLOG(10) << "In seg_3";
+        //                                                 value.add_timing("Node3_Body");
 
-                                                        return value;
-                                                    }));
+        //                                                 return value;
+        //                                             }));
 
-                auto out = s.get_egress<transfer_t>("my_int4");
-                s.make_edge(in, node);
-                s.make_edge(node, out);
-            });
-        pipeline->make_segment("seg_4", segment::IngressPorts<transfer_t>({"my_int4"}), [](segment::IBuilder& s) {
+        //         auto out = s.get_egress<transfer_t>("my_int4");
+        //         s.make_edge(in, node);
+        //         s.make_edge(node, out);
+        //     });
+        pipeline->make_segment("seg_4", segment::IngressPorts<transfer_t>({"my_int2"}), [&](segment::IBuilder& s) {
             // pure pass-thru
-            auto in   = s.get_ingress<transfer_t>("my_int4");
+            auto in   = s.get_ingress<transfer_t>("my_int2");
             auto sink = s.make_sink<transfer_t>("rx_sink", rxcpp::make_observer_dynamic<transfer_t>([&](transfer_t x) {
-                                                    x.add_timing();
+                                                    x.add_timing("Sink_Body");
 
-                                                    // Write to the log
-                                                    // VLOG(10) << "Got value";
-                                                    x.print_timings();
+                                                    // LOG_EVERY_N(INFO, 100) << "Got value";
+
+                                                    if (x.id == msg_count - 1)
+                                                    {
+                                                        // Write to the log
+                                                        x.print_timings();
+                                                        LOG(INFO) << "///////////////// Complete /////////////////";
+                                                    }
                                                 }));
             s.make_edge(in, sink);
         });
@@ -567,6 +605,10 @@ TEST_F(TestExecutor, SingleNode)
 
     auto pipeline_1 = make_pipeline();
 
+    machine_1.register_pipeline(std::move(pipeline_1));
+
+    auto start_time = std::chrono::system_clock::now();
+
     auto start_1 = boost::fibers::async([&] {
         machine_1.start();
     });
@@ -588,6 +630,10 @@ TEST_F(TestExecutor, SingleNode)
     // machine_1.stop();
 
     machine_1.join();
+
+    auto end_time = std::chrono::system_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end_time - start_time);
+    LOG(INFO) << "Duration: " << duration.count() << " ms";
 }
 
 TEST_F(TestExecutor, MultiNode)
@@ -614,11 +660,13 @@ TEST_F(TestExecutor, MultiNode)
     auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
     auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
 
-    mapping_1.get_segment("seg_2").set_enabled(false);
+    // mapping_1.get_segment("seg_2").set_enabled(false);
     mapping_1.get_segment("seg_4").set_enabled(false);
 
     mapping_2.get_segment("seg_1").set_enabled(false);
-    mapping_2.get_segment("seg_3").set_enabled(false);
+    // mapping_2.get_segment("seg_3").set_enabled(false);
+
+    auto start_time = std::chrono::system_clock::now();
 
     auto start_1 = boost::fibers::async([&] {
         machine_1.start();
@@ -646,6 +694,10 @@ TEST_F(TestExecutor, MultiNode)
 
     machine_2.join();
     machine_1.join();
+
+    auto end_time = std::chrono::system_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end_time - start_time);
+    LOG(INFO) << "Duration: " << duration.count() << " ms";
 }
 
 TEST_F(TestExecutor, MultiNodeA)

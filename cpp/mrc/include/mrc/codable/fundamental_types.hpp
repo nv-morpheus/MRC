@@ -23,6 +23,7 @@
 #include "mrc/codable/encoding_options.hpp"
 #include "mrc/codable/types.hpp"
 #include "mrc/memory/memory_kind.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 
 #include <type_traits>
 #include <typeindex>
@@ -200,7 +201,59 @@ struct codable_protocol<std::vector<T>>
 
         auto object = std::vector<T>(count);
 
-        decoder.read_descriptor(0, {object.data(), count * sizeof(T), memory::memory_kind::host});
+        if constexpr (std::is_fundamental_v<T>)
+        {
+            decoder.read_descriptor(0, {object.data(), count * sizeof(T), memory::memory_kind::host});
+        }
+        else
+        {
+            // Now decode each object
+            for (size_t i = 0; i < count; ++i)
+            {
+                object[i] = mrc::codable::decode2<T>(decoder, object_idx);
+            }
+        }
+
+        return object;
+    }
+};
+
+template <typename... Ts>
+struct codable_protocol<std::tuple<Ts...>>
+{
+    static void serialize(const std::tuple<Ts...>& obj,
+                          mrc::codable::Encoder<std::tuple<Ts...>>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        mrc::utils::tuple_for_each(obj, [&](const auto& o, std::size_t idx) {
+            mrc::codable::encode2(o, encoder, opts);
+        });
+    }
+
+    static void serialize(const std::tuple<Ts...>& obj,
+                          mrc::codable::Encoder2<std::tuple<Ts...>>& encoder,
+                          const mrc::codable::EncodingOptions& opts)
+    {
+        mrc::utils::tuple_for_each(obj, [&](const auto& o, std::size_t idx) {
+            mrc::codable::encode2(o, encoder, opts);
+        });
+    }
+
+    static std::tuple<Ts...> deserialize(const Decoder<std::tuple<Ts...>>& decoder, std::size_t object_idx)
+    {
+        DCHECK_EQ(std::type_index(typeid(std::tuple<Ts...>)).hash_code(),
+                  decoder.type_index_hash_for_object(object_idx));
+
+        auto object = std::tuple<Ts...>{mrc::codable::decode2<Ts>(decoder, object_idx)...};
+
+        return object;
+    }
+
+    static std::tuple<Ts...> deserialize(const Decoder2<std::tuple<Ts...>>& decoder, std::size_t object_idx)
+    {
+        // DCHECK_EQ(std::type_index(typeid(std::vector<T>)).hash_code(),
+        // decoder.type_index_hash_for_object(object_idx));
+        auto object = std::tuple<Ts...>{mrc::codable::decode2<Ts>(decoder, object_idx)...};
 
         return object;
     }

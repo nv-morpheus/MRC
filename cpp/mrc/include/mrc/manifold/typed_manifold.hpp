@@ -92,6 +92,7 @@ class ManifoldTagger2 : public ManifoldTaggerBase2,
 
         if (status == channel::Status::success)
         {
+            VLOG(10) << "ManifoldTagger2 received data";
             return this->on_next(std::move(data));
         }
 

@@ -62,6 +62,7 @@ class NetworkResources;
 namespace mrc::ucx {
 class RegistrationCache;
 class RegistrationCache2;
+class RegistrationCache3;
 class UcxResources;
 }  // namespace mrc::ucx
 
@@ -132,7 +133,7 @@ class DataPlaneResources2
 
     std::string address() const;
 
-    ucx::RegistrationCache2& registration_cache() const;
+    ucx::RegistrationCache3& registration_cache() const;
 
     std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address, uint64_t instance_id);
 
@@ -167,7 +168,7 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::buffer_view buffer_view,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data,
+                                                     const std::string& serialized_rkey,
                                                      ucxx::RequestCallbackUserFunction callback_function = nullptr,
                                                      ucxx::RequestCallbackUserData callback_data         = nullptr);
 
@@ -175,7 +176,7 @@ class DataPlaneResources2
                                                      void* addr,
                                                      std::size_t bytes,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data,
+                                                     const std::string& serialized_rkey,
                                                      ucxx::RequestCallbackUserFunction callback_function = nullptr,
                                                      ucxx::RequestCallbackUserData callback_data         = nullptr);
 
@@ -230,7 +231,7 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Worker> m_worker;
     std::shared_ptr<ucxx::Address> m_address;
 
-    std::shared_ptr<ucx::RegistrationCache2> m_registration_cache;
+    std::shared_ptr<ucx::RegistrationCache3> m_registration_cache;
 
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;

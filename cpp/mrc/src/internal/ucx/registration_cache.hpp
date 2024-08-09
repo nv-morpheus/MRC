@@ -17,9 +17,13 @@
 
 #pragma once
 
+#include "ucxx/memory_handle.h"
+
 #include "internal/memory/block_manager.hpp"
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/memory_block.hpp"
+
+#include "mrc/memory/memory_kind.hpp"
 
 #include <glog/logging.h>
 
@@ -172,6 +176,49 @@ class RegistrationCache2 final
     mutable std::mutex m_mutex;
     const std::shared_ptr<ucxx::Context> m_context;
     memory::BlockManager<MemoryBlock> m_blocks;
+};
+
+/**
+ * @brief UCX Registration Cache
+ *
+ * UCX memory registration object that will both register/deregister memory. The cache can be queried for the original
+ * memory block by providing the starting address of the contiguous block.
+ */
+class RegistrationCache3 final
+{
+  public:
+    RegistrationCache3(std::shared_ptr<ucxx::Context> context);
+
+    /**
+     * @brief Register a contiguous block of memory starting at addr and spanning `bytes` bytes.
+     *
+     * For each block of memory registered with the RegistrationCache, an entry containing the block information is
+     * storage and can be queried.
+     *
+     * @param addr
+     * @param bytes
+     */
+    std::shared_ptr<ucxx::MemoryHandle> add_block(void* addr, std::size_t bytes, memory::memory_kind memory_type);
+
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type);
+
+    /**
+     * @brief Look up the memory registration details for a given address.
+     *
+     * This method queries the registration cache to find the MemoryHanlde containing the original address and size as
+     * well as the serialized remote keys associated with the memory block.
+     *
+     * @param addr
+     * @return std::shared_ptr<ucxx::MemoryHandle>
+     */
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(const void* addr) const noexcept;
+
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uintptr_t addr) const noexcept;
+
+  private:
+    mutable std::mutex m_mutex;
+    const std::shared_ptr<ucxx::Context> m_context;
+    std::map<const void*, std::shared_ptr<ucxx::MemoryHandle>> m_memory_handle_by_address;
 };
 
 }  // namespace mrc::ucx

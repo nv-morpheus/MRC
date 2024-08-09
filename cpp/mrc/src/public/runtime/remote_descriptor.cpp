@@ -159,7 +159,7 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
     auto async_recv = [&data_plane_resources](std::shared_ptr<ucxx::Endpoint> endpoint,
                                               memory::buffer_view buffer_view,
                                               uintptr_t remote_addr,
-                                              const void* packed_rkey_data) {
+                                              const std::string& serialized_rkey) {
         auto promise = std::make_shared<Promise<void>>();
 
         auto future = promise->get_future();
@@ -168,7 +168,7 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
             endpoint,
             buffer_view,
             remote_addr,
-            packed_rkey_data,
+            serialized_rkey,
             [](ucs_status_t status, std::shared_ptr<void> request) {
                 auto inner_promise = std::static_pointer_cast<Promise<void>>(request);
 
@@ -200,7 +200,7 @@ std::unique_ptr<LocalDescriptor2> LocalDescriptor2::from_remote(std::unique_ptr<
         auto& buffer = buffers.emplace_back(remote_payload.bytes(), mr);
 
         // now issue the request
-        requests.push_back(async_recv(ep, buffer, remote_payload.address(), remote_payload.remote_key().data()));
+        requests.push_back(async_recv(ep, buffer, remote_payload.address(), remote_payload.remote_key()));
 
         auto* local_payload = local_obj->proto().add_payloads();
 
@@ -307,18 +307,21 @@ std::shared_ptr<RemoteDescriptorImpl2> RemoteDescriptorImpl2::from_local(
         {
             // Need to register the memory
             ucx_block = data_plane_resources.registration_cache().add_block(local_payload.address(),
-                                                                            local_payload.bytes());
+                                                                            local_payload.bytes(),
+                                                                            memory::memory_kind::host);
         }
+
+        auto remoteKey = ucx_block.value()->createRemoteKey();
 
         bool should_cache = false;  // Not sure what to set this
 
         remote_payload->set_instance_id(data_plane_resources.get_instance_id());
         remote_payload->set_address(local_payload.address());
         remote_payload->set_bytes(local_payload.bytes());
-        remote_payload->set_memory_block_address(reinterpret_cast<std::uint64_t>(ucx_block->data()));
-        remote_payload->set_memory_block_size(ucx_block->bytes());
+        remote_payload->set_memory_block_address(ucx_block.value()->getBaseAddress());
+        remote_payload->set_memory_block_size(ucx_block.value()->getSize());
         remote_payload->set_memory_kind(local_payload.memory_kind());
-        remote_payload->set_remote_key(ucx_block->packed_remote_keys());
+        remote_payload->set_remote_key(remoteKey->serialize());
         remote_payload->set_should_cache(should_cache);
     }
 

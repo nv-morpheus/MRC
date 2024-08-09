@@ -235,7 +235,7 @@ void DataPlaneSystemManager::do_service_start(std::stop_token stop_token)
                                std::move(resources_progress));
 
     this->child_runnable_start("pull_remote_descriptors",
-                               mrc::runnable::LaunchOptions("mrc_network", 1),
+                               mrc::runnable::LaunchOptions("mrc_network", 1, 8),
                                std::move(pull_remote_descriptors));
 
     this->mark_started();
@@ -300,6 +300,8 @@ std::shared_ptr<node::Queue<std::unique_ptr<ValueDescriptor>>> DataPlaneSystemMa
 channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destination,
                                                         std::unique_ptr<ValueDescriptor> descriptor)
 {
+    VLOG(10) << "Sending descriptor to " << port_destination << "[starting]";
+
     auto block_provider = std::make_shared<memory::memory_block_provider>();
 
     // Convert from value to local descriptor
@@ -325,6 +327,8 @@ channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destin
 
     auto completed_future = completed_promise.get_future();
 
+    VLOG(10) << "Sending descriptor to " << port_destination << "[sending]";
+
     // Send the bytes to the remote worker
     auto request = m_resources->am_send_async(
         endpoint,
@@ -342,9 +346,13 @@ channel::Status DataPlaneSystemManager::send_descriptor(PortAddress2 port_destin
             }
         }));
 
+    VLOG(10) << "Sending descriptor to " << port_destination << "[waiting]";
+
     // TODO(MDD): Do we need to wait for the request to send or can we just assume it sends?
     completed_future.get();
     // m_resources->wait_requests(std::vector<std::shared_ptr<ucxx::Request>>{request});
+
+    VLOG(10) << "Sending descriptor to " << port_destination << "[complete]";
 
     return channel::Status::success;
 }
