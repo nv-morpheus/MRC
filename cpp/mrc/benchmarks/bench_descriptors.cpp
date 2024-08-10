@@ -267,7 +267,6 @@ class DescriptorFixture : public benchmark::Fixture
     {
         m_progress_engine->start_progress();
 
-        std::vector<std::weak_ptr<runtime::Descriptor2>> registered_send_descriptors;
         auto send_thread = std::thread([&]() {
             cudaSetDevice(0); // Ensure the CUDA context is initialized
 
@@ -276,14 +275,14 @@ class DescriptorFixture : public benchmark::Fixture
             std::vector<std::shared_ptr<ucxx::Request>> send_requests;
             std::vector<memory::buffer> serialized_buffers;
 
+            std::vector<std::weak_ptr<runtime::Descriptor2>> registered_send_descriptors;
             for (size_t i = 0; i < messages_to_send; ++i)
             {
                 auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj[i]->get_object()).get();
-                std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data),
-                                                                                                     *m_resources);
+                auto send_descriptor = runtime::Descriptor2::create_from_value(std::move(send_data), *m_resources);
 
                 // Get the serialized data
-                auto serialized_data           = send_descriptor->serialize<T>(memory::malloc_memory_resource::instance());
+                auto serialized_data           = send_descriptor->serialize(memory::malloc_memory_resource::instance());
                 auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
 
                 send_descriptor = nullptr;
@@ -295,32 +294,32 @@ class DescriptorFixture : public benchmark::Fixture
                 // invalid once `DataPlaneResources2` releases it
                 registered_send_descriptors.push_back(m_resources->get_descriptor(send_descriptor_object_id));
             }
+
+            // Wait for remote decrement messages
+            // This loop also guarantees that all send_requests and recv_requests have been completed
+            for (auto& registered_send_descriptor : registered_send_descriptors)
+            {
+                while (registered_send_descriptor.lock() != nullptr)
+                {
+                    std::this_thread::yield(); // Yield to avoid busy-waiting
+                }
+            }
         });
 
         // Received and process messages
         for (size_t i = 0; i < messages_to_send; i++) {
             std::shared_ptr<memory::buffer> buffer = coroutines::sync_wait(m_resources->await_recv());
 
-            auto recv_descriptor = runtime::Descriptor2::create(*buffer, *m_resources);
+            auto recv_descriptor = runtime::Descriptor2::create_from_bytes(std::move(*buffer), *m_resources);
 
             auto recv_data = recv_descriptor->deserialize<T>();
 
             m_obj[i]->register_buffer(recv_data);
         }
 
-        // Wait for remote decrement messages
-        // This loop also guarantees that all send_requests and recv_requests have been completed
-        for (auto& registered_send_descriptor : registered_send_descriptors)
-        {
-            while (registered_send_descriptor.lock() != nullptr)
-            {
-                std::this_thread::yield(); // Yield to avoid busy-waiting
-            }
-        }
+        send_thread.join();
 
         m_progress_engine->end_progress();
-
-        send_thread.join();
     }
 
     void run_benchmark(size_t messages_to_send)

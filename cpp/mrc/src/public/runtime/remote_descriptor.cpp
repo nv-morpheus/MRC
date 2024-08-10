@@ -329,17 +329,32 @@ std::unique_ptr<RemoteDescriptor2> RemoteDescriptor2::from_bytes(memory::const_b
     return std::unique_ptr<RemoteDescriptor2>(new RemoteDescriptor2(RemoteDescriptorImpl2::from_bytes(view)));
 }
 
-codable::protos::DescriptorObject& Descriptor2::encoded_object() const
+codable::protos::DescriptorObject& Descriptor2::encoded_object()
 {
     return m_encoded_object->proto();
 }
 
-std::shared_ptr<Descriptor2> Descriptor2::create(std::any value, data_plane::DataPlaneResources2& data_plane_resources)
+memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> mr)
 {
-    return std::shared_ptr<Descriptor2>(new Descriptor2(std::move(value), data_plane_resources));
+    auto& encoded_object = this->encoded_object();
+
+    this->register_remote_descriptor();
+
+    this->setup_remote_payloads();
+
+    // Allocate enough bytes to hold the encoded object
+    auto buffer = memory::buffer(encoded_object.ByteSizeLong(), mr);
+
+    if (!encoded_object.SerializeToArray(buffer.data(), buffer.bytes()))
+    {
+        LOG(FATAL) << "Failed to serialize EncodedObjectProto to bytes";
+    }
+
+    return buffer;
 }
 
-std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_plane::DataPlaneResources2& data_plane_resources)
+std::shared_ptr<Descriptor2> Descriptor2::create_from_bytes(memory::buffer_view&& view,
+                                                            data_plane::DataPlaneResources2& data_plane_resources)
 {
     auto descriptor = std::make_unique<codable::DescriptorObjectHandler>();
 
@@ -400,7 +415,7 @@ std::shared_ptr<Descriptor2> Descriptor2::create(memory::buffer_view view, data_
 
 void Descriptor2::setup_remote_payloads()
 {
-    auto& remote_object = m_encoded_object->proto();
+    auto& remote_object = this->encoded_object();
 
     // Transfer the info object
     remote_object.set_instance_id(m_data_plane_resources.get_instance_id());

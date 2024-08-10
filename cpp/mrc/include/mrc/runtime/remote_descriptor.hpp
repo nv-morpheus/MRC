@@ -421,18 +421,19 @@ std::unique_ptr<TypedValueDescriptor<T>> TypedValueDescriptor<T>::from_local(
 class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 {
   public:
-    codable::protos::DescriptorObject& encoded_object() const;
+    virtual codable::protos::DescriptorObject& encoded_object();
 
-    template <typename T>
     memory::buffer serialize(std::shared_ptr<memory::memory_resource> mr);
 
     template <typename T>
     [[nodiscard]] const T deserialize();
 
-    static std::shared_ptr<Descriptor2> create(std::any value, data_plane::DataPlaneResources2& data_plane_resources);
-    static std::shared_ptr<Descriptor2> create(memory::buffer_view view, data_plane::DataPlaneResources2& data_plane_resources);
+    template <typename T>
+    static std::shared_ptr<Descriptor2> create_from_value(T value, data_plane::DataPlaneResources2& data_plane_resources);
 
-  private:
+    static std::shared_ptr<Descriptor2> create_from_bytes(memory::buffer_view&& view, data_plane::DataPlaneResources2& data_plane_resources);
+
+  protected:
     Descriptor2(std::any value, data_plane::DataPlaneResources2& data_plane_resources):
         m_value(value), m_data_plane_resources(data_plane_resources) {}
     Descriptor2(std::unique_ptr<codable::DescriptorObjectHandler> encoded_object, data_plane::DataPlaneResources2& data_plane_resources):
@@ -451,32 +452,31 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 };
 
 template <typename T>
-memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> mr)
+class TypedDescriptor : public Descriptor2
 {
-    // Temporary logic until TypedDescriptor is introduced
-    if (!m_encoded_object)
+  public:
+    codable::protos::DescriptorObject& encoded_object()
     {
-        m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
+        if (!m_encoded_object)
+        {
+            m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
+        }
 
-        this->register_remote_descriptor();
-
-        this->setup_remote_payloads();
-    }
-    else
-    {
-        this->register_remote_descriptor();
+        return Descriptor2::encoded_object();
     }
 
+  private:
+    template <typename U>
+    friend std::shared_ptr<Descriptor2> Descriptor2::create_from_value(U value, data_plane::DataPlaneResources2& data_plane_resources);
 
-    // Allocate enough bytes to hold the encoded object
-    auto buffer = memory::buffer(m_encoded_object->proto().ByteSizeLong(), mr);
+    TypedDescriptor(T value, data_plane::DataPlaneResources2& data_plane_resources):
+        Descriptor2(std::move(value), data_plane_resources) {}
+};
 
-    if (!m_encoded_object->proto().SerializeToArray(buffer.data(), buffer.bytes()))
-    {
-        LOG(FATAL) << "Failed to serialize EncodedObjectProto to bytes";
-    }
-
-    return buffer;
+template <typename T>
+std::shared_ptr<Descriptor2> Descriptor2::create_from_value(T value, data_plane::DataPlaneResources2& data_plane_resources)
+{
+    return std::shared_ptr<Descriptor2>(new TypedDescriptor<T>(std::move(value), data_plane_resources));
 }
 
 template <typename T>
