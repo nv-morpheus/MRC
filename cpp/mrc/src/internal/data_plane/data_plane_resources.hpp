@@ -24,8 +24,7 @@
 #include "internal/service.hpp"
 #include "internal/ucx/forward.hpp"
 
-#include "mrc/coroutines/event.hpp"
-#include "mrc/coroutines/task.hpp"
+#include "mrc/coroutines/closable_ring_buffer.hpp"
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -33,6 +32,7 @@
 
 #include <ucp/api/ucp_def.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -202,7 +202,7 @@ class DataPlaneResources2
                                                  ucs_memory_type_t mem_type);
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
-    coroutines::Task<std::shared_ptr<memory::buffer>> await_recv();
+    coroutines::Task<std::shared_ptr<runtime::Descriptor2>> await_recv_descriptor();
 
     uint64_t register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
     uint64_t registered_remote_descriptor_count();
@@ -231,16 +231,16 @@ class DataPlaneResources2
     uint64_t get_next_object_id();
 
     void complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
-    void process_message(std::shared_ptr<memory::buffer> buffer);
 
     uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
     boost::fibers::mutex m_remote_descriptors_mutex{};
     boost::fibers::condition_variable m_remote_descriptors_cv{};
 
-    // An event for signaling to await_recv that a payload is available to fetch
-    coroutines::Event m_descriptor_event{};
-    std::mutex m_event_mutex;
-    std::queue<std::shared_ptr<memory::buffer>> m_recv_buffers;
+    // Given that m_max_remote_descriptors any size <= std::numeric_limits<uint64_t>::max(), simply initializing a
+    // ClosableRingBuffer of size m_max_remote_descriptors can lead to std::bad_alloc errors.
+    // We use 100000 as a temporary "practical" limit where the capacity is the minimum of the two values.
+    coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>> m_recv_descriptors{
+        {.capacity = std::min(m_max_remote_descriptors, static_cast<uint64_t>(100000))}};
 
   protected:
     std::map<uint64_t, std::vector<std::shared_ptr<runtime::Descriptor2>>> m_descriptor_by_id;

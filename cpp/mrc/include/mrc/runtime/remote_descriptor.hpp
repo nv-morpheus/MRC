@@ -418,7 +418,7 @@ std::unique_ptr<TypedValueDescriptor<T>> TypedValueDescriptor<T>::from_local(
         new TypedValueDescriptor<T>(mrc::codable::decode2<T>(local_descriptor->encoded_object())));
 }
 
-class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
+class Descriptor2
 {
   public:
     virtual codable::protos::DescriptorObject& encoded_object();
@@ -433,6 +433,8 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
 
     static std::shared_ptr<Descriptor2> create_from_bytes(memory::buffer_view&& view, data_plane::DataPlaneResources2& data_plane_resources);
 
+    void fetch_remote_payloads();
+
   protected:
     Descriptor2(std::any value, data_plane::DataPlaneResources2& data_plane_resources):
         m_value(value), m_data_plane_resources(data_plane_resources) {}
@@ -440,7 +442,6 @@ class Descriptor2 : public std::enable_shared_from_this<Descriptor2>
         m_encoded_object(std::move(encoded_object)), m_data_plane_resources(data_plane_resources) {}
 
     void setup_remote_payloads();
-    void register_remote_descriptor();
 
     std::any m_value;
 

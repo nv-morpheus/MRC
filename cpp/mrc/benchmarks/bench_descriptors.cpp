@@ -228,11 +228,14 @@ class DescriptorFixture : public benchmark::Fixture
     {
         cudaSetDevice(0); // Ensure the CUDA context is initialized
 
-        m_resources = std::make_unique<DataPlaneResources2Tester>();
+        if (!m_resources)
+        {
+            m_resources = std::make_unique<DataPlaneResources2Tester>();
 
-        m_resources->set_instance_id(42);
+            m_resources->set_instance_id(42);
 
-        m_loopback_endpoint = m_resources->create_endpoint(m_resources->address(), m_resources->get_instance_id());
+            m_loopback_endpoint = m_resources->create_endpoint(m_resources->address(), m_resources->get_instance_id());
+        }
 
         m_progress_engine = std::unique_ptr<ProgressEngine>(new ProgressEngine(*m_resources));
 
@@ -257,8 +260,6 @@ class DescriptorFixture : public benchmark::Fixture
     void TearDown(const benchmark::State& state) override
     {
         m_obj.clear();
-        m_resources.reset();
-        m_loopback_endpoint.reset();
         m_progress_engine.reset();
     }
 
@@ -280,6 +281,8 @@ class DescriptorFixture : public benchmark::Fixture
             {
                 auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj[i]->get_object()).get();
                 auto send_descriptor = runtime::Descriptor2::create_from_value(std::move(send_data), *m_resources);
+
+                m_resources->register_remote_descriptor(send_descriptor);
 
                 // Get the serialized data
                 auto serialized_data           = send_descriptor->serialize(memory::malloc_memory_resource::instance());
@@ -308,9 +311,7 @@ class DescriptorFixture : public benchmark::Fixture
 
         // Received and process messages
         for (size_t i = 0; i < messages_to_send; i++) {
-            std::shared_ptr<memory::buffer> buffer = coroutines::sync_wait(m_resources->await_recv());
-
-            auto recv_descriptor = runtime::Descriptor2::create_from_bytes(std::move(*buffer), *m_resources);
+            std::shared_ptr<runtime::Descriptor2> recv_descriptor = coroutines::sync_wait(m_resources->await_recv_descriptor());
 
             auto recv_data = recv_descriptor->deserialize<T>();
 

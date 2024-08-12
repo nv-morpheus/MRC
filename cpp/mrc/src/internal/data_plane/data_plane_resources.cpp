@@ -27,6 +27,7 @@
 #include "internal/ucx/utils.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/memory/resources/host/malloc_memory_resource.hpp"
 
@@ -187,12 +188,21 @@ DataPlaneResources2::DataPlaneResources2()
                        << ucs_status_string(status) << ")";
         }
 
-        auto mr = memory::malloc_memory_resource::instance();
-        auto buffer = memory::buffer(req->getRecvBuffer()->getSize(), mr);
+        // Create a descriptor from the received data
+        auto buffer_view = memory::buffer_view(req->getRecvBuffer()->data(),
+                                               req->getRecvBuffer()->getSize(),
+                                               mrc::memory::memory_kind::host);
 
-        std::memcpy(buffer.data(), req->getRecvBuffer()->data(), req->getRecvBuffer()->getSize());
+        std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *this);
 
-        process_message(std::make_shared<memory::buffer>(std::move(buffer)));
+        // Although ClosableRingBuffer::write is a coroutine, write always completes instantaneously without awaiting.
+        // ClosablRingBuffer size is always >= m_max_remote_descriptors, so there is always an empty slot.
+        auto write_descriptor = [this, recv_descriptor]() -> coroutines::Task<void> {
+            co_await m_recv_descriptors.write(recv_descriptor);
+            co_return;
+        };
+
+        coroutines::sync_wait(write_descriptor());
     });
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(1)),
@@ -399,20 +409,14 @@ uint64_t DataPlaneResources2::get_next_object_id()
     return m_next_object_id++;
 }
 
-coroutines::Task<std::shared_ptr<memory::buffer>> DataPlaneResources2::await_recv()
+coroutines::Task<std::shared_ptr<runtime::Descriptor2>> DataPlaneResources2::await_recv_descriptor()
 {
-    co_await m_descriptor_event;
+    auto read_element = co_await m_recv_descriptors.read();
+    std::shared_ptr<runtime::Descriptor2> recv_descriptor = std::move(*read_element);
 
-    std::unique_lock lock(m_remote_descriptors_mutex);
-    auto buffer = m_recv_buffers.front();
-    m_recv_buffers.pop();
+    recv_descriptor->fetch_remote_payloads();
 
-    if (m_recv_buffers.empty())
-    {
-        m_descriptor_event.reset();
-    }
-
-    co_return buffer;
+    co_return recv_descriptor;
 }
 
 uint64_t DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
@@ -468,13 +472,6 @@ void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPull
             m_remote_descriptors_cv.notify_one();
         }
     }
-}
-
-void DataPlaneResources2::process_message(std::shared_ptr<memory::buffer> buffer)
-{
-    std::unique_lock lock(m_event_mutex);
-    m_recv_buffers.push(buffer);
-    m_descriptor_event.set();
 }
 
 void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
