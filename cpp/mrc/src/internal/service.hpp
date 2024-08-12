@@ -36,7 +36,7 @@ enum class ServiceState
 };
 
 /**
- * @brief Converts a `AsyncServiceState` enum to a string
+ * @brief Converts a `ServiceState` enum to a string
  *
  * @param f
  * @return std::string
