@@ -17,7 +17,8 @@
 
 #include "pymrc/executor.hpp"
 
-#include "pymrc/pipeline.hpp"  // IWYU pragma: keep
+#include "pymrc/pipeline.hpp"                     // IWYU pragma: keep
+#include "pymrc/utilities/function_wrappers.hpp"  // for PyFuncWrapper
 #include "pymrc/utils.hpp"
 
 #include "mrc/options/options.hpp"
@@ -68,11 +69,24 @@ PYBIND11_MODULE(executor, py_mod)
 
             return exec;
         }))
-        .def(py::init<>([](std::shared_ptr<mrc::Options> options) {
-            auto* exec = new Executor(std::move(options));
+        // .def(py::init(py::overload_cast<int>(&test_fn)))
+        // .def(py::init<>(&test_fn, py::arg("options"), py::arg("state_change_cb") = py::none()))
+        .def(py::init<>([](std::shared_ptr<mrc::Options> options, py::object state_change_cb) {
+                 std::function<void(State)> wrapped_state_change_cb = nullptr;
+                 if (!state_change_cb.is_none())
+                 {
+                     auto wrapped_cb         = PyFuncWrapper(std::move(state_change_cb));
+                     wrapped_state_change_cb = [wrapped_cb = std::move(wrapped_cb)](State state) {
+                         wrapped_cb.operator()<void, pybind11::int_>(static_cast<int>(state));
+                     };
+                 }
 
-            return exec;
-        }))
+                 auto exec = std::make_shared<Executor>(std::move(options), std::move(wrapped_state_change_cb));
+
+                 return exec;
+             }),
+             py::arg("options"),
+             py::arg("state_change_cb") = py::none())
         .def("start", &Executor::start)
         .def("stop", &Executor::stop)
         .def("join", &Executor::join)

@@ -55,11 +55,22 @@ class Awaitable : public std::enable_shared_from_this<Awaitable>
     Future<pybind11::object> m_future;
 };
 
+enum class State
+{
+    Init = 0,
+    Run,
+    Joined,
+    Stop,
+    Kill
+};
+
 class Executor
 {
   public:
     Executor();
-    Executor(std::shared_ptr<Options> options);
+
+    // TODO: move callback to options?
+    Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb = nullptr);
     ~Executor();
 
     void register_pipeline(pymrc::Pipeline& pipeline);
@@ -74,7 +85,11 @@ class Executor
   private:
     SharedFuture<void> m_join_future;
 
+    void change_stage(State new_state);
+
     std::shared_ptr<pipeline::IExecutor> m_exec;
+    State m_state                                = State::Init;
+    std::function<void(State)> m_state_change_cb = nullptr;
 };
 
 class PyBoostFuture
