@@ -262,7 +262,7 @@ void Executor::register_pipeline(pymrc::Pipeline& pipeline)
 
 void Executor::change_stage(State new_state)
 {
-    DVLOG(10) << "Changing state to " << static_cast<int>(new_state);
+    DVLOG(10) << "pymrc::Executor - Changing state to " << static_cast<int>(new_state);
     m_state = new_state;
     if (m_state_change_cb)
     {
