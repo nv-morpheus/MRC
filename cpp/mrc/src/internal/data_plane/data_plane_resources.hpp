@@ -25,6 +25,7 @@
 #include "internal/ucx/forward.hpp"
 
 #include "mrc/coroutines/closable_ring_buffer.hpp"
+#include "mrc/coroutines/semaphore.hpp"
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -200,11 +201,18 @@ class DataPlaneResources2
                                                  const void* addr,
                                                  std::size_t bytes,
                                                  ucs_memory_type_t mem_type);
+
+    coroutines::Task<std::shared_ptr<ucxx::Request>> await_am_send(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                   memory::const_buffer_view buffer_view);
+
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
+    coroutines::Task<std::shared_ptr<ucxx::Request>> await_send_descriptor(
+        std::shared_ptr<runtime::Descriptor2> send_descriptor,
+        std::shared_ptr<ucxx::Endpoint> endpoint);
     coroutines::Task<std::shared_ptr<runtime::Descriptor2>> await_recv_descriptor();
 
-    uint64_t register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
+    coroutines::Task<uint64_t> register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
     uint64_t registered_remote_descriptor_count();
     uint64_t registered_remote_descriptor_ptr_count(uint64_t object_id);
 
@@ -230,15 +238,17 @@ class DataPlaneResources2
 
     uint64_t get_next_object_id();
 
-    void complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
+    coroutines::Task<void> complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
 
     uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
-    boost::fibers::mutex m_remote_descriptors_mutex{};
-    boost::fibers::condition_variable m_remote_descriptors_cv{};
 
     // Given that m_max_remote_descriptors any size <= std::numeric_limits<uint64_t>::max(), simply initializing a
-    // ClosableRingBuffer of size m_max_remote_descriptors can lead to std::bad_alloc errors.
+    // Semaphore of size m_max_remote_descriptors can lead to std::bad_alloc errors.
     // We use 100000 as a temporary "practical" limit where the capacity is the minimum of the two values.
+    std::unique_ptr<coroutines::Semaphore> m_remote_descriptors_semaphore;
+    boost::fibers::mutex m_remote_descriptors_mutex{};
+
+    // ClosableRingBuffer uses 100000 as a "practical" limit where the capacity is the minimum of the two values.
     coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>> m_recv_descriptors{
         {.capacity = std::min(m_max_remote_descriptors, static_cast<uint64_t>(100000))}};
 

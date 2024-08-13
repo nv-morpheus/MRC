@@ -27,6 +27,7 @@
 #include "internal/ucx/utils.hpp"
 #include "internal/ucx/worker.hpp"
 
+#include "mrc/coroutines/event.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/memory/literals.hpp"
 #include "mrc/memory/resources/host/malloc_memory_resource.hpp"
@@ -163,6 +164,11 @@ DataPlaneResources2::DataPlaneResources2()
     DVLOG(10) << "initialize the registration cache for this context";
     m_registration_cache3 = std::make_shared<ucx::RegistrationCache3>(m_context);
 
+    // When DataPlanResources2 initializes, m_max_remote_descriptors is initialized to std::numeric_limits<uint64_t>::max()
+    // By default, m_remote_descriptors_semaphore should have capacity = practical limit, 100000
+    m_remote_descriptors_semaphore = std::unique_ptr<coroutines::Semaphore>(
+        new coroutines::Semaphore{{.capacity = static_cast<uint64_t>(100000)}});
+
     auto pull_complete_callback = ucxx::AmReceiverCallbackType([this](std::shared_ptr<ucxx::Request> req) {
         auto status = req->getStatus();
         if (status != UCS_OK)
@@ -174,7 +180,7 @@ DataPlaneResources2::DataPlaneResources2()
         auto* message = reinterpret_cast<remote_descriptor::DescriptorPullCompletionMessage*>(
             req->getRecvBuffer()->data());
 
-        complete_remote_pull(message);
+        coroutines::sync_wait(complete_remote_pull(message));
     });
     m_worker->registerAmReceiverCallback(
         ucxx::AmReceiverCallbackInfo(ucxx::AmReceiverCallbackOwnerType("MRC"), ucxx::AmReceiverCallbackIdType(0)),
@@ -391,9 +397,29 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::am_send_async(std::shared_pt
     // TODO(MDD): Check that this EP belongs to this resource
 
     // Const cast away because UCXX only accepts void*
-    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type, ucxx::AmReceiverCallbackInfo("MRC", 1));
+    auto request = endpoint->amSend(const_cast<void*>(addr), bytes, mem_type);
 
     return request;
+}
+
+coroutines::Task<std::shared_ptr<ucxx::Request>> DataPlaneResources2::await_am_send(
+    std::shared_ptr<ucxx::Endpoint> endpoint,
+    memory::const_buffer_view buffer_view)
+{
+    coroutines::Event event{};
+
+    // Const cast away because UCXX only accepts void*
+    auto request = endpoint->amSend(const_cast<void*>(buffer_view.data()),
+                                    buffer_view.bytes(),
+                                    ucx::to_ucs_memory_type(buffer_view.kind()),
+                                    ucxx::AmReceiverCallbackInfo("MRC", 1),
+                                    false,
+                                    [&event](ucs_status_t status, std::shared_ptr<void> data) {
+                                        event.set();
+                                    });
+
+    co_await event;
+    co_return request;
 }
 
 std::shared_ptr<ucxx::Request> DataPlaneResources2::am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint)
@@ -409,6 +435,21 @@ uint64_t DataPlaneResources2::get_next_object_id()
     return m_next_object_id++;
 }
 
+coroutines::Task<std::shared_ptr<ucxx::Request>> DataPlaneResources2::await_send_descriptor(
+    std::shared_ptr<runtime::Descriptor2> send_descriptor,
+    std::shared_ptr<ucxx::Endpoint> endpoint)
+{
+    // Wait until there is an empty slot to register remote descriptor
+    // Require register_remote_descriptor before descriptor serialize as serialize requires object_id to be in the protobuf
+    uint64_t object_id = co_await this->register_remote_descriptor(send_descriptor);
+
+    // Serialize the descriptor's protobuf into a byte stream for remote communication
+    auto serialized_data = send_descriptor->serialize(memory::malloc_memory_resource::instance());
+
+    // Return an asynchronous send request so completion can be checked
+    co_return co_await this->await_am_send(endpoint, serialized_data);
+}
+
 coroutines::Task<std::shared_ptr<runtime::Descriptor2>> DataPlaneResources2::await_recv_descriptor()
 {
     auto read_element = co_await m_recv_descriptors.read();
@@ -419,39 +460,33 @@ coroutines::Task<std::shared_ptr<runtime::Descriptor2>> DataPlaneResources2::awa
     co_return recv_descriptor;
 }
 
-uint64_t DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
+coroutines::Task<uint64_t> DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
 {
     // If the descriptor has an object_id > 0, the descriptor has already been registered and should not be re-registered
     auto object_id = descriptor->encoded_object().object_id();
     if (object_id > 0)
     {
+        // Add a new shared_ptr reference to the std::vector of descriptor shared_ptrs
+        // Once all shared_ptrs are erased, the descriptor object will be destructed via RAII
         m_descriptor_by_id[object_id].push_back(descriptor);
-        return object_id;
+        co_return object_id;
     }
 
+    // The descriptor has object_id of 0, meaning it has not been previously registered
     object_id = get_next_object_id();
     descriptor->encoded_object().set_object_id(object_id);
+
+    // Wait for semaphore to ensure that we have an empty slot to register the current descriptor
+    co_await m_remote_descriptors_semaphore->acquire();  // Directly await the semaphore
+
     {
         std::unique_lock lock(m_remote_descriptors_mutex);
-        m_remote_descriptors_cv.wait(lock, [this] {
-            return m_descriptor_by_id.size() < m_max_remote_descriptors;
-        });
         m_descriptor_by_id[object_id].push_back(descriptor);
     }
-    return object_id;
+    co_return object_id;
 }
 
-uint64_t DataPlaneResources2::registered_remote_descriptor_count()
-{
-    return m_descriptor_by_id.size();
-}
-
-uint64_t DataPlaneResources2::registered_remote_descriptor_ptr_count(uint64_t object_id)
-{
-    return m_descriptor_by_id.at(object_id).size();
-}
-
-void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message)
+coroutines::Task<void> DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message)
 {
     // If the mapping between object_id to descriptor shared ptrs exists, then there exists >= 1 shared ptrs
     if (m_descriptor_by_id.find(message->object_id) != m_descriptor_by_id.end())
@@ -469,15 +504,27 @@ void DataPlaneResources2::complete_remote_pull(remote_descriptor::DescriptorPull
                 m_descriptor_by_id.erase(message->object_id);
                 m_registration_cache3->remove_descriptor(message->object_id);
             }
-            m_remote_descriptors_cv.notify_one();
+            co_await m_remote_descriptors_semaphore->release();
         }
     }
+    co_return;
+}
+
+uint64_t DataPlaneResources2::registered_remote_descriptor_count()
+{
+    return m_descriptor_by_id.size();
+}
+
+uint64_t DataPlaneResources2::registered_remote_descriptor_ptr_count(uint64_t object_id)
+{
+    return m_descriptor_by_id.at(object_id).size();
 }
 
 void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
 {
     m_max_remote_descriptors = max_remote_descriptors;
-    m_remote_descriptors_cv.notify_all();
+    m_remote_descriptors_semaphore = std::unique_ptr<coroutines::Semaphore>(
+        new coroutines::Semaphore{{.capacity = std::min(m_max_remote_descriptors, static_cast<uint64_t>(100000))}});
 }
 
 }  // namespace mrc::data_plane

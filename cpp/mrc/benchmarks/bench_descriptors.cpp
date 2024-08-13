@@ -22,6 +22,7 @@
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/fundamental_types.hpp"
 #include "mrc/coroutines/sync_wait.hpp"
+#include "mrc/coroutines/when_all.hpp"
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
@@ -272,9 +273,7 @@ class DescriptorFixture : public benchmark::Fixture
             cudaSetDevice(0); // Ensure the CUDA context is initialized
 
             // Store send_requests to check for completion after all messages are sent to achieve async sending
-            // The serialized_buffers must also remain in-scope until the send_requests are completed
-            std::vector<std::shared_ptr<ucxx::Request>> send_requests;
-            std::vector<memory::buffer> serialized_buffers;
+            std::vector<coroutines::Task<std::shared_ptr<ucxx::Request>>> pending_tasks;
 
             std::vector<std::weak_ptr<runtime::Descriptor2>> registered_send_descriptors;
             for (size_t i = 0; i < messages_to_send; ++i)
@@ -282,21 +281,20 @@ class DescriptorFixture : public benchmark::Fixture
                 auto send_data = std::any_cast<std::reference_wrapper<T>>(m_obj[i]->get_object()).get();
                 auto send_descriptor = runtime::Descriptor2::create_from_value(std::move(send_data), *m_resources);
 
-                m_resources->register_remote_descriptor(send_descriptor);
+                auto send_request = m_resources->await_send_descriptor(send_descriptor, m_loopback_endpoint);
+                pending_tasks.push_back(std::move(send_request));
 
-                // Get the serialized data
-                auto serialized_data           = send_descriptor->serialize(memory::malloc_memory_resource::instance());
                 auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
 
                 send_descriptor = nullptr;
-
-                send_requests.push_back(m_resources->am_send_async(m_loopback_endpoint, serialized_data));
-                serialized_buffers.push_back(std::move(serialized_data));
 
                 // Acquire the registered descriptor as a `weak_ptr` which we can use to immediately verify to be valid, but
                 // invalid once `DataPlaneResources2` releases it
                 registered_send_descriptors.push_back(m_resources->get_descriptor(send_descriptor_object_id));
             }
+
+            // Wait for all send requests to complete before proceeding
+            coroutines::sync_wait(coroutines::when_all(std::move(pending_tasks)));
 
             // Wait for remote decrement messages
             // This loop also guarantees that all send_requests and recv_requests have been completed
@@ -309,7 +307,7 @@ class DescriptorFixture : public benchmark::Fixture
             }
         });
 
-        // Received and process messages
+        // Receive the messages, process them into descriptors, and deserialize into class T objects
         for (size_t i = 0; i < messages_to_send; i++) {
             std::shared_ptr<runtime::Descriptor2> recv_descriptor = coroutines::sync_wait(m_resources->await_recv_descriptor());
 
@@ -368,7 +366,7 @@ BENCHMARK_DEFINE_F(DescriptorFixture, descriptor_latency)(benchmark::State& stat
 BENCHMARK_REGISTER_F(DescriptorFixture, descriptor_latency)
     ->ArgsProduct({
         {static_cast<int>(memory::memory_kind::device)}, // memory type
-        benchmark::CreateRange(1, 1000, /*multi=*/10),   // number of messages to send
+        benchmark::CreateRange(1, 10000, /*multi=*/10),   // number of messages to send
     })
     ->Iterations(1);
 
@@ -376,6 +374,6 @@ BENCHMARK_REGISTER_F(DescriptorFixture, descriptor_latency)
 BENCHMARK_REGISTER_F(DescriptorFixture, descriptor_latency)
     ->ArgsProduct({
         {static_cast<int>(memory::memory_kind::host)}, // memory type
-        benchmark::CreateRange(1, 1000, /*multi=*/10),   // number of messages to send
+        benchmark::CreateRange(1, 10000, /*multi=*/10),   // number of messages to send
     })
     ->Iterations(1);

@@ -348,7 +348,7 @@ memory::buffer Descriptor2::serialize(std::shared_ptr<memory::memory_resource> m
         LOG(FATAL) << "Failed to serialize EncodedObjectProto to bytes";
     }
 
-    return buffer;
+    return std::move(buffer);
 }
 
 std::shared_ptr<Descriptor2> Descriptor2::create_from_bytes(memory::buffer_view&& view,
