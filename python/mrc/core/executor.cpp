@@ -69,8 +69,6 @@ PYBIND11_MODULE(executor, py_mod)
 
             return exec;
         }))
-        // .def(py::init(py::overload_cast<int>(&test_fn)))
-        // .def(py::init<>(&test_fn, py::arg("options"), py::arg("state_change_cb") = py::none()))
         .def(py::init<>([](std::shared_ptr<mrc::Options> options, py::object state_change_cb) {
                  std::function<void(State)> wrapped_state_change_cb = nullptr;
                  if (!state_change_cb.is_none())
