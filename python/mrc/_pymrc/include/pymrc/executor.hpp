@@ -16,20 +16,18 @@
  */
 #pragma once
 
-#include "mrc/types.hpp"  // for Future, SharedFuture
+#include "mrc/pipeline/executor.hpp"  // for IExecutor, State
+#include "mrc/types.hpp"              // for Future, SharedFuture
 
 #include <pybind11/pytypes.h>
 
-#include <future>  // for future & promise
+#include <functional>  // for function
+#include <future>      // for future & promise
 #include <memory>
 
 namespace mrc {
 class Options;
 }  // namespace mrc
-
-namespace mrc::pipeline {
-class IExecutor;
-}
 
 namespace mrc::pymrc {
 class Pipeline;
@@ -53,15 +51,6 @@ class Awaitable : public std::enable_shared_from_this<Awaitable>
 
   private:
     Future<pybind11::object> m_future;
-};
-
-enum class State
-{
-    Init = 0,
-    Run,
-    Joined,
-    Stop,
-    Kill
 };
 
 class Executor

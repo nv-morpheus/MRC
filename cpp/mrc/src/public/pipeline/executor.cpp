@@ -30,7 +30,9 @@ namespace mrc {
 
 Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
-Executor::Executor(std::shared_ptr<Options> options) : m_impl(make_executor(options)) {}
+Executor::Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb) :
+  m_impl(make_executor(options))
+{}
 
 Executor::~Executor() = default;
 

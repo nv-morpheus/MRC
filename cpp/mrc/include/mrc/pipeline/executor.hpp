@@ -19,6 +19,7 @@
 
 #include "mrc/utils/macros.hpp"
 
+#include <functional>  // for function
 #include <memory>
 
 namespace mrc {
@@ -51,12 +52,21 @@ class IExecutor
 
 namespace mrc {
 
+enum class State
+{
+    Init = 0,
+    Run,
+    Joined,
+    Stop,
+    Kill
+};
+
 // For backwards compatibility, make utility implementation which holds onto a unique_ptr
 class Executor : public pipeline::IExecutor
 {
   public:
     Executor();
-    Executor(std::shared_ptr<Options> options);
+    Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb = nullptr);
     ~Executor() override;
 
     void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
