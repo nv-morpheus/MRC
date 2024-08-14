@@ -96,7 +96,6 @@ void Manager::do_service_start()
 
 void Manager::do_service_await_live()
 {
-    DVLOG(1) << "Pipeline::Manager - await_live";
     m_controller->await_live();
 }
 
@@ -117,19 +116,15 @@ void Manager::do_service_await_join()
     std::exception_ptr ptr;
     try
     {
-        DVLOG(1) << "Pipeline::Manager - await_on_pipeline";
         m_controller->runnable_as<Controller>().await_on_pipeline();
-        DVLOG(1) << "Pipeline::Manager - await_on_pipeline - done";
     } catch (...)
     {
-        DVLOG(1) << "Pipeline::Manager - caught exception";
         ptr = std::current_exception();
     }
     m_update_channel.reset();
     m_controller->await_join();
     if (ptr)
     {
-        DVLOG(1) << "Pipeline::Manager - rethrowing exception";
         std::rethrow_exception(ptr);
     }
 }
