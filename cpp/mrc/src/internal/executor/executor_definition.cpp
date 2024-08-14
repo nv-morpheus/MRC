@@ -154,7 +154,6 @@ void ExecutorDefinition::do_service_kill()
 void ExecutorDefinition::do_service_await_live()
 {
     CHECK(m_pipeline_manager);
-    DVLOG(1) << "ExecutorDefinition - service_await_live";
     m_pipeline_manager->service_await_live();
 }
 void ExecutorDefinition::do_service_await_join()
