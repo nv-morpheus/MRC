@@ -80,7 +80,7 @@ std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> opti
 
     auto full_system = system::SystemDefinition::unwrap(std::move(system));
 
-    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system));
+    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system), std::move(state_change_cb));
 }
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system,
@@ -88,7 +88,7 @@ std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISy
 {
     auto full_system = system::SystemDefinition::unwrap(std::move(system));
 
-    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system));
+    return std::make_unique<executor::ExecutorDefinition>(std::move(full_system), std::move(state_change_cb));
 }
 
 }  // namespace mrc
