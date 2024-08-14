@@ -266,7 +266,7 @@ void Executor::change_stage(State new_state)
     m_state = new_state;
     if (m_state_change_cb)
     {
-        m_state_change_cb(m_state);
+        // m_state_change_cb(m_state);
     }
 }
 
