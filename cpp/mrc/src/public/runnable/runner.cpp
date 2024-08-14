@@ -214,16 +214,22 @@ void Runner::update_state(std::size_t launcher_id, State new_state)
              << "; new_state: " << runnable_state_str(new_state)
              << "; m_on_instance_state_change: " << (m_on_instance_state_change == nullptr);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    DVLOG(1) << "Runner::update_state - 1";
     CHECK(m_runnable);
     CHECK_LT(launcher_id, m_instances.size());
+    DVLOG(1) << "Runner::update_state - 2";
     auto& state = m_instances.at(launcher_id).m_state;
+    DVLOG(1) << "Runner::update_state - 3";
     CHECK(state < new_state) << "Runner::State failed to advance in the proper order; current state: "
                              << runnable_state_str(state) << "; target state: " << runnable_state_str(new_state);
     auto old_state = state;
     state          = new_state;
+    DVLOG(1) << "Runner::update_state - 4";
     if (m_on_instance_state_change)
     {
+        DVLOG(1) << "Runner::update_state - 5";
         m_on_instance_state_change(*m_runnable, launcher_id, old_state, new_state);
+        DVLOG(1) << "Runner::update_state - 6";
     }
 }
 
