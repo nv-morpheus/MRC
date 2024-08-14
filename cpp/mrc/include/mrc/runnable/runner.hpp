@@ -69,10 +69,10 @@ class Runner
     enum class State
     {
         Unqueued = 0,
-        Queued,
-        Running,
-        Error,
-        Completed,
+        Queued,     // 1
+        Running,    // 2
+        Error,      // 3
+        Completed,  // 4
     };
 
     virtual ~Runner();
@@ -82,7 +82,7 @@ class Runner
 
     /**
      * @brief Signature for the callback lambda which is on each state change
-     * Calling arguments are the new State and the unique instance id.
+     * Calling arguments are a const ref to the runnable, ID of the launcher, the old state, and the new State.
      */
     using on_instance_state_change_t = std::function<void(const Runnable&, std::size_t, State, State)>;
 

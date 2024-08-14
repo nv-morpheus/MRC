@@ -100,6 +100,28 @@ void Manager::do_service_start()
                 LOG(ERROR) << "error detected on controller";
             }
         });
+
+        runner.on_instance_state_change_callback([this](const mrc::runnable::Runnable& runnable,
+                                                        std::size_t launcher_id,
+                                                        mrc::runnable::Runner::State old_state,
+                                                        mrc::runnable::Runner::State state) {
+            State executor_state = State::Init;
+            switch (state)
+            {
+            case mrc::runnable::Runner::State::Running:
+                executor_state = State::Run;
+                break;
+            case mrc::runnable::Runner::State::Completed:
+                executor_state = State::Stop;
+                break;
+            case mrc::runnable::Runner::State::Error:
+                executor_state = State::Kill;
+                break;
+            default:
+                break;
+            }
+            change_stage(executor_state);
+        });
     });
     m_controller = launcher->ignition();
     change_stage(State::Run);
