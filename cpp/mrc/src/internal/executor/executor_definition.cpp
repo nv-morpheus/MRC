@@ -113,16 +113,6 @@ void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> 
     m_pipeline_manager = std::make_unique<pipeline::Manager>(full_pipeline, *m_resources_manager, m_state_change_cb);
 }
 
-void ExecutorDefinition::change_stage(State new_state)
-{
-    DVLOG(1) << "ExecutorDefinition - Changing state to " << static_cast<int>(new_state);
-    m_state = new_state;
-    if (m_state_change_cb)
-    {
-        m_state_change_cb(m_state);
-    }
-}
-
 void ExecutorDefinition::start()
 {
     this->service_start();
@@ -149,20 +139,17 @@ void ExecutorDefinition::do_service_start()
         initial_segments[address] = 0;                              // partition 0;
     }
     m_pipeline_manager->push_updates(std::move(initial_segments));
-    change_stage(State::Run);
 }
 
 void ExecutorDefinition::do_service_stop()
 {
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_stop();
-    change_stage(State::Stop);
 }
 void ExecutorDefinition::do_service_kill()
 {
     CHECK(m_pipeline_manager);
     return m_pipeline_manager->service_kill();
-    change_stage(State::Stop);
 }
 void ExecutorDefinition::do_service_await_live()
 {
@@ -174,7 +161,6 @@ void ExecutorDefinition::do_service_await_join()
 {
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_await_join();
-    change_stage(State::Joined);
 }
 
 }  // namespace mrc::executor

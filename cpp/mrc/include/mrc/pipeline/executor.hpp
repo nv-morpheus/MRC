@@ -75,10 +75,6 @@ class Executor : public pipeline::IExecutor
     void join() override;
 
   private:
-    void change_stage(State new_state);
-
-    State m_state                                = State::Init;
-    std::function<void(State)> m_state_change_cb = nullptr;
     std::unique_ptr<IExecutor> m_impl;
 };
 

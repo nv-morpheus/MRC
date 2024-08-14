@@ -58,16 +58,6 @@ Manager::~Manager()
     Service::call_in_destructor();
 }
 
-void Manager::change_stage(State new_state)
-{
-    DVLOG(1) << "Pipeline::Manager - Changing state to " << static_cast<int>(new_state);
-    m_state = new_state;
-    if (m_state_change_cb)
-    {
-        m_state_change_cb(m_state);
-    }
-}
-
 void Manager::push_updates(SegmentAddresses&& segment_addresses)
 {
     CHECK(m_update_channel);
@@ -82,7 +72,7 @@ void Manager::do_service_start()
     main.pe_count            = 1;
     main.engines_per_pe      = 1;
 
-    auto instance    = std::make_unique<PipelineInstance>(m_pipeline, m_resources);
+    auto instance    = std::make_unique<PipelineInstance>(m_pipeline, m_resources, m_state_change_cb);
     auto controller  = std::make_unique<Controller>(std::move(instance));
     m_update_channel = std::make_unique<node::WritableEntrypoint<ControlMessage>>();
 
@@ -100,33 +90,8 @@ void Manager::do_service_start()
                 LOG(ERROR) << "error detected on controller";
             }
         });
-
-        runner.on_instance_state_change_callback([this](const mrc::runnable::Runnable& runnable,
-                                                        std::size_t launcher_id,
-                                                        mrc::runnable::Runner::State old_state,
-                                                        mrc::runnable::Runner::State state) {
-            DVLOG(1) << "Pipeline::Manager - on_instance_state_change_callback controller state change: "
-                     << static_cast<int>(state);
-            State executor_state = State::Init;
-            switch (state)
-            {
-            case mrc::runnable::Runner::State::Running:
-                executor_state = State::Run;
-                break;
-            case mrc::runnable::Runner::State::Completed:
-                executor_state = State::Stop;
-                break;
-            case mrc::runnable::Runner::State::Error:
-                executor_state = State::Kill;
-                break;
-            default:
-                break;
-            }
-            change_stage(executor_state);
-        });
     });
     m_controller = launcher->ignition();
-    change_stage(State::Run);
 }
 
 void Manager::do_service_await_live()
@@ -138,14 +103,12 @@ void Manager::do_service_await_live()
 void Manager::do_service_stop()
 {
     VLOG(10) << "stop: closing update channels";
-    change_stage(State::Stop);
     m_update_channel->await_write({ControlMessageType::Stop});
 }
 
 void Manager::do_service_kill()
 {
     VLOG(10) << "kill: closing update channels; issuing kill to controllers";
-    change_stage(State::Stop);
     m_update_channel->await_write({ControlMessageType::Kill});
 }
 
@@ -169,8 +132,6 @@ void Manager::do_service_await_join()
         DVLOG(1) << "Pipeline::Manager - rethrowing exception";
         std::rethrow_exception(ptr);
     }
-
-    change_stage(State::Joined);
 }
 
 resources::Manager& Manager::resources()

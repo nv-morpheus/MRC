@@ -33,8 +33,7 @@ namespace mrc {
 Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
 Executor::Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb) :
-  m_impl(make_executor(options)),
-  m_state_change_cb(std::move(state_change_cb))
+  m_impl(make_executor(options, std::move(state_change_cb)))
 {}
 
 Executor::~Executor() = default;
@@ -44,32 +43,19 @@ void Executor::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
     m_impl->register_pipeline(std::move(pipeline));
 }
 
-void Executor::change_stage(State new_state)
-{
-    DVLOG(1) << "mrc::Executor - Changing state to " << static_cast<int>(new_state);
-    m_state = new_state;
-    if (m_state_change_cb)
-    {
-        m_state_change_cb(m_state);
-    }
-}
-
 void Executor::start()
 {
     m_impl->start();
-    change_stage(State::Run);
 }
 
 void Executor::stop()
 {
     m_impl->stop();
-    change_stage(State::Stop);
 }
 
 void Executor::join()
 {
     m_impl->join();
-    change_stage(State::Joined);
 }
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options,

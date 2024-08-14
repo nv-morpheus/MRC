@@ -69,10 +69,10 @@ class Runner
     enum class State
     {
         Unqueued = 0,
-        Queued,     // 1
-        Running,    // 2
-        Error,      // 3
-        Completed,  // 4
+        Queued,
+        Running,
+        Error,
+        Completed,
     };
 
     virtual ~Runner();

@@ -67,9 +67,6 @@ class Manager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    void change_stage(State new_state);
-
-    State m_state                                = State::Init;
     std::function<void(State)> m_state_change_cb = nullptr;
     resources::Manager& m_resources;
     std::shared_ptr<PipelineDefinition> m_pipeline;
