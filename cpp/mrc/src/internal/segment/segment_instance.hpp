@@ -19,12 +19,10 @@
 
 #include "internal/service.hpp"
 
-#include "mrc/pipeline/executor.hpp"  // for State
 #include "mrc/runnable/runner.hpp"
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for SegmentAddress, SegmentID, SegmentRank, PortName, on_state_change_fn & State
 
 #include <cstddef>
-#include <functional>  // for function
 #include <map>
 #include <memory>
 #include <mutex>

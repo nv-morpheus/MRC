@@ -22,6 +22,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/options/options.hpp"
+#include "mrc/types.hpp"  // for State & on_state_change_fn
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 

@@ -21,9 +21,8 @@
 #include "internal/service.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
-#include "mrc/pipeline/executor.hpp"  // for State
+#include "mrc/types.hpp"  // for on_state_change_fn
 
-#include <functional>  // for function
 #include <memory>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint

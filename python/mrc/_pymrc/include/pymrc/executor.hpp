@@ -16,18 +16,20 @@
  */
 #pragma once
 
-#include "mrc/pipeline/executor.hpp"  // for IExecutor, State
-#include "mrc/types.hpp"              // for Future, SharedFuture
+#include "mrc/types.hpp"  // for Future, SharedFuture, on_state_change_fn
 
 #include <pybind11/pytypes.h>
 
-#include <functional>  // for function
-#include <future>      // for future & promise
+#include <future>  // for future & promise
 #include <memory>
 
 namespace mrc {
 class Options;
 }  // namespace mrc
+
+namespace mrc::pipeline {
+class IExecutor;
+}
 
 namespace mrc::pymrc {
 class Pipeline;

@@ -20,11 +20,9 @@
 #include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/service.hpp"
 
-#include "mrc/pipeline/executor.hpp"  // for State
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for SegmentAddress, PortName, on_state_change_fn
 
 #include <cstdint>
-#include <functional>  // for function
 #include <map>
 #include <memory>
 // IWYU pragma: no_include "internal/segment/segment_instance.hpp"

@@ -21,8 +21,8 @@
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/pipeline/executor.hpp"
+#include "mrc/types.hpp"  // for on_state_change_fn
 
-#include <functional>  // for function
 #include <memory>
 
 namespace mrc::system {

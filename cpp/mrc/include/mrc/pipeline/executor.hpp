@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "mrc/types.hpp"
+#include "mrc/types.hpp"  // for on_state_change_fn, State
 #include "mrc/utils/macros.hpp"
 
-#include <functional>  // for function
 #include <memory>
 
 namespace mrc {
