@@ -42,6 +42,7 @@
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/fundamental_types.hpp"
+#include "mrc/coroutines/sync_wait.hpp"
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
@@ -612,7 +613,7 @@ TEST_F(TestNetwork, LocalDescriptorRoundTrip)
     auto send_data_copy = send_data;
 
     // Create a descriptor that will pass throught the local path
-    auto descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+    auto descriptor = runtime::Descriptor2::create_from_value(std::move(send_data_copy), *m_resources);
 
     // deserialize the descriptor to get value
     auto recv_data = descriptor->deserialize<decltype(send_data)>();
@@ -629,13 +630,16 @@ TEST_F(TestNetwork, TransferFullDescriptors)
 
     auto send_data_copy = send_data;
 
-    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+    std::shared_ptr<runtime::Descriptor2> send_descriptor =
+        runtime::Descriptor2::create_from_value(std::move(send_data_copy), *m_resources);
 
     // Check that no remote payloads are yet registered with `DataPlaneResources2`.
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
 
+    uint64_t obj_id = coroutines::sync_wait(m_resources->register_remote_descriptor(send_descriptor));
+
     // Get the serialized data
-    auto serialized_data           = send_descriptor->serialize<decltype(send_data)>(memory::malloc_memory_resource::instance());
+    auto serialized_data           = send_descriptor->serialize(memory::malloc_memory_resource::instance());
     auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
 
     // Check that there is exactly 1 registered descriptor
@@ -662,8 +666,12 @@ TEST_F(TestNetwork, TransferFullDescriptors)
                                            receive_request->getRecvBuffer()->getSize(),
                                            mrc::memory::memory_kind::host);
 
-    std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
-    uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
+    std::shared_ptr<runtime::Descriptor2> recv_descriptor =
+        runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *m_resources);
+
+    recv_descriptor->fetch_remote_payloads();
+
+    uint64_t recv_descriptor_object_id = recv_descriptor->encoded_object().object_id();
 
     EXPECT_EQ(send_descriptor_object_id, recv_descriptor_object_id);
 
@@ -698,13 +706,16 @@ TEST_F(TestNetwork, TransferFullDescriptorsDevice)
     cudaMalloc(&send_data_device, send_data_host.size() * sizeof(u_int8_t));
     cudaMemcpy(send_data_device, send_data_host.data(), send_data_host.size() * sizeof(u_int8_t), cudaMemcpyHostToDevice);
 
-    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_device), *m_resources);
+    std::shared_ptr<runtime::Descriptor2> send_descriptor =
+        runtime::Descriptor2::create_from_value(std::move(send_data_device), *m_resources);
 
     // Check that no remote payloads are yet registered with `DataPlaneResources2`.
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
 
+    uint64_t obj_id = coroutines::sync_wait(m_resources->register_remote_descriptor(send_descriptor));
+
     // Get the serialized data
-    auto serialized_data           = send_descriptor->serialize<u_int8_t*>(memory::malloc_memory_resource::instance());
+    auto serialized_data           = send_descriptor->serialize(memory::malloc_memory_resource::instance());
     auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
 
     // Check that there is exactly 1 registered descriptor
@@ -731,8 +742,12 @@ TEST_F(TestNetwork, TransferFullDescriptorsDevice)
                                            receive_request->getRecvBuffer()->getSize(),
                                            mrc::memory::memory_kind::host);
 
-    std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
-    uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
+    std::shared_ptr<runtime::Descriptor2> recv_descriptor =
+        runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *m_resources);
+
+    recv_descriptor->fetch_remote_payloads();
+
+    uint64_t recv_descriptor_object_id = recv_descriptor->encoded_object().object_id();
 
     EXPECT_EQ(send_descriptor_object_id, recv_descriptor_object_id);
 
@@ -784,13 +799,17 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
     auto send_data_copy = send_data;
 
     // Create a descriptor
-    std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+    std::shared_ptr<runtime::Descriptor2> send_descriptor =
+        runtime::Descriptor2::create_from_value(std::move(send_data_copy), *m_resources);
 
     // Check that no remote payloads are yet registered with `DataPlaneResources2`.
     EXPECT_EQ(m_resources->registered_remote_descriptor_count(), 0);
 
-    auto serialized_data1 = send_descriptor->serialize<decltype(send_data)>(memory::malloc_memory_resource::instance());
-    auto serialized_data2 = send_descriptor->serialize<decltype(send_data)>(memory::malloc_memory_resource::instance());
+    uint64_t obj_id1 = coroutines::sync_wait(m_resources->register_remote_descriptor(send_descriptor));
+    uint64_t obj_id2 = coroutines::sync_wait(m_resources->register_remote_descriptor(send_descriptor));
+
+    auto serialized_data1 = send_descriptor->serialize(memory::malloc_memory_resource::instance());
+    auto serialized_data2 = send_descriptor->serialize(memory::malloc_memory_resource::instance());
     auto send_descriptor_object_id = send_descriptor->encoded_object().object_id();
 
     // Check that there is exactly 1 registered descriptor but there are 2 pointers to the same descriptor
@@ -822,7 +841,12 @@ TEST_F(TestNetwork, TransferFullDescriptorsBroadcast)
         auto buffer_view = memory::buffer_view(receive_request->getRecvBuffer()->data(),
                                               receive_request->getRecvBuffer()->getSize(),
                                               mrc::memory::memory_kind::host);
-        std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create(buffer_view, *m_resources);
+
+        std::shared_ptr<runtime::Descriptor2> recv_descriptor =
+            runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *m_resources);
+
+        recv_descriptor->fetch_remote_payloads();
+
         uint64_t recv_descriptor_object_id                    = recv_descriptor->encoded_object().object_id();
 
         if (expected_ptrs > 0)
@@ -895,10 +919,14 @@ TEST_P(TestNetworkPressure, TransferPressureControl)
         {
             auto send_data_copy = send_data;
 
-            std::shared_ptr<runtime::Descriptor2> send_descriptor = runtime::Descriptor2::create(std::move(send_data_copy), *m_resources);
+            std::shared_ptr<runtime::Descriptor2> send_descriptor =
+                runtime::Descriptor2::create_from_value(std::move(send_data_copy), *m_resources);
+
+            // Register descriptor with the DataPlaneResource object
+            uint64_t obj_id = coroutines::sync_wait(m_resources->register_remote_descriptor(send_descriptor));
 
             // Get the serialized data and push to queue for consumption by request processing thread
-            serialized_data.push(send_descriptor->serialize<decltype(send_data)>(memory::malloc_memory_resource::instance()));
+            serialized_data.push(send_descriptor->serialize(memory::malloc_memory_resource::instance()));
             send_descriptor_object_ids.push(send_descriptor->encoded_object().object_id());
 
             send_descriptor = nullptr;
@@ -958,11 +986,13 @@ TEST_P(TestNetworkPressure, TransferPressureControl)
         EXPECT_NE(registered_send_descriptor.lock(), nullptr);
 
         // Create a remote descriptor from the received data
-        auto recv_descriptor = runtime::Descriptor2::create(
+        auto recv_descriptor = runtime::Descriptor2::create_from_bytes(
             {receive_request->getRecvBuffer()->data(),
              receive_request->getRecvBuffer()->getSize(),
              mrc::memory::memory_kind::host},
             *m_resources);
+
+        recv_descriptor->fetch_remote_payloads();
 
         auto recv_descriptor_object_id = recv_descriptor->encoded_object().object_id();
 
