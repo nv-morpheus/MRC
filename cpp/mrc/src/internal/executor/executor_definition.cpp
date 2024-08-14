@@ -110,7 +110,7 @@ void ExecutorDefinition::register_pipeline(std::shared_ptr<pipeline::IPipeline> 
         throw exceptions::MrcRuntimeError("pipeline validation failed");
     }
 
-    m_pipeline_manager = std::make_unique<pipeline::Manager>(full_pipeline, *m_resources_manager);
+    m_pipeline_manager = std::make_unique<pipeline::Manager>(full_pipeline, *m_resources_manager, m_state_change_cb);
 }
 
 void ExecutorDefinition::change_stage(State new_state)
