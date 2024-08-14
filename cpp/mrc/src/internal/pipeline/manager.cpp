@@ -105,6 +105,8 @@ void Manager::do_service_start()
                                                         std::size_t launcher_id,
                                                         mrc::runnable::Runner::State old_state,
                                                         mrc::runnable::Runner::State state) {
+            DVLOG(1) << "Pipeline::Manager - on_instance_state_change_callback controller state change: "
+                     << static_cast<int>(state);
             State executor_state = State::Init;
             switch (state)
             {

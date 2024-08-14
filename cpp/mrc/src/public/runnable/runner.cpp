@@ -211,7 +211,8 @@ void Runner::kill() const
 void Runner::update_state(std::size_t launcher_id, State new_state)
 {
     DVLOG(1) << "Runner::update_state - launcher_id: " << launcher_id
-             << "; new_state: " << runnable_state_str(new_state);
+             << "; new_state: " << runnable_state_str(new_state)
+             << "; m_on_instance_state_change: " << (m_on_instance_state_change == nullptr);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     CHECK(m_runnable);
     CHECK_LT(launcher_id, m_instances.size());
