@@ -40,10 +40,13 @@
 
 namespace mrc::pipeline {
 
-Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources) :
+Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline,
+                 resources::Manager& resources,
+                 std::function<void(State)> state_change_cb) :
   Service("pipeline::Manager"),
   m_pipeline(std::move(pipeline)),
-  m_resources(resources)
+  m_resources(resources),
+  m_state_change_cb(std::move(state_change_cb))
 {
     CHECK(m_pipeline);
     CHECK_GE(m_resources.partition_count(), 1);
@@ -53,6 +56,16 @@ Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manage
 Manager::~Manager()
 {
     Service::call_in_destructor();
+}
+
+void Manager::change_stage(State new_state)
+{
+    DVLOG(1) << "Pipeline::Manager - Changing state to " << static_cast<int>(new_state);
+    m_state = new_state;
+    if (m_state_change_cb)
+    {
+        m_state_change_cb(m_state);
+    }
 }
 
 void Manager::push_updates(SegmentAddresses&& segment_addresses)
@@ -89,27 +102,32 @@ void Manager::do_service_start()
         });
     });
     m_controller = launcher->ignition();
+    change_stage(State::Run);
 }
 
 void Manager::do_service_await_live()
 {
+    DVLOG(1) << "Pipeline::Manager - await_live";
     m_controller->await_live();
 }
 
 void Manager::do_service_stop()
 {
     VLOG(10) << "stop: closing update channels";
+    change_stage(State::Stop);
     m_update_channel->await_write({ControlMessageType::Stop});
 }
 
 void Manager::do_service_kill()
 {
     VLOG(10) << "kill: closing update channels; issuing kill to controllers";
+    change_stage(State::Stop);
     m_update_channel->await_write({ControlMessageType::Kill});
 }
 
 void Manager::do_service_await_join()
 {
+    change_stage(State::Joined);
     std::exception_ptr ptr;
     try
     {

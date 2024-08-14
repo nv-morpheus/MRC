@@ -21,7 +21,9 @@
 #include "internal/service.hpp"
 
 #include "mrc/node/writable_entrypoint.hpp"
+#include "mrc/pipeline/executor.hpp"  // for State
 
+#include <functional>  // for function
 #include <memory>
 
 // IWYU pragma: no_forward_declare mrc::node::WritableEntrypoint
@@ -46,7 +48,9 @@ class PipelineDefinition;
 class Manager : public Service
 {
   public:
-    Manager(std::shared_ptr<PipelineDefinition> pipeline, resources::Manager& resources);
+    Manager(std::shared_ptr<PipelineDefinition> pipeline,
+            resources::Manager& resources,
+            std::function<void(State)> state_change_cb = nullptr);
     ~Manager() override;
 
     const PipelineDefinition& pipeline() const;
@@ -63,6 +67,10 @@ class Manager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
+    void change_stage(State new_state);
+
+    State m_state                                = State::Init;
+    std::function<void(State)> m_state_change_cb = nullptr;
     resources::Manager& m_resources;
     std::shared_ptr<PipelineDefinition> m_pipeline;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;
