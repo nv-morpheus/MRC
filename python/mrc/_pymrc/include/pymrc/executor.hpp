@@ -58,7 +58,6 @@ class Executor
   public:
     Executor();
 
-    // TODO: move callback to options?
     Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb = nullptr);
     ~Executor();
 
@@ -74,10 +73,7 @@ class Executor
   private:
     SharedFuture<void> m_join_future;
 
-    void change_stage(State new_state);
-
     std::shared_ptr<pipeline::IExecutor> m_exec;
-    State m_state                                = State::Init;
     std::function<void(State)> m_state_change_cb = nullptr;
 };
 

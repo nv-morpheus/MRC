@@ -260,24 +260,12 @@ void Executor::register_pipeline(pymrc::Pipeline& pipeline)
     m_exec->register_pipeline(pipeline.get_wrapped());
 }
 
-void Executor::change_stage(State new_state)
-{
-    DVLOG(1) << "pymrc::Executor - Changing state to " << static_cast<int>(new_state);
-    m_state = new_state;
-    if (m_state_change_cb)
-    {
-        // m_state_change_cb(m_state);
-    }
-}
-
 void Executor::start()
 {
     py::gil_scoped_release nogil;
 
     // Run the start future
     m_exec->start();
-
-    change_stage(State::Run);
 
     // Now enqueue a join future
     m_join_future = boost::fibers::async([this] {
@@ -288,7 +276,6 @@ void Executor::start()
 void Executor::stop()
 {
     m_exec->stop();
-    change_stage(State::Stop);
 }
 
 void Executor::join()
@@ -303,8 +290,6 @@ void Executor::join()
 
     // Call get() with the GIL to rethrow any exceptions
     m_join_future.get();
-
-    change_stage(State::Joined);
 }
 
 std::shared_ptr<Awaitable> Executor::join_async()
@@ -319,8 +304,6 @@ std::shared_ptr<Awaitable> Executor::join_async()
 
         // Once we have the GIL, call get() to propagate any exceptions
         this->m_join_future.get();
-
-        change_stage(State::Joined);
 
         return py::none();
     });
