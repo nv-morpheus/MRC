@@ -42,7 +42,7 @@ namespace mrc::pipeline {
 
 Manager::Manager(std::shared_ptr<PipelineDefinition> pipeline,
                  resources::Manager& resources,
-                 std::function<void(State)> state_change_cb) :
+                 on_state_change_fn state_change_cb) :
   Service("pipeline::Manager"),
   m_pipeline(std::move(pipeline)),
   m_resources(resources),

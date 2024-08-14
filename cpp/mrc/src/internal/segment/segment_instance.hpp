@@ -49,7 +49,7 @@ class SegmentInstance final : public Service
                     SegmentRank rank,
                     pipeline::PipelineResources& resources,
                     std::size_t partition_id,
-                    std::function<void(State)> state_change_cb = nullptr);
+                    on_state_change_fn state_change_cb = nullptr);
     ~SegmentInstance() override;
 
     const std::string& name() const;
@@ -81,7 +81,7 @@ class SegmentInstance final : public Service
     std::unique_ptr<BuilderDefinition> m_builder;
     pipeline::PipelineResources& m_resources;
     const std::size_t m_default_partition_id;
-    std::function<void(State)> m_state_change_cb = nullptr;
+    on_state_change_fn m_state_change_cb = nullptr;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;

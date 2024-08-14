@@ -210,7 +210,7 @@ void Awaitable::next()
 }
 
 /** Executor impls -- move to own file **/
-Executor::Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb) :
+Executor::Executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb) :
   m_state_change_cb(std::move(state_change_cb))
 {
     // Before creating the internal exec, set the signal mask so we can capture Ctrl+C

@@ -47,8 +47,7 @@ namespace mrc::executor {
 class ExecutorDefinition : public pipeline::IExecutor, public Service, public system::SystemProvider
 {
   public:
-    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system,
-                       std::function<void(State)> state_change_cb = nullptr);
+    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system, on_state_change_fn state_change_cb = nullptr);
     ~ExecutorDefinition() override;
 
     static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
@@ -65,7 +64,7 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     void do_service_await_live() final;
     void do_service_await_join() final;
 
-    std::function<void(State)> m_state_change_cb = nullptr;
+    on_state_change_fn m_state_change_cb = nullptr;
     std::unique_ptr<resources::Manager> m_resources_manager;
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };

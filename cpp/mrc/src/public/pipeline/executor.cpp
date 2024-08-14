@@ -32,7 +32,7 @@ namespace mrc {
 
 Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
-Executor::Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb) :
+Executor::Executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb) :
   m_impl(make_executor(options, std::move(state_change_cb)))
 {}
 
@@ -58,8 +58,7 @@ void Executor::join()
     m_impl->join();
 }
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options,
-                                                   std::function<void(State)> state_change_cb)
+std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb)
 {
     // Convert options to a system object first
     auto system = mrc::make_system(std::move(options));
@@ -70,7 +69,7 @@ std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> opti
 }
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system,
-                                                   std::function<void(State)> state_change_cb)
+                                                   on_state_change_fn state_change_cb)
 {
     auto full_system = system::SystemDefinition::unwrap(std::move(system));
 

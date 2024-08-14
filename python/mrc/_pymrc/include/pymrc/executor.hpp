@@ -58,7 +58,7 @@ class Executor
   public:
     Executor();
 
-    Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb = nullptr);
+    Executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb = nullptr);
     ~Executor();
 
     void register_pipeline(pymrc::Pipeline& pipeline);
@@ -74,7 +74,7 @@ class Executor
     SharedFuture<void> m_join_future;
 
     std::shared_ptr<pipeline::IExecutor> m_exec;
-    std::function<void(State)> m_state_change_cb = nullptr;
+    on_state_change_fn m_state_change_cb = nullptr;
 };
 
 class PyBoostFuture

@@ -50,7 +50,7 @@ class Manager : public Service
   public:
     Manager(std::shared_ptr<PipelineDefinition> pipeline,
             resources::Manager& resources,
-            std::function<void(State)> state_change_cb = nullptr);
+            on_state_change_fn state_change_cb = nullptr);
     ~Manager() override;
 
     const PipelineDefinition& pipeline() const;
@@ -67,7 +67,7 @@ class Manager : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
-    std::function<void(State)> m_state_change_cb = nullptr;
+    on_state_change_fn m_state_change_cb = nullptr;
     resources::Manager& m_resources;
     std::shared_ptr<PipelineDefinition> m_pipeline;
     std::unique_ptr<node::WritableEntrypoint<ControlMessage>> m_update_channel;

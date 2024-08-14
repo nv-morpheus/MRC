@@ -75,7 +75,7 @@ static bool valid_pipeline(const pipeline::PipelineDefinition& pipeline)
 }
 
 ExecutorDefinition::ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system,
-                                       std::function<void(State)> state_change_cb) :
+                                       on_state_change_fn state_change_cb) :
   SystemProvider(std::move(system)),
   Service("ExecutorDefinition"),
   m_resources_manager(std::make_unique<resources::Manager>(*this)),

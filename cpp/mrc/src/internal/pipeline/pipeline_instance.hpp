@@ -47,7 +47,7 @@ class PipelineInstance final : public Service, public PipelineResources
   public:
     PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
                      resources::Manager& resources,
-                     std::function<void(State)> state_change_cb = nullptr);
+                     on_state_change_fn state_change_cb = nullptr);
     ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
@@ -89,7 +89,7 @@ class PipelineInstance final : public Service, public PipelineResources
     bool m_joinable{false};
     Promise<void> m_joinable_promise;
     SharedFuture<void> m_joinable_future;
-    std::function<void(State)> m_state_change_cb = nullptr;
+    on_state_change_fn m_state_change_cb = nullptr;
 };
 
 }  // namespace mrc::pipeline

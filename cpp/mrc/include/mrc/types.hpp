@@ -58,6 +58,18 @@ using PortName    = std::string;
 using PortID      = std::uint16_t;
 using PortAddress = std::uint64_t;  // id + rank + port
 
+enum class State
+{
+    Init   = 0,
+    Run    = 1,
+    Joined = 2,
+    Stop   = 3,
+    Kill   = 4
+};
+
+// Stage change callback passed to the executor
+using on_state_change_fn = std::function<void(State)>;
+
 // NOLINTEND(readability-identifier-naming)
 
 }  // namespace mrc

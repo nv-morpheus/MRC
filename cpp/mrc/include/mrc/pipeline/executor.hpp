@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/types.hpp"
 #include "mrc/utils/macros.hpp"
 
 #include <functional>  // for function
@@ -52,21 +53,12 @@ class IExecutor
 
 namespace mrc {
 
-enum class State
-{
-    Init   = 0,
-    Run    = 1,
-    Joined = 2,
-    Stop   = 3,
-    Kill   = 4
-};
-
 // For backwards compatibility, make utility implementation which holds onto a unique_ptr
 class Executor : public pipeline::IExecutor
 {
   public:
     Executor();
-    Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb = nullptr);
+    Executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb = nullptr);
     ~Executor() override;
 
     void register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline) override;
@@ -79,9 +71,9 @@ class Executor : public pipeline::IExecutor
 };
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options,
-                                                   std::function<void(State)> state_change_cb = nullptr);
+                                                   on_state_change_fn state_change_cb = nullptr);
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system,
-                                                   std::function<void(State)> state_change_cb = nullptr);
+                                                   on_state_change_fn state_change_cb = nullptr);
 
 }  // namespace mrc

@@ -77,7 +77,7 @@ PYBIND11_MODULE(executor, py_mod)
             return exec;
         }))
         .def(py::init<>([](std::shared_ptr<mrc::Options> options, py::object state_change_cb) {
-                 std::function<void(State)> wrapped_state_change_cb = nullptr;
+                 on_state_change_fn wrapped_state_change_cb = nullptr;
                  if (!state_change_cb.is_none())
                  {
                      auto wrapped_cb         = PyFuncWrapper(std::move(state_change_cb));
