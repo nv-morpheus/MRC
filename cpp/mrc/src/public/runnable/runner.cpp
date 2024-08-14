@@ -214,7 +214,7 @@ void Runner::update_state(std::size_t launcher_id, State new_state)
                              << runnable_state_str(state) << "; target state: " << runnable_state_str(new_state);
     auto old_state = state;
     state          = new_state;
-    if (m_on_instance_state_change != nullptr)
+    if (m_on_instance_state_change)
     {
         m_on_instance_state_change(*m_runnable, launcher_id, old_state, new_state);
     }
