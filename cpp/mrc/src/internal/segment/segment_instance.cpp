@@ -107,7 +107,7 @@ const SegmentAddress& SegmentInstance::address() const
 
 void SegmentInstance::change_stage(State new_state)
 {
-    DVLOG(1) << "SegmentInstance - Changing state to " << static_cast<int>(new_state);
+    DVLOG(10) << "Changing state to " << static_cast<int>(new_state);
     if (m_state_change_cb)
     {
         m_state_change_cb(new_state);
