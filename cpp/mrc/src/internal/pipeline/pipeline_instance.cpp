@@ -79,7 +79,6 @@ void PipelineInstance::update()
 
 void PipelineInstance::remove_segment(const SegmentAddress& address)
 {
-    DVLOG(1) << "PipelineInstance - Removing segment " << ::mrc::segment::info(address);
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
     m_segments.erase(search);
@@ -87,7 +86,6 @@ void PipelineInstance::remove_segment(const SegmentAddress& address)
 
 void PipelineInstance::join_segment(const SegmentAddress& address)
 {
-    DVLOG(1) << "PipelineInstance - JOIN segment " << ::mrc::segment::info(address);
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
     search->second->service_await_join();
@@ -95,7 +93,6 @@ void PipelineInstance::join_segment(const SegmentAddress& address)
 
 void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
-    DVLOG(1) << "PipelineInstance - stop segment " << ::mrc::segment::info(address);
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
 
@@ -196,7 +193,6 @@ void PipelineInstance::do_service_await_live()
 
 void PipelineInstance::do_service_stop()
 {
-    DVLOG(1) << "PipelineInstance - do_service_stop ";
     mark_joinable();
 
     for (auto& [id, segment] : m_segments)
@@ -207,7 +203,6 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
-    DVLOG(1) << "PipelineInstance - do_service_kill ";
     mark_joinable();
     for (auto& [id, segment] : m_segments)
     {
@@ -218,7 +213,6 @@ void PipelineInstance::do_service_kill()
 
 void PipelineInstance::do_service_await_join()
 {
-    DVLOG(1) << "PipelineInstance - do_service_await_join ";
     std::exception_ptr first_exception = nullptr;
     m_joinable_future.get();
     for (const auto& [address, segment] : m_segments)
