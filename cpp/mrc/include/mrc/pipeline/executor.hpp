@@ -75,11 +75,17 @@ class Executor : public pipeline::IExecutor
     void join() override;
 
   private:
+    void change_stage(State new_state);
+
+    State m_state                                = State::Init;
+    std::function<void(State)> m_state_change_cb = nullptr;
     std::unique_ptr<IExecutor> m_impl;
 };
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options);
+std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options,
+                                                   std::function<void(State)> state_change_cb = nullptr);
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system);
+std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system,
+                                                   std::function<void(State)> state_change_cb = nullptr);
 
 }  // namespace mrc

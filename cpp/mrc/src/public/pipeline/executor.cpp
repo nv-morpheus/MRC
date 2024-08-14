@@ -23,6 +23,8 @@
 #include "mrc/options/options.hpp"
 #include "mrc/pipeline/system.hpp"
 
+#include <glog/logging.h>
+
 #include <memory>
 #include <utility>
 
@@ -31,7 +33,8 @@ namespace mrc {
 Executor::Executor() : m_impl(make_executor(std::make_shared<Options>())) {}
 
 Executor::Executor(std::shared_ptr<Options> options, std::function<void(State)> state_change_cb) :
-  m_impl(make_executor(options))
+  m_impl(make_executor(options)),
+  m_state_change_cb(std::move(state_change_cb))
 {}
 
 Executor::~Executor() = default;
@@ -41,22 +44,36 @@ void Executor::register_pipeline(std::shared_ptr<pipeline::IPipeline> pipeline)
     m_impl->register_pipeline(std::move(pipeline));
 }
 
+void Executor::change_stage(State new_state)
+{
+    DVLOG(1) << "mrc::Executor - Changing state to " << static_cast<int>(new_state);
+    m_state = new_state;
+    if (m_state_change_cb)
+    {
+        m_state_change_cb(m_state);
+    }
+}
+
 void Executor::start()
 {
     m_impl->start();
+    change_stage(State::Run);
 }
 
 void Executor::stop()
 {
     m_impl->stop();
+    change_stage(State::Stop);
 }
 
 void Executor::join()
 {
     m_impl->join();
+    change_stage(State::Joined);
 }
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options)
+std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options,
+                                                   std::function<void(State)> state_change_cb)
 {
     // Convert options to a system object first
     auto system = mrc::make_system(std::move(options));
@@ -66,7 +83,8 @@ std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> opti
     return std::make_unique<executor::ExecutorDefinition>(std::move(full_system));
 }
 
-std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system)
+std::unique_ptr<pipeline::IExecutor> make_executor(std::unique_ptr<pipeline::ISystem> system,
+                                                   std::function<void(State)> state_change_cb)
 {
     auto full_system = system::SystemDefinition::unwrap(std::move(system));
 
