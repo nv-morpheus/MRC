@@ -52,7 +52,8 @@ namespace mrc::segment {
 SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> definition,
                                  SegmentRank rank,
                                  pipeline::PipelineResources& resources,
-                                 std::size_t partition_id) :
+                                 std::size_t partition_id,
+                                 std::function<void(State)> state_change_cb) :
   Service("segment::SegmentInstance"),
   m_name(definition->name()),
   m_id(definition->id()),
@@ -60,7 +61,8 @@ SegmentInstance::SegmentInstance(std::shared_ptr<const SegmentDefinition> defini
   m_address(segment_address_encode(m_id, m_rank)),
   m_info(::mrc::segment::info(segment_address_encode(m_id, rank))),
   m_resources(resources),
-  m_default_partition_id(partition_id)
+  m_default_partition_id(partition_id),
+  m_state_change_cb(std::move(state_change_cb))
 {
     // construct the segment definition on the intended numa node
     m_builder = m_resources.resources()
@@ -101,6 +103,15 @@ const SegmentRank& SegmentInstance::rank() const
 const SegmentAddress& SegmentInstance::address() const
 {
     return m_address;
+}
+
+void SegmentInstance::change_stage(State new_state)
+{
+    DVLOG(1) << "Pipeline::Manager - Changing state to " << static_cast<int>(new_state);
+    if (m_state_change_cb)
+    {
+        m_state_change_cb(new_state);
+    }
 }
 
 void SegmentInstance::do_service_start()
@@ -170,6 +181,7 @@ void SegmentInstance::do_service_start()
     m_launchers.clear();
     m_ingress_launchers.clear();
 
+    change_stage(State::Run);
     DVLOG(10) << info() << " start has been initiated; use the is_running future to await on startup";
 }
 
@@ -185,6 +197,7 @@ void SegmentInstance::do_service_stop()
         runner->stop();
     }
 
+    change_stage(State::Stop);
     DVLOG(10) << info() << " stop has been initiated; use the is_completed future to await on shutdown";
 }
 
@@ -210,6 +223,7 @@ void SegmentInstance::do_service_kill()
         runner->kill();
     }
 
+    change_stage(State::Kill);
     DVLOG(10) << info() << " kill has been initiated; use the is_completed future to await on shutdown";
 }
 
@@ -231,7 +245,8 @@ void SegmentInstance::do_service_await_live()
         DVLOG(10) << info() << " awaiting on egress port " << name;
         runner->await_live();
     }
-    DVLOG(10) << info() << " join complete";
+
+    DVLOG(10) << info() << " await live complete";
 }
 
 void SegmentInstance::do_service_await_join()
@@ -267,6 +282,8 @@ void SegmentInstance::do_service_await_join()
         DVLOG(10) << info() << " awaiting on egress port join to " << name;
         check(*runner);
     }
+
+    change_stage(State::Joined);
     DVLOG(10) << info() << " join complete";
     if (first_exception)
     {

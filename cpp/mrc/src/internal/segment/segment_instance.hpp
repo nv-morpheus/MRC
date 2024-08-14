@@ -19,10 +19,12 @@
 
 #include "internal/service.hpp"
 
+#include "mrc/pipeline/executor.hpp"  // for State
 #include "mrc/runnable/runner.hpp"
 #include "mrc/types.hpp"
 
 #include <cstddef>
+#include <functional>  // for function
 #include <map>
 #include <memory>
 #include <mutex>
@@ -46,7 +48,8 @@ class SegmentInstance final : public Service
     SegmentInstance(std::shared_ptr<const SegmentDefinition> definition,
                     SegmentRank rank,
                     pipeline::PipelineResources& resources,
-                    std::size_t partition_id);
+                    std::size_t partition_id,
+                    std::function<void(State)> state_change_cb = nullptr);
     ~SegmentInstance() override;
 
     const std::string& name() const;
@@ -67,6 +70,8 @@ class SegmentInstance final : public Service
     void do_service_kill() final;
     void do_service_await_join() final;
 
+    void change_stage(State new_state);
+
     void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
 
     std::string m_name;
@@ -78,6 +83,7 @@ class SegmentInstance final : public Service
     std::unique_ptr<BuilderDefinition> m_builder;
     pipeline::PipelineResources& m_resources;
     const std::size_t m_default_partition_id;
+    std::function<void(State)> m_state_change_cb = nullptr;
 
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_runners;
     std::map<std::string, std::unique_ptr<mrc::runnable::Runner>> m_egress_runners;

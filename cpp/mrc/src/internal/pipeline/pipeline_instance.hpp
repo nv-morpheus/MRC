@@ -20,9 +20,11 @@
 #include "internal/pipeline/pipeline_resources.hpp"
 #include "internal/service.hpp"
 
+#include "mrc/pipeline/executor.hpp"  // for State
 #include "mrc/types.hpp"
 
 #include <cstdint>
+#include <functional>  // for function
 #include <map>
 #include <memory>
 // IWYU pragma: no_include "internal/segment/segment_instance.hpp"
@@ -43,7 +45,9 @@ class PipelineDefinition;
 class PipelineInstance final : public Service, public PipelineResources
 {
   public:
-    PipelineInstance(std::shared_ptr<const PipelineDefinition> definition, resources::Manager& resources);
+    PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
+                     resources::Manager& resources,
+                     std::function<void(State)> state_change_cb = nullptr);
     ~PipelineInstance() override;
 
     // currently we are passing the instance back to the executor
@@ -85,6 +89,7 @@ class PipelineInstance final : public Service, public PipelineResources
     bool m_joinable{false};
     Promise<void> m_joinable_promise;
     SharedFuture<void> m_joinable_future;
+    std::function<void(State)> m_state_change_cb = nullptr;
 };
 
 }  // namespace mrc::pipeline

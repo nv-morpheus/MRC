@@ -45,10 +45,12 @@
 namespace mrc::pipeline {
 
 PipelineInstance::PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
-                                   resources::Manager& resources) :
+                                   resources::Manager& resources,
+                                   std::function<void(State)> state_change_cb) :
   PipelineResources(resources),
   Service("pipeline::PipelineInstance"),
-  m_definition(std::move(definition))
+  m_definition(std::move(definition)),
+  m_state_change_cb(std::move(state_change_cb))
 {
     CHECK(m_definition);
     m_joinable_future = m_joinable_promise.get_future().share();
@@ -124,7 +126,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
-            auto segment    = std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id);
+            auto segment =
+                std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id, m_state_change_cb);
 
             for (const auto& name : definition->egress_port_names())
             {
