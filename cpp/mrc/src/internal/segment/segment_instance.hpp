@@ -72,9 +72,6 @@ class SegmentInstance final : public Service
 
     void change_stage(State new_state);
 
-    // what is this? doesn't appear to be implemented
-    void callback_on_state_change(const std::string& name, const mrc::runnable::Runner::State& new_state);
-
     std::string m_name;
     SegmentID m_id;
     SegmentRank m_rank;
