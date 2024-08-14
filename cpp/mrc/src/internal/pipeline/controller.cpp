@@ -81,19 +81,16 @@ void Controller::on_data(ControlMessage&& message)
 
 void Controller::stop()
 {
-    DVLOG(1) << info() << ": Controller::stop";
     m_pipeline->service_stop();
 }
 
 void Controller::kill()
 {
-    DVLOG(1) << info() << ": Controller::kill";
     m_pipeline->service_kill();
 }
 
 void Controller::await_on_pipeline() const
 {
-    DVLOG(1) << info() << ": Controller::await_on_pipeline";
     m_pipeline->service_await_join();
 }
 
@@ -158,7 +155,7 @@ void Controller::update(SegmentAddresses&& new_segments_map)
 
 void Controller::did_complete()
 {
-    VLOG(1) << info() << ": received shutdown notification - channel closed no new assigments will be issued";
+    VLOG(10) << info() << ": received shutdown notification - channel closed no new assigments will be issued";
 }
 
 const std::string& Controller::info()
