@@ -55,10 +55,10 @@ namespace mrc {
 enum class State
 {
     Init = 0,
-    Run,
-    Joined,
-    Stop,
-    Kill
+    Run,     // 1
+    Joined,  // 2
+    Stop,    // 3
+    Kill     // 4
 };
 
 // For backwards compatibility, make utility implementation which holds onto a unique_ptr

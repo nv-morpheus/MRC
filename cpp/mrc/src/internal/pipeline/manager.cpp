@@ -127,21 +127,26 @@ void Manager::do_service_kill()
 
 void Manager::do_service_await_join()
 {
-    change_stage(State::Joined);
     std::exception_ptr ptr;
     try
     {
+        DVLOG(1) << "Pipeline::Manager - await_on_pipeline";
         m_controller->runnable_as<Controller>().await_on_pipeline();
+        DVLOG(1) << "Pipeline::Manager - await_on_pipeline - done";
     } catch (...)
     {
+        DVLOG(1) << "Pipeline::Manager - caught exception";
         ptr = std::current_exception();
     }
     m_update_channel.reset();
     m_controller->await_join();
     if (ptr)
     {
+        DVLOG(1) << "Pipeline::Manager - rethrowing exception";
         std::rethrow_exception(ptr);
     }
+
+    change_stage(State::Joined);
 }
 
 resources::Manager& Manager::resources()
