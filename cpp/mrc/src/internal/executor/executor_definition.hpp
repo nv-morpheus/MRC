@@ -22,6 +22,7 @@
 
 #include "mrc/pipeline/executor.hpp"
 
+#include <functional>  // for function
 #include <memory>
 
 namespace mrc::system {
@@ -46,7 +47,8 @@ namespace mrc::executor {
 class ExecutorDefinition : public pipeline::IExecutor, public Service, public system::SystemProvider
 {
   public:
-    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system);
+    ExecutorDefinition(std::unique_ptr<system::SystemDefinition> system,
+                       std::function<void(State)> state_change_cb = nullptr);
     ~ExecutorDefinition() override;
 
     static std::shared_ptr<ExecutorDefinition> unwrap(std::shared_ptr<IExecutor> object);
@@ -57,12 +59,15 @@ class ExecutorDefinition : public pipeline::IExecutor, public Service, public sy
     void join() override;
 
   private:
+    void change_stage(State new_state);
     void do_service_start() final;
     void do_service_stop() final;
     void do_service_kill() final;
     void do_service_await_live() final;
     void do_service_await_join() final;
 
+    State m_state                                = State::Init;
+    std::function<void(State)> m_state_change_cb = nullptr;
     std::unique_ptr<resources::Manager> m_resources_manager;
     std::unique_ptr<pipeline::Manager> m_pipeline_manager;
 };
