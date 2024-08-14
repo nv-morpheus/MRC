@@ -18,6 +18,7 @@ from .core import operators
 from .core.common import __version__
 from .core.executor import Executor
 from .core.executor import Future
+from .core.executor import State
 from .core.options import Config
 from .core.options import Options
 from .core.pipeline import Pipeline

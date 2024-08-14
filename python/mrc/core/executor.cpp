@@ -61,6 +61,13 @@ PYBIND11_MODULE(executor, py_mod)
         .def("__await__", &Awaitable::await)
         .def("__next__", &Awaitable::next);
 
+    py::enum_<State>(py_mod, "State", "Executor states")
+        .value("Init", State::Init)
+        .value("Run", State::Run)
+        .value("Joined", State::Joined)
+        .value("Stop", State::Stop)
+        .value("Kill", State::Kill);
+
     py::class_<Executor, std::shared_ptr<Executor>>(py_mod, "Executor")
         .def(py::init<>([]() {
             auto options = std::make_shared<mrc::Options>();
@@ -75,7 +82,10 @@ PYBIND11_MODULE(executor, py_mod)
                  {
                      auto wrapped_cb         = PyFuncWrapper(std::move(state_change_cb));
                      wrapped_state_change_cb = [wrapped_cb = std::move(wrapped_cb)](State state) {
-                         wrapped_cb.operator()<void, pybind11::int_>(static_cast<int>(state));
+                         py::gil_scoped_acquire gil;
+                         auto mrc_mod  = pybind11::module_::import("mrc");
+                         auto py_state = mrc_mod.attr("State")(state);
+                         wrapped_cb.operator()<void, pybind11::object>(py_state);
                      };
                  }
 
