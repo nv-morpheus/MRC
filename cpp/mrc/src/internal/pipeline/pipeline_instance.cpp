@@ -46,7 +46,7 @@ namespace mrc::pipeline {
 
 PipelineInstance::PipelineInstance(std::shared_ptr<const PipelineDefinition> definition,
                                    resources::Manager& resources,
-                                   std::function<void(State)> state_change_cb) :
+                                   on_state_change_fn state_change_cb) :
   PipelineResources(resources),
   Service("pipeline::PipelineInstance"),
   m_definition(std::move(definition)),
