@@ -161,7 +161,6 @@ const std::vector<Runner::Instance>& Runner::instances() const
 
 void Runner::await_live() const
 {
-    DVLOG(1) << "Runner::await_live";
     for (const auto& instance : instances())
     {
         instance.live_future().get();
@@ -170,7 +169,6 @@ void Runner::await_live() const
 
 void Runner::await_join() const
 {
-    DVLOG(1) << "Runner::await_join";
     std::exception_ptr first_exception{nullptr};
     for (const auto& instance : instances())
     {
@@ -196,40 +194,29 @@ void Runner::await_join() const
 
 void Runner::stop() const
 {
-    DVLOG(1) << "Runner::stop";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     m_runnable->update_state(Runnable::State::Stop);
 }
 
 void Runner::kill() const
 {
-    DVLOG(1) << "Runner::kill";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     m_runnable->update_state(Runnable::State::Kill);
 }
 
 void Runner::update_state(std::size_t launcher_id, State new_state)
 {
-    DVLOG(1) << "Runner::update_state - launcher_id: " << launcher_id
-             << "; new_state: " << runnable_state_str(new_state)
-             << "; m_on_instance_state_change: " << (m_on_instance_state_change != nullptr);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    DVLOG(1) << "Runner::update_state - 1";
     CHECK(m_runnable);
     CHECK_LT(launcher_id, m_instances.size());
-    DVLOG(1) << "Runner::update_state - 2";
     auto& state = m_instances.at(launcher_id).m_state;
-    DVLOG(1) << "Runner::update_state - 3";
     CHECK(state < new_state) << "Runner::State failed to advance in the proper order; current state: "
                              << runnable_state_str(state) << "; target state: " << runnable_state_str(new_state);
     auto old_state = state;
     state          = new_state;
-    DVLOG(1) << "Runner::update_state - 4";
     if (m_on_instance_state_change != nullptr)
     {
-        DVLOG(1) << "Runner::update_state - 5";
         m_on_instance_state_change(*m_runnable, launcher_id, old_state, new_state);
-        DVLOG(1) << "Runner::update_state - 6";
     }
 }
 
@@ -255,7 +242,6 @@ SharedFuture<void> Runner::Instance::join_future() const
 
 void Runner::on_instance_state_change_callback(on_instance_state_change_t callback)
 {
-    DVLOG(1) << "Runner::on_instance_state_change_callback - callback: " << (callback != nullptr);
     CHECK(m_on_instance_state_change == nullptr);
     m_on_instance_state_change = callback;
 }
@@ -268,7 +254,6 @@ Runnable& Runner::runnable()
 
 void Runner::on_completion_callback(on_completion_callback_t callback)
 {
-    DVLOG(1) << "Runner::on_completion_callback";
     CHECK(m_completion_callback == nullptr);
     m_completion_callback = callback;
 }
