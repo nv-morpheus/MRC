@@ -212,7 +212,7 @@ void Runner::update_state(std::size_t launcher_id, State new_state)
 {
     DVLOG(1) << "Runner::update_state - launcher_id: " << launcher_id
              << "; new_state: " << runnable_state_str(new_state)
-             << "; m_on_instance_state_change: " << (m_on_instance_state_change == nullptr);
+             << "; m_on_instance_state_change: " << (m_on_instance_state_change != nullptr);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     DVLOG(1) << "Runner::update_state - 1";
     CHECK(m_runnable);
@@ -225,7 +225,7 @@ void Runner::update_state(std::size_t launcher_id, State new_state)
     auto old_state = state;
     state          = new_state;
     DVLOG(1) << "Runner::update_state - 4";
-    if (m_on_instance_state_change)
+    if (m_on_instance_state_change != nullptr)
     {
         DVLOG(1) << "Runner::update_state - 5";
         m_on_instance_state_change(*m_runnable, launcher_id, old_state, new_state);
@@ -255,7 +255,7 @@ SharedFuture<void> Runner::Instance::join_future() const
 
 void Runner::on_instance_state_change_callback(on_instance_state_change_t callback)
 {
-    DVLOG(1) << "Runner::on_instance_state_change_callback";
+    DVLOG(1) << "Runner::on_instance_state_change_callback - callback: " << (callback != nullptr);
     CHECK(m_on_instance_state_change == nullptr);
     m_on_instance_state_change = callback;
 }
