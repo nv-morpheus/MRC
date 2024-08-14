@@ -352,9 +352,13 @@ BENCHMARK_DEFINE_F(DescriptorFixture, descriptor_latency)(benchmark::State& stat
         total_time += (end - start);
     }
 
-    state.counters["average_latency"] = total_time.count() / messages_to_send;
-    state.counters["bytes_per_second"] = messages_to_send * data_size * state.iterations() / total_time.count();
-    state.counters["messages_per_second"] = messages_to_send * state.iterations() / total_time.count();
+    // get the total time in milliseconds
+    double duration_ms = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(total_time).count());
+
+    state.counters["total_time"] = duration_ms;
+    state.counters["average_latency"] = duration_ms / messages_to_send;
+    state.counters["bytes_per_second"] = messages_to_send * data_size * state.iterations() * 1000 / duration_ms;
+    state.counters["messages_per_second"] = messages_to_send * state.iterations() * 1000 / duration_ms;
 }
 
 /*
