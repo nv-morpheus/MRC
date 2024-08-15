@@ -3,7 +3,7 @@ files:
   all:
     output: conda
     matrix:
-      cuda: ["12.4"]
+      cuda: ["12.5"]
       arch: [x86_64]
     includes:
       - build
@@ -21,7 +21,7 @@ files:
   ci:
     output: conda
     matrix:
-      cuda: ["12.4"]
+      cuda: ["12.5"]
       arch: [x86_64]
     includes:
       - build
@@ -60,7 +60,7 @@ dependencies:
           - gxx=11.2
           - libgrpc=1.62.2
           - libhwloc=2.9.2
-          - librmm=24.08
+          - librmm=6
           - libxml2>=2.12.6,<3
           - ninja=1.11
           - nlohmann_json=3.11
@@ -137,17 +137,17 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - python=3.11
+          - python=3.10
 
   cudatoolkit:
     specific:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.4"
+              cuda: "12.5"
             packages:
-              - cuda-cudart-dev=12.4
-              - cuda-nvml-dev=12.4
-              - cuda-nvrtc-dev=12.4
-              - cuda-tools=12.4
-              - cuda-version=12.4
+              - cuda-cudart-dev=12.5
+              - cuda-nvml-dev=12.5
+              - cuda-nvrtc-dev=12.5
+              # - cuda-tools=12.5
+              - cuda-version=12.5
