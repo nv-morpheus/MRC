@@ -41,6 +41,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <iterator>
 #include <map>
 #include <stdexcept>
@@ -136,6 +137,30 @@ class PyIteratorIterator
         return a.m_value.ptr() != b.m_value.ptr();
     }
 
+    void try_advance(PyObjectSubscriber& subscriber)
+    {
+        auto task = std::packaged_task<void()>([this]() {
+            this->advance();
+        });
+
+        auto future = task.get_future();
+        std::thread(std::move(task)).detach();
+
+        auto future_status = future.wait_for(std::chrono::milliseconds(100));
+        while (subscriber.is_subscribed() && future_status != std::future_status::ready)
+        {
+            future_status = future.wait_for(std::chrono::milliseconds(100));
+            if (future_status == std::future_status::ready)
+            {
+                future.get();
+            }
+            else
+            {
+                std::this_thread::yield();
+            }
+        }
+    }
+
   private:
     void advance()
     {
@@ -226,17 +251,30 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
         {
             DVLOG(10) << ctx.info() << " Starting source";
 
-            for (auto next_val : iter_wrapper)
+            auto iter          = iter_wrapper.begin();
+            bool is_subscribed = subscriber.is_subscribed();
+            AcquireGIL gil;
+
+            while (is_subscribed && iter != py::iterator::sentinel())
             {
-                //  Only send if its subscribed. Very important to ensure the object has been moved!
-                if (subscriber.is_subscribed())
+                auto next_val = py::cast<py::object>(*iter);
+
                 {
-                    subscriber.on_next(std::move(next_val));
+                    // Release the GIL to call on_next
+                    pybind11::gil_scoped_release nogil;
+
+                    is_subscribed = subscriber.is_subscribed();
+                    //  Only send if its subscribed. Very important to ensure the object has been moved!
+                    if (is_subscribed)
+                    {
+                        subscriber.on_next(std::move(next_val));
+                    }
                 }
-                else
+                if (is_subscribed)
                 {
-                    DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
-                    break;
+                    pybind11::gil_scoped_release nogil;
+                    // Increment it for next loop
+                    iter.try_advance(subscriber);
                 }
             }
 
