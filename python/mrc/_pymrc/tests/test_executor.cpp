@@ -19,8 +19,6 @@
 
 #include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
-#include "pymrc/types.hpp"
-#include "pymrc/utilities/object_wrappers.hpp"
 
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
