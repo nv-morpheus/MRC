@@ -70,7 +70,9 @@ class PyIteratorIterator
     // NOLINTEND(readability-identifier-naming)
 
     PyIteratorIterator() = default;
-    PyIteratorIterator(py::iterator iter) : m_iter(std::move(iter))
+    PyIteratorIterator(py::iterator iter, PyObjectSubscriber* subscriber) :
+      m_iter(std::move(iter)),
+      m_subscriber(subscriber)
     {
         // When creating this object, we want to save the iterator value while we have the GIL. This way we dont have to
         // eagerly grab the GIL even if we already have the value
@@ -137,17 +139,25 @@ class PyIteratorIterator
         return a.m_value.ptr() != b.m_value.ptr();
     }
 
-    void try_advance(PyObjectSubscriber& subscriber)
+  private:
+    void advance()
     {
+        CHECK_NOTNULL(m_subscriber);
         auto task = std::packaged_task<void()>([this]() {
-            this->advance();
+            // Grab the GIL before advancing
+            AcquireGIL gil;
+
+            ++m_iter;
+
+            // While we have the GIL, preload the next value
+            m_value = py::cast<py::object>(*m_iter);
         });
 
         auto future = task.get_future();
         std::thread(std::move(task)).detach();
 
         auto future_status = future.wait_for(std::chrono::milliseconds(100));
-        while (subscriber.is_subscribed() && future_status != std::future_status::ready)
+        while (m_subscriber->is_subscribed() && future_status != std::future_status::ready)
         {
             future_status = future.wait_for(std::chrono::milliseconds(100));
 
@@ -163,20 +173,9 @@ class PyIteratorIterator
         }
     }
 
-  private:
-    void advance()
-    {
-        // Grab the GIL before advancing
-        AcquireGIL gil;
-
-        ++m_iter;
-
-        // While we have the GIL, preload the next value
-        m_value = py::cast<py::object>(*m_iter);
-    }
-
     py::iterator m_iter{};
     PyHolder m_value{};
+    PyObjectSubscriber* m_subscriber = nullptr;
 };
 
 class PyIteratorWrapper
@@ -187,7 +186,7 @@ class PyIteratorWrapper
     // NOLINTEND(readability-identifier-naming)
 
     // Create from an iterator
-    PyIteratorWrapper(py::iterator source_iterator) :
+    PyIteratorWrapper(py::iterator source_iterator, PyObjectSubscriber* subscriber) :
       m_iter_factory([iterator = PyObjectHolder(std::move(source_iterator))]() mutable {
           // Check if the iterator has been started already
           if (!iterator)
@@ -200,27 +199,33 @@ class PyIteratorWrapper
 
           // Move the object into the iterator to ensure its only used once.
           return py::cast<py::iterator>(py::object(std::move(iterator)));
-      })
+      }),
+      m_subscriber(subscriber)
     {}
 
     // Create from an iterable
-    PyIteratorWrapper(py::iterable source_iterable) :
+    PyIteratorWrapper(py::iterable source_iterable, PyObjectSubscriber* subscriber) :
       m_iter_factory([iterable = PyObjectHolder(std::move(source_iterable))]() {
           // Turn the iterable into an iterator
           return py::iter(iterable);
-      })
+      }),
+      m_subscriber(subscriber)
     {}
 
     // Create from a factory function
-    PyIteratorWrapper(py::function gen_factory) :
+    PyIteratorWrapper(py::function gen_factory, PyObjectSubscriber* subscriber) :
       m_iter_factory([gen_factory = PyObjectHolder(std::move(gen_factory))]() {
           // Call the generator factory to make a new generator
           return py::cast<py::iterator>(gen_factory());
-      })
+      }),
+      m_subscriber(subscriber)
     {}
 
     // Create directly
-    PyIteratorWrapper(std::function<py::iterator()> iter_factory) : m_iter_factory(std::move(iter_factory)) {}
+    PyIteratorWrapper(std::function<py::iterator()> iter_factory, PyObjectSubscriber* subscriber) :
+      m_iter_factory(std::move(iter_factory)),
+      m_subscriber(subscriber)
+    {}
 
     iterator begin()
     {
@@ -229,7 +234,7 @@ class PyIteratorWrapper
 
         auto iter = m_iter_factory();
 
-        return iterator{std::move(iter)};
+        return iterator{std::move(iter), m_subscriber};
     }
 
     iterator end()  // NOLINT(readability-convert-member-functions-to-static)
@@ -240,6 +245,7 @@ class PyIteratorWrapper
 
   private:
     std::function<py::iterator()> m_iter_factory;
+    PyObjectSubscriber* m_subscriber;
 };
 
 std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuilder& self,
