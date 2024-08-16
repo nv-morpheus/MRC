@@ -150,14 +150,16 @@ class PyIteratorIterator
         while (subscriber.is_subscribed() && future_status != std::future_status::ready)
         {
             future_status = future.wait_for(std::chrono::milliseconds(100));
-            if (future_status == std::future_status::ready)
-            {
-                future.get();
-            }
-            else
+
+            if (future_status != std::future_status::ready)
             {
                 std::this_thread::yield();
             }
+        }
+
+        if (future_status == std::future_status::ready)
+        {
+            future.get();
         }
     }
 
