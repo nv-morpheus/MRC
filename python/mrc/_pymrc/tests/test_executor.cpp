@@ -19,6 +19,8 @@
 
 #include "pymrc/executor.hpp"
 #include "pymrc/pipeline.hpp"
+#include "pymrc/types.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
@@ -42,6 +44,17 @@ namespace pymrc = mrc::pymrc;
 using namespace std::string_literals;
 
 PYMRC_TEST_CLASS(Executor);
+
+TEST_F(TestExecutor, DGExecute)
+{
+    EXPECT_EQ(1, 1);
+    EXPECT_EQ(PyGILState_Check(), 1);
+    pymrc::PyHolder py_holder{};
+    EXPECT_FALSE(py_holder);
+
+    py_holder = pymrc::PyHolder{py::module::import("mrc")};
+    EXPECT_TRUE(py_holder);
+}
 
 TEST_F(TestExecutor, Execute)
 {

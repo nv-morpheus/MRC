@@ -77,10 +77,6 @@ class PyIteratorIterator
         // When creating this object, we want to save the iterator value while we have the GIL. This way we dont have to
         // eagerly grab the GIL even if we already have the value
         DCHECK_EQ(PyGILState_Check(), 1) << "Must have the GIL when creating PyIteratorIterator";
-
-        // This also triggers py::iterator to load the value into memory and avoid needing the GIL unless we are
-        // advancing.
-        m_value = py::cast<py::object>(*m_iter);
     }
 
     ~PyIteratorIterator()
@@ -140,14 +136,17 @@ class PyIteratorIterator
     }
 
   private:
-    void advance()
+    void advance(bool load_only = false)
     {
         CHECK_NOTNULL(m_subscriber);
-        auto task = std::packaged_task<void()>([this]() {
+        auto task = std::packaged_task<void()>([this, load_only]() {
             // Grab the GIL before advancing
             AcquireGIL gil;
 
-            ++m_iter;
+            if (!load_only)
+            {
+                ++m_iter;
+            }
 
             // While we have the GIL, preload the next value
             m_value = py::cast<py::object>(*m_iter);
