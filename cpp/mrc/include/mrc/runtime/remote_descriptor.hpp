@@ -21,6 +21,7 @@
 #include "mrc/codable/decode.hpp"
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/encoded_object.hpp"
+#include "mrc/codable/encoded_object_proto.hpp"
 #include "mrc/memory/memory_block_provider.hpp"
 #include "mrc/type_traits.hpp"  // IWYU pragma: keep
 #include "mrc/types.hpp"
@@ -28,6 +29,7 @@
 
 #include <glog/logging.h>
 
+#include <any>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -285,8 +287,7 @@ class ValueDescriptor
     T release_value() &&;
 
   private:
-    virtual std::unique_ptr<codable::LocalSerializedWrapper> encode(
-        std::shared_ptr<memory::memory_block_provider> block_provider) = 0;
+    virtual std::unique_ptr<codable::DescriptorObjectHandler> encode() = 0;
 
     friend LocalDescriptor2;
 };
@@ -316,10 +317,9 @@ class TypedValueDescriptor : public ValueDescriptor
   private:
     TypedValueDescriptor(T&& value) : m_value(std::move(value)) {}
 
-    std::unique_ptr<codable::LocalSerializedWrapper> encode(
-        std::shared_ptr<memory::memory_block_provider> block_provider) override
+    std::unique_ptr<codable::DescriptorObjectHandler> encode() override
     {
-        return mrc::codable::encode2(m_value, block_provider);
+        return mrc::codable::encode2(m_value);
     }
 
     T m_value;
@@ -345,7 +345,7 @@ T ValueDescriptor::release_value() &&
 class LocalDescriptor2
 {
   public:
-    codable::LocalSerializedWrapper& encoded_object() const;
+    codable::DescriptorObjectHandler& encoded_object() const;
 
     static std::unique_ptr<LocalDescriptor2> from_value(std::unique_ptr<ValueDescriptor> value_descriptor,
                                                         std::shared_ptr<memory::memory_block_provider> block_provider);
@@ -354,10 +354,10 @@ class LocalDescriptor2
                                                          data_plane::DataPlaneResources2& data_plane_resources);
 
   private:
-    LocalDescriptor2(std::unique_ptr<codable::LocalSerializedWrapper> encoded_object,
+    LocalDescriptor2(std::unique_ptr<codable::DescriptorObjectHandler> encoded_object,
                      std::unique_ptr<ValueDescriptor> value_descriptor = nullptr);
 
-    std::unique_ptr<codable::LocalSerializedWrapper> m_encoded_object;
+    std::unique_ptr<codable::DescriptorObjectHandler> m_encoded_object;
 
     std::unique_ptr<ValueDescriptor> m_value_descriptor;  // Necessary to keep the value alive when serializing
 };
@@ -365,7 +365,7 @@ class LocalDescriptor2
 class RemoteDescriptorImpl2
 {
   public:
-    codable::protos::RemoteSerializedObject& encoded_object() const;
+    codable::protos::DescriptorObject& encoded_object() const;
 
     memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
 
@@ -379,15 +379,15 @@ class RemoteDescriptorImpl2
   private:
     friend class RemoteDescriptor2;
 
-    RemoteDescriptorImpl2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
+    RemoteDescriptorImpl2(std::unique_ptr<codable::protos::DescriptorObject> encoded_object);
 
-    std::unique_ptr<codable::protos::RemoteSerializedObject> m_serialized_object;
+    std::unique_ptr<codable::protos::DescriptorObject> m_serialized_object;
 };
 
 class RemoteDescriptor2
 {
   public:
-    codable::protos::RemoteSerializedObject& encoded_object() const;
+    codable::protos::DescriptorObject& encoded_object() const;
 
     memory::buffer to_bytes(std::shared_ptr<memory::memory_resource> mr) const;
 
@@ -399,7 +399,7 @@ class RemoteDescriptor2
     static std::unique_ptr<RemoteDescriptor2> from_bytes(memory::const_buffer_view view);
 
   private:
-    RemoteDescriptor2(std::unique_ptr<codable::protos::RemoteSerializedObject> encoded_object);
+    RemoteDescriptor2(std::unique_ptr<codable::protos::DescriptorObject> encoded_object);
 
     RemoteDescriptor2(std::shared_ptr<RemoteDescriptorImpl2> impl);
 
@@ -411,11 +411,123 @@ std::unique_ptr<TypedValueDescriptor<T>> TypedValueDescriptor<T>::from_local(
     std::unique_ptr<LocalDescriptor2> local_descriptor)
 {
     // Reset the counter
-    local_descriptor->encoded_object().reset_current_object_idx();
+    local_descriptor->encoded_object().reset_payload_idx();
 
     // Perform a decode to get the value
     return std::unique_ptr<TypedValueDescriptor<T>>(
         new TypedValueDescriptor<T>(mrc::codable::decode2<T>(local_descriptor->encoded_object())));
 }
 
+/**
+ * @brief Descriptor2 class used to faciliate communication between any arbitrary pair of machines. Supports multi-node,
+ * multi-gpu communication, and asynchronous data transfer.
+ */
+class Descriptor2
+{
+  public:
+    /**
+     * @brief Gets the protobuf object associated with this descriptor instance
+     *
+     * @return codable::protos::DescriptorObject&
+     */
+    virtual codable::protos::DescriptorObject& encoded_object();
+
+    /**
+     * @brief Serialize the encoded object stored by this descriptor into a byte stream for remote communication
+     *
+     * @param mr Instance of memory_resource for allocating a memory_buffer to return
+     * @return memory::buffer
+     */
+    memory::buffer serialize(std::shared_ptr<memory::memory_resource> mr);
+
+    /**
+     * @brief Deserialize the encoded object stored by this descriptor into a class T instance
+     *
+     * @return T
+     */
+    template <typename T>
+    [[nodiscard]] const T deserialize();
+
+    /**
+     * @brief Creates a Descriptor2 instance from a class T value
+     *
+     * @param value class T instance
+     * @param data_plane_resources reference to DataPlaneResources2 for remote communication
+     * @return std::shared_ptr<Descriptor2>
+     */
+    template <typename T>
+    static std::shared_ptr<Descriptor2> create_from_value(T value, data_plane::DataPlaneResources2& data_plane_resources);
+
+    /**
+     * @brief Creates a Descriptor2 instance from a byte stream
+     *
+     * @param view byte stream
+     * @param data_plane_resources reference to DataPlaneResources2 for remote communication
+     * @return std::shared_ptr<Descriptor2>
+     */
+    static std::shared_ptr<Descriptor2> create_from_bytes(memory::buffer_view&& view, data_plane::DataPlaneResources2& data_plane_resources);
+
+    /**
+     * @brief Fetches all deferred payloads from the sending remote machine
+     */
+    void fetch_remote_payloads();
+
+  protected:
+    Descriptor2(std::any value, data_plane::DataPlaneResources2& data_plane_resources):
+        m_value(value), m_data_plane_resources(data_plane_resources) {}
+    Descriptor2(std::unique_ptr<codable::DescriptorObjectHandler> encoded_object, data_plane::DataPlaneResources2& data_plane_resources):
+        m_encoded_object(std::move(encoded_object)), m_data_plane_resources(data_plane_resources) {}
+
+    void setup_remote_payloads();
+
+    std::any m_value;
+
+    std::vector<memory::buffer> m_local_buffers;
+
+    std::unique_ptr<codable::DescriptorObjectHandler> m_encoded_object;
+
+    data_plane::DataPlaneResources2& m_data_plane_resources;
+};
+
+/**
+ * @brief Class used for type erasure of Descriptor2 when serialized with class T instance
+ */
+template <typename T>
+class TypedDescriptor : public Descriptor2
+{
+  public:
+    codable::protos::DescriptorObject& encoded_object()
+    {
+        // If the encoded object does not exist yet, lazily create it
+        if (!m_encoded_object)
+        {
+            m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
+        }
+
+        return Descriptor2::encoded_object();
+    }
+
+  private:
+    template <typename U>
+    friend std::shared_ptr<Descriptor2> Descriptor2::create_from_value(U value, data_plane::DataPlaneResources2& data_plane_resources);
+
+    // Private constructor to prohibit instantiation of this class outside of use in create_from_value
+    TypedDescriptor(T value, data_plane::DataPlaneResources2& data_plane_resources):
+        Descriptor2(std::move(value), data_plane_resources) {}
+};
+
+template <typename T>
+std::shared_ptr<Descriptor2> Descriptor2::create_from_value(T value, data_plane::DataPlaneResources2& data_plane_resources)
+{
+    return std::shared_ptr<Descriptor2>(new TypedDescriptor<T>(std::move(value), data_plane_resources));
+}
+
+template <typename T>
+[[nodiscard]] const T Descriptor2::deserialize()
+{
+    T return_value = m_value.has_value() ? std::move(std::any_cast<T>(m_value)) :
+                                           std::move(mrc::codable::decode2<T>(*m_encoded_object));
+    m_value.reset();
+    return std::move(return_value);
+}
 }  // namespace mrc::runtime

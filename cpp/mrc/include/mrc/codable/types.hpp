@@ -24,7 +24,7 @@ namespace mrc::codable {
 using idx_t     = int;
 using obj_idx_t = int;
 
-enum class DescriptorKind : uint8_t
+enum class MessageKind : uint8_t
 {
     Default,   // Leave it up to the implementation
     Eager,     // Prefer eager

@@ -86,7 +86,7 @@ class LocalSerializedWrapper
     size_t add_object(std::type_index type_info);
 
     protos::MemoryDescriptor& add_descriptor();
-    size_t add_descriptor(memory::const_buffer_view view, DescriptorKind kind);
+    size_t add_descriptor(memory::const_buffer_view view, MessageKind kind);
 
     // Adds an eager descriptor and copies the data into the protobuf
     idx_t add_eager_descriptor(memory::const_buffer_view view);
@@ -117,6 +117,26 @@ class LocalSerializedWrapper
 
     mutable size_t m_object_counter;  // Tracks the number of times "push_current_object_idx" has been called
     mutable std::stack<size_t> m_object_idx_stack;
+};
+
+class DescriptorObjectHandler
+{
+  public:
+    DescriptorObjectHandler() = default;
+
+    void increment_payload_idx() const;
+    void reset_payload_idx();
+
+    mrc::codable::protos::DescriptorObject& proto();
+    const mrc::codable::protos::DescriptorObject& proto() const;
+
+    const protos::Payload& get_current_payload() const;
+
+    const ::google::protobuf::RepeatedPtrField<::mrc::codable::protos::Payload>& payloads() const;
+
+  private:
+    mrc::codable::protos::DescriptorObject m_proto;
+    mutable size_t m_payload_idx;  // Tracks the next payload to be processed
 };
 
 }  // namespace mrc::codable

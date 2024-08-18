@@ -16,6 +16,7 @@
  */
 
 #include "internal/ucx/registration_cache.hpp"
+#include "internal/ucx/utils.hpp"
 
 #include <ucp/api/ucp.h>
 #include <ucxx/api.h>
@@ -129,4 +130,50 @@ void RegistrationCache2::unregister_memory(ucp_mem_h handle, void* rbuffer)
         }
     }
 }
+
+RegistrationCache3::RegistrationCache3(std::shared_ptr<ucxx::Context> context) : m_context(std::move(context))
+{
+    CHECK(m_context);
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uint64_t obj_id, void* addr, std::size_t bytes, memory::memory_kind memory_type)
+{
+    DCHECK(addr && bytes);
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    m_memory_handle_by_address[obj_id][addr] = m_context->createMemoryHandle(bytes, addr, ucx::to_ucs_memory_type(memory_type));
+    return m_memory_handle_by_address[obj_id][addr];
+}
+
+std::shared_ptr<ucxx::MemoryHandle> RegistrationCache3::add_block(uint64_t obj_id, uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type)
+{
+    return this->add_block(obj_id, reinterpret_cast<void*>(addr), bytes, memory_type);
+}
+
+std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(uint64_t obj_id, const void* addr) const noexcept
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    // The descriptor obj_id and memory block addr must both be valid
+    if (m_memory_handle_by_address.find(obj_id) != m_memory_handle_by_address.end())
+    {
+        auto descriptor_handles = m_memory_handle_by_address.at(obj_id);
+        if (descriptor_handles.find(addr) != descriptor_handles.end())
+        {
+            return descriptor_handles.at(addr);
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(uint64_t obj_id, uintptr_t addr) const noexcept
+{
+    return this->lookup(obj_id, reinterpret_cast<const void*>(addr));
+}
+
+void RegistrationCache3::remove_descriptor(uint64_t obj_id)
+{
+    m_memory_handle_by_address.erase(obj_id);
+}
+
 }  // namespace mrc::ucx

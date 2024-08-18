@@ -17,6 +17,7 @@ add_executable(bench_mrc
   main.cpp
   bench_mrc.cpp
   bench_coroutines.cpp
+  bench_descriptors.cpp
   bench_fibers.cpp
   bench_segment.cpp
 )
@@ -24,8 +25,15 @@ add_executable(bench_mrc
 target_link_libraries(bench_mrc
   PRIVATE
   ${PROJECT_NAME}::libmrc
+  GTest::gtest
   benchmark::benchmark
   prometheus-cpp::core
+)
+
+target_include_directories(bench_mrc
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/cpp/mrc/src>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/cpp/mrc/include>
 )
 
 add_executable(bench_rxcpp_components

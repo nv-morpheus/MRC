@@ -37,31 +37,29 @@ struct codable_protocol<T, std::enable_if_t<std::is_fundamental_v<T>>>
         auto index = encoder.copy_to_eager_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
-    static void serialize(const T& t, Encoder2<T>& encoder, const EncodingOptions& opts)
+    static void serialize(const T& t, Encoder2<T>& encoder)
     {
-        // codable::encode2(t, encoder, std::move(opts));
-
-        encoder.write_descriptor({&t, sizeof(t), memory::memory_kind::host}, DescriptorKind::Eager);
+        encoder.write_descriptor({&t, sizeof(t), memory::memory_kind::host});
     }
 
-    static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
-    {
-        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
-        auto idx = decoder.start_idx_for_object(object_idx);
-
-        T val;
-        decoder.copy_from_buffer(object_idx, {&val, sizeof(T), memory::memory_kind::host});
-
-        return val;
-    }
-
-    static T deserialize(const Decoder2<T>& decoder, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& decoder)
     {
         // DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
         // auto idx = decoder.start_idx_for_object(object_idx);
 
         T val;
-        decoder.read_descriptor(0, {&val, sizeof(T), memory::memory_kind::host});
+        // decoder.copy_from_buffer(object_idx, {&val, sizeof(T), memory::memory_kind::host});
+
+        return val;
+    }
+
+    static T deserialize(const Decoder2<T>& decoder)
+    {
+        // DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+        // auto idx = decoder.start_idx_for_object(object_idx);
+
+        T val;
+        decoder.read_descriptor({&val, sizeof(T), memory::memory_kind::host});
 
         return val;
     }
@@ -87,11 +85,11 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         }
     }
 
-    static void serialize(const std::string& str, Encoder2<T>& encoder, const EncodingOptions& opts)
+    static void serialize(const std::string& str, Encoder2<T>& encoder)
     {
-        DescriptorKind kind = DescriptorKind::Default;
+        MessageKind kind = MessageKind::Default;
 
-        encoder.write_descriptor({str.data(), str.size(), memory::memory_kind::host}, kind);
+        encoder.write_descriptor({str.data(), str.size(), memory::memory_kind::host});
 
         // if (opts.force_copy())
         // {
@@ -108,28 +106,29 @@ struct codable_protocol<T, std::enable_if_t<std::is_same_v<T, std::string>>>
         // }
     }
 
-    static T deserialize(const Decoder<T>& decoder, std::size_t object_idx)
-    {
-        DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
-        auto idx   = decoder.start_idx_for_object(object_idx);
-        auto bytes = decoder.buffer_size(idx);
-
-        T str;
-        str.resize(bytes);
-        decoder.copy_from_buffer(idx, {str.data(), str.size(), memory::memory_kind::host});
-
-        return str;
-    }
-
-    static T deserialize(const Decoder2<T>& decoder, std::size_t object_idx)
+    static T deserialize(const Decoder<T>& decoder)
     {
         // DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
         // auto idx   = decoder.start_idx_for_object(object_idx);
-        auto bytes = decoder.descriptor_size(0);
+        // auto bytes = decoder.buffer_size(idx);
+
+
+        T str;
+        // str.resize(bytes);
+        // decoder.copy_from_buffer(idx, {str.data(), str.size(), memory::memory_kind::host});
+        // std::cout << "DESERIALIZE DECODER: idx: " << idx << "str: " << str << std::endl;
+        return str;
+    }
+
+    static T deserialize(const Decoder2<T>& decoder)
+    {
+        // DCHECK_EQ(std::type_index(typeid(T)).hash_code(), decoder.type_index_hash_for_object(object_idx));
+        // auto idx   = decoder.start_idx_for_object(object_idx);
+        auto bytes = decoder.descriptor_size();
 
         T str;
         str.resize(bytes);
-        decoder.read_descriptor(0, {str.data(), str.size(), memory::memory_kind::host});
+        decoder.read_descriptor({str.data(), str.size(), memory::memory_kind::host});
 
         return str;
     }

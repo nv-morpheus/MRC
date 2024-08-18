@@ -17,61 +17,54 @@
 
 #include "mrc/codable/decode.hpp"
 
+#include <cuda_runtime.h>
+
 namespace mrc::codable {
 
-DecoderBase::DecoderBase(const LocalSerializedWrapper& encoded_object) : m_encoded_object(encoded_object) {}
+DecoderBase::DecoderBase(const DescriptorObjectHandler& encoded_object) : m_encoded_object(encoded_object) {}
 
-void DecoderBase::read_descriptor(size_t offset, memory::buffer_view dst_view) const
+void DecoderBase::read_descriptor(memory::buffer_view dst_view) const
 {
-    // Find the descriptor from the current object and offset
-    const auto& descriptor = m_encoded_object.get_descriptor_from_offset(offset);
+    // Get the next unprocessed payload
+    const auto& payload = m_encoded_object.get_current_payload();
 
-    if (descriptor.has_eager_desc())
+    if (payload.has_eager_msg())
     {
-        const auto& eager_desc = descriptor.eager_desc();
+        const auto& eager_msg = payload.eager_msg();
 
-        CHECK_EQ(eager_desc.memory_kind(), mrc::codable::protos::MemoryKind::Host) << "Only host memory is "
-                                                                                      "supported at this time";
-
-        // Finally, copy the data
-        std::memcpy(dst_view.data(), eager_desc.data().data(), eager_desc.data().size());
+        // Eager messages will always be host to host memcopy
+        std::memcpy(dst_view.data(), eager_msg.data().data(), eager_msg.data().size());
     }
     else
     {
-        // Its deferred. Find the corresponding payload object
-        const auto& deferred_desc = descriptor.deferred_desc();
+        const auto& deferred_msg = payload.deferred_msg();
 
-        // Find the payload object
-        const auto& payload = m_encoded_object.payloads().at(deferred_desc.payload_idx());
-
-        CHECK_EQ(payload.memory_kind(), mrc::codable::protos::MemoryKind::Host) << "Only host memory is "
-                                                                                   "supported at this time";
-
-        // Finally, copy the data
-        std::memcpy(dst_view.data(), reinterpret_cast<const void*>(payload.address()), payload.bytes());
+        // Depending on the message memory type, we will use a different memcpy method to properly copy the data
+        switch (payload.memory_kind())
+        {
+            case protos::MemoryKind::Host:
+            case protos::MemoryKind::Pinned:
+                std::memcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes());
+                break;
+            case protos::MemoryKind::Device:
+                cudaMemcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes(), cudaMemcpyDeviceToHost);
+                break;
+            case protos::MemoryKind::Managed:
+                cudaMemcpy(dst_view.data(), reinterpret_cast<const void*>(deferred_msg.address()), deferred_msg.bytes(), cudaMemcpyDefault);
+            default:
+                LOG(FATAL) << "unhandled protos::MemoryKind";
+        };
     }
+
+    m_encoded_object.increment_payload_idx();
 }
 
-std::size_t DecoderBase::descriptor_size(size_t offset) const
+std::size_t DecoderBase::descriptor_size() const
 {
-    // Find the descriptor from the current object and offset
-    const auto& descriptor = m_encoded_object.get_descriptor_from_offset(offset);
+    // Get the next unprocessed payload
+    const auto& payload = m_encoded_object.get_current_payload();
 
-    if (descriptor.has_eager_desc())
-    {
-        return descriptor.eager_desc().data().size();
-    }
-
-    if (descriptor.has_deferred_desc())
-    {
-        // Its deferred. Find the corresponding payload object
-        const auto& deferred_desc = descriptor.deferred_desc();
-
-        // Find the payload object
-        const auto& payload = m_encoded_object.payloads().at(deferred_desc.payload_idx());
-
-        return payload.bytes();
-    }
+    return payload.has_eager_msg() ? payload.eager_msg().data().size() : payload.deferred_msg().bytes();
 
     throw std::runtime_error("Invalid descriptor. Does not have either an eager or deferred descriptor");
 }

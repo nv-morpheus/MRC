@@ -21,6 +21,8 @@
 #include "internal/ucx/context.hpp"
 #include "internal/ucx/memory_block.hpp"
 
+#include "mrc/memory/memory_kind.hpp"
+
 #include <glog/logging.h>
 
 #include <cstdint>
@@ -30,6 +32,7 @@
 
 namespace ucxx {
 class Context;
+class MemoryHandle;
 }
 
 namespace mrc::ucx {
@@ -174,4 +177,62 @@ class RegistrationCache2 final
     memory::BlockManager<MemoryBlock> m_blocks;
 };
 
+/**
+ * @brief UCX Registration Cache
+ *
+ * UCX memory registration object that will both register/deregister memory. The cache can be queried for the original
+ * memory block by providing the id of the descriptor object and the starting address of the contiguous block.
+ */
+class RegistrationCache3 final
+{
+  public:
+    RegistrationCache3(std::shared_ptr<ucxx::Context> context);
+
+    /**
+     * @brief Register a contiguous block of memory starting at addr and spanning `bytes` bytes.
+     *
+     * For each block of memory registered with the RegistrationCache, an entry containing the block information is
+     * storage and can be queried.
+     *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
+     * @param addr
+     * @param bytes
+     * @param memory_type
+     * @return std::shared_ptr<ucxx::MemoryHandle>
+     */
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uint64_t obj_id, void* addr, std::size_t bytes, memory::memory_kind memory_type);
+
+    std::shared_ptr<ucxx::MemoryHandle> add_block(uint64_t obj_id, uintptr_t addr, std::size_t bytes, memory::memory_kind memory_type);
+
+    /**
+     * @brief Look up the memory registration details for a given address.
+     *
+     * This method queries the registration cache to find the MemoryHanlde containing the original address and size as
+     * well as the serialized remote keys associated with the memory block.
+     *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
+     * @param addr
+     * @return std::shared_ptr<ucxx::MemoryHandle>
+     */
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uint64_t obj_id, const void* addr) const noexcept;
+
+    std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uint64_t obj_id, uintptr_t addr) const noexcept;
+
+    /**
+     * @brief Deregistration of all memory blocks owned by the descriptor object with id obj_id
+     *
+     * This method deregisters all memory blocks owned by the descriptor object at the end of the descriptor's lifetime.
+     * Required so the system does not run into memory insufficiency errors.
+     *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
+     */
+    void remove_descriptor(uint64_t obj_id);
+
+  private:
+    mutable std::mutex m_mutex;
+    const std::shared_ptr<ucxx::Context> m_context;
+
+    // <descriptor object_id : <address : MemoryHandle>>
+    std::map<uint64_t, std::map<const void*, std::shared_ptr<ucxx::MemoryHandle>>> m_memory_handle_by_address;
+};
 }  // namespace mrc::ucx

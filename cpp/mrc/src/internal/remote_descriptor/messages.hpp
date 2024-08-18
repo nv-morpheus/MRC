@@ -21,6 +21,11 @@
 
 namespace mrc::remote_descriptor {
 
+struct DescriptorPullCompletionMessage
+{
+    std::uint64_t object_id;
+};
+
 struct RemoteDescriptorDecrementMessage
 {
     std::uint64_t object_id;

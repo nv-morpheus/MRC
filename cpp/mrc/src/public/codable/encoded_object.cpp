@@ -235,7 +235,7 @@ protos::MemoryDescriptor& LocalSerializedWrapper::add_descriptor()
     return *descriptor;
 }
 
-size_t LocalSerializedWrapper::add_descriptor(memory::const_buffer_view view, DescriptorKind kind)
+size_t LocalSerializedWrapper::add_descriptor(memory::const_buffer_view view, MessageKind kind)
 {
     throw std::runtime_error("Not implemented");
 }
@@ -411,4 +411,34 @@ std::unique_ptr<LocalSerializedWrapper> LocalSerializedWrapper::from_bytes(memor
     return encoded_obj_proto;
 }
 
+void DescriptorObjectHandler::increment_payload_idx() const
+{
+    m_payload_idx++;
+}
+
+void DescriptorObjectHandler::reset_payload_idx()
+{
+    m_payload_idx = 0;
+}
+
+mrc::codable::protos::DescriptorObject& DescriptorObjectHandler::proto()
+{
+    return m_proto;
+}
+
+const mrc::codable::protos::DescriptorObject& DescriptorObjectHandler::proto() const
+{
+    return m_proto;
+}
+
+const protos::Payload& DescriptorObjectHandler::get_current_payload() const
+{
+    return m_proto.payloads(m_payload_idx);
+}
+
+const ::google::protobuf::RepeatedPtrField<::mrc::codable::protos::Payload>& DescriptorObjectHandler::payloads()
+    const
+{
+    return m_proto.payloads();
+}
 }  // namespace mrc::codable

@@ -30,7 +30,7 @@ enum MemoryKind
     None = 99;
 }
 
-enum DescriptorKind
+enum MessageKind
 {
     Default = 0;
     Eager = 1;
@@ -87,15 +87,6 @@ message Descriptor
         PackedDescriptor       packed_desc    = 2;
         EagerDescriptor        eager_desc     = 3;
         MetaDataDescriptor     meta_data_desc = 4;
-    }
-}
-
-message Payload
-{
-    oneof payload
-    {
-        LocalPayload local = 1;
-        RemotePayload remote = 2;
     }
 }
 
@@ -225,4 +216,59 @@ message RemoteSerializedObject
 
     // The payload stored on remote machines associated with this object
     repeated RemotePayload payloads  = 5;
+}
+
+message Payload
+{
+    oneof message
+    {
+        EagerMessage eager_msg = 1;
+        DeferredMessage deferred_msg = 2;
+    }
+
+    // Type of data. i.e. Host, Shared, Device
+    MemoryKind memory_kind = 4;
+}
+
+message EagerMessage
+{
+    // Bytes of the message
+    bytes data = 1;
+}
+
+message DeferredMessage
+{
+    // Address of the start point of the payload
+    uint64 address = 1;
+
+    // Number of bytes of the payload
+    uint64 bytes = 2;
+
+    // Address of mem registered with UCX
+    uint64 memory_block_address = 3;
+
+    // Size of the memory registered with UCX
+    uint64 memory_block_size = 4;
+
+    // The UCX hkey for the remote memory region
+    bytes remote_key = 5;
+}
+
+
+message DescriptorObject
+{
+    // Destination of the remote object
+    uint64 instance_id = 1;
+
+    // Unique identifier of the DescriptorObject
+    uint64 object_id = 2;
+
+    // Payloads associated with this object
+    repeated Payload payloads = 3;
+
+    // The number of "lifetime" tokens associated with this object. When number of tokens reaches 0, the object is deleted
+
+    // NOTE: This object is deprecated in the new implementation but kept for backwards compatibility.
+    //       The new implementation relies on shared_ptr built-in reference counting
+    uint64 tokens = 4;
 }

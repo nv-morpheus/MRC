@@ -25,6 +25,7 @@
 #include <cuda_runtime.h>
 
 #include <cstddef>
+#include <memory>
 
 namespace mrc::memory {
 
@@ -55,6 +56,34 @@ class cuda_malloc_resource final : public memory_resource
     }
 
     const int m_device_id;
+};
+
+class cuda_malloc_resource2 final : public memory_resource
+{
+  public:
+    static std::shared_ptr<cuda_malloc_resource2> instance()
+    {
+        static std::shared_ptr<cuda_malloc_resource2> instance = std::make_shared<cuda_malloc_resource2>();
+        return instance;
+    }
+
+  private:
+    void* do_allocate(std::size_t bytes) final
+    {
+        void* ptr = nullptr;
+        MRC_CHECK_CUDA(cudaMalloc(&ptr, bytes));
+        return ptr;
+    }
+
+    void do_deallocate(void* ptr, std::size_t /*__bytes*/) final
+    {
+        MRC_CHECK_CUDA(cudaFree(ptr));
+    }
+
+    memory_kind do_kind() const final
+    {
+        return memory_kind::device;
+    }
 };
 
 }  // namespace mrc::memory

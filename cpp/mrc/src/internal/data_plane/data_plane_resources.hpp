@@ -24,6 +24,8 @@
 #include "internal/service.hpp"
 #include "internal/ucx/forward.hpp"
 
+#include "mrc/coroutines/closable_ring_buffer.hpp"
+#include "mrc/coroutines/semaphore.hpp"
 #include "mrc/memory/buffer_view.hpp"
 #include "mrc/runnable/launch_options.hpp"
 #include "mrc/runtime/remote_descriptor.hpp"
@@ -31,11 +33,13 @@
 
 #include <ucp/api/ucp_def.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <string>
 
 // using ucp_rkey_h        = struct ucp_rkey*;
@@ -45,6 +49,7 @@ namespace ucxx {
 class Context;
 class Endpoint;
 class Worker;
+class RemoteKey;
 class Request;
 class Address;
 }  // namespace ucxx
@@ -61,6 +66,7 @@ class NetworkResources;
 namespace mrc::ucx {
 class RegistrationCache;
 class RegistrationCache2;
+class RegistrationCache3;
 class UcxResources;
 }  // namespace mrc::ucx
 
@@ -125,6 +131,7 @@ class DataPlaneResources2
     bool has_instance_id() const;
     uint64_t get_instance_id() const;
 
+    // Should only be called when there are no in-flight messages as m_recv_descriptors will be reset
     void set_max_remote_descriptors(uint64_t max_remote_descriptors);
 
     ucxx::Context& context() const;
@@ -134,6 +141,7 @@ class DataPlaneResources2
     std::string address() const;
 
     ucx::RegistrationCache2& registration_cache() const;
+    ucx::RegistrationCache3& registration_cache3() const;
 
     std::shared_ptr<ucxx::Endpoint> create_endpoint(const std::string& address, uint64_t instance_id);
 
@@ -164,13 +172,13 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::buffer_view buffer_view,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data);
+                                                     const std::string& serialized_rkey);
 
     std::shared_ptr<ucxx::Request> memory_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      void* addr,
                                                      std::size_t bytes,
                                                      uintptr_t remote_addr,
-                                                     const void* packed_rkey_data);
+                                                     const std::string& serialized_rkey);
 
     std::shared_ptr<ucxx::Request> tagged_send_async(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                      memory::const_buffer_view buffer_view,
@@ -194,11 +202,25 @@ class DataPlaneResources2
                                                  const void* addr,
                                                  std::size_t bytes,
                                                  ucs_memory_type_t mem_type);
+
+    // Coroutine to asynchronously send message to remote machine
+    coroutines::Task<std::shared_ptr<ucxx::Request>> await_am_send(std::shared_ptr<ucxx::Endpoint> endpoint,
+                                                                   memory::const_buffer_view buffer_view);
+
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
-    uint64_t register_remote_decriptor(std::shared_ptr<runtime::RemoteDescriptorImpl2> remote_descriptor);
+    // Coroutine to async register, serialize, and send a descriptor to the specified endpoint
+    // Relies on callback to receive the message. Must be used in tandem with await_recv_descriptor
+    coroutines::Task<std::shared_ptr<ucxx::Request>> await_send_descriptor(
+        std::shared_ptr<runtime::Descriptor2> send_descriptor,
+        std::shared_ptr<ucxx::Endpoint> endpoint);
+
+    // Coroutine to async await on new descriptor object in shared buffer, fetch deferred payloads from remote machine
+    coroutines::Task<std::shared_ptr<runtime::Descriptor2>> await_recv_descriptor();
+
+    coroutines::Task<uint64_t> register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
     uint64_t registered_remote_descriptor_count();
-    uint64_t registered_remote_descriptor_token_count(uint64_t object_id);
+    uint64_t registered_remote_descriptor_ptr_count(uint64_t object_id);
 
   private:
     std::optional<uint64_t> m_instance_id;  // Global ID used to identify this instance
@@ -208,11 +230,13 @@ class DataPlaneResources2
     std::shared_ptr<ucxx::Address> m_address;
 
     std::shared_ptr<ucx::RegistrationCache2> m_registration_cache;
+    std::shared_ptr<ucx::RegistrationCache3> m_registration_cache3;
 
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
-    std::atomic<uint64_t> m_next_object_id{0};
+    // An object_id of 0 (default protobuf int field value) signifies an unregistered descriptor
+    std::atomic<uint64_t> m_next_object_id{1};
 
     // std::shared_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>> m_outbound_descriptors;
     // std::map<InstanceID, std::weak_ptr<node::Queue<std::unique_ptr<runtime::ValueDescriptor>>>>
@@ -220,14 +244,25 @@ class DataPlaneResources2
 
     uint64_t get_next_object_id();
 
-    void decrement_tokens(remote_descriptor::RemoteDescriptorDecrementMessage* dec_message);
+    // Callback function to decrement shared_ptr reference count or signal end-of-life of a descriptor object
+    // Requires awaiting on the release of coroutines::Semaphore
+    coroutines::Task<void> complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
 
     uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
+
+    // Given that m_max_remote_descriptors any size <= std::numeric_limits<uint64_t>::max(), simply initializing a
+    // Semaphore of size m_max_remote_descriptors can lead to std::bad_alloc errors.
+    // We use 100000 as a temporary "practical" limit where the capacity is the minimum of the two values.
+    std::unique_ptr<coroutines::Semaphore> m_remote_descriptors_semaphore;
     boost::fibers::mutex m_remote_descriptors_mutex{};
-    boost::fibers::condition_variable m_remote_descriptors_cv{};
+
+    // ClosableRingBuffer uses 100000 as a "practical" limit where the capacity is the minimum of the two values.
+    std::unique_ptr<coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>> m_recv_descriptors;
 
   protected:
-    std::map<uint64_t, std::shared_ptr<runtime::RemoteDescriptorImpl2>> m_remote_descriptor_by_id;
+    // Maps descriptor id to a vector of shared_ptr instances
+    // Uses std::shared_ptr reference counting for maintaining the lifetime of a descriptor object
+    std::map<uint64_t, std::vector<std::shared_ptr<runtime::Descriptor2>>> m_descriptor_by_id;
 };
 
 }  // namespace mrc::data_plane
