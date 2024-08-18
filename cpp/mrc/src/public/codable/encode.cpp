@@ -29,6 +29,8 @@ EncoderBase::EncoderBase(DescriptorObjectHandler& encoded_object) :
 
 void EncoderBase::write_descriptor(memory::const_buffer_view view)
 {
+    // Static check with arbitrary memory size to determine whether we should use eager or deferred protocol
+    // Thorough benchmarking and analysis should be done to derive protocol selection heuristic
     MessageKind kind = (view.bytes() < 64_KiB) ? MessageKind::Eager : MessageKind::Deferred;
 
     protos::Payload* payload = m_encoded_object.proto().add_payloads();
@@ -37,10 +39,12 @@ void EncoderBase::write_descriptor(memory::const_buffer_view view)
     switch (kind)
     {
     case MessageKind::Eager: {
+        // If the message is allocated on device memory, we should fall through and default to using deferred protocol
         if (view.kind() == memory::memory_kind::host)
         {
             auto* eager_msg = payload->mutable_eager_msg();
 
+            // Directly set the data for eager payload
             eager_msg->set_data(view.data(), view.bytes());
 
             return;
@@ -49,6 +53,7 @@ void EncoderBase::write_descriptor(memory::const_buffer_view view)
     case MessageKind::Deferred: {
         auto* deferred_msg = payload->mutable_deferred_msg();
 
+        // Set the payload address and number of bytes for later RDMA operation
         deferred_msg->set_address(reinterpret_cast<uintptr_t>(view.data()));
         deferred_msg->set_bytes(view.bytes());
 

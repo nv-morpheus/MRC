@@ -383,11 +383,12 @@ void Descriptor2::setup_remote_payloads()
 
         auto* deferred_msg = payload.mutable_deferred_msg();
 
+        // Look for the memory block in the registration cache
         auto ucx_block = m_data_plane_resources.registration_cache3().lookup(remote_object.object_id(), deferred_msg->address());
 
         if (!ucx_block.has_value())
         {
-            // Need to register the memory
+            // Given that the memory block is not registered, we must register the memory
             ucx_block = m_data_plane_resources.registration_cache3().add_block(remote_object.object_id(),
                                                                                deferred_msg->address(),
                                                                                deferred_msg->bytes(),
@@ -409,7 +410,7 @@ void Descriptor2::fetch_remote_payloads()
     // Loop over all remote payloads and convert them to local payloads
     for (auto& remote_payload : *m_encoded_object->proto().mutable_payloads())
     {
-        // If payload is an EagerMessage, we do not need to do any pulling
+        // If payload is an EagerMessage, we do not need to do RDMA operations on remote sending machine
         if (remote_payload.has_eager_msg())
         {
             continue;

@@ -38,6 +38,8 @@ void DecoderBase::read_descriptor(memory::buffer_view dst_view) const
     else
     {
         const auto& deferred_msg = payload.deferred_msg();
+
+        // Depending on the message memory type, we will use a different memcpy method to properly copy the data
         switch (payload.memory_kind())
         {
             case protos::MemoryKind::Host:

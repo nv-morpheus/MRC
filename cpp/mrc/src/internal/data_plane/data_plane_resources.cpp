@@ -165,7 +165,10 @@ DataPlaneResources2::DataPlaneResources2()
     m_registration_cache3 = std::make_shared<ucx::RegistrationCache3>(m_context);
 
     // When DataPlanResources2 initializes, m_max_remote_descriptors is initialized to std::numeric_limits<uint64_t>::max()
-    // By default, m_remote_descriptors_semaphore should have capacity = practical limit, 100000
+    // By default, the following should have capacity = practical limit, 100000
+    m_recv_descriptors = std::unique_ptr<coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>>(
+        new coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>({.capacity = uint64_t(100000)}));
+
     m_remote_descriptors_semaphore = std::unique_ptr<coroutines::Semaphore>(
         new coroutines::Semaphore{{.capacity = static_cast<uint64_t>(100000)}});
 
@@ -180,6 +183,7 @@ DataPlaneResources2::DataPlaneResources2()
         auto* message = reinterpret_cast<remote_descriptor::DescriptorPullCompletionMessage*>(
             req->getRecvBuffer()->data());
 
+        // Await for callback function to decrement shared_ptr reference count or signal end-of-life of a descriptor
         coroutines::sync_wait(complete_remote_pull(message));
     });
     m_worker->registerAmReceiverCallback(
@@ -199,12 +203,16 @@ DataPlaneResources2::DataPlaneResources2()
                                                req->getRecvBuffer()->getSize(),
                                                mrc::memory::memory_kind::host);
 
-        std::shared_ptr<runtime::Descriptor2> recv_descriptor = runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *this);
+        // Create the descriptor object from received data
+        // Note that we do not immediately call fetch_remote_payloads. This callback function runs on a UCXX thread and
+        // should freed ASAP. Defer remote payload pulling when descriptor object is actually consumed
+        std::shared_ptr<runtime::Descriptor2> recv_descriptor =
+            runtime::Descriptor2::create_from_bytes(std::move(buffer_view), *this);
 
         // Although ClosableRingBuffer::write is a coroutine, write always completes instantaneously without awaiting.
         // ClosablRingBuffer size is always >= m_max_remote_descriptors, so there is always an empty slot.
         auto write_descriptor = [this, recv_descriptor]() -> coroutines::Task<void> {
-            co_await m_recv_descriptors.write(recv_descriptor);
+            co_await m_recv_descriptors->write(recv_descriptor);
             co_return;
         };
 
@@ -340,7 +348,6 @@ std::shared_ptr<ucxx::Request> DataPlaneResources2::memory_recv_async(std::share
                                                                       uintptr_t remote_addr,
                                                                       const std::string& serialized_rkey)
 {
-    // Const cast away because UCXX only accepts void*
     auto rkey = ucxx::createRemoteKeyFromSerialized(endpoint, serialized_rkey);
     auto request = endpoint->memGet(addr, bytes, rkey);
 
@@ -408,8 +415,9 @@ coroutines::Task<std::shared_ptr<ucxx::Request>> DataPlaneResources2::await_am_s
 {
     coroutines::Event event{};
 
-    // Const cast away because UCXX only accepts void*
-    auto request = endpoint->amSend(const_cast<void*>(buffer_view.data()),
+    // Use AmReceiverCallbackInfo to handle receiving/processing message downstream and lambda callback function
+    // to signal send request completion
+    auto request = endpoint->amSend(const_cast<void*>(buffer_view.data()), // Const cast away, UCXX only accepts void*
                                     buffer_view.bytes(),
                                     ucx::to_ucs_memory_type(buffer_view.kind()),
                                     ucxx::AmReceiverCallbackInfo("MRC", 1),
@@ -440,7 +448,6 @@ coroutines::Task<std::shared_ptr<ucxx::Request>> DataPlaneResources2::await_send
     std::shared_ptr<ucxx::Endpoint> endpoint)
 {
     // Wait until there is an empty slot to register remote descriptor
-    // Require register_remote_descriptor before descriptor serialize as serialize requires object_id to be in the protobuf
     uint64_t object_id = co_await this->register_remote_descriptor(send_descriptor);
 
     // Serialize the descriptor's protobuf into a byte stream for remote communication
@@ -452,9 +459,11 @@ coroutines::Task<std::shared_ptr<ucxx::Request>> DataPlaneResources2::await_send
 
 coroutines::Task<std::shared_ptr<runtime::Descriptor2>> DataPlaneResources2::await_recv_descriptor()
 {
-    auto read_element = co_await m_recv_descriptors.read();
+    // Await and get descriptor object from shared buffer
+    auto read_element = co_await m_recv_descriptors->read();
     std::shared_ptr<runtime::Descriptor2> recv_descriptor = std::move(*read_element);
 
+    // Now that user is consuming the descriptor object, pull deferred payloads from remote machine
     recv_descriptor->fetch_remote_payloads();
 
     co_return recv_descriptor;
@@ -462,7 +471,7 @@ coroutines::Task<std::shared_ptr<runtime::Descriptor2>> DataPlaneResources2::awa
 
 coroutines::Task<uint64_t> DataPlaneResources2::register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor)
 {
-    // If the descriptor has an object_id > 0, the descriptor has already been registered and should not be re-registered
+    // If the descriptor has an object_id > 0, descriptor has already been registered and should not be re-registered
     auto object_id = descriptor->encoded_object().object_id();
     if (object_id > 0)
     {
@@ -477,8 +486,7 @@ coroutines::Task<uint64_t> DataPlaneResources2::register_remote_descriptor(std::
     descriptor->encoded_object().set_object_id(object_id);
 
     // Wait for semaphore to ensure that we have an empty slot to register the current descriptor
-    co_await m_remote_descriptors_semaphore->acquire();  // Directly await the semaphore
-
+    co_await m_remote_descriptors_semaphore->acquire();
     {
         std::unique_lock lock(m_remote_descriptors_mutex);
         m_descriptor_by_id[object_id].push_back(descriptor);
@@ -494,7 +502,6 @@ coroutines::Task<void> DataPlaneResources2::complete_remote_pull(remote_descript
         // Once we've completed pulling of a descriptor, we remove a descriptor shared ptr from the vector
         // When the vector becomes empty, there will be no more shared ptrs pointing to the descriptor object,
         // it will be destructed accordingly.
-        // We should also remove that mapping as the object_id corresponding to that mapping will not be reused.
         auto& descriptors = m_descriptor_by_id[message->object_id];
         descriptors.pop_back();
         if (descriptors.size() == 0)
@@ -523,6 +530,12 @@ uint64_t DataPlaneResources2::registered_remote_descriptor_ptr_count(uint64_t ob
 void DataPlaneResources2::set_max_remote_descriptors(uint64_t max_remote_descriptors)
 {
     m_max_remote_descriptors = max_remote_descriptors;
+
+    // Update the remote descriptor ClosableRingBuffer and Semaphore capacity
+    m_recv_descriptors = std::unique_ptr<coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>>(
+        new coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>(
+            {.capacity = std::min(m_max_remote_descriptors, uint64_t(100000))}));
+
     m_remote_descriptors_semaphore = std::unique_ptr<coroutines::Semaphore>(
         new coroutines::Semaphore{{.capacity = std::min(m_max_remote_descriptors, static_cast<uint64_t>(100000))}});
 }

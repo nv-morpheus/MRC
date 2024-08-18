@@ -266,7 +266,9 @@ message DescriptorObject
     // Payloads associated with this object
     repeated Payload payloads = 3;
 
-    // The number of "lifetime" tokens associated with this object. When the number of tokens reaches 0, the object
-    // is deleted
-    uint64 tokens = 5;
+    // The number of "lifetime" tokens associated with this object. When number of tokens reaches 0, the object is deleted
+
+    // NOTE: This object is deprecated in the new implementation but kept for backwards compatibility.
+    //       The new implementation relies on shared_ptr built-in reference counting
+    uint64 tokens = 4;
 }

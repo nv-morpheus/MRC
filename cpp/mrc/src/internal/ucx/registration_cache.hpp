@@ -181,7 +181,7 @@ class RegistrationCache2 final
  * @brief UCX Registration Cache
  *
  * UCX memory registration object that will both register/deregister memory. The cache can be queried for the original
- * memory block by providing the starting address of the contiguous block.
+ * memory block by providing the id of the descriptor object and the starting address of the contiguous block.
  */
 class RegistrationCache3 final
 {
@@ -194,8 +194,11 @@ class RegistrationCache3 final
      * For each block of memory registered with the RegistrationCache, an entry containing the block information is
      * storage and can be queried.
      *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
      * @param addr
      * @param bytes
+     * @param memory_type
+     * @return std::shared_ptr<ucxx::MemoryHandle>
      */
     std::shared_ptr<ucxx::MemoryHandle> add_block(uint64_t obj_id, void* addr, std::size_t bytes, memory::memory_kind memory_type);
 
@@ -207,6 +210,7 @@ class RegistrationCache3 final
      * This method queries the registration cache to find the MemoryHanlde containing the original address and size as
      * well as the serialized remote keys associated with the memory block.
      *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
      * @param addr
      * @return std::shared_ptr<ucxx::MemoryHandle>
      */
@@ -214,6 +218,14 @@ class RegistrationCache3 final
 
     std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uint64_t obj_id, uintptr_t addr) const noexcept;
 
+    /**
+     * @brief Deregistration of all memory blocks owned by the descriptor object with id obj_id
+     *
+     * This method deregisters all memory blocks owned by the descriptor object at the end of the descriptor's lifetime.
+     * Required so the system does not run into memory insufficiency errors.
+     *
+     * @param obj_id ID of the descriptor object that owns the memory block being registered
+     */
     void remove_descriptor(uint64_t obj_id);
 
   private:

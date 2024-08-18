@@ -418,21 +418,58 @@ std::unique_ptr<TypedValueDescriptor<T>> TypedValueDescriptor<T>::from_local(
         new TypedValueDescriptor<T>(mrc::codable::decode2<T>(local_descriptor->encoded_object())));
 }
 
+/**
+ * @brief Descriptor2 class used to faciliate communication between any arbitrary pair of machines. Supports multi-node,
+ * multi-gpu communication, and asynchronous data transfer.
+ */
 class Descriptor2
 {
   public:
+    /**
+     * @brief Gets the protobuf object associated with this descriptor instance
+     *
+     * @return codable::protos::DescriptorObject&
+     */
     virtual codable::protos::DescriptorObject& encoded_object();
 
+    /**
+     * @brief Serialize the encoded object stored by this descriptor into a byte stream for remote communication
+     *
+     * @param mr Instance of memory_resource for allocating a memory_buffer to return
+     * @return memory::buffer
+     */
     memory::buffer serialize(std::shared_ptr<memory::memory_resource> mr);
 
+    /**
+     * @brief Deserialize the encoded object stored by this descriptor into a class T instance
+     *
+     * @return T
+     */
     template <typename T>
     [[nodiscard]] const T deserialize();
 
+    /**
+     * @brief Creates a Descriptor2 instance from a class T value
+     *
+     * @param value class T instance
+     * @param data_plane_resources reference to DataPlaneResources2 for remote communication
+     * @return std::shared_ptr<Descriptor2>
+     */
     template <typename T>
     static std::shared_ptr<Descriptor2> create_from_value(T value, data_plane::DataPlaneResources2& data_plane_resources);
 
+    /**
+     * @brief Creates a Descriptor2 instance from a byte stream
+     *
+     * @param view byte stream
+     * @param data_plane_resources reference to DataPlaneResources2 for remote communication
+     * @return std::shared_ptr<Descriptor2>
+     */
     static std::shared_ptr<Descriptor2> create_from_bytes(memory::buffer_view&& view, data_plane::DataPlaneResources2& data_plane_resources);
 
+    /**
+     * @brief Fetches all deferred payloads from the sending remote machine
+     */
     void fetch_remote_payloads();
 
   protected:
@@ -452,12 +489,16 @@ class Descriptor2
     data_plane::DataPlaneResources2& m_data_plane_resources;
 };
 
+/**
+ * @brief Class used for type erasure of Descriptor2 when serialized with class T instance
+ */
 template <typename T>
 class TypedDescriptor : public Descriptor2
 {
   public:
     codable::protos::DescriptorObject& encoded_object()
     {
+        // If the encoded object does not exist yet, lazily create it
         if (!m_encoded_object)
         {
             m_encoded_object = std::move(mrc::codable::encode2<T>(std::any_cast<const T&>(m_value)));
@@ -470,6 +511,7 @@ class TypedDescriptor : public Descriptor2
     template <typename U>
     friend std::shared_ptr<Descriptor2> Descriptor2::create_from_value(U value, data_plane::DataPlaneResources2& data_plane_resources);
 
+    // Private constructor to prohibit instantiation of this class outside of use in create_from_value
     TypedDescriptor(T value, data_plane::DataPlaneResources2& data_plane_resources):
         Descriptor2(std::move(value), data_plane_resources) {}
 };

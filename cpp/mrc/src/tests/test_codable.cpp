@@ -70,105 +70,40 @@ class CodableObject
     CodableObject()  = default;
     ~CodableObject() = default;
 
-    static CodableObject deserialize(const Decoder<CodableObject>& buffer, std::size_t /*unused*/)
+    static CodableObject deserialize(const mrc::codable::Decoder2<CodableObject>& decoder)
     {
         return {};
     }
 
-    void serialize(Encoder<CodableObject>& /*unused*/) const {}
+    void serialize(mrc::codable::Encoder2<CodableObject>& encoder) const {}
 };
-
-class CodableObjectWithOptions
-{
-  public:
-    CodableObjectWithOptions()  = default;
-    ~CodableObjectWithOptions() = default;
-
-    static CodableObjectWithOptions deserialize(const Decoder<CodableObjectWithOptions>& encoding,
-                                                std::size_t /*unused*/)
-    {
-        return {};
-    }
-
-    void serialize(Encoder<CodableObjectWithOptions>& /*unused*/, const EncodingOptions& opts) const {}
-};
-
-class CodableViaExternalStruct
-{};
-
-namespace mrc::codable {
-
-template <>
-struct codable_protocol<CodableViaExternalStruct>
-{
-    void serialize(const CodableViaExternalStruct& /*unused*/, Encoder<CodableViaExternalStruct>& /*unused*/) {}
-};
-
-};  // namespace mrc::codable
 
 namespace mrc::codable {}
 
 struct NotCodableObject
 {};
 
-class TestCodable : public ::testing::Test
-{
-  protected:
-    void SetUp() override
-    {
-        m_runtime = std::make_unique<runtime::Runtime>(system::SystemProvider(tests::make_system([](Options& options) {
-            // todo(#114) - propose: remove this option entirely
-            options.enable_server(true);
-            options.architect_url("localhost:13337");
-            options.placement().resources_strategy(PlacementResources::Dedicated);
-        })));
-
-        DVLOG(10) << "Setup Complete";
-    }
-
-    void TearDown() override
-    {
-        DVLOG(10) << "Start Teardown";
-        m_runtime.reset();
-        DVLOG(10) << "Teardown Complete";
-    }
-
-    std::unique_ptr<runtime::Runtime> m_runtime;
-};
+class TestCodable : public ::testing::Test {};
 
 TEST_F(TestCodable, Objects)
 {
-    static_assert(codable::encodable<CodableObject>::value, "should be encodable");
-    static_assert(codable::encodable<CodableObjectWithOptions>::value, "should be encodable");
-    static_assert(codable::encodable<CodableViaExternalStruct>::value, "should be encodable");
-    static_assert(!codable::encodable<NotCodableObject>::value, "should NOT be encodable");
+    static_assert(codable::encodable<CodableObject>, "should be encodable");
+    static_assert(!codable::encodable<NotCodableObject>, "should NOT be encodable");
 
-    static_assert(codable::decodable<CodableObject>::value, "should be decodable");
-    static_assert(codable::decodable<CodableObjectWithOptions>::value, "should be decodable");
-    static_assert(!codable::decodable<CodableViaExternalStruct>::value, "should NOT be decodable");
-    static_assert(!codable::decodable<NotCodableObject>::value, "should NOT be decodable");
-
-    static_assert(codable<CodableObject>::value, "fully codable");
-    static_assert(codable<CodableObjectWithOptions>::value, "fully codable");
-    static_assert(!codable<CodableViaExternalStruct>::value, "half codable");
-    static_assert(!codable<NotCodableObject>::value, "not codable");
+    static_assert(codable::decodable<CodableObject>, "should be decodable");
+    static_assert(!codable::decodable<NotCodableObject>, "should NOT be decodable");
 }
 
 TEST_F(TestCodable, String)
 {
-    static_assert(codable<std::string>::value, "should be codable");
+    static_assert(codable::encodable<std::string>, "should be encodable");
+    static_assert(codable::decodable<std::string>, "should be decodable");
 
     std::string str = "Hello MRC";
-    auto str_block  = m_runtime->partition(0).resources().network()->data_plane().registration_cache().lookup(
-        str.data());
-    EXPECT_FALSE(str_block);
 
-    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
+    std::unique_ptr<DescriptorObjectHandler> encoded_obj = encode2(str);
 
-    encode(str, *encodable_storage);
-    EXPECT_EQ(encodable_storage->descriptor_count(), 1);
-
-    auto decoded_str = decode<std::string>(*encodable_storage);
+    auto decoded_str = decode2<std::string>(*encoded_obj);
     EXPECT_STREQ(str.c_str(), decoded_str.c_str());
 }
 
@@ -185,7 +120,8 @@ void populate(int size, int* ptr)
 
 TEST_F(TestCodable, Buffer)
 {
-    static_assert(codable<mrc::memory::buffer>::value, "should be codable");
+    // static_assert(codable::encodable<mrc::memory::buffer>, "should be encodable");
+    // static_assert(codable::decodable<mrc::memory::buffer>, "should be decodable");
 
     // Uncomment when local copy is working!
     // auto encodable_storage = m_runtime->partition(0).make_codable_storage();
@@ -209,45 +145,34 @@ TEST_F(TestCodable, Buffer)
 
 TEST_F(TestCodable, Double)
 {
-    static_assert(codable<double>::value, "should be codable");
-
-    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
+    static_assert(codable::encodable<double>, "should be encodable");
+    static_assert(codable::decodable<double>, "should be decodable");
 
     double pi = 3.14159;
 
-    encode(pi, *encodable_storage);
-    EXPECT_EQ(encodable_storage->descriptor_count(), 1);
+    std::unique_ptr<DescriptorObjectHandler> encoded_obj = encode2(pi);
 
-    auto decoding = decode<double>(*encodable_storage);
+    auto decoding = decode2<double>(*encoded_obj);
     EXPECT_DOUBLE_EQ(pi, decoding);
 }
 
 TEST_F(TestCodable, Composite)
 {
-    static_assert(codable<std::string>::value, "should be codable");
-    static_assert(codable<std::uint64_t>::value, "should be codable");
+    static_assert(codable::encodable<std::string>, "should be encodable");
+    static_assert(codable::decodable<std::string>, "should be decodable");
+
+    static_assert(codable::encodable<std::uint64_t>, "should be encodable");
+    static_assert(codable::decodable<std::uint64_t>, "should be decodable");
 
     std::string str   = "Hello Mrc";
     std::uint64_t ans = 42;
 
-    auto encodable_storage = m_runtime->partition(0).make_codable_storage();
+    std::unique_ptr<DescriptorObjectHandler> encoded_obj1 = encode2(str);
+    std::unique_ptr<DescriptorObjectHandler> encoded_obj2 = encode2(ans);
 
-    encode(str, *encodable_storage);
-    encode(ans, *encodable_storage);
-
-    EXPECT_EQ(encodable_storage->object_count(), 2);
-    EXPECT_EQ(encodable_storage->descriptor_count(), 2);
-
-    auto decoded_str = decode<std::string>(*encodable_storage, 0);
-    auto decoded_ans = decode<std::uint64_t>(*encodable_storage, 1);
+    auto decoded_str = decode2<std::string>(*encoded_obj1);
+    auto decoded_ans = decode2<std::uint64_t>(*encoded_obj2);
 
     EXPECT_STREQ(str.c_str(), decoded_str.c_str());
     EXPECT_EQ(ans, decoded_ans);
-}
-
-TEST_F(TestCodable, EncodedObjectProto)
-{
-    static_assert(codable::encodable<mrc::codable::protos::EncodedObject>::value, "should be encodable");
-    static_assert(codable::decodable<mrc::codable::protos::EncodedObject>::value, "should be decodable");
-    static_assert(codable<mrc::codable::protos::EncodedObject>::value, "should be codable");
 }

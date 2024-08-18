@@ -131,6 +131,7 @@ class DataPlaneResources2
     bool has_instance_id() const;
     uint64_t get_instance_id() const;
 
+    // Should only be called when there are no in-flight messages as m_recv_descriptors will be reset
     void set_max_remote_descriptors(uint64_t max_remote_descriptors);
 
     ucxx::Context& context() const;
@@ -202,14 +203,19 @@ class DataPlaneResources2
                                                  std::size_t bytes,
                                                  ucs_memory_type_t mem_type);
 
+    // Coroutine to asynchronously send message to remote machine
     coroutines::Task<std::shared_ptr<ucxx::Request>> await_am_send(std::shared_ptr<ucxx::Endpoint> endpoint,
                                                                    memory::const_buffer_view buffer_view);
 
     std::shared_ptr<ucxx::Request> am_recv_async(std::shared_ptr<ucxx::Endpoint> endpoint);
 
+    // Coroutine to async register, serialize, and send a descriptor to the specified endpoint
+    // Relies on callback to receive the message. Must be used in tandem with await_recv_descriptor
     coroutines::Task<std::shared_ptr<ucxx::Request>> await_send_descriptor(
         std::shared_ptr<runtime::Descriptor2> send_descriptor,
         std::shared_ptr<ucxx::Endpoint> endpoint);
+
+    // Coroutine to async await on new descriptor object in shared buffer, fetch deferred payloads from remote machine
     coroutines::Task<std::shared_ptr<runtime::Descriptor2>> await_recv_descriptor();
 
     coroutines::Task<uint64_t> register_remote_descriptor(std::shared_ptr<runtime::Descriptor2> descriptor);
@@ -238,6 +244,8 @@ class DataPlaneResources2
 
     uint64_t get_next_object_id();
 
+    // Callback function to decrement shared_ptr reference count or signal end-of-life of a descriptor object
+    // Requires awaiting on the release of coroutines::Semaphore
     coroutines::Task<void> complete_remote_pull(remote_descriptor::DescriptorPullCompletionMessage* message);
 
     uint64_t m_max_remote_descriptors{std::numeric_limits<uint64_t>::max()};
@@ -249,10 +257,11 @@ class DataPlaneResources2
     boost::fibers::mutex m_remote_descriptors_mutex{};
 
     // ClosableRingBuffer uses 100000 as a "practical" limit where the capacity is the minimum of the two values.
-    coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>> m_recv_descriptors{
-        {.capacity = std::min(m_max_remote_descriptors, static_cast<uint64_t>(100000))}};
+    std::unique_ptr<coroutines::ClosableRingBuffer<std::shared_ptr<runtime::Descriptor2>>> m_recv_descriptors;
 
   protected:
+    // Maps descriptor id to a vector of shared_ptr instances
+    // Uses std::shared_ptr reference counting for maintaining the lifetime of a descriptor object
     std::map<uint64_t, std::vector<std::shared_ptr<runtime::Descriptor2>>> m_descriptor_by_id;
 };
 

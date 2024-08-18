@@ -45,10 +45,28 @@ add_executable(test_mrc_private
   pipelines/multi_segment.cpp
   pipelines/single_segment.cpp
   segments/common_segments.cpp
+  test_codable.cpp
   # test_control_plane_components.cpp
   # test_control_plane.cpp
+  test_expected.cpp
+  test_grpc.cpp
   test_main.cpp
+  test_memory.cpp
   test_network.cpp
+  test_next.cpp
+  # test_partition_manager.cpp
+  # test_partitions.cpp
+  test_pipeline.cpp
+  test_ranges.cpp
+  # test_remote_descriptor.cpp
+  # test_resources.cpp
+  test_reusable_pool.cpp
+  # test_runnable.cpp
+  # test_runtime.cpp
+  test_service.cpp
+  test_system.cpp
+  test_topology.cpp
+  test_ucx.cpp
 )
 
 target_link_libraries(test_mrc_private

@@ -153,6 +153,7 @@ std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(ui
 {
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
 
+    // The descriptor obj_id and memory block addr must both be valid
     if (m_memory_handle_by_address.find(obj_id) != m_memory_handle_by_address.end())
     {
         auto descriptor_handles = m_memory_handle_by_address.at(obj_id);
