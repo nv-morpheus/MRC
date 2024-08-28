@@ -159,7 +159,7 @@ class PyIteratorIterator
         });
 
         auto future = task.get_future();
-        std::thread(std::move(task)).detach();
+        std::thread task_thread(std::move(task));
 
         auto future_status = future.wait_for(std::chrono::milliseconds(100));
         auto is_subscribed = [this]() {
@@ -183,6 +183,16 @@ class PyIteratorIterator
         if (future_status == std::future_status::ready)
         {
             future.get();
+            task_thread.join();
+        }
+        else
+        {
+            auto p_task_thread = task_thread.native_handle();
+            task_thread.detach();
+            if (pthread_cancel(p_task_thread) != 0)
+            {
+                LOG(ERROR) << "Failed to cancel source thread";
+            }
         }
     }
 
