@@ -251,6 +251,8 @@ PYBIND11_MODULE(segment, py_mod)
 
     Builder.def("make_node_full", &BuilderProxy::make_node_full, py::return_value_policy::reference_internal);
 
+    py_mod.def("_iterator_thread", &iterator_thread, py::arg("itr"), py::arg("queue"));
+
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
 }

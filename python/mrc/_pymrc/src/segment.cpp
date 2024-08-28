@@ -35,13 +35,13 @@
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <exception>
 #include <fstream>
 #include <functional>
-#include <future>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -70,30 +70,27 @@ class PyIteratorIterator
     using iterator_category = std::input_iterator_tag;
     // NOLINTEND(readability-identifier-naming)
 
-    // represents an uninitialized iterator
     PyIteratorIterator() = default;
-
-    // Construct a PyIteratorIterator, souce componenets which do not have a subscriber should pass in a nullptr for
-    // the subscriber
-    PyIteratorIterator(py::iterator iter, PyObjectSubscriber* subscriber = nullptr) :
-      m_iter(std::move(iter)),
-      m_subscriber(subscriber)
+    PyIteratorIterator(py::iterator iter) : m_iter(std::move(iter))
     {
-        try
-        {
-            py::gil_scoped_release no_gil;
-            advance();
-        } catch (...)
-        {
-            LOG(ERROR) << "Error occurred in PyIteratorIterator.";
-            cleanup();
-            throw;
-        }
+        // When creating this object, we want to save the iterator value while we have the GIL. This way we dont have to
+        // eagerly grab the GIL even if we already have the value
+        DCHECK_EQ(PyGILState_Check(), 1) << "Must have the GIL when creating PyIteratorIterator";
+
+        // This also triggers py::iterator to load the value into memory and avoid needing the GIL unless we are
+        // advancing.
+        m_value = py::cast<py::object>(*m_iter);
     }
 
     ~PyIteratorIterator()
     {
-        cleanup();
+        if (m_iter)
+        {
+            AcquireGIL gil;
+
+            py::iterator kill = std::move(m_iter);
+            m_value           = py::object();
+        }
     }
 
     bool is_initialized() const
@@ -144,80 +141,41 @@ class PyIteratorIterator
   private:
     void advance()
     {
-        bool load_only = !static_cast<bool>(m_value);
-        auto task      = std::packaged_task<void()>([this, load_only]() {
-            // Grab the GIL before advancing
-            AcquireGIL gil;
+        // Grab the GIL before advancing
+        AcquireGIL gil;
 
-            if (!load_only)
-            {
-                ++m_iter;
-            }
+        ++m_iter;
 
-            // While we have the GIL, preload the next value
-            m_value = py::cast<py::object>(*m_iter);
-        });
-
-        auto future = task.get_future();
-        std::thread task_thread(std::move(task));
-
-        auto future_status = future.wait_for(std::chrono::milliseconds(100));
-        auto is_subscribed = [this]() {
-            if (m_subscriber == nullptr)
-            {
-                return true;
-            }
-            return m_subscriber->is_subscribed();
-        };
-
-        while (is_subscribed() && future_status != std::future_status::ready)
-        {
-            future_status = future.wait_for(std::chrono::milliseconds(100));
-
-            if (future_status != std::future_status::ready)
-            {
-                std::this_thread::yield();
-            }
-        }
-
-        if (future_status == std::future_status::ready)
-        {
-            future.get();
-            task_thread.join();
-        }
-        else
-        {
-            auto p_task_thread = task_thread.native_handle();
-            task_thread.detach();
-            if (pthread_cancel(p_task_thread) != 0)
-            {
-                LOG(ERROR) << "Failed to cancel source thread";
-            }
-        }
-    }
-
-    void cleanup()
-    {
-        if (m_iter || m_value)
-        {
-            AcquireGIL gil;
-
-            if (m_iter)
-            {
-                py::iterator kill = std::move(m_iter);
-            }
-
-            if (m_value)
-            {
-                m_value = py::object();
-            }
-        }
+        // While we have the GIL, preload the next value
+        m_value = py::cast<py::object>(*m_iter);
     }
 
     py::iterator m_iter{};
     PyHolder m_value{};
-    PyObjectSubscriber* m_subscriber = nullptr;
 };
+
+void iterator_thread(py::iterator itr, py::object queue)
+{
+    py::gil_scoped_acquire gil;
+    PyIteratorIterator wrapped_iter(std::move(itr));
+    PyIteratorIterator sentinel;
+    while (wrapped_iter != sentinel)
+    {
+        {
+            py::gil_scoped_release no_gil;
+            // Copy the current value into the queue. No need for the GIL here due to PyHolder
+            queue.attr("put")(*wrapped_iter);
+        }
+
+        ++wrapped_iter;
+    }
+
+    // Finally signal that we are done
+    queue.attr("put")(py::iterator::sentinel());
+}
+
+class EmptyQueue : public std::exception
+{};
 
 class PyIteratorWrapper
 {
@@ -240,92 +198,123 @@ class PyIteratorWrapper
 
           // Move the object into the iterator to ensure its only used once.
           return py::cast<py::iterator>(py::object(std::move(iterator)));
-      }),
-      m_subscriber(subscriber)
-    {}
+      })
+    {
+        init();
+    }
 
     // Create from an iterable
-    PyIteratorWrapper(py::iterable source_iterable, PyObjectSubscriber* subscriber = nullptr) :
+    PyIteratorWrapper(py::iterable source_iterable) :
       m_iter_factory([iterable = PyObjectHolder(std::move(source_iterable))]() {
           // Turn the iterable into an iterator
           return py::iter(iterable);
-      }),
-      m_subscriber(subscriber)
-    {}
+      })
+    {
+        init();
+    }
 
     // Create from a factory function
-    PyIteratorWrapper(py::function gen_factory, PyObjectSubscriber* subscriber = nullptr) :
+    PyIteratorWrapper(py::function gen_factory) :
       m_iter_factory([gen_factory = PyObjectHolder(std::move(gen_factory))]() {
           // Call the generator factory to make a new generator
           return py::cast<py::iterator>(gen_factory());
-      }),
-      m_subscriber(subscriber)
-    {}
-
-    // Create directly
-    PyIteratorWrapper(std::function<py::iterator()> iter_factory, PyObjectSubscriber* subscriber = nullptr) :
-      m_iter_factory(std::move(iter_factory)),
-      m_subscriber(subscriber)
-    {}
-
-    iterator begin()
+      })
     {
-        // Grab the GIL and create the iterator from the factory
-        AcquireGIL gil;
-
-        auto iter = m_iter_factory();
-
-        return iterator{std::move(iter), m_subscriber};
+        init();
     }
 
-    iterator end()  // NOLINT(readability-convert-member-functions-to-static)
+    // Create directly
+    PyIteratorWrapper(std::function<py::iterator()> iter_factory) : m_iter_factory(std::move(iter_factory))
     {
-        // Do we need the GIL here?
-        return iterator{};
+        init();
+    }
+
+    py::object get_next_value()
+    {
+        AcquireGIL gil;
+
+        try
+        {
+            auto value = m_queue.attr("get_nowait")();
+            if (value.is(py::iterator::sentinel()))
+            {
+                std::cerr << "\n***********\nThrowing stop iteration\n**************\n" << std::flush;
+                throw pybind11::stop_iteration();
+            }
+
+            return value;
+        } catch (py::error_already_set py_except)
+        {
+            if (py_except.matches(m_queue_empty))
+            {
+                std::cerr << "\n***********\nMatches!\n**************\n" << std::flush;
+                throw EmptyQueue();
+            }
+
+            std::cerr << "\n***********\nNo Match!\n**************\n" << std::flush;
+            throw;
+        }
     }
 
   private:
+    void init()
+    {
+        using namespace py::literals;
+
+        AcquireGIL gil;
+        auto iter = m_iter_factory();
+
+        // Use Python to create/track the thread to allow the interpreter to shutdown safely
+        auto queue_mod     = py::module_::import("queue");
+        auto threading_mod = py::module_::import("threading");
+
+        // We want the python bound version of iterator_thread
+        auto segment_mod = py::module_::import("mrc.core.segment");
+
+        m_queue_empty = queue_mod.attr("Empty");
+        m_queue       = queue_mod.attr("Queue")();
+        m_thread = threading_mod.attr("Thread")("target"_a = segment_mod.attr("_iterator_thread"), "daemon"_a = true);
+    }
+
+    py::object m_thread{};
+    py::object m_queue{};
+    py::object m_queue_empty{};
     std::function<py::iterator()> m_iter_factory;
-    PyObjectSubscriber* m_subscriber;
 };
 
 std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuilder& self,
                                                              const std::string& name,
-                                                             std::function<py::iterator()> iter_factory)
+                                                             PyIteratorWrapper iter_wrapper)
 {
-    auto wrapper = [iter_factory](PyObjectSubscriber& subscriber) mutable {
+    auto wrapper = [iter_wrapper = std::move(iter_wrapper)](PyObjectSubscriber& subscriber) mutable {
         auto& ctx = runnable::Context::get_runtime_context();
-        std::unique_ptr<PyIteratorWrapper> iter_wrapper{nullptr};
-        {
-            AcquireGIL gil;
-            iter_wrapper = std::make_unique<PyIteratorWrapper>(iter_factory, &subscriber);
-        }
 
-        try
-        {
-            DVLOG(10) << ctx.info() << " Starting source";
+        DVLOG(10) << ctx.info() << " Starting source";
 
-            for (auto next_val : *iter_wrapper)
+        bool received_stop_iteration = false;
+        while (!received_stop_iteration && subscriber.is_subscribed())
+        {
+            try
             {
-                //  Only send if its subscribed. Very important to ensure the object has been moved!
+                auto next_val = iter_wrapper.get_next_value();
+
+            } catch (EmptyQueue)
+            {
+                // No value
                 if (subscriber.is_subscribed())
                 {
-                    subscriber.on_next(std::move(next_val));
+                    boost::this_fiber::yield();
                 }
-                else
-                {
-                    DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
-                    break;
-                }
+            } catch (pybind11::stop_iteration)
+            {
+                DVLOG(10) << ctx.info() << "Received stop_iteration";
+                received_stop_iteration = true;
+            } catch (const std::exception& e)
+            {
+                LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
+                subscriber.on_error(std::current_exception());
+                return;
             }
-
-        } catch (const std::exception& e)
-        {
-            LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
-
-            // gil.release();
-            subscriber.on_error(std::current_exception());
-            return;
         }
 
         subscriber.on_completed();
@@ -341,23 +330,34 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segm
                                                                        PyIteratorWrapper iter_wrapper)
 {
     auto get_next = [iter_wrapper = std::move(iter_wrapper), current = PyIteratorIterator()](PyHolder& data) mutable {
-        // // Unfortunately, all of the below steps need the GIL but will grab it individually.
-        if (!current.is_initialized())
-        {
-            // On the first pass, initialize the iterator. This will generate the first value
-            current = iter_wrapper.begin();
-        }
-        else
-        {
-            // Otherwise pre-increment the iterator
-            ++current;
-        }
+        // // Unfortunately, all of the below steps need the GIL but will grab it individually. To prevent that grab
+        // // the GIL now to avoid dropping and reacquiring multiple times
+        // AcquireGIL gil;
 
-        // Copy the current value into data. No need for the GIL here due to PyHolder
-        data = *current;
+        auto& ctx = runnable::Context::get_runtime_context();
+
+        bool received_value          = false;
+        bool received_stop_iteration = false;
+        while (!received_value && !received_stop_iteration)
+        {
+            try
+            {
+                data           = iter_wrapper.get_next_value();
+                received_value = true;
+
+            } catch (EmptyQueue)
+            {
+                // No value
+                boost::this_fiber::yield();
+            } catch (pybind11::stop_iteration)
+            {
+                DVLOG(10) << ctx.info() << "Received stop_iteration";
+                received_stop_iteration = true;
+            }
+        }
 
         // Return closed if the current iterator is complete
-        return current == PyIteratorIterator() ? channel::Status::closed : channel::Status::success;
+        return received_stop_iteration ? channel::Status::closed : channel::Status::success;
     };
 
     return self.construct_object<PythonSourceComponent<PyHolder>>(name, std::move(get_next));
@@ -367,41 +367,21 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
                                                                           const std::string& name,
                                                                           py::iterator source_iterator)
 {
-    return build_source(self, name, [iterator = PyObjectHolder(std::move(source_iterator))]() mutable {
-        // Check if the iterator has been started already
-        if (!iterator)
-        {
-            LOG(ERROR) << "Cannot have multiple progress engines for the iterator overload. Iterators cannot be "
-                          "duplicated";
-            throw std::runtime_error(
-                "Cannot have multiple progress engines for the iterator overload. Iterators cannot be duplicated");
-        }
-
-        // Move the object into the iterator to ensure its only used once.
-        return py::cast<py::iterator>(py::object(std::move(iterator)));
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(source_iterator)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::IBuilder& self,
                                                                           const std::string& name,
                                                                           py::iterable source_iterable)
 {
-    // Capture the iterator
-    return build_source(self, name, [iterable = PyObjectHolder(std::move(source_iterable))]() {
-        // Turn the iterable into an iterator
-        return py::iter(iterable);
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(source_iterable)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::segment::IBuilder& self,
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
-    // Capture the generator factory
-    return build_source(self, name, [gen_factory = PyObjectHolder(std::move(gen_factory))]() {
-        // Call the generator factory to make a new generator
-        return py::cast<py::iterator>(gen_factory());
-    });
+    return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
