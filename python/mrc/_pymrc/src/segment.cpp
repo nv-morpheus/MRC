@@ -162,16 +162,12 @@ void iterator_thread(py::iterator itr, py::object queue)
     while (wrapped_iter != sentinel)
     {
         {
-            py::gil_scoped_release no_gil;
-            // Copy the current value into the queue. No need for the GIL here due to PyHolder
-            queue.attr("put")(*wrapped_iter);
+            // Copy the current value into the queue.
+            queue.attr("put")((*wrapped_iter).copy_obj());
         }
 
         ++wrapped_iter;
     }
-
-    // Finally signal that we are done
-    queue.attr("put")(py::iterator::sentinel());
 }
 
 class EmptyQueue : public std::exception
@@ -236,23 +232,33 @@ class PyIteratorWrapper
         try
         {
             auto value = m_queue.attr("get_nowait")();
-            if (value.is(py::iterator::sentinel()))
-            {
-                std::cerr << "\n***********\nThrowing stop iteration\n**************\n" << std::flush;
-                throw pybind11::stop_iteration();
-            }
-
             return value;
         } catch (py::error_already_set py_except)
         {
             if (py_except.matches(m_queue_empty))
             {
-                std::cerr << "\n***********\nMatches!\n**************\n" << std::flush;
+                auto is_thread_alive = m_thread.attr("is_alive")().cast<bool>();
+                if (!is_thread_alive)
+                {
+                    throw pybind11::stop_iteration();
+                }
+
                 throw EmptyQueue();
             }
 
-            std::cerr << "\n***********\nNo Match!\n**************\n" << std::flush;
             throw;
+        }
+    }
+
+    ~PyIteratorWrapper()
+    {
+        if (m_thread || m_queue || m_queue_empty)
+        {
+            AcquireGIL gil;
+
+            m_thread      = py::object();
+            m_queue       = py::object();
+            m_queue_empty = py::object();
         }
     }
 
@@ -265,15 +271,20 @@ class PyIteratorWrapper
         auto iter = m_iter_factory();
 
         // Use Python to create/track the thread to allow the interpreter to shutdown safely
+        auto functools_mod = py::module_::import("functools");
         auto queue_mod     = py::module_::import("queue");
         auto threading_mod = py::module_::import("threading");
 
         // We want the python bound version of iterator_thread
         auto segment_mod = py::module_::import("mrc.core.segment");
 
-        m_queue_empty = queue_mod.attr("Empty");
-        m_queue       = queue_mod.attr("Queue")();
-        m_thread = threading_mod.attr("Thread")("target"_a = segment_mod.attr("_iterator_thread"), "daemon"_a = true);
+        m_queue_empty             = queue_mod.attr("Empty");
+        m_queue                   = queue_mod.attr("Queue")();
+        auto iter_thread_fn       = segment_mod.attr("_iterator_thread");
+        auto bound_iter_thread_fn = functools_mod.attr("partial")(iter_thread_fn, "itr"_a = iter, "queue"_a = m_queue);
+
+        m_thread = threading_mod.attr("Thread")("target"_a = bound_iter_thread_fn, "daemon"_a = true);
+        m_thread.attr("start")();
     }
 
     py::object m_thread{};
@@ -297,6 +308,10 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
             try
             {
                 auto next_val = iter_wrapper.get_next_value();
+                if (subscriber.is_subscribed())
+                {
+                    subscriber.on_next(std::move(next_val));
+                }
 
             } catch (EmptyQueue)
             {
@@ -307,11 +322,11 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                 }
             } catch (pybind11::stop_iteration)
             {
-                DVLOG(10) << ctx.info() << "Received stop_iteration";
+                DVLOG(10) << ctx.info() << " Received stop_iteration";
                 received_stop_iteration = true;
             } catch (const std::exception& e)
             {
-                LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
+                LOG(ERROR) << ctx.info() << " Error occurred in source. Error msg: " << e.what();
                 subscriber.on_error(std::current_exception());
                 return;
             }
