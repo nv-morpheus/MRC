@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -232,6 +232,11 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                 if (subscriber.is_subscribed())
                 {
                     subscriber.on_next(std::move(next_val));
+                }
+                else
+                {
+                    DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
+                    break;
                 }
             }
 
