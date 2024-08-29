@@ -210,12 +210,11 @@ class PyIteratorIterator
 
 void iterator_thread(py::iterator itr, py::object queue, py::object exception_queue)
 {
-    py::gil_scoped_acquire gil;
-    PyIteratorIterator wrapped_iter(std::move(itr));
-    PyIteratorIterator sentinel;
-
     try
     {
+        py::gil_scoped_acquire gil;
+        PyIteratorIterator wrapped_iter(std::move(itr));
+        PyIteratorIterator sentinel;
         while (wrapped_iter != sentinel)
         {
             {
