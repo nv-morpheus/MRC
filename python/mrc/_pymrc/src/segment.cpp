@@ -371,12 +371,15 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                                                              const std::string& name,
                                                              PyIteratorWrapper iter_wrapper)
 {
-    auto wrapper = [iter_wrapper = std::move(iter_wrapper)](PyObjectSubscriber& subscriber) mutable {
+    auto wrapper = [src_iter_wrapper = std::move(iter_wrapper)](PyObjectSubscriber& subscriber) mutable {
         auto& ctx = runnable::Context::get_runtime_context();
 
         DVLOG(10) << ctx.info() << " Starting source";
 
-        bool received_stop_iteration = false;
+        // Taking a copy, if the source has pe_count>1 or engines_per_pe>1 we will need an indepdenent copy of the
+        // iterator wrapper
+        PyIteratorWrapper iter_wrapper = src_iter_wrapper;
+        bool received_stop_iteration   = false;
         while (!received_stop_iteration && subscriber.is_subscribed())
         {
             try
