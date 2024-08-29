@@ -256,9 +256,7 @@ class PyIteratorWrapper
           // Move the object into the iterator to ensure its only used once.
           return py::cast<py::iterator>(py::object(std::move(iterator)));
       })
-    {
-        init();
-    }
+    {}
 
     // Create from an iterable
     PyIteratorWrapper(py::iterable source_iterable) :
@@ -266,9 +264,7 @@ class PyIteratorWrapper
           // Turn the iterable into an iterator
           return py::iter(iterable);
       })
-    {
-        init();
-    }
+    {}
 
     // Create from a factory function
     PyIteratorWrapper(py::function gen_factory) :
@@ -276,21 +272,20 @@ class PyIteratorWrapper
           // Call the generator factory to make a new generator
           return py::cast<py::iterator>(gen_factory());
       })
-    {
-        init();
-    }
+    {}
 
     // Create directly
-    PyIteratorWrapper(std::function<py::iterator()> iter_factory) : m_iter_factory(std::move(iter_factory))
-    {
-        init();
-    }
+    PyIteratorWrapper(std::function<py::iterator()> iter_factory) : m_iter_factory(std::move(iter_factory)) {}
 
     py::object get_next_value()
     {
         using namespace py::literals;
-        AcquireGIL gil;
+        if (!m_initialized)
+        {
+            init();
+        }
 
+        AcquireGIL gil;
         try
         {
             auto value = m_queue.attr("get_nowait")();
@@ -322,7 +317,10 @@ class PyIteratorWrapper
         {
             pybind11::gil_scoped_acquire gil;
 
-            stop_python_thread(m_thread);
+            if (m_initialized)
+            {
+                stop_python_thread(m_thread);
+            }
 
             m_exception_queue = py::object();
             m_queue           = py::object();
@@ -357,8 +355,11 @@ class PyIteratorWrapper
         m_thread = threading_mod.attr(
             "Thread")("target"_a = bound_iter_thread_fn, "name"_a = "py_gen_src", "daemon"_a = true);
         m_thread.attr("start")();
+
+        m_initialized = true;
     }
 
+    bool m_initialized = false;
     py::object m_thread{};
     py::object m_exception_queue{};  // replace with exception queue
     py::object m_queue{};
