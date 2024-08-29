@@ -252,7 +252,7 @@ class BuilderProxy
     static void init_module(mrc::segment::IBuilder& self, std::shared_ptr<mrc::modules::SegmentModule> module);
 };
 
-void iterator_thread(pybind11::iterator itr, pybind11::object queue);
+void iterator_thread(pybind11::iterator itr, pybind11::object queue, pybind11::object exception_queue);
 
 #pragma GCC visibility pop
 }  // namespace mrc::pymrc

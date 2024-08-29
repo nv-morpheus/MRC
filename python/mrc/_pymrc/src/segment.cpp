@@ -154,19 +154,27 @@ class PyIteratorIterator
     PyHolder m_value{};
 };
 
-void iterator_thread(py::iterator itr, py::object queue)
+void iterator_thread(py::iterator itr, py::object queue, py::object exception_queue)
 {
     py::gil_scoped_acquire gil;
     PyIteratorIterator wrapped_iter(std::move(itr));
     PyIteratorIterator sentinel;
-    while (wrapped_iter != sentinel)
+    try
     {
+        while (wrapped_iter != sentinel)
         {
-            // Copy the current value into the queue.
-            queue.attr("put")((*wrapped_iter).copy_obj());
-        }
+            {
+                // Copy the current value into the queue.
+                queue.attr("put")((*wrapped_iter).copy_obj());
+            }
 
-        ++wrapped_iter;
+            ++wrapped_iter;
+        }
+    } catch (py::error_already_set py_except)
+    {
+        std::cerr << "\n********************\nCaught python exception : " << py_except.what() << std::flush;
+        exception_queue.attr("put")(py::str(py_except.what()));
+        std::cerr << "\n********************\npushed\n" << std::flush;
     }
 }
 
@@ -227,6 +235,7 @@ class PyIteratorWrapper
 
     py::object get_next_value()
     {
+        using namespace py::literals;
         AcquireGIL gil;
 
         try
@@ -235,11 +244,21 @@ class PyIteratorWrapper
             return value;
         } catch (py::error_already_set py_except)
         {
-            if (py_except.matches(m_queue_empty))
+            if (py_except.matches(m_empty_exception))
             {
-                auto is_thread_alive = m_thread.attr("is_alive")().cast<bool>();
-                if (!is_thread_alive)
+                if (!m_thread.attr("is_alive")().cast<bool>())
                 {
+                    std::cerr << "**************\n************\nqueue is empty, thread has stopped\n" << std::flush;
+                    // Check to see if we got an exception
+                    if (!m_exception_queue.attr("empty")().cast<bool>())
+                    {
+                        std::cerr << "**************\n************\nExcepion queue has an item\n" << std::flush;
+
+                        auto py_err_str = m_exception_queue.attr("get")("block"_a = true, "timeout"_a = 0.5);
+                        std::cerr << "**************\n************\nGot an exception, attempting to cast and re-throw\n"
+                                  << std::flush;
+                        throw std::runtime_error(py_err_str.cast<std::string>());
+                    }
                     throw pybind11::stop_iteration();
                 }
 
@@ -252,13 +271,13 @@ class PyIteratorWrapper
 
     ~PyIteratorWrapper()
     {
-        if (m_thread || m_queue || m_queue_empty)
         {
             AcquireGIL gil;
 
-            m_thread      = py::object();
-            m_queue       = py::object();
-            m_queue_empty = py::object();
+            m_thread          = py::object();
+            m_exception_queue = py::object();
+            m_queue           = py::object();
+            m_empty_exception = py::object();
         }
     }
 
@@ -278,18 +297,21 @@ class PyIteratorWrapper
         // We want the python bound version of iterator_thread
         auto segment_mod = py::module_::import("mrc.core.segment");
 
-        m_queue_empty             = queue_mod.attr("Empty");
+        m_empty_exception         = queue_mod.attr("Empty");
         m_queue                   = queue_mod.attr("Queue")();
+        m_exception_queue         = queue_mod.attr("Queue")();
         auto iter_thread_fn       = segment_mod.attr("_iterator_thread");
-        auto bound_iter_thread_fn = functools_mod.attr("partial")(iter_thread_fn, "itr"_a = iter, "queue"_a = m_queue);
+        auto bound_iter_thread_fn = functools_mod.attr(
+            "partial")(iter_thread_fn, "itr"_a = iter, "queue"_a = m_queue, "exception_queue"_a = m_exception_queue);
 
         m_thread = threading_mod.attr("Thread")("target"_a = bound_iter_thread_fn, "daemon"_a = true);
         m_thread.attr("start")();
     }
 
     py::object m_thread{};
+    py::object m_exception_queue{};  // replace with exception queue
     py::object m_queue{};
-    py::object m_queue_empty{};
+    py::object m_empty_exception{};
     std::function<py::iterator()> m_iter_factory;
 };
 
