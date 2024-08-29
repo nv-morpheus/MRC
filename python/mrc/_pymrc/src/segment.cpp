@@ -294,17 +294,19 @@ class PyIteratorWrapper
         {
             if (py_except.matches(m_empty_exception))
             {
+                // Check to see if we got an exception
+                if (!m_exception_queue.attr("empty")().cast<bool>())
+                {
+                    auto py_err_str = m_exception_queue.attr("get")("block"_a = true, "timeout"_a = 0.5);
+                    throw std::runtime_error(py_err_str.cast<std::string>());
+                }
+
                 if (!m_thread.attr("is_alive")().cast<bool>())
                 {
-                    // Check to see if we got an exception
-                    if (!m_exception_queue.attr("empty")().cast<bool>())
-                    {
-                        auto py_err_str = m_exception_queue.attr("get")("block"_a = true, "timeout"_a = 0.5);
-                        throw std::runtime_error(py_err_str.cast<std::string>());
-                    }
                     throw pybind11::stop_iteration();
                 }
 
+                // if the thread is alive and we don't have an exception, just signal that we don't have any data
                 throw EmptyQueue();
             }
 
