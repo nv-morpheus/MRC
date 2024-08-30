@@ -134,6 +134,12 @@ PYBIND11_MODULE(segment, py_mod)
                                                                         const std::string&,
                                                                         py::function)>(&BuilderProxy::make_source));
 
+    Builder.def("make_subscriber_source",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
+                                                                                const std::string&,
+                                                                                py::function)>(
+                    &BuilderProxy::make_subscriber_source));
+
     Builder.def("make_source_component",
                 static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                                 const std::string&,
