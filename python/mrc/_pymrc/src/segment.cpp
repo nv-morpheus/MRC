@@ -284,7 +284,7 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
             try
             {
                 DVLOG(10) << ctx.info() << " Starting source";
-                AcquireGIL gil;
+                py::gil_scoped_acquire gil;
                 py::object py_sub    = py::cast(subscriber);
                 py::iterator py_iter = py::cast<py::iterator>(m_gen_factory(std::move(py_sub)));
                 PyIteratorWrapper iter_wrapper{std::move(py_iter)};
@@ -294,6 +294,7 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
                     //  Only send if its subscribed. Very important to ensure the object has been moved!
                     if (subscriber.is_subscribed())
                     {
+                        py::gil_scoped_release no_gil;
                         subscriber.on_next(std::move(next_val));
                     }
                     else
