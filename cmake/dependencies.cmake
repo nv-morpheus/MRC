@@ -91,26 +91,18 @@ morpheus_utils_configure_prometheus_cpp()
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================
-  rapids_find_package(benchmark REQUIRED
-    GLOBAL_TARGETS benchmark::benchmark
+  include(${rapids-cmake-dir}/cpm/gbench.cmake)
+  rapids_cpm_gbench(
     BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-
-    # No install set
-    FIND_ARGS
-    CONFIG
   )
 endif()
 
 if(MRC_BUILD_TESTS)
   # google test
   # ===========
-  rapids_find_package(GTest REQUIRED
-    GLOBAL_TARGETS GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
+  include(${rapids-cmake-dir}/cpm/gtest.cmake)
+  rapids_cpm_gtest(
     BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-
-    # No install set
-    FIND_ARGS
-    CONFIG
   )
 endif()
 
