@@ -320,17 +320,6 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
     py::function m_gen_factory{};
 };
 
-std::shared_ptr<mrc::segment::ObjectProperties> build_subscriber_source(mrc::segment::IBuilder& self,
-                                                                        const std::string& name,
-                                                                        py::function gen_factory)
-{
-    // auto wrapper = [gen_factory = std::move(gen_factory)](PyObjectSubscriber& subscriber) mutable {
-
-    // };
-
-    return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
-}
-
 std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::IBuilder& self,
                                                                        const std::string& name,
                                                                        PyIteratorWrapper iter_wrapper)
@@ -386,16 +375,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_subscriber_so
                                                                                      const std::string& name,
                                                                                      py::function gen_factory)
 {
-    return build_subscriber_source(self, name, std::move(gen_factory));
+    return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
 }
-
-// static std::shared_ptr<mrc::segment::ObjectProperties> make_source(
-//     mrc::segment::IBuilder& self,
-//     const std::string& name,
-//     const std::function<void(pymrc::PyObjectSubscriber& sub)>& f)
-// {
-//     return self.construct_object<PythonSource<PyHolder>>(name, f);
-// }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
                                                                                     const std::string& name,
