@@ -175,6 +175,7 @@ target_link_libraries(libmrc
     mrc_protos
     rmm::rmm
     rxcpp::rxcpp
+    nlohmann_json::nlohmann_json
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199
