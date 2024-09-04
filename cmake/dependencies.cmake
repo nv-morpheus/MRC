@@ -86,18 +86,14 @@ if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================
   include(${rapids-cmake-dir}/cpm/gbench.cmake)
-  rapids_cpm_gbench(
-    BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-  )
+  rapids_cpm_gbench(BUILD_STATIC)
 endif()
 
 if(MRC_BUILD_TESTS)
   # google test
   # ===========
   include(${rapids-cmake-dir}/cpm/gtest.cmake)
-  rapids_cpm_gtest(
-    BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-  )
+  rapids_cpm_gtest(BUILD_STATIC)
 endif()
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
