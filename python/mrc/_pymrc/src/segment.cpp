@@ -267,14 +267,6 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
 
     SubscriberFuncWrapper(py::function gen_factory) : PythonSource(build()), m_gen_factory{std::move(gen_factory)} {}
 
-    ~SubscriberFuncWrapper() override
-    {
-        {
-            AcquireGIL gil;
-            PyFuncWrapper kill = std::move(m_gen_factory);
-        }
-    }
-
   private:
     subscriber_fn_t build()
     {
