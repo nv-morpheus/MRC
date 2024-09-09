@@ -271,7 +271,7 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
     {
         {
             AcquireGIL gil;
-            py::object kill = std::move(m_gen_factory);
+            PyFuncWrapper kill = std::move(m_gen_factory);
         }
     }
 
@@ -285,8 +285,8 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
             {
                 DVLOG(10) << ctx.info() << " Starting source";
                 py::gil_scoped_acquire gil;
-                py::object py_sub    = py::cast(subscriber);
-                py::iterator py_iter = py::cast<py::iterator>(m_gen_factory(std::move(py_sub)));
+                py::object py_sub = py::cast(subscriber);
+                auto py_iter      = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
                 PyIteratorWrapper iter_wrapper{std::move(py_iter)};
 
                 for (auto next_val : iter_wrapper)
@@ -317,7 +317,7 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
         };
     }
 
-    py::function m_gen_factory{};
+    PyFuncWrapper m_gen_factory{};
 };
 
 std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::IBuilder& self,
