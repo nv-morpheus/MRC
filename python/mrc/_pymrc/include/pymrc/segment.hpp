@@ -147,11 +147,6 @@ class BuilderProxy
                                                                                   const std::string& name,
                                                                                   pybind11::function gen_factory);
 
-    // static std::shared_ptr<mrc::segment::ObjectProperties> make_source(
-    //     mrc::segment::IBuilder& self,
-    //     const std::string& name,
-    //     const std::function<void(pymrc::PyObjectSubscriber& sub)>& f);
-
     static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::IBuilder& self,
                                                                                  const std::string& name,
                                                                                  pybind11::iterator source_iterator);
