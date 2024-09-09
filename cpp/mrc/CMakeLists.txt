@@ -168,7 +168,6 @@ target_link_libraries(libmrc
     rmm::rmm
     CUDA::cudart
     rxcpp::rxcpp
-    glog::glog
     libcudacxx::libcudacxx
     Boost::fiber
     Boost::context
@@ -176,6 +175,7 @@ target_link_libraries(libmrc
     gRPC::grpc++
     gRPC::grpc
     gRPC::gpr
+    nlohmann_json::nlohmann_json
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199

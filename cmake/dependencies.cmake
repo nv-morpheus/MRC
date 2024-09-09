@@ -48,14 +48,6 @@ morpheus_utils_configure_cccl()
 # =================
 morpheus_utils_configure_rmm()
 
-# gflags
-# ======
-rapids_find_package(gflags REQUIRED
-  GLOBAL_TARGETS gflags
-  BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-  INSTALL_EXPORT_SET ${PROJECT_NAME}-exports
-)
-
 # glog
 # ====
 # - link against shared
@@ -73,9 +65,9 @@ find_path(CUB_INCLUDE_DIRS "cub/cub.cuh"
 # =========
 rapids_find_package(gRPC REQUIRED
   GLOBAL_TARGETS
-  gRPC::address_sorting gRPC::gpr gRPC::grpc gRPC::grpc_unsecure gRPC::grpc++ gRPC::grpc++_alts gRPC::grpc++_error_details gRPC::grpc++_reflection
-  gRPC::grpc++_unsecure gRPC::grpc_plugin_support gRPC::grpcpp_channelz gRPC::upb gRPC::grpc_cpp_plugin gRPC::grpc_csharp_plugin gRPC::grpc_node_plugin
-  gRPC::grpc_objective_c_plugin gRPC::grpc_php_plugin gRPC::grpc_python_plugin gRPC::grpc_ruby_plugin
+    gRPC::address_sorting gRPC::gpr gRPC::grpc gRPC::grpc_unsecure gRPC::grpc++ gRPC::grpc++_alts gRPC::grpc++_error_details gRPC::grpc++_reflection
+    gRPC::grpc++_unsecure gRPC::grpc_plugin_support gRPC::grpcpp_channelz gRPC::upb gRPC::grpc_cpp_plugin gRPC::grpc_csharp_plugin gRPC::grpc_node_plugin
+    gRPC::grpc_objective_c_plugin gRPC::grpc_php_plugin gRPC::grpc_python_plugin gRPC::grpc_ruby_plugin
   BUILD_EXPORT_SET ${PROJECT_NAME}-exports
   INSTALL_EXPORT_SET ${PROJECT_NAME}-exports
 )
@@ -86,13 +78,7 @@ morpheus_utils_configure_rxcpp()
 
 # JSON
 # ======
-rapids_find_package(nlohmann_json REQUIRED
-  GLOBAL_TARGETS nlohmann_json::nlohmann_json
-  BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-  INSTALL_EXPORT_SET ${PROJECT_NAME}-exports
-  FIND_ARGS
-  CONFIG
-)
+morpheus_utils_configure_nlohmann_json()
 
 # prometheus
 # =========
@@ -101,27 +87,15 @@ morpheus_utils_configure_prometheus_cpp()
 if(MRC_BUILD_BENCHMARKS)
   # google benchmark
   # ================
-  rapids_find_package(benchmark REQUIRED
-    GLOBAL_TARGETS benchmark::benchmark
-    BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-
-    # No install set
-    FIND_ARGS
-    CONFIG
-  )
+  include(${rapids-cmake-dir}/cpm/gbench.cmake)
+  rapids_cpm_gbench(BUILD_STATIC)
 endif()
 
 if(MRC_BUILD_TESTS)
   # google test
   # ===========
-  rapids_find_package(GTest REQUIRED
-    GLOBAL_TARGETS GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main
-    BUILD_EXPORT_SET ${PROJECT_NAME}-exports
-
-    # No install set
-    FIND_ARGS
-    CONFIG
-  )
+  include(${rapids-cmake-dir}/cpm/gtest.cmake)
+  rapids_cpm_gtest(BUILD_STATIC)
 endif()
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
