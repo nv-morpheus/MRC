@@ -363,7 +363,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
     return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_subscriber_source(mrc::segment::IBuilder& self,
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_subscriber(mrc::segment::IBuilder& self,
                                                                                      const std::string& name,
                                                                                      py::function gen_factory)
 {
