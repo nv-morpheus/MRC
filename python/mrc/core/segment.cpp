@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,6 +133,12 @@ PYBIND11_MODULE(segment, py_mod)
         static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
                                                                         const std::string&,
                                                                         py::function)>(&BuilderProxy::make_source));
+
+    Builder.def("make_source_subscriber",
+                static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,
+                                                                                const std::string&,
+                                                                                py::function)>(
+                    &BuilderProxy::make_source_subscriber));
 
     Builder.def("make_source_component",
                 static_cast<std::shared_ptr<mrc::segment::ObjectProperties> (*)(mrc::segment::IBuilder&,

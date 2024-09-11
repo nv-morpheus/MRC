@@ -43,6 +43,7 @@
 #include <functional>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -257,6 +258,60 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
 
+class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
+{
+  public:
+    using base_t = mrc::pymrc::PythonSource<PyHolder>;
+    using typename base_t::source_type_t;
+    using typename base_t::subscriber_fn_t;
+
+    SubscriberFuncWrapper(py::function gen_factory) : PythonSource(build()), m_gen_factory{std::move(gen_factory)} {}
+
+  private:
+    subscriber_fn_t build()
+    {
+        return [this](rxcpp::subscriber<source_type_t> subscriber) {
+            auto& ctx = runnable::Context::get_runtime_context();
+
+            try
+            {
+                DVLOG(10) << ctx.info() << " Starting source";
+                py::gil_scoped_acquire gil;
+                py::object py_sub = py::cast(subscriber);
+                auto py_iter      = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
+                PyIteratorWrapper iter_wrapper{std::move(py_iter)};
+
+                for (auto next_val : iter_wrapper)
+                {
+                    //  Only send if its subscribed. Very important to ensure the object has been moved!
+                    if (subscriber.is_subscribed())
+                    {
+                        py::gil_scoped_release no_gil;
+                        subscriber.on_next(std::move(next_val));
+                    }
+                    else
+                    {
+                        DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
+                        break;
+                    }
+                }
+
+            } catch (const std::exception& e)
+            {
+                LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
+
+                subscriber.on_error(std::current_exception());
+                return;
+            }
+            subscriber.on_completed();
+
+            DVLOG(10) << ctx.info() << " Source complete";
+        };
+    }
+
+    PyFuncWrapper m_gen_factory{};
+};
+
 std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::IBuilder& self,
                                                                        const std::string& name,
                                                                        PyIteratorWrapper iter_wrapper)
@@ -306,6 +361,13 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
                                                                           py::function gen_factory)
 {
     return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
+}
+
+std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_subscriber(mrc::segment::IBuilder& self,
+                                                                                     const std::string& name,
+                                                                                     py::function gen_factory)
+{
+    return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
