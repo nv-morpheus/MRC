@@ -150,7 +150,7 @@ struct NvmlState
             m_nvml_handle = std::make_unique<NvmlHandle>();
         } catch (std::runtime_error e)
         {
-            DVLOG(1) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
+            VLOG(1) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
             return;
         }
 
