@@ -69,9 +69,9 @@ def blocking_source():
 
     def build(builder: mrc.Builder):
 
-        def gen_data(subscriber: mrc.Subscriber):
+        def gen_data(subscription: mrc.Subscription):
             yield 1
-            while subscriber.is_subscribed():
+            while subscription.is_subscribed():
                 time.sleep(0.1)
 
         return builder.make_source_subscriber("blocking_source", gen_data)
