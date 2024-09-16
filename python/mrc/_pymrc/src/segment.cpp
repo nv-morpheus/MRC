@@ -277,9 +277,9 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
             {
                 DVLOG(10) << ctx.info() << " Starting source";
                 py::gil_scoped_acquire gil;
-                auto subscription = subscriber.get_subscription();
-                py::object py_sub = py::cast(subscription);
-                auto py_iter      = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
+                PySubscription subscription = subscriber.get_subscription();
+                py::object py_sub           = py::cast(subscription);
+                auto py_iter                = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
                 PyIteratorWrapper iter_wrapper{std::move(py_iter)};
 
                 for (auto next_val : iter_wrapper)
