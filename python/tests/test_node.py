@@ -489,5 +489,26 @@ def test_sink_function_unpacking(single_segment_pipeline, node_type: str, use_pa
     assert on_completed_count == 1
 
 
+def test_invalid_source():
+
+    def segment_init(seg: mrc.Builder):
+
+        def source_gen(a, b):
+            yield a + b
+
+        seg.make_source("my_src", source_gen)
+
+    pipeline = mrc.Pipeline()
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = mrc.Options()
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipeline)
+
+    with pytest.raises(ValueError):
+        executor.start()
+        executor.join()
+
+
 if (__name__ == "__main__"):
     test_launch_options_properties()

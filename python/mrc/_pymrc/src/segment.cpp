@@ -376,7 +376,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
         return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
     }
 
-    throw std::runtime_error("Invalid number of parameters for source generator function. Expected 0 or 1");
+    throw py::value_error("Invalid number of parameters for source generator function. Expected 0 or 1");
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
