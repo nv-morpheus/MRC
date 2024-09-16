@@ -510,5 +510,39 @@ def test_invalid_source():
         executor.join()
 
 
+def test_source_with_bound_value():
+    """
+    This test ensures that the bound values isn't confused with a subscription object
+    """
+    on_next_value = None
+
+    def segment_init(seg: mrc.Builder):
+
+        def source_gen(a):
+            yield a
+
+        bound_gen = functools.partial(source_gen, a=1)
+        source = seg.make_source("my_src", bound_gen)
+
+        def on_next(x: int):
+            nonlocal on_next_value
+            on_next_value = x
+
+        sink = seg.make_sink("sink", on_next)
+        seg.make_edge(source, sink)
+
+    pipeline = mrc.Pipeline()
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = mrc.Options()
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+    executor.join()
+
+    assert on_next_value == 1
+
+
 if (__name__ == "__main__"):
     test_launch_options_properties()
