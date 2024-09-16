@@ -361,14 +361,22 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
-    return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
-}
+    // Determine if the gen_factory is expecting to receive a subscription object
+    auto inspect_mod = py::module::import("inspect");
+    auto signature   = inspect_mod.attr("signature")(gen_factory);
+    auto num_params  = py::len(signature.attr("parameters"));
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_subscriber(mrc::segment::IBuilder& self,
-                                                                                     const std::string& name,
-                                                                                     py::function gen_factory)
-{
-    return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
+    if (num_params == 1)
+    {
+        return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
+    }
+
+    if (num_params == 0)
+    {
+        return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
+    }
+
+    throw std::runtime_error("Invalid number of parameters for source generator function. Expected 0 or 1");
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,

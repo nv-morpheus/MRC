@@ -74,7 +74,7 @@ def blocking_source():
             while subscription.is_subscribed():
                 time.sleep(0.1)
 
-        return builder.make_source_subscriber("blocking_source", gen_data)
+        return builder.make_source("blocking_source", gen_data)
 
     return build
 
