@@ -277,8 +277,9 @@ class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
             {
                 DVLOG(10) << ctx.info() << " Starting source";
                 py::gil_scoped_acquire gil;
-                py::object py_sub = py::cast(subscriber);
-                auto py_iter      = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
+                PySubscription subscription = subscriber.get_subscription();
+                py::object py_sub           = py::cast(subscription);
+                auto py_iter                = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
                 PyIteratorWrapper iter_wrapper{std::move(py_iter)};
 
                 for (auto next_val : iter_wrapper)
@@ -360,14 +361,33 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
-    return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
-}
+    // Determine if the gen_factory is expecting to receive a subscription object
+    auto inspect_mod          = py::module::import("inspect");
+    auto signature            = inspect_mod.attr("signature")(gen_factory);
+    auto params               = signature.attr("parameters");
+    auto num_params           = py::len(params);
+    bool expects_subscription = false;
 
-std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_subscriber(mrc::segment::IBuilder& self,
-                                                                                     const std::string& name,
-                                                                                     py::function gen_factory)
-{
-    return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
+    if (num_params > 0)
+    {
+        // We know there is at least one parameter. Check if the first parameter is a subscription object
+        // Note, when we receive a function that has been bound with `functools.partial(fn, arg1=some_value)`, the
+        // parameter is still visible in the signature of the partial object.
+        auto mrc_mod         = py::module::import("mrc");
+        auto param_values    = params.attr("values")();
+        auto first_param     = py::iter(param_values);
+        auto type_hint       = py::object((*first_param).attr("annotation"));
+        expects_subscription = (type_hint.is(mrc_mod.attr("Subscription")) ||
+                                type_hint.equal(py::str("mrc.Subscription")) ||
+                                type_hint.equal(py::str("Subscription")));
+    }
+
+    if (expects_subscription)
+    {
+        return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
+    }
+
+    return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 
 std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source_component(mrc::segment::IBuilder& self,
