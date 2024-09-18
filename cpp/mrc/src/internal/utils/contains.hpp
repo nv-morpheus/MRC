@@ -29,13 +29,15 @@ bool contains(const ContainerT& container, const KeyT& key)
 }
 
 template <typename C>
-class KeyIterator : public std::iterator<std::bidirectional_iterator_tag,
-                                         typename C::key_type,
-                                         typename C::difference_type,
-                                         typename C::pointer,
-                                         typename C::reference>
+class KeyIterator
 {
   public:
+    using iterator_category = std::bidirectional_iterator_tag; // NOLINT(readability-identifier-naming)
+    using value_type        = C::key_type;
+    using difference_type   = C::difference_type;
+    using pointer           = C::pointer; // NOLINT(readability-identifier-naming)
+    using reference         = C::reference; // NOLINT(readability-identifier-naming)
+
     KeyIterator() = default;
     explicit KeyIterator(typename C::const_iterator it) : m_iter(it) {}
 
