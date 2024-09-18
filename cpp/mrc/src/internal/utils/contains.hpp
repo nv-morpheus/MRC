@@ -32,11 +32,11 @@ template <typename C>
 class KeyIterator
 {
   public:
-    using iterator_category = std::bidirectional_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag; // NOLINT(readability-identifier-naming)
     using value_type        = C::key_type;
     using difference_type   = C::difference_type;
-    using pointer           = C::pointer;
-    using reference         = C::reference;
+    using pointer           = C::pointer; // NOLINT(readability-identifier-naming)
+    using reference         = C::reference; // NOLINT(readability-identifier-naming)
 
     KeyIterator() = default;
     explicit KeyIterator(typename C::const_iterator it) : m_iter(it) {}
