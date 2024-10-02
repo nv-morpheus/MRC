@@ -42,7 +42,7 @@ set(OPTION_PREFIX "MRC")
 
 morpheus_utils_python_configure()
 
-rapids_find_package(mrc REQUIRED)
+morpheus_utils_configure_mrc()
 rapids_find_package(CUDAToolkit REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set
