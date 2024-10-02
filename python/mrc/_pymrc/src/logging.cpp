@@ -88,7 +88,8 @@ void log(const std::string& msg, int py_level, const std::string& filename, int 
         LOG(WARNING) << "Log called prior to calling init_logging, initialized with defaults";
     }
 
-    google::LogMessage(filename.c_str(), line, static_cast<google::LogSeverity>(py_level_to_mrc(py_level))).stream() << msg;
+    google::LogMessage(filename.c_str(), line, static_cast<google::LogSeverity>(py_level_to_mrc(py_level))).stream()
+        << msg;
 }
 
 }  // namespace mrc::pymrc
