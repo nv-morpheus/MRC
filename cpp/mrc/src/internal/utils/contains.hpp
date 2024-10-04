@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,13 +29,15 @@ bool contains(const ContainerT& container, const KeyT& key)
 }
 
 template <typename C>
-class KeyIterator : public std::iterator<std::bidirectional_iterator_tag,
-                                         typename C::key_type,
-                                         typename C::difference_type,
-                                         typename C::pointer,
-                                         typename C::reference>
+class KeyIterator
 {
   public:
+    using iterator_category_t = std::bidirectional_iterator_tag;
+    using value_type          = C::key_type;
+    using difference_type     = C::difference_type;
+    using pointer_t           = C::pointer;
+    using reference_t         = C::reference;
+
     KeyIterator() = default;
     explicit KeyIterator(typename C::const_iterator it) : m_iter(it) {}
 
