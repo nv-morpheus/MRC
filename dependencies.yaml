@@ -149,5 +149,4 @@ dependencies:
               - cuda-cudart-dev=12.5
               - cuda-nvml-dev=12.5
               - cuda-nvrtc-dev=12.5
-              # - cuda-tools=12.5
               - cuda-version=12.5
