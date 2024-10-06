@@ -22,6 +22,7 @@
 #include "mrc/codable/encode.hpp"
 #include "mrc/codable/encoding_options.hpp"
 #include "mrc/codable/types.hpp"
+#include "mrc/memory/literals.hpp"
 #include "mrc/memory/memory_kind.hpp"
 #include "mrc/utils/tuple_utils.hpp"
 
@@ -157,6 +158,8 @@ struct codable_protocol<std::vector<T>>
                           mrc::codable::Encoder2<std::vector<T>>& encoder,
                           const mrc::codable::EncodingOptions& opts)
     {
+        using namespace mrc::memory::literals;
+
         // First put in the size
         mrc::codable::encode2(obj.size(), encoder, opts);
 
@@ -164,7 +167,7 @@ struct codable_protocol<std::vector<T>>
         {
             // Since these are fundamental types, just encode in a single memory block
             encoder.write_descriptor({obj.data(), obj.size() * sizeof(T), memory::memory_kind::host},
-                                     DescriptorKind::Deferred);
+                                     obj.size() * sizeof(T) > 1_MiB ? DescriptorKind::Eager : DescriptorKind::Deferred);
         }
         else
         {

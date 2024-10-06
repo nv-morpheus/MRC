@@ -53,7 +53,7 @@ class Step:
 
     def step(self, x: TrackTimings):
 
-        # y = len(large_object)
+        y = len(large_object)
 
         x.add_timing()
 
@@ -75,7 +75,7 @@ with InputNode() as dag_input:
 print("==============Starting Ray DAG==============")
 ray_start = time.time()
 
-timings = ray.get([dag.execute(TrackTimings(i, np.zeros((0 * 1024 * 1024) // 8))) for i in range(num_msg)])
+timings = ray.get([dag.execute(TrackTimings(i, np.zeros((4 * 1024 * 1024) // 8))) for i in range(num_msg)])
 
 for timing in timings:
     if (timing.id == num_msg - 1):

@@ -196,7 +196,7 @@ class TestExecutor : public ::testing::Test
 
     static std::unique_ptr<pipeline::IPipeline> make_pipeline()
     {
-        const size_t msg_count = 10;
+        const size_t msg_count = 10000;
         using transfer_t       = TrackTimings;
 
         auto pipeline = mrc::make_pipeline();
@@ -714,7 +714,7 @@ TEST_F(TestExecutor, MultiNodeA)
 
     auto& mapping_1 = machine_1.register_pipeline(std::move(pipeline_1));
 
-    mapping_1.get_segment("seg_2").set_enabled(false);
+    // mapping_1.get_segment("seg_2").set_enabled(false);
     mapping_1.get_segment("seg_4").set_enabled(false);
 
     auto start_1 = boost::fibers::async([&] {
@@ -741,7 +741,7 @@ TEST_F(TestExecutor, MultiNodeB)
     auto& mapping_2 = machine_2.register_pipeline(std::move(pipeline_2));
 
     mapping_2.get_segment("seg_1").set_enabled(false);
-    mapping_2.get_segment("seg_3").set_enabled(false);
+    // mapping_2.get_segment("seg_3").set_enabled(false);
 
     auto start_2 = boost::fibers::async([&] {
         machine_2.start();

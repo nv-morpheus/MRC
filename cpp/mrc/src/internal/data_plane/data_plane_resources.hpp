@@ -236,7 +236,7 @@ class DataPlaneResources2
     std::map<std::string, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_address;
     std::map<uint64_t, std::shared_ptr<ucxx::Endpoint>> m_endpoints_by_id;
 
-    std::atomic_size_t m_next_object_id{0};
+    std::atomic_size_t m_next_object_id{1000};
 
     std::unique_ptr<BufferedChannel<std::unique_ptr<runtime::RemoteDescriptor2>>> m_inbound_channel;
 

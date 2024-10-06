@@ -19,6 +19,7 @@
 
 #include "internal/ucx/utils.hpp"
 
+#include <glog/logging.h>
 #include <ucp/api/ucp.h>
 #include <ucxx/api.h>
 
@@ -169,4 +170,28 @@ std::optional<std::shared_ptr<ucxx::MemoryHandle>> RegistrationCache3::lookup(ui
     return this->lookup(reinterpret_cast<const void*>(addr));
 }
 
+std::size_t RegistrationCache3::drop_block(const void* addr, std::size_t bytes)
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+    auto found = m_memory_handle_by_address.find(addr);
+
+    if (found == m_memory_handle_by_address.end())
+    {
+        throw std::runtime_error("Memory block not found");
+    }
+
+    auto handle = found->second;
+
+    m_memory_handle_by_address.erase(addr);
+
+    DCHECK_EQ(handle->getSize(), bytes);
+
+    return handle->getSize();
+}
+
+std::size_t RegistrationCache3::drop_block(uintptr_t addr, std::size_t bytes)
+{
+    return this->drop_block(reinterpret_cast<const void*>(addr), bytes);
+}
 }  // namespace mrc::ucx

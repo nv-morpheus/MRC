@@ -215,6 +215,17 @@ class RegistrationCache3 final
 
     std::optional<std::shared_ptr<ucxx::MemoryHandle>> lookup(uintptr_t addr) const noexcept;
 
+    /**
+     * @brief Deregister a contiguous block of memory from the ucx context and remove the cache entry
+     *
+     * @param addr
+     * @param bytes
+     * @return std::size_t
+     */
+    std::size_t drop_block(const void* addr, std::size_t bytes);
+
+    std::size_t drop_block(uintptr_t addr, std::size_t bytes);
+
   private:
     mutable std::mutex m_mutex;
     const std::shared_ptr<ucxx::Context> m_context;

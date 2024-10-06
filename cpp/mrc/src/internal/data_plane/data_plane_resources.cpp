@@ -258,6 +258,11 @@ DataPlaneResources2::DataPlaneResources2() :
                 //          << dec_message->object_id << ") " << start_tokens << " -> " << dec_message->tokens << " -> "
                 //          << remaining_tokens << ". Destroying.";
 
+                for (const auto& payload : remote_descriptor->encoded_object().payloads())
+                {
+                    m_registration_cache->drop_block(payload.address(), payload.bytes());
+                }
+
                 m_remote_descriptor_by_id.erase(dec_message->object_id);
             }
             else
