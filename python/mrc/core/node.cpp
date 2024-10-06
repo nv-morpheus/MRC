@@ -21,6 +21,7 @@
 
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -67,7 +68,7 @@ PYBIND11_MODULE(node, py_mod)
 
             return node;
         }));
-		
+
     py::class_<mrc::segment::Object<node::ZipBase>,
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
