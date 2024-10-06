@@ -170,19 +170,18 @@ add_library(${PROJECT_NAME}::libmrc ALIAS libmrc)
 
 target_link_libraries(libmrc
   PUBLIC
-    mrc_protos
-    mrc_architect_protos
-    rmm::rmm
-    CUDA::cudart
-    rxcpp::rxcpp
-    glog::glog
-    libcudacxx::libcudacxx
-    Boost::fiber
     Boost::context
+    Boost::fiber
+    CUDA::cudart
     glog::glog
-    gRPC::grpc++
-    gRPC::grpc
     gRPC::gpr
+    gRPC::grpc
+    gRPC::grpc++
+    libcudacxx::libcudacxx
+    mrc_architect_protos
+    mrc_protos
+    rmm::rmm
+    rxcpp::rxcpp
   PRIVATE
     hwloc::hwloc
     prometheus-cpp::core # private in MR !199

@@ -14,20 +14,20 @@
 # limitations under the License.
 
 c_compiler_version:
-  - 11.2
+  - 12.1
 
 cxx_compiler_version:
-  - 11.2
+  - 12.1
 
 cuda_compiler:
   - cuda-nvcc
 
 cuda_compiler_version:
-  - 12.1
+  - 12.5
 
 python:
   - 3.10
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -2
-  - 24.02
+  - 24.10

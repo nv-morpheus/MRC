@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -150,7 +150,7 @@ struct NvmlState
             m_nvml_handle = std::make_unique<NvmlHandle>();
         } catch (std::runtime_error e)
         {
-            LOG(WARNING) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
+            VLOG(1) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
             return;
         }
 
