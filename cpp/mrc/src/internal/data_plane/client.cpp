@@ -25,7 +25,7 @@
 #include "internal/memory/transient_pool.hpp"
 #include "internal/remote_descriptor/manager.hpp"
 #include "internal/runnable/runnable_resources.hpp"
-#include "internal/ucx/common.hpp"
+#include "internal/service.hpp"
 #include "internal/ucx/endpoint.hpp"
 #include "internal/ucx/ucx_resources.hpp"
 #include "internal/ucx/worker.hpp"
@@ -53,7 +53,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::data_plane {
 
@@ -64,13 +63,17 @@ Client::Client(resources::PartitionResourceBase& base,
                control_plane::client::ConnectionsManager& connections_manager,
                memory::TransientPool& transient_pool) :
   resources::PartitionResourceBase(base),
+  Service("data_plane::Client"),
   m_ucx(ucx),
   m_connnection_manager(connections_manager),
   m_transient_pool(transient_pool),
   m_rd_channel(std::make_unique<node::NodeComponent<RemoteDescriptorMessage>>())
 {}
 
-Client::~Client() = default;
+Client::~Client()
+{
+    Service::call_in_destructor();
+}
 
 std::shared_ptr<ucx::Endpoint> Client::endpoint_shared(const InstanceID& id) const
 {

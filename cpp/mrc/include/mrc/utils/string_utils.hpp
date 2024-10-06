@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,23 @@
 
 #pragma once
 
-#include <sstream>
+// for ostringstream
+#include <sstream>  // IWYU pragma: keep
 #include <string>
+#include <vector>
 
 // Concats multiple strings together using ostringstream. Use with MRC_CONCAT_STR("Start [" << my_int << "]")
 #define MRC_CONCAT_STR(strs) ((std::ostringstream&)(std::ostringstream() << strs)).str()
+
+namespace mrc {
+
+/**
+ * @brief Splits a string into an vector of strings based on a delimiter.
+ *
+ * @param str The string to split.
+ * @param delimiter The delimiter to split the string on.
+ * @return std::vector<std::string> vector array of strings.
+ */
+std::vector<std::string> split_string_to_vector(const std::string& str, const std::string& delimiter);
+
+}  // namespace mrc

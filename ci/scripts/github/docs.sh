@@ -39,6 +39,6 @@ rapids-logger "Tarring the docs"
 tar cfj "${WORKSPACE_TMP}/docs.tar.bz" build/docs/html
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-aws s3 cp --no-progress "${WORKSPACE_TMP}/docs.tar.bz" "${ARTIFACT_URL}/docs.tar.bz"
+upload_artifact "${WORKSPACE_TMP}/docs.tar.bz"
 
 rapids-logger "Success"

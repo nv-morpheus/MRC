@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,13 @@
 
 #include "pymrc/utils.hpp"
 
+#include "pymrc/utilities/json_values.hpp"  // for JSONValues
+
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
+#include <pybind11/gil.h>  // for gil_scoped_acquire
 #include <pybind11/pybind11.h>
 
 #include <sstream>
@@ -29,6 +32,21 @@
 namespace mrc::pytests {
 
 namespace py = pybind11;
+
+// Simple test class which uses pybind11's `gil_scoped_acquire` class in the destructor. Needed to repro #362
+struct RequireGilInDestructor
+{
+    ~RequireGilInDestructor()
+    {
+        // Grab the GIL
+        py::gil_scoped_acquire gil;
+    }
+};
+
+pymrc::JSONValues roundtrip_cast(pymrc::JSONValues v)
+{
+    return v;
+}
 
 PYBIND11_MODULE(utils, py_mod)
 {
@@ -47,6 +65,10 @@ PYBIND11_MODULE(utils, py_mod)
             throw std::runtime_error(msg);
         },
         py::arg("msg") = "");
+
+    py::class_<RequireGilInDestructor>(py_mod, "RequireGilInDestructor").def(py::init<>());
+
+    py_mod.def("roundtrip_cast", &roundtrip_cast, py::arg("v"));
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

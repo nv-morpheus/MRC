@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,12 +38,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-#include <array>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <sstream>
-#include <vector>
 
 namespace mrc::pymrc {
 

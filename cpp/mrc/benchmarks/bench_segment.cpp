@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +18,6 @@
 #include "mrc/benchmarking/segment_watcher.hpp"
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/benchmarking/util.hpp"
-#include "mrc/node/rx_node.hpp"
-#include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/pipeline/executor.hpp"
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
@@ -33,7 +30,6 @@
 #include <chrono>
 #include <cstddef>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <set>
 #include <string>

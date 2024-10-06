@@ -39,7 +39,6 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
-#include <string>
 
 using namespace mrc;
 using namespace ucx;

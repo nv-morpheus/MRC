@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,21 @@
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
 #include "mrc/channel/forward.hpp"
+#include "mrc/edge/edge.hpp"  // for Edge
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_channel.hpp"
+#include "mrc/edge/edge_holder.hpp"  // for EdgeHolder
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
+#include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/node/operators/router.hpp"
+#include "mrc/node/operators/with_latest_from.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
@@ -39,10 +45,13 @@
 #include <gtest/internal/gtest-internal.h>
 #include <rxcpp/rx.hpp>  // for observable_member
 
+#include <deque>
 #include <functional>
+#include <initializer_list>
 #include <map>
 #include <memory>
 #include <ostream>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -121,25 +130,73 @@ template <typename T>
 class TestSource : public WritableAcceptor<T>, public ReadableProvider<T>, public SourceChannelOwner<T>
 {
   public:
-    TestSource()
+    TestSource(std::vector<T> values) :
+      m_init_values(values),
+      m_values(std::deque<T>(std::make_move_iterator(values.begin()), std::make_move_iterator(values.end())))
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
+    TestSource(std::initializer_list<T> values) :
+      TestSource(std::vector<T>(std::make_move_iterator(values.begin()), std::make_move_iterator(values.end())))
+    {}
+
+    TestSource(size_t count) : TestSource(gen_values(count)) {}
+
+    TestSource() : TestSource(3) {}
+
     void run()
+    {
+        // Just push them all
+        this->push(m_values.size());
+    }
+
+    void push_one()
+    {
+        this->push(1);
+    }
+
+    void push(size_t count = 1)
     {
         auto output = this->get_writable_edge();
 
-        for (int i = 0; i < 3; i++)
+        for (size_t i = 0; i < count; ++i)
         {
-            if (output->await_write(T(i)) != channel::Status::success)
+            if (output->await_write(std::move(m_values.front())) != channel::Status::success)
             {
-                break;
+                this->release_edge_connection();
+                throw exceptions::MrcRuntimeError("Failed to push values. await_write returned non-success status");
             }
+
+            m_values.pop();
         }
 
-        this->release_edge_connection();
+        if (m_values.empty())
+        {
+            this->release_edge_connection();
+        }
     }
+
+    const std::vector<T>& get_init_values()
+    {
+        return m_init_values;
+    }
+
+  private:
+    static std::vector<T> gen_values(size_t count)
+    {
+        std::vector<T> values;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            values.emplace_back(i);
+        }
+
+        return values;
+    }
+
+    std::vector<T> m_init_values;
+    std::queue<T> m_values;
 };
 
 template <typename T>
@@ -153,15 +210,8 @@ class TestNode : public WritableProvider<T>,
   public:
     TestNode()
     {
-        this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
-    }
-
-    void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
-    {
-        edge::EdgeChannel<T> edge_channel(std::move(channel));
-
-        SinkChannelOwner<T>::do_set_channel(edge_channel);
-        SourceChannelOwner<T>::do_set_channel(edge_channel);
+        SinkChannelOwner<T>::set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
+        SourceChannelOwner<T>::set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
 
     void run()
@@ -175,7 +225,12 @@ class TestNode : public WritableProvider<T>,
         {
             VLOG(10) << "Node got value: " << t;
 
-            output->await_write(std::move(t));
+            if (output->await_write(std::move(t)) != channel::Status::success)
+            {
+                SinkChannelOwner<T>::release_edge_connection();
+                SourceChannelOwner<T>::release_edge_connection();
+                throw exceptions::MrcRuntimeError("Failed to push values. await_write returned non-success status");
+            }
         }
 
         VLOG(10) << "Node exited run";
@@ -203,12 +258,21 @@ class TestSink : public WritableProvider<T>, public ReadableAcceptor<T>, public 
         while (input->await_read(t) == channel::Status::success)
         {
             VLOG(10) << "Sink got value";
+            m_values.emplace_back(std::move(t));
         }
 
         VLOG(10) << "Sink exited run";
 
         this->release_edge_connection();
     }
+
+    const std::vector<T>& get_values()
+    {
+        return m_values;
+    }
+
+  private:
+    std::vector<T> m_values;
 };
 
 template <typename T>
@@ -233,17 +297,40 @@ template <typename T>
 class TestSourceComponent : public GenericSourceComponent<T>
 {
   public:
-    TestSourceComponent() = default;
+    TestSourceComponent(std::vector<T> values) :
+      m_init_values(values),
+      m_values(std::deque<T>(std::make_move_iterator(values.begin()), std::make_move_iterator(values.end())))
+    {}
+
+    TestSourceComponent(std::initializer_list<T> values) :
+      TestSourceComponent(
+          std::vector<T>(std::make_move_iterator(values.begin()), std::make_move_iterator(values.end())))
+    {}
+
+    TestSourceComponent(size_t count) : TestSourceComponent(gen_values(count)) {}
+
+    TestSourceComponent() : TestSourceComponent(3) {}
+
+    const std::vector<T>& get_init_values()
+    {
+        return m_init_values;
+    }
 
   protected:
     channel::Status get_data(T& data) override
     {
-        data = m_value++;
+        // Close after all values have been pulled
+        if (m_values.empty())
+        {
+            return channel::Status::closed;
+        }
+
+        data = std::move(m_values.front());
+        m_values.pop();
 
         VLOG(10) << "TestSourceComponent emmitted value: " << data;
 
-        // Close after 3
-        return m_value >= 3 ? channel::Status::closed : channel::Status::success;
+        return channel::Status::success;
     }
 
     void on_complete() override
@@ -252,7 +339,20 @@ class TestSourceComponent : public GenericSourceComponent<T>
     }
 
   private:
-    T m_value{1};
+    static std::vector<T> gen_values(size_t count)
+    {
+        std::vector<T> values;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            values.emplace_back(i);
+        }
+
+        return values;
+    }
+
+    std::vector<T> m_init_values;
+    std::queue<T> m_values;
 };
 
 template <typename T>
@@ -271,7 +371,7 @@ class TestNodeComponent : public NodeComponent<T, T>
     {
         VLOG(10) << "TestNodeComponent got value: " << t;
 
-        return this->get_writable_edge()->await_write(t + 1);
+        return this->get_writable_edge()->await_write(t);
     }
 
     void do_on_complete() override
@@ -315,9 +415,17 @@ class TestSinkComponent : public WritableProvider<T>
             }));
     }
 
+    const std::vector<T>& get_values()
+    {
+        return m_values;
+    }
+
+  protected:
     channel::Status await_write(int&& t)
     {
         VLOG(10) << "TestSinkComponent got value: " << t;
+
+        m_values.emplace_back(std::move(t));
 
         return channel::Status::success;
     }
@@ -326,6 +434,9 @@ class TestSinkComponent : public WritableProvider<T>
     {
         VLOG(10) << "TestSinkComponent completed";
     }
+
+  private:
+    std::vector<T> m_values;
 };
 
 template <typename T>
@@ -398,6 +509,8 @@ TEST_F(TestEdges, SourceToSink)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToSinkUpcast)
@@ -409,6 +522,15 @@ TEST_F(TestEdges, SourceToSinkUpcast)
 
     source->run();
     sink->run();
+
+    std::vector<float> source_float_vals;
+
+    for (const auto& v : source->get_init_values())
+    {
+        source_float_vals.push_back(v);
+    }
+
+    EXPECT_EQ(source_float_vals, sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToSinkTypeless)
@@ -420,6 +542,8 @@ TEST_F(TestEdges, SourceToSinkTypeless)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToNodeToSink)
@@ -434,6 +558,8 @@ TEST_F(TestEdges, SourceToNodeToSink)
     source->run();
     node->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToNodeToNodeToSink)
@@ -451,6 +577,8 @@ TEST_F(TestEdges, SourceToNodeToNodeToSink)
     node1->run();
     node2->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToSinkMultiFail)
@@ -475,6 +603,8 @@ TEST_F(TestEdges, SourceToSinkComponent)
     mrc::make_edge(*source, *sink);
 
     source->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceComponentToSink)
@@ -485,6 +615,8 @@ TEST_F(TestEdges, SourceComponentToSink)
     mrc::make_edge(*source, *sink);
 
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceComponentToNodeToSink)
@@ -498,6 +630,8 @@ TEST_F(TestEdges, SourceComponentToNodeToSink)
 
     node->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToNodeComponentToSink)
@@ -511,6 +645,8 @@ TEST_F(TestEdges, SourceToNodeComponentToSink)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToNodeToSinkComponent)
@@ -524,6 +660,8 @@ TEST_F(TestEdges, SourceToNodeToSinkComponent)
 
     source->run();
     node->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
@@ -536,6 +674,8 @@ TEST_F(TestEdges, SourceToNodeComponentToSinkComponent)
     mrc::make_edge(*node, *sink);
 
     source->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToRxNodeComponentToSinkComponent)
@@ -556,6 +696,8 @@ TEST_F(TestEdges, SourceToRxNodeComponentToSinkComponent)
     source->run();
 
     EXPECT_TRUE(node->stream_fn_called);
+
+    EXPECT_EQ((std::vector<int>{0, 2, 4}), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
@@ -568,6 +710,8 @@ TEST_F(TestEdges, SourceComponentToNodeToSinkComponent)
     mrc::make_edge(*node, *sink);
 
     node->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToQueueToSink)
@@ -581,6 +725,8 @@ TEST_F(TestEdges, SourceToQueueToSink)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToQueueToNodeToSink)
@@ -597,6 +743,8 @@ TEST_F(TestEdges, SourceToQueueToNodeToSink)
     source->run();
     node->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToQueueToMultiSink)
@@ -613,6 +761,9 @@ TEST_F(TestEdges, SourceToQueueToMultiSink)
     source->run();
     sink1->run();
     sink2->run();
+
+    EXPECT_EQ(source->get_init_values(), sink1->get_values());
+    EXPECT_EQ(std::vector<int>{}, sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToQueueToDifferentSinks)
@@ -632,6 +783,9 @@ TEST_F(TestEdges, SourceToQueueToDifferentSinks)
     node->run();
     sink1->run();
     sink2->run();
+
+    EXPECT_EQ((std::vector<int>{}), sink1->get_values());
+    EXPECT_EQ(source->get_init_values(), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToRouterToSinks)
@@ -648,6 +802,9 @@ TEST_F(TestEdges, SourceToRouterToSinks)
     source->run();
     sink1->run();
     sink2->run();
+
+    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToRouterToDifferentSinks)
@@ -660,6 +817,39 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     mrc::make_edge(*source, *router);
     mrc::make_edge(*router->get_source("odd"), *sink1);
     mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+
+    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+}
+
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
+
+    source->run();
+    sink1->run();
+}
+
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
 
     source->run();
     sink1->run();
@@ -676,6 +866,8 @@ TEST_F(TestEdges, SourceToBroadcastToSink)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSinkFirst)
@@ -689,6 +881,8 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSinkFirst)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSourceFirst)
@@ -702,6 +896,8 @@ TEST_F(TestEdges, SourceToBroadcastTypelessToSinkSourceFirst)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSinkFirst)
@@ -717,6 +913,8 @@ TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSinkFirst)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSourceFirst)
@@ -732,6 +930,8 @@ TEST_F(TestEdges, SourceToMultipleBroadcastTypelessToSinkSourceFirst)
 
     source->run();
     sink->run();
+
+    EXPECT_EQ(source->get_init_values(), sink->get_values());
 }
 
 TEST_F(TestEdges, MultiSourceToMultipleBroadcastTypelessToMultiSink)
@@ -753,6 +953,12 @@ TEST_F(TestEdges, MultiSourceToMultipleBroadcastTypelessToMultiSink)
     source2->run();
     sink1->run();
     sink2->run();
+
+    auto expected = source1->get_init_values();
+    expected.insert(expected.end(), source2->get_init_values().begin(), source2->get_init_values().end());
+
+    EXPECT_EQ(expected, sink1->get_values());
+    EXPECT_EQ(expected, sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastToMultiSink)
@@ -767,6 +973,11 @@ TEST_F(TestEdges, SourceToBroadcastToMultiSink)
     mrc::make_edge(*broadcast, *sink2);
 
     source->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ(source->get_init_values(), sink1->get_values());
+    EXPECT_EQ(source->get_init_values(), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
@@ -781,6 +992,10 @@ TEST_F(TestEdges, SourceToBroadcastToDifferentSinks)
     mrc::make_edge(*broadcast, *sink2);
 
     source->run();
+    sink1->run();
+
+    EXPECT_EQ(source->get_init_values(), sink1->get_values());
+    EXPECT_EQ(source->get_init_values(), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
@@ -795,6 +1010,9 @@ TEST_F(TestEdges, SourceToBroadcastToSinkComponents)
     mrc::make_edge(*broadcast, *sink2);
 
     source->run();
+
+    EXPECT_EQ(source->get_init_values(), sink1->get_values());
+    EXPECT_EQ(source->get_init_values(), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceComponentDoubleToSinkFloat)
@@ -805,6 +1023,8 @@ TEST_F(TestEdges, SourceComponentDoubleToSinkFloat)
     mrc::make_edge(*source, *sink);
 
     sink->run();
+
+    EXPECT_EQ((std::vector<float>{0, 1, 2}), sink->get_values());
 }
 
 TEST_F(TestEdges, CombineLatest)
@@ -824,6 +1044,212 @@ TEST_F(TestEdges, CombineLatest)
     source2->run();
 
     sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{2, 0},
+                  std::tuple<int, float>{2, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, Zip)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>();
+    auto source2 = std::make_shared<node::TestSource<float>>();
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, ZipEarlyClose)
+{
+    // Have one source emit different counts than the other
+    auto source1 = std::make_shared<node::TestSource<int>>(3);
+    auto source2 = std::make_shared<node::TestSource<float>>(4);
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+
+    // Should throw when pushing last value
+    EXPECT_THROW(source2->run(), exceptions::MrcRuntimeError);
+}
+
+TEST_F(TestEdges, ZipLateClose)
+{
+    // Have one source emit different counts than the other
+    auto source1 = std::make_shared<node::TestSource<int>>(4);
+    auto source2 = std::make_shared<node::TestSource<float>>(3);
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, ZipEarlyReset)
+{
+    // Have one source emit different counts than the other
+    auto source1 = std::make_shared<node::TestSource<int>>(4);
+    auto source2 = std::make_shared<node::TestSource<float>>(3);
+
+    auto zip = std::make_shared<node::Zip<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, zip->get_sink<0>());
+    mrc::make_edge(*source2, zip->get_sink<1>());
+    mrc::make_edge(*zip, *sink);
+
+    // After the edges have been made, reset the zip to ensure that it can be kept alive by its children
+    zip.reset();
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 1},
+                  std::tuple<int, float>{2, 2},
+              }));
+}
+
+TEST_F(TestEdges, WithLatestFrom)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>(5);
+    auto source2 = std::make_shared<node::TestSource<float>>(5);
+    auto source3 = std::make_shared<node::TestSource<std::string>>(std::vector<std::string>{"a", "b", "c", "d", "e"});
+
+    auto with_latest = std::make_shared<node::WithLatestFrom<int, float, std::string>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float, std::string>>>();
+
+    mrc::make_edge(*source1, *with_latest->get_sink<0>());
+    mrc::make_edge(*source2, *with_latest->get_sink<1>());
+    mrc::make_edge(*source3, *with_latest->get_sink<2>());
+    mrc::make_edge(*with_latest, *sink);
+
+    // Push 2 from each
+    source2->push(2);
+    source1->push(2);
+    source3->push(2);
+
+    // Push 2 from each
+    source2->push(2);
+    source1->push(2);
+    source3->push(2);
+
+    // Push the rest
+    source3->run();
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float, std::string>>{
+                  std::tuple<int, float, std::string>{0, 1, "a"},
+                  std::tuple<int, float, std::string>{1, 1, "a"},
+                  std::tuple<int, float, std::string>{2, 3, "b"},
+                  std::tuple<int, float, std::string>{3, 3, "b"},
+                  std::tuple<int, float, std::string>{4, 3, "e"},
+              }));
+}
+
+TEST_F(TestEdges, WithLatestFromUnevenPrimary)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>(5);
+    auto source2 = std::make_shared<node::TestSource<float>>(3);
+
+    auto with_latest = std::make_shared<node::WithLatestFrom<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, *with_latest->get_sink<0>());
+    mrc::make_edge(*source2, *with_latest->get_sink<1>());
+    mrc::make_edge(*with_latest, *sink);
+
+    source2->run();
+    source1->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 2},
+                  std::tuple<int, float>{1, 2},
+                  std::tuple<int, float>{2, 2},
+                  std::tuple<int, float>{3, 2},
+                  std::tuple<int, float>{4, 2},
+              }));
+}
+
+TEST_F(TestEdges, WithLatestFromUnevenSecondary)
+{
+    auto source1 = std::make_shared<node::TestSource<int>>(3);
+    auto source2 = std::make_shared<node::TestSource<float>>(5);
+
+    auto with_latest = std::make_shared<node::WithLatestFrom<int, float>>();
+
+    auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
+
+    mrc::make_edge(*source1, *with_latest->get_sink<0>());
+    mrc::make_edge(*source2, *with_latest->get_sink<1>());
+    mrc::make_edge(*with_latest, *sink);
+
+    source1->run();
+    source2->run();
+
+    sink->run();
+
+    EXPECT_EQ(sink->get_values(),
+              (std::vector<std::tuple<int, float>>{
+                  std::tuple<int, float>{0, 0},
+                  std::tuple<int, float>{1, 0},
+                  std::tuple<int, float>{2, 0},
+              }));
 }
 
 TEST_F(TestEdges, SourceToNull)
@@ -995,5 +1421,38 @@ TEST_F(TestEdges, EdgeTapWithSpliceRxComponent)
     sink->run();
 
     EXPECT_TRUE(node->stream_fn_called);
+}
+
+template <typename T>
+class TestEdgeHolder : public edge::EdgeHolder<T>
+{
+  public:
+    bool has_active_connection() const
+    {
+        return this->check_active_connection(false);
+    }
+
+    void call_release_edge_connection()
+    {
+        this->release_edge_connection();
+    }
+
+    void call_init_owned_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_owned_edge(std::move(edge));
+    }
+};
+
+TEST_F(TestEdges, EdgeHolderIsConnected)
+{
+    TestEdgeHolder<int> edge_holder;
+    auto edge = std::make_shared<edge::Edge<int>>();
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_release_edge_connection();
+    EXPECT_FALSE(edge_holder.has_active_connection());
 }
 }  // namespace mrc

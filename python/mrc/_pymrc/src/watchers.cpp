@@ -24,8 +24,8 @@
 #include "mrc/benchmarking/tracer.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
-#include "mrc/node/rx_source.hpp"
 #include "mrc/segment/builder.hpp"
+#include "mrc/segment/object.hpp"
 
 #include <nlohmann/json.hpp>
 #include <pybind11/gil.h>
@@ -34,11 +34,9 @@
 
 #include <cstddef>
 #include <functional>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace mrc::pymrc {
 

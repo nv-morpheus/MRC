@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,14 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
 find_package(pybind11 REQUIRED)
 
+add_subdirectory(coro)
+
 # Keep all source files sorted!!!
 add_executable(test_pymrc
+  test_asyncio_runnable.cpp
   test_codable_pyobject.cpp
   test_executor.cpp
+  test_json_values.cpp
   test_main.cpp
   test_object_cache.cpp
   test_pickle_wrapper.cpp

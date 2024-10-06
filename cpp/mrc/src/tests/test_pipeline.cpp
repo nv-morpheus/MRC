@@ -35,7 +35,9 @@
 #include "mrc/node/queue.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
+#include "mrc/node/rx_sink_base.hpp"  // for RxSinkBase
 #include "mrc/node/rx_source.hpp"
+#include "mrc/node/rx_source_base.hpp"  // for RxSourceBase
 #include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
@@ -67,7 +69,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
-#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -111,7 +112,6 @@ static void run_custom_manager(std::unique_ptr<pipeline::IPipeline> pipeline,
         }
     });
 
-    manager->service_start();
     manager->push_updates(std::move(update));
     manager->service_await_join();
 
@@ -139,7 +139,6 @@ static void run_manager(std::unique_ptr<pipeline::IPipeline> pipeline, bool dela
         }
     });
 
-    manager->service_start();
     manager->push_updates(std::move(update));
     manager->service_await_join();
 

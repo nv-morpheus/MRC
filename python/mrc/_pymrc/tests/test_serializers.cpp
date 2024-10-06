@@ -28,7 +28,6 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
-#include <array>
 #include <ostream>
 #include <stdexcept>
 #include <string>

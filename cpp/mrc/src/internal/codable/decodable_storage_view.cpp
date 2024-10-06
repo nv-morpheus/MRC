@@ -37,7 +37,6 @@
 #include <cstring>
 #include <optional>
 #include <ostream>
-#include <string>
 
 namespace mrc::codable {
 

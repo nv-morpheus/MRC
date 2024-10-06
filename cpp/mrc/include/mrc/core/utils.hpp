@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -60,9 +61,12 @@ std::set<KeyT> extract_keys(const std::map<KeyT, ValT>& stdmap)
 class Unwinder
 {
   public:
-    explicit Unwinder(std::function<void()> unwind_fn) : m_unwind_fn(std::move(unwind_fn)) {}
+    explicit Unwinder(std::function<void()> unwind_fn) :
+      m_unwind_fn(std::move(unwind_fn)),
+      m_ctor_exception_count(std::uncaught_exceptions())
+    {}
 
-    ~Unwinder()
+    ~Unwinder() noexcept(false)
     {
         if (!!m_unwind_fn)
         {
@@ -71,8 +75,14 @@ class Unwinder
                 m_unwind_fn();
             } catch (...)
             {
-                LOG(ERROR) << "Fatal error during unwinder function";
-                std::terminate();
+                if (std::uncaught_exceptions() > m_ctor_exception_count)
+                {
+                    LOG(ERROR) << "Error occurred during unwinder function, but another exception is active.";
+                    std::terminate();
+                }
+
+                LOG(ERROR) << "Error occurred during unwinder function. Rethrowing";
+                throw;
             }
         }
     }
@@ -92,6 +102,9 @@ class Unwinder
     }
 
   private:
+    // Stores the number of active exceptions during creation. If the number of active exceptions during destruction is
+    // greater, we do not throw and log error and terminate
+    int m_ctor_exception_count;
     std::function<void()> m_unwind_fn;
 };
 

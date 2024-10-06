@@ -20,6 +20,7 @@
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/edge/forward.hpp"
+#include "mrc/utils/macros.hpp"
 
 #include <memory>
 
@@ -89,6 +90,24 @@ class EdgeChannel
     {
         CHECK(m_channel) << "Cannot create an EdgeChannel from an empty pointer";
     }
+
+    EdgeChannel(EdgeChannel&& other) : m_channel(std::move(other.m_channel)) {}
+
+    EdgeChannel& operator=(EdgeChannel&& other)
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        m_channel = std::move(other.m_channel);
+
+        return *this;
+    }
+
+    // This should not be copyable because it requires passing in a unique_ptr
+    DELETE_COPYABILITY(EdgeChannel);
+
     virtual ~EdgeChannel() = default;
 
     [[nodiscard]] std::shared_ptr<EdgeChannelReader<T>> get_reader() const

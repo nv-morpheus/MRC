@@ -39,10 +39,8 @@
 #include <glog/logging.h>
 #include <rxcpp/rx.hpp>
 
-#include <map>
 #include <optional>
 #include <utility>
-#include <vector>
 
 namespace mrc::pubsub {
 

@@ -33,11 +33,9 @@
 #include <rxcpp/rx.hpp>
 
 #include <atomic>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;

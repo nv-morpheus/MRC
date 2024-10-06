@@ -1,0 +1,152 @@
+# Dependency list for https://github.com/rapidsai/dependency-file-generator
+files:
+  all:
+    output: conda
+    matrix:
+      cuda: ["12.5"]
+      arch: [x86_64]
+    includes:
+      - build
+      - checks
+      - developer_productivity
+      - code_style
+      - testing
+      - benchmarking
+      - ci
+      - examples
+      - documentation
+      - python
+      - cudatoolkit
+
+  ci:
+    output: conda
+    matrix:
+      cuda: ["12.5"]
+      arch: [x86_64]
+    includes:
+      - build
+      - code_style
+      - testing
+      - benchmarking
+      - ci
+      - documentation
+      - python
+      - cudatoolkit
+
+  checks:
+    output: none
+    includes:
+      - checks
+
+channels:
+  - conda-forge
+  - rapidsai
+  - rapidsai-nightly
+  - nvidia
+
+dependencies:
+
+  build:
+    common:
+      - output_types: [conda]
+        packages:
+          - boost-cpp=1.84
+          - ccache
+          - cmake=3.27
+          - cuda-nvcc
+          - cxx-compiler
+          - glog>=0.7.1,<0.8
+          - gtest=1.14
+          - gxx=12.1
+          - libgrpc=1.62.2
+          - libhwloc=2.9.2
+          - librmm=24.10
+          - libxml2=2.11.6
+          - ninja=1.11
+          - nlohmann_json=3.11
+          - numactl=2.0.18
+          - pkg-config=0.29
+          - pybind11-stubgen=0.10
+          - scikit-build=0.17
+          - ucx=1.15
+
+  checks:
+    common:
+      - output_types: [conda]
+        packages:
+          - pre-commit
+
+  developer_productivity:
+    common:
+      - output_types: [conda]
+        packages:
+          - bash-completion
+          - clang-tools=16
+          - clang=16
+          - clangdev=16
+          - clangxx=16
+          - flake8
+          - gdb
+          - libclang-cpp=16
+          - libclang=16
+          - llvmdev=16
+          - yapf
+
+  code_style:
+    common:
+      - output_types: [conda]
+        packages:
+          - include-what-you-use=0.20
+
+  testing:
+    common:
+      - output_types: [conda]
+        packages:
+          - pytest
+          - pytest-asyncio
+          - pytest-timeout
+
+  benchmarking:
+    common:
+      - output_types: [conda]
+        packages:
+          - benchmark=1.8.3
+
+  ci:
+    common:
+      - output_types: [conda]
+        packages:
+          - codecov=2.1
+          - gcovr=5.2
+          - pre-commit
+
+  examples:
+    common:
+      - output_types: [conda]
+        packages:
+          - numpy=1.24
+
+  documentation:
+    common:
+      - output_types: [conda]
+        packages:
+          - doxygen=1.9.2
+          - python-graphviz
+
+  python:
+    common:
+      - output_types: [conda]
+        packages:
+          - python=3.10
+
+  cudatoolkit:
+    specific:
+      - output_types: [conda]
+        matrices:
+          - matrix:
+              cuda: "12.5"
+            packages:
+              - cuda-cudart-dev=12.5
+              - cuda-nvml-dev=12.5
+              - cuda-nvrtc-dev=12.5
+              - cuda-version=12.5

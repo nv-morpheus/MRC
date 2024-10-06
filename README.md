@@ -38,8 +38,8 @@ MRC includes both Python and C++ bindings and supports installation via [conda](
 
 ### Prerequisites
 
-- Pascal architecture (Compute capability 6.0) or better
-- NVIDIA driver `450.80.02` or higher
+- Volta architecture (Compute capability 7.0) or better
+- [CUDA 12.1](https://developer.nvidia.com/cuda-12-1-0-download-archive)
 - [conda or miniconda](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html)
 - If using Docker:
   - [Docker](https://docs.docker.com/get-docker/)
@@ -118,7 +118,7 @@ cd $MRC_ROOT
 #### Create MRC Conda Environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc-dev --file $MRC_ROOT/ci/conda/environments/dev_env.yml
+conda env create -n mrc-dev --file $MRC_ROOT/conda/environments/all_cuda-125_arch-x86_64.yaml
 conda activate mrc-dev
 ```
 <!-- omit in toc -->
@@ -151,12 +151,16 @@ pytest $MRC_ROOT/python
 ### Docker Installation
 A Dockerfile is provided at `$MRC_ROOT` and can be built with
 ```bash
-docker build -t mrc:latest .
+DOCKER_BUILDKIT=1 docker build -t mrc:latest .
 ```
 To run the container
 ```bash
-docker run --gpus all --rm -it mrc:latest /bin/bash
+docker run --gpus all --cap-add=sys_nice -v $PWD:/work --rm -it mrc:latest /bin/bash
 ```
+
+> **Note:**
+> Users wishing to debug MRC in a Docker container should add the following to the `docker run` command:
+> `--cap-add=SYS_PTRACE`
 
 ## Quickstart Guide
 

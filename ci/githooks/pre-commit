@@ -41,6 +41,5 @@ export CHANGED_FILES=$(GIT_DIFF_ARGS="--cached --name-only" get_modified_files)
 
 if [[ "${CHANGED_FILES}" != "" ]]; then
    run_and_check "python3 ci/scripts/copyright.py --git-diff-staged --update-current-year --verify-apache-v2 --git-add"
-   run_and_check "ci/scripts/python_checks.sh"
    SKIP_CLANG_TIDY=1 SKIP_IWYU=1 run_and_check "ci/scripts/cpp_checks.sh"
 fi

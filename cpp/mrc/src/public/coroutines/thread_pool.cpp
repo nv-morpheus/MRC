@@ -39,7 +39,6 @@
 #include "mrc/coroutines/thread_pool.hpp"
 
 #include <cstddef>
-#include <future>
 #include <iostream>
 #include <stdexcept>
 

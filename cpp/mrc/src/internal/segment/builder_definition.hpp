@@ -135,8 +135,11 @@ class BuilderDefinition : public IBuilder
     // Local methods
     bool has_object(const std::string& name) const;
 
-    void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
-    void ns_pop();
+    std::string module_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
+    std::string module_pop(std::shared_ptr<mrc::modules::SegmentModule> smodule);
+
+    std::string ns_push(const std::string& name);
+    std::string ns_pop(const std::string& name);
 
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;

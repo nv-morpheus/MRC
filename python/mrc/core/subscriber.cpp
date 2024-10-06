@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +25,10 @@
 
 #include <pybind11/attr.h>
 #include <pybind11/functional.h>  // IWYU pragma: keep
-#include <pybind11/gil.h>         // IWYU pragma: keep(for call_guard)
+#include <pybind11/gil.h>         // IWYU pragma: keep
 #include <pybind11/pybind11.h>
+#include <rxcpp/rx.hpp>
 
-#include <array>
 #include <memory>
 #include <sstream>
 
@@ -50,7 +50,8 @@ PYBIND11_MODULE(subscriber, py_mod)
     // Common must be first in every module
     pymrc::import(py_mod, "mrc.core.common");
 
-    py::class_<PySubscription>(py_mod, "Subscription");
+    py::class_<PySubscription>(py_mod, "Subscription")
+        .def("is_subscribed", &SubscriptionProxy::is_subscribed, py::call_guard<py::gil_scoped_release>());
 
     py::class_<PyObjectObserver>(py_mod, "Observer")
         .def("on_next",

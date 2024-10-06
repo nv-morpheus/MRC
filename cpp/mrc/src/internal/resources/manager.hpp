@@ -24,25 +24,29 @@
 
 #include "mrc/types.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>
+// IWYU pragma: no_include "internal/memory/device_resources.hpp"
+// IWYU pragma: no_include "internal/network/network_resources.hpp"
+// IWYU pragma: no_include "internal/ucx/ucx_resources.hpp"
 
 namespace mrc::network {
-class NetworkResources;
+class NetworkResources;  // IWYU pragma: keep
 }  // namespace mrc::network
 namespace mrc::control_plane {
 class ControlPlaneResources;
 }  // namespace mrc::control_plane
 namespace mrc::memory {
-class DeviceResources;
+class DeviceResources;  // IWYU pragma: keep
 }  // namespace mrc::memory
 namespace mrc::system {
 class ThreadingResources;
 }  // namespace mrc::system
 namespace mrc::ucx {
-class UcxResources;
+class UcxResources;  // IWYU pragma: keep
 }  // namespace mrc::ucx
 namespace mrc::runtime {
 class Runtime;
@@ -57,6 +61,8 @@ class Manager final : public system::SystemProvider
     // Manager(std::unique_ptr<system::ThreadingResources> resources);
     ~Manager() override;
 
+    std::size_t runtime_id() const;
+
     static Manager& get_resources();
     static PartitionResources& get_partition();
 
@@ -67,6 +73,8 @@ class Manager final : public system::SystemProvider
 
   private:
     Future<void> shutdown();
+
+    const size_t m_runtime_id;  // unique id for this runtime
 
     const std::unique_ptr<system::ThreadingResources> m_threading;
     std::vector<runnable::RunnableResources> m_runnable;  // one per host partition
@@ -82,6 +90,7 @@ class Manager final : public system::SystemProvider
     // which must be destroyed before all other
     std::vector<std::optional<network::NetworkResources>> m_network;  // one per flattened partition
 
+    static std::atomic_size_t s_id_counter;
     static thread_local PartitionResources* m_thread_partition;
     static thread_local Manager* m_thread_resources;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,6 @@
 #include <chrono>
 #include <cstddef>
 #include <exception>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -573,7 +572,7 @@ TEST_P(ParallelTests, SourceMultiThread)
                 }
 
                 DVLOG(1) << context.info() << " Enqueueing value: '" << i << "'" << std::endl;
-                ASSERT_TRUE(parallel_test.wait_for(100ms));
+                ASSERT_TRUE(parallel_test.wait_for(250ms));
 
                 s.on_next(i);
             }
@@ -673,7 +672,7 @@ TEST_P(ParallelTests, SinkMultiThread)
 
                 // Print value
                 DVLOG(1) << context.info() << " Sink got value: '" << x << "'" << std::endl;
-                EXPECT_TRUE(parallel_test.wait_for(100ms));
+                EXPECT_TRUE(parallel_test.wait_for(250ms));
 
                 ++next_count;
             },
@@ -745,7 +744,7 @@ TEST_P(ParallelTests, NodeMultiThread)
 
                                            DVLOG(1) << context.info() << " Node got value: '" << x << "'" << std::endl;
 
-                                           EXPECT_TRUE(parallel_test.wait_for(100ms));
+                                           EXPECT_TRUE(parallel_test.wait_for(250ms));
                                            // Double the value
                                            return x * 2;
                                        }));

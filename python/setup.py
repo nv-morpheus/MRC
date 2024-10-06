@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) 2018-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,20 +22,16 @@ import versioneer
 ##############################################################################
 # - Python package generation ------------------------------------------------
 
-setup(
-    name="mrc",
-    description="mrc",
-    version=versioneer.get_version(),
-    classifiers=[
-        "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.10"
-    ],
-    author="NVIDIA Corporation",
-    setup_requires=[],
-    include_package_data=True,
-    packages=find_namespace_packages(include=["mrc*"], exclude=["tests", "mrc.core.segment.module_definitions"]),
-    package_data={
-        "mrc": ["_pymrc/*.so"]  # Add the pymrc library for the root package
-    },
-    license="Apache",
-    cmdclass=versioneer.get_cmdclass(),
-    zip_safe=False)
+setup(name="mrc",
+      description="mrc",
+      version=versioneer.get_version(),
+      classifiers=[
+          "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.10"
+      ],
+      author="NVIDIA Corporation",
+      setup_requires=[],
+      include_package_data=True,
+      packages=find_namespace_packages(include=["mrc*"], exclude=["tests", "mrc.core.segment.module_definitions"]),
+      license="Apache",
+      cmdclass=versioneer.get_cmdclass(),
+      zip_safe=False)

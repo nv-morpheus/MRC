@@ -19,9 +19,10 @@
 
 #include "internal/system/fiber_manager.hpp"
 
+#include "mrc/types.hpp"
+
 #include <boost/fiber/future/future.hpp>
 
-#include <map>
 #include <vector>
 
 namespace mrc::system {

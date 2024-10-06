@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../external/utili
 include(morpheus_utils/load)
 
 project(mrc-quickstart
-  VERSION 23.07.00
+  VERSION 24.10.00
   LANGUAGES C CXX
 )
 
@@ -42,7 +42,7 @@ set(OPTION_PREFIX "MRC")
 
 morpheus_utils_python_configure()
 
-rapids_find_package(mrc REQUIRED)
+morpheus_utils_configure_mrc()
 rapids_find_package(CUDAToolkit REQUIRED)
 
 # To make it easier for CI to find output files, set the default executable suffix to .x if not set

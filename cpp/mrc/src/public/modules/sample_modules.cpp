@@ -26,10 +26,8 @@
 
 #include <glog/logging.h>
 
-#include <map>
 #include <memory>
 #include <ostream>
-#include <vector>
 
 namespace mrc::modules {
 
