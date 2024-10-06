@@ -1,3 +1,33 @@
+<!--
+SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+# MRC 24.06.00 (03 Jul 2024)
+
+## 🚀 New Features
+
+- Add JSONValues container for holding Python values as JSON objects if possible, and as pybind11::object otherwise ([#455](https://github.com/nv-morpheus/MRC/pull/455)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 🛠️ Improvements
+
+- resolve rapids-dependency-file-generator warning ([#482](https://github.com/nv-morpheus/MRC/pull/482)) [@jameslamb](https://github.com/jameslamb)
+- Downgrade doxygen to match Morpheus ([#469](https://github.com/nv-morpheus/MRC/pull/469)) [@cwharris](https://github.com/cwharris)
+- Consolidate redundant split_string_to_array, split_string_on &amp; split_path methods ([#465](https://github.com/nv-morpheus/MRC/pull/465)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Add pybind11 type caster for JSONValues ([#458](https://github.com/nv-morpheus/MRC/pull/458)) [@dagardner-nv](https://github.com/dagardner-nv)
+
 # MRC 24.03.01 (16 Apr 2024)
 
 ## 🐛 Bug Fixes

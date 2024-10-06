@@ -20,6 +20,7 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
