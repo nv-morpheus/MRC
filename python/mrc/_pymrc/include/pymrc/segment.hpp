@@ -19,8 +19,6 @@
 
 #include "pymrc/types.hpp"
 
-#include "mrc/edge/edge_readable.hpp"
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/segment/builder.hpp"  // IWYU pragma: keep
 
 #include <pybind11/functional.h>  // IWYU pragma: keep
@@ -31,7 +29,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <variant>
 
 namespace mrc::modules {
 class SegmentModule;

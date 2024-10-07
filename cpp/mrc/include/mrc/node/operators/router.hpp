@@ -249,7 +249,7 @@ class TaggedRouter : public Router<KeyT, std::pair<KeyT, T>, T>
 template <typename KeyT, typename InputT>
 class DynamicRouterComponent : public ForwardingWritableProvider<InputT>,
                                public MultiWritableAcceptor<KeyT, InputT>,
-                               public DynamicNodeParent<edge::IWritableAcceptor<InputT>>
+                               public HomogeneousNodeParent<edge::IWritableAcceptor<InputT>>
 {
   public:
     using this_t   = DynamicRouterComponent<KeyT, InputT>;
@@ -345,7 +345,7 @@ template <typename KeyT, typename InputT>
 class StaticRouterBase : public MultiWritableAcceptor<KeyT, InputT>,
                          public MultiReadableProvider<KeyT, InputT>,
                          public MultiSourceChannelOwner<KeyT, InputT>,
-                         public DynamicNodeParent<RouterDownstreamNode<InputT>>
+                         public HomogeneousNodeParent<RouterDownstreamNode<InputT>>
 {
   public:
     using this_t   = StaticRouterBase<KeyT, InputT>;

@@ -32,27 +32,20 @@
 namespace mrc::node {
 
 template <typename ChildT>
-class DynamicNodeParent
+class HomogeneousNodeParent
 {
   public:
     using child_node_t = ChildT;
 
-    void add_child_sync_callback(std::function<void()> callback) {}
-
     virtual std::map<std::string, std::reference_wrapper<child_node_t>> get_children_refs(
         std::optional<std::string> child_name = std::nullopt) const = 0;
-
-  protected:
-    void children_updated() {}
 };
 
 template <typename... TypesT>
-class NodeParent
+class HeterogeneousNodeParent
 {
   public:
     using child_types_t = std::tuple<TypesT...>;
-
-    void add_child_sync_callback(std::function<void()> callback) {}
 
     virtual std::tuple<std::pair<std::string, std::reference_wrapper<TypesT>>...> get_children_refs() const = 0;
 };
