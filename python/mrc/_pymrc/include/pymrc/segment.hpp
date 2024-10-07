@@ -215,12 +215,8 @@ class BuilderProxy
                                                                                pybind11::args operators);
 
     static void make_edge(mrc::segment::IBuilder& self,
-                          std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
-                                       std::shared_ptr<mrc::edge::IWritableAcceptorBase>,
-                                       std::shared_ptr<mrc::edge::IReadableProviderBase>> source,
-                          std::variant<std::shared_ptr<mrc::segment::ObjectProperties>,
-                                       std::shared_ptr<mrc::edge::IWritableProviderBase>,
-                                       std::shared_ptr<mrc::edge::IReadableAcceptorBase>> sink);
+                          std::shared_ptr<mrc::segment::ObjectProperties> source,
+                          std::shared_ptr<mrc::segment::ObjectProperties> sink);
 
     static void splice_edge(mrc::segment::IBuilder& self,
                             std::string& source,

@@ -45,48 +45,50 @@
 
 namespace mrc::node {
 
+template <typename... TypesT>
 class ZipBase
+{};
+
+template <typename... InputT, typename OutputT>
+class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>,
+                                                public NodeParent<edge::IWritableProvider<InputT>...>
 {
   public:
-    virtual ~ZipBase() = default;
-};
+    using input_tuple_t = std::tuple<InputT...>;
+    using output_t      = OutputT;
 
-template <typename... TypesT>
-class Zip : public ZipBase,
-            public WritableAcceptor<std::tuple<TypesT...>>,
-            public NodeParent<edge::IWritableProvider<TypesT>...>
-{
+  private:
     template <typename T>
     using queue_t = BufferedChannel<T>;
     template <typename T>
     using wrapped_queue_t   = std::unique_ptr<queue_t<T>>;
-    using queues_tuple_type = std::tuple<wrapped_queue_t<TypesT>...>;
-    using output_t          = std::tuple<TypesT...>;
+    using queues_tuple_type = std::tuple<wrapped_queue_t<InputT>...>;
 
     template <std::size_t... Is>
-    static auto build_ingress(Zip* self, std::index_sequence<Is...> /*unused*/)
+    static auto build_ingress(ZipBase* self, std::index_sequence<Is...> /*unused*/)
     {
         return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
     }
 
     static auto build_queues(size_t channel_size)
     {
-        return std::make_tuple(std::make_unique<queue_t<TypesT>>(channel_size)...);
+        return std::make_tuple(std::make_unique<queue_t<InputT>>(channel_size)...);
     }
 
     template <std::size_t... Is>
-    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...>
-    build_child_pairs(Zip* self, std::index_sequence<Is...> /*unused*/)
+    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...>
+    build_child_pairs(ZipBase* self, std::index_sequence<Is...> /*unused*/)
     {
-        return std::make_tuple(std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(self->get_sink<Is>()))...);
+        return std::make_tuple(
+            std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(*self->get_sink<Is>()))...);
     }
 
     template <std::size_t I = 0>
-    channel::Status tuple_pop_each(queues_tuple_type& queues_tuple, output_t& output_tuple)
+    channel::Status tuple_pop_each(queues_tuple_type& queues_tuple, input_tuple_t& output_tuple)
     {
         channel::Status status = std::get<I>(queues_tuple)->await_read(std::get<I>(output_tuple));
 
-        if constexpr (I + 1 < sizeof...(TypesT))
+        if constexpr (I + 1 < sizeof...(InputT))
         {
             // Iterate to the next index
             channel::Status inner_status = tuple_pop_each<I + 1>(queues_tuple, output_tuple);
@@ -99,63 +101,63 @@ class Zip : public ZipBase,
     }
 
   public:
-    Zip(size_t channel_size = channel::default_channel_size()) :
-      m_queues(build_queues(channel_size)),
-      m_upstream_holders(build_ingress(const_cast<Zip*>(this), std::index_sequence_for<TypesT...>{}))
+    ZipBase(size_t max_outstanding = channel::default_channel_size()) :
+      m_queues(build_queues(max_outstanding)),
+      m_upstream_holders(build_ingress(const_cast<ZipBase*>(this), std::index_sequence_for<InputT...>{}))
     {
         // Must be sure to set any array values
         m_queue_counts.fill(0);
     }
 
-    ~Zip() override = default;
+    virtual ~ZipBase() = default;
 
     template <size_t N>
-    edge::IWritableProvider<NthTypeOf<N, TypesT...>>& get_sink() const
+    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const
     {
-        return *std::get<N>(m_upstream_holders);
+        return std::get<N>(m_upstream_holders);
     }
 
-    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...> get_children_refs()
+    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...> get_children_refs()
         const override
     {
-        return build_child_pairs(const_cast<Zip*>(this), std::index_sequence_for<TypesT...>{});
+        return build_child_pairs(const_cast<ZipBase*>(this), std::index_sequence_for<InputT...>{});
     }
 
   protected:
     template <size_t N>
-    class Upstream : public WritableProvider<NthTypeOf<N, TypesT...>>
+    class Upstream : public WritableProvider<NthTypeOf<N, InputT...>>
     {
-        using upstream_t = NthTypeOf<N, TypesT...>;
+        using upstream_t = NthTypeOf<N, InputT...>;
 
       public:
-        Upstream(Zip& parent)
+        Upstream(ZipBase& parent)
         {
             this->init_owned_edge(std::make_shared<InnerEdge>(parent));
         }
 
       private:
-        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, TypesT...>>
+        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, InputT...>>
         {
           public:
-            InnerEdge(Zip& parent) : m_parent(parent) {}
+            InnerEdge(ZipBase& parent) : m_parent(parent) {}
             ~InnerEdge()
             {
                 m_parent.edge_complete<N>();
             }
 
-            virtual channel::Status await_write(upstream_t&& data)
+            channel::Status await_write(upstream_t&& data) override
             {
                 return m_parent.upstream_await_write<N>(std::move(data));
             }
 
           private:
-            Zip& m_parent;
+            ZipBase& m_parent;
         };
     };
 
   private:
     template <size_t N>
-    channel::Status upstream_await_write(NthTypeOf<N, TypesT...> value)
+    channel::Status upstream_await_write(NthTypeOf<N, InputT...> value)
     {
         // Push before locking so we dont deadlock
         auto push_status = std::get<N>(m_queues)->await_write(std::move(value));
@@ -192,14 +194,14 @@ class Zip : public ZipBase,
         if (all_queues_have_value)
         {
             // For each tuple, pop a value off
-            std::tuple<TypesT...> new_val;
+            std::tuple<InputT...> new_val;
 
             auto channel_status = tuple_pop_each(m_queues, new_val);
 
             DCHECK_EQ(channel_status, channel::Status::success) << "Queues returned failed status";
 
             // Push the new value
-            status = this->get_writable_edge()->await_write(std::move(new_val));
+            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
 
             m_pull_count++;
         }
@@ -238,7 +240,7 @@ class Zip : public ZipBase,
 
         m_completions++;
 
-        if (m_completions == sizeof...(TypesT))
+        if (m_completions == sizeof...(InputT))
         {
             // Warn on any left over values
             auto left_over_messages = std::transform_reduce(m_queue_counts.begin(),
@@ -262,9 +264,11 @@ class Zip : public ZipBase,
                                       while (q->await_read(value) == channel::Status::success) {}
                                   });
 
-            WritableAcceptor<std::tuple<TypesT...>>::release_edge_connection();
+            WritableAcceptor<output_t>::release_edge_connection();
         }
     }
+
+    virtual output_t convert_value(input_tuple_t&& data) = 0;
 
     mutable Mutex m_mutex;
 
@@ -276,7 +280,7 @@ class Zip : public ZipBase,
     size_t m_completions{0};
 
     // Holds the number of values pushed to each queue
-    std::array<size_t, sizeof...(TypesT)> m_queue_counts;
+    std::array<size_t, sizeof...(InputT)> m_queue_counts;
 
     // The number of messages pulled off the queue
     size_t m_pull_count{0};
@@ -285,7 +289,62 @@ class Zip : public ZipBase,
     queues_tuple_type m_queues;
 
     // Upstream edges
-    std::tuple<std::shared_ptr<WritableProvider<TypesT>>...> m_upstream_holders;
+    std::tuple<std::shared_ptr<WritableProvider<InputT>>...> m_upstream_holders;
+};
+
+template <typename...>
+class Zip;
+
+template <typename... InputT, typename OutputT>
+class Zip<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
+{
+  public:
+    using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
+    using input_tuple_t = typename base_t::input_tuple_t;
+    using output_t      = typename base_t::output_t;
+};
+
+// Specialization for Zip with a default output type
+template <typename... InputT>
+class Zip<std::tuple<InputT...>> : public ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>
+{
+  public:
+    using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
+    using input_tuple_t = typename base_t::input_tuple_t;
+    using output_t      = typename base_t::output_t;
+
+  private:
+    output_t convert_value(input_tuple_t&& data) override
+    {
+        // No change to the output type
+        return std::move(data);
+    }
+};
+
+template <typename...>
+class ZipTransform;
+
+template <typename... InputT, typename OutputT>
+class ZipTransform<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
+{
+  public:
+    using base_t         = ZipBase<std::tuple<InputT...>, OutputT>;
+    using input_tuple_t  = typename base_t::input_tuple_t;
+    using output_t       = typename base_t::output_t;
+    using transform_fn_t = std::function<output_t(input_tuple_t&&)>;
+
+    ZipTransform(transform_fn_t transform_fn, size_t max_outstanding = 64) :
+      base_t(max_outstanding),
+      m_transform_fn(std::move(transform_fn))
+    {}
+
+  private:
+    output_t convert_value(input_tuple_t&& data) override
+    {
+        return m_transform_fn(std::move(data));
+    }
+
+    transform_fn_t m_transform_fn;
 };
 
 }  // namespace mrc::node

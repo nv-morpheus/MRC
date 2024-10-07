@@ -315,20 +315,6 @@ edge::IReadableProvider<T>& ObjectProperties::readable_provider_typed()
 template <typename ObjectT>
 class Object : public virtual ObjectProperties, public std::enable_shared_from_this<Object<ObjectT>>
 {
-  protected:
-    static std::shared_ptr<ObjectPropertiesState> build_state()
-    {
-        auto state = std::make_shared<ObjectPropertiesState>();
-
-        state->type_name            = std::string(::mrc::type_name<ObjectT>());
-        state->is_writable_acceptor = std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
-        state->is_writable_provider = std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
-        state->is_readable_acceptor = std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
-        state->is_readable_provider = std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
-
-        return state;
-    }
-
   public:
     // Object(const Object& other) : m_name(other.m_name), m_launch_options(other.m_launch_options) {}
     // Object(Object&&)                 = delete;
@@ -384,33 +370,14 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
 
     std::shared_ptr<ObjectProperties> get_child(const std::string& name) const override
     {
-        CHECK(m_children.contains(name)) << "Child " << name << " not found in " << this->name();
+        MRC_CHECK2(m_children.contains(name)) << "Child " << name << " not found in " << this->name();
 
-        if (auto child = m_children.at(name).lock())
-        {
-            return child;
-        }
-
-        auto* mutable_this = const_cast<Object*>(this);
-
-        // Otherwise, we need to build one
-        auto child = mutable_this->m_create_children_fns.at(name)();
-
-        mutable_this->m_children[name] = child;
-
-        return child;
+        return m_children.at(name);
     }
 
-    std::map<std::string, std::shared_ptr<ObjectProperties>> get_children() const override
+    const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const override
     {
-        std::map<std::string, std::shared_ptr<ObjectProperties>> children;
-
-        for (const auto& [name, child] : m_children)
-        {
-            children[name] = this->get_child(name);
-        }
-
-        return children;
+        return m_children;
     }
 
     template <typename U>
@@ -423,7 +390,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
     }
 
   protected:
-    Object() : ObjectProperties(build_state())
+    Object() : ObjectProperties(ObjectPropertiesState::create<ObjectT>())
     {
         LOG(INFO) << "Creating Object '" << this->name() << "' with type: " << this->type_name();
     }
@@ -433,39 +400,10 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
     Object(const Object<U>& other) :
       ObjectProperties(other),
       m_launch_options(other.m_launch_options),
-      m_children(other.m_children),
-      m_create_children_fns(other.m_create_children_fns)
+      m_children(other.m_children)
     {
         LOG(INFO) << "Copying Object '" << this->name() << "' from type: " << other.type_name()
                   << " to type: " << this->type_name();
-    }
-
-    void init_children()
-    {
-        if constexpr (is_base_of_template<node::NodeParent, ObjectT>::value)
-        {
-            using child_types_t = typename ObjectT::child_types_t;
-
-            // Get the name/reference pairs from the NodeParent
-            auto children_ref_pairs = this->object().get_children_refs();
-
-            // Finally, convert the tuple of name/ChildObject pairs into a map
-            utils::tuple_for_each(
-                children_ref_pairs,
-                [this]<typename ChildIndexT>(std::pair<std::string, std::reference_wrapper<ChildIndexT>>& pair,
-                                             size_t idx) {
-                    // auto child_obj = std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(),
-                    // pair.second);
-
-                    // m_children.emplace(std::move(pair.first), std::move(child_obj));
-
-                    m_children.emplace(pair.first, std::weak_ptr<ObjectProperties>());
-
-                    m_create_children_fns.emplace(pair.first, [this, obj_ref = pair.second]() {
-                        return std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(), obj_ref);
-                    });
-                });
-        }
     }
 
     // // Move to protected to allow only the IBuilder to set the name
@@ -513,8 +451,8 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
 
     runnable::LaunchOptions m_launch_options;
 
-    std::map<std::string, std::weak_ptr<ObjectProperties>> m_children;
-    std::map<std::string, std::function<std::shared_ptr<ObjectProperties>()>> m_create_children_fns;
+    std::map<std::string, std::shared_ptr<ObjectProperties>> m_children;
+    // std::map<std::string, std::function<std::shared_ptr<ObjectProperties>()>> m_create_children_fns;
 
     // Allows converting to base classes
     template <typename U>
@@ -686,7 +624,7 @@ class SharedObject final : public Object<ObjectT>
 {
   public:
     SharedObject(std::shared_ptr<const ObjectProperties> owner, std::reference_wrapper<ObjectT> resource) :
-      ObjectProperties(Object<ObjectT>::build_state()),
+      ObjectProperties(ObjectPropertiesState::create<ObjectT>()),
       m_owner(std::move(owner)),
       m_resource(std::move(resource))
     {}

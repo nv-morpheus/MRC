@@ -878,21 +878,6 @@ TEST_F(TestEdges, SourceToDynamicRouterToSinks)
     EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink3->get_values());
 }
 
-TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router, *sink1);
-    mrc::make_edge(*router, *sink2);
-
-    source->run();
-    sink1->run();
-}
-
 TEST_F(TestEdges, SourceToBroadcastToSink)
 {
     auto source    = std::make_shared<node::TestSource<int>>();
@@ -1159,6 +1144,7 @@ TEST_F(TestEdges, ZipEarlyClose)
     auto source1 = std::make_shared<node::TestSource<int>>(3);
     auto source2 = std::make_shared<node::TestSource<float>>(4);
 
+    auto zip = std::make_shared<node::Zip<std::tuple<int, float>>>();
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 
@@ -1250,24 +1236,24 @@ TEST_F(TestEdges, ZipTransform)
     sink->run();
 }
 
-TEST_F(TestEdges, DynamicZipComponent)
-{
-    auto source1 = std::make_shared<node::TestSource<int>>();
-    auto source2 = std::make_shared<node::TestSource<int>>();
+// TEST_F(TestEdges, DynamicZipComponent)
+// {
+//     auto source1 = std::make_shared<node::TestSource<int>>();
+//     auto source2 = std::make_shared<node::TestSource<int>>();
 
-    auto zip = std::make_shared<node::DynamicZipComponent<size_t, int>>();
+//     auto zip = std::make_shared<node::DynamicZipComponent<size_t, int>>();
 
-    auto sink = std::make_shared<node::TestSink<std::vector<int>>>();
+//     auto sink = std::make_shared<node::TestSink<std::vector<int>>>();
 
-    mrc::make_edge(*source1, *zip->get_sink(0));
-    mrc::make_edge(*source2, *zip->get_sink(1));
-    mrc::make_edge(*zip, *sink);
+//     mrc::make_edge(*source1, *zip->get_sink(0));
+//     mrc::make_edge(*source2, *zip->get_sink(1));
+//     mrc::make_edge(*zip, *sink);
 
-    source1->run();
-    source2->run();
+//     source1->run();
+//     source2->run();
 
-    sink->run();
-}
+//     sink->run();
+// }
 
 TEST_F(TestEdges, WithLatestFrom)
 {

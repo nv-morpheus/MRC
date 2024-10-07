@@ -59,14 +59,11 @@ class EgressPort final : public Object<node::RxSinkBase<T>>,
 
   public:
     EgressPort(SegmentAddress address, PortName name) :
-      ObjectProperties(Object<node::RxSinkBase<T>>::build_state()),
+      ObjectProperties(ObjectPropertiesState::create<node::RxSinkBase<T>>()),
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_sink(std::make_unique<node::RxNode<T>>())
-    {
-        // Must call after constructing Object<T>
-        this->init_children();
-    }
+    {}
 
   private:
     node::RxSinkBase<T>* get_object() const final

@@ -109,11 +109,11 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
         channel::Status status = channel::Status::success;
 
         // Check if we should push the new value
-        if (m_values_set == sizeof...(TypesT))
+        if (m_values_set == sizeof...(InputT))
         {
-            std::tuple<TypesT...> new_val = utils::tuple_surely(m_state);
+            std::tuple<InputT...> new_val = utils::tuple_surely(m_state);
 
-            status = this->get_writable_edge()->await_write(std::move(new_val));
+            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
         }
 
         return status;
@@ -128,7 +128,7 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
         if (m_completions == sizeof...(InputT))
         {
             // Clear the held tuple to remove any dangling values
-            m_state = std::tuple<std::optional<TypesT>...>();
+            m_state = std::tuple<std::optional<InputT>...>();
 
             WritableAcceptor<OutputT>::release_edge_connection();
         }
