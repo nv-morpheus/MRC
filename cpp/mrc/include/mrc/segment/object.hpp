@@ -129,16 +129,16 @@ class ObjectProperties
 
     void initialize(std::string name)
     {
-        MRC_CHECK2(!this->get_state()->is_initialized) << "Object '" << name << "' is already initialized.";
+        MRC_CHECK2(!this->get_state().is_initialized) << "Object '" << name << "' is already initialized.";
 
         // Set our name first
-        m_state->name = name;
+        this->get_state().name = name;
 
         // Initialize the children
         this->init_children();
 
         // Set the initialized flag
-        m_state->is_initialized = true;
+        this->get_state().is_initialized = true;
     }
 
     // virtual void set_name(const std::string& name)
@@ -148,22 +148,22 @@ class ObjectProperties
 
     virtual std::string name() const
     {
-        return m_state->name;
+        return this->get_state().name;
     }
 
     virtual std::string type_name() const
     {
-        return m_state->type_name;
+        return this->get_state().type_name;
     }
 
     virtual bool is_sink() const
     {
-        return m_state->is_sink;
+        return this->get_state().is_sink;
     }
 
     virtual bool is_source() const
     {
-        return m_state->is_source;
+        return this->get_state().is_source;
     }
 
     virtual std::type_index sink_type(bool ignore_holder = false) const = 0;
@@ -172,19 +172,19 @@ class ObjectProperties
 
     bool is_writable_acceptor() const
     {
-        return m_state->is_writable_acceptor;
+        return this->get_state().is_writable_acceptor;
     }
     bool is_writable_provider() const
     {
-        return m_state->is_writable_provider;
+        return this->get_state().is_writable_provider;
     }
     bool is_readable_acceptor() const
     {
-        return m_state->is_readable_acceptor;
+        return this->get_state().is_readable_acceptor;
     }
     bool is_readable_provider() const
     {
-        return m_state->is_readable_provider;
+        return this->get_state().is_readable_provider;
     }
 
     virtual edge::IWritableAcceptorBase& writable_acceptor_base() = 0;
@@ -206,7 +206,7 @@ class ObjectProperties
 
     virtual bool is_runnable() const
     {
-        return m_state->is_runnable;
+        return this->get_state().is_runnable;
     }
 
     virtual runnable::LaunchOptions& launch_options()             = 0;
@@ -216,17 +216,13 @@ class ObjectProperties
     virtual const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const = 0;
 
   protected:
-    ObjectProperties(std::shared_ptr<ObjectPropertiesState> state) : m_state(std::move(state)) {}
+    ObjectProperties() = default;
 
-    std::shared_ptr<const ObjectPropertiesState> get_state() const
-    {
-        return m_state;
-    }
+    virtual const ObjectPropertiesState& get_state() const = 0;
+    virtual ObjectPropertiesState& get_state()             = 0;
 
   private:
     virtual void init_children() = 0;
-
-    std::shared_ptr<ObjectPropertiesState> m_state;
 };
 
 template <typename T>
@@ -390,7 +386,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
     }
 
   protected:
-    Object() : ObjectProperties(ObjectPropertiesState::create<ObjectT>())
+    Object() : m_state(ObjectPropertiesState::create<ObjectT>())
     {
         LOG(INFO) << "Creating Object '" << this->name() << "' with type: " << this->type_name();
     }
@@ -399,11 +395,22 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
         requires std::derived_from<U, ObjectT>
     Object(const Object<U>& other) :
       ObjectProperties(other),
+      m_state(ObjectPropertiesState::create<U>()),
       m_launch_options(other.m_launch_options),
       m_children(other.m_children)
     {
         LOG(INFO) << "Copying Object '" << this->name() << "' from type: " << other.type_name()
                   << " to type: " << this->type_name();
+    }
+
+    const ObjectPropertiesState& get_state() const override
+    {
+        return *m_state;
+    }
+
+    ObjectPropertiesState& get_state() override
+    {
+        return *m_state;
     }
 
     // // Move to protected to allow only the IBuilder to set the name
@@ -448,6 +455,8 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
                 });
         }
     }
+
+    std::shared_ptr<ObjectPropertiesState> m_state;
 
     runnable::LaunchOptions m_launch_options;
 
@@ -624,7 +633,6 @@ class SharedObject final : public Object<ObjectT>
 {
   public:
     SharedObject(std::shared_ptr<const ObjectProperties> owner, std::reference_wrapper<ObjectT> resource) :
-      ObjectProperties(ObjectPropertiesState::create<ObjectT>()),
       m_owner(std::move(owner)),
       m_resource(std::move(resource))
     {}
@@ -647,7 +655,6 @@ class ReferencedObject final : public Object<ObjectT>
     template <typename U>
         requires std::derived_from<U, ObjectT>
     ReferencedObject(Object<U>& other) :
-      ObjectProperties(other),
       Object<ObjectT>(other),
       m_owner(other.shared_from_this()),
       m_resource(other.object())

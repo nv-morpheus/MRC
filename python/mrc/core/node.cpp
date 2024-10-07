@@ -30,6 +30,7 @@
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
@@ -128,7 +129,12 @@ PYBIND11_MODULE(node, py_mod)
                      name,
                      router_keys,
                      [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
-                         return std::string(py::str(key_fn_cap(data)));
+                         py::gil_scoped_acquire gil;
+
+                         auto ret_key     = key_fn_cap(data);
+                         auto ret_key_str = py::str(ret_key);
+
+                         return std::string(ret_key_str);
                      });
              }),
              py::arg("builder"),
@@ -141,7 +147,42 @@ PYBIND11_MODULE(node, py_mod)
             [](mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, py::object>>& self, py::object key) {
                 std::string key_str = py::str(key);
 
-                return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
+                return self.get_child(key_str);
+            },
+            py::arg("key"));
+
+    py::class_<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>>>(py_mod,
+                                                                                                                 "Route"
+                                                                                                                 "r")
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           std::vector<std::string> router_keys,
+                           OnDataFunction key_fn) {
+                 return builder.construct_object<node::LambdaStaticRouterRunnable<std::string, py::object>>(
+                     name,
+                     router_keys,
+                     [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
+                         py::gil_scoped_acquire gil;
+
+                         auto ret_key     = key_fn_cap(data);
+                         auto ret_key_str = py::str(ret_key);
+
+                         return std::string(ret_key_str);
+                     });
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("router_keys"),
+             py::arg("key_fn"))
+        .def(
+            "get_source",
+            [](mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>& self, py::object key) {
+                std::string key_str = py::str(key);
+
+                return self.get_child(key_str);
             },
             py::arg("key"));
 

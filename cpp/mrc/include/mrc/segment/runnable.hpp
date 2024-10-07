@@ -37,10 +37,7 @@ template <typename NodeT>
 class Runnable : public Object<NodeT>, public runnable::Launchable
 {
   public:
-    Runnable(std::unique_ptr<NodeT> node) :
-      ObjectProperties(ObjectPropertiesState::create<NodeT>()),
-      Object<NodeT>(),
-      m_node(std::move(node))
+    Runnable(std::unique_ptr<NodeT> node) : Object<NodeT>(), m_node(std::move(node))
     {
         CHECK(m_node);
     }

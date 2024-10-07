@@ -31,11 +31,7 @@ template <typename ResourceT>
 class Component final : public Object<ResourceT>
 {
   public:
-    Component(std::unique_ptr<ResourceT> resource) :
-      ObjectProperties(ObjectPropertiesState::create<ResourceT>()),
-      Object<ResourceT>(),
-      m_resource(std::move(resource))
-    {}
+    Component(std::unique_ptr<ResourceT> resource) : Object<ResourceT>(), m_resource(std::move(resource)) {}
     ~Component() final = default;
 
   private:

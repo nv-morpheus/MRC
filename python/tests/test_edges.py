@@ -255,14 +255,18 @@ def add_broadcast(seg: mrc.Builder, *upstream: mrc.SegmentObject):
 def add_router(seg: mrc.Builder,
                *upstream: mrc.SegmentObject,
                router_keys: list[str],
-               key_fn: typing.Callable[[typing.Any], str] = None):
+               key_fn: typing.Callable[[typing.Any], str] = None,
+               is_component: bool):
 
     if (key_fn is None):
         key_fn = lambda _: "a"
 
-    node = mrc.core.node.Router(seg, "Router", router_keys=router_keys, key_fn=key_fn)
+    if (is_component):
+        node = mrc.core.node.RouterComponent(seg, "RouterComponent", router_keys=router_keys, key_fn=key_fn)
+    else:
+        node = mrc.core.node.Router(seg, "Router", router_keys=router_keys, key_fn=key_fn)
 
-    for i, u in enumerate(upstream):
+    for u in upstream:
         seg.make_edge(u, node)
 
     return node
@@ -274,16 +278,6 @@ def add_round_robin_router(seg: mrc.Builder, *upstream: mrc.SegmentObject):
 
     for u in upstream:
         seg.make_edge(u, node)
-
-    return node
-
-
-def add_zip(seg: mrc.Builder, *upstream: mrc.SegmentObject):
-
-    node = mrc.core.node.Zip(seg, "Zip", len(upstream))
-
-    for i, u in enumerate(upstream):
-        seg.make_edge(u, node.get_sink(i))
 
     return node
 
@@ -693,7 +687,8 @@ def test_multi_source_to_zip_to_sink(run_segment, source_cpp: bool):
 
 
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
-def test_source_to_router_to_multi_sink(run_segment, source_cpp: bool):
+@pytest.mark.parametrize("router_component", gen_parameters("router", is_fail_fn=lambda x: False))
+def test_source_to_router_to_multi_sink(run_segment, source_cpp: bool, router_component: bool):
 
     def segment_init(seg: mrc.Builder):
 
@@ -702,10 +697,14 @@ def test_source_to_router_to_multi_sink(run_segment, source_cpp: bool):
             return "a"
 
         source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
-        router = add_router(seg, source, router_keys=["a", "b", "c"], key_fn=determine_key)
+        router = add_router(seg,
+                            source,
+                            router_keys=["a", "b", "c"],
+                            key_fn=determine_key,
+                            is_component=router_component)
         add_sink(seg, router.get_source("a"), is_cpp=False, data_type=m.Base, is_component=False, suffix="a")
-        add_sink(seg, router.get_source("b"), is_cpp=False, data_type=m.Base, is_component=False, suffix="b")
-        add_sink(seg, router.get_source("c"), is_cpp=False, data_type=m.Base, is_component=False, suffix="c")
+        add_sink(seg, router.get_source("b"), is_cpp=False, data_type=m.Base, is_component=False, suffix="b", count=0)
+        add_sink(seg, router.get_source("c"), is_cpp=False, data_type=m.Base, is_component=False, suffix="c", count=0)
 
     results = run_segment(segment_init)
 
