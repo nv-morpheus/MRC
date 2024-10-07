@@ -51,6 +51,10 @@
                     {
                         "description": "Skip stdio-common files",
                         "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                    },
+                    {
+                        "description": "Skip stdio-common files in Conda",
+                        "text": "-interpreter-exec console \"skip -rfu ^std::.*\""
                     }
                     // {
                     //     "description": "Stay on same thread when debugging",

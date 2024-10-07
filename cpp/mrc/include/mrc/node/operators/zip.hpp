@@ -17,356 +17,275 @@
 
 #pragma once
 
+#include "mrc/channel/buffered_channel.hpp"
+#include "mrc/channel/channel.hpp"
 #include "mrc/channel/status.hpp"
-#include "mrc/edge/edge_writable.hpp"
+#include "mrc/node/node_parent.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
-#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/mutex.hpp>
+#include <boost/fiber/unbuffered_channel.hpp>
+#include <glog/logging.h>
 
-#include <execution>
+#include <algorithm>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <numeric>
-#include <queue>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace mrc::node {
 
-template <typename... TypesT>
 class ZipBase
-{};
-
-template <typename... InputT, typename OutputT>
-class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>
 {
+  public:
+    virtual ~ZipBase() = default;
+};
+
+template <typename... TypesT>
+class Zip : public ZipBase,
+            public WritableAcceptor<std::tuple<TypesT...>>,
+            public NodeParent<edge::IWritableProvider<TypesT>...>
+{
+    template <typename T>
+    using queue_t = BufferedChannel<T>;
+    template <typename T>
+    using wrapped_queue_t   = std::unique_ptr<queue_t<T>>;
+    using queues_tuple_type = std::tuple<wrapped_queue_t<TypesT>...>;
+    using output_t          = std::tuple<TypesT...>;
+
     template <std::size_t... Is>
-    static auto build_ingress(ZipBase* self, std::index_sequence<Is...> /*unused*/)
+    static auto build_ingress(Zip* self, std::index_sequence<Is...> /*unused*/)
     {
         return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
     }
 
+    static auto build_queues(size_t channel_size)
+    {
+        return std::make_tuple(std::make_unique<queue_t<TypesT>>(channel_size)...);
+    }
+
+    template <std::size_t... Is>
+    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...>
+    build_child_pairs(Zip* self, std::index_sequence<Is...> /*unused*/)
+    {
+        return std::make_tuple(std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(self->get_sink<Is>()))...);
+    }
+
+    template <std::size_t I = 0>
+    channel::Status tuple_pop_each(queues_tuple_type& queues_tuple, output_t& output_tuple)
+    {
+        channel::Status status = std::get<I>(queues_tuple)->await_read(std::get<I>(output_tuple));
+
+        if constexpr (I + 1 < sizeof...(TypesT))
+        {
+            // Iterate to the next index
+            channel::Status inner_status = tuple_pop_each<I + 1>(queues_tuple, output_tuple);
+
+            // If the inner status failed, return that, otherwise return our status
+            status = inner_status == channel::Status::success ? status : inner_status;
+        }
+
+        return status;
+    }
+
   public:
-    using input_tuple_t = std::tuple<InputT...>;
-    using output_t      = OutputT;
+    Zip(size_t channel_size = channel::default_channel_size()) :
+      m_queues(build_queues(channel_size)),
+      m_upstream_holders(build_ingress(const_cast<Zip*>(this), std::index_sequence_for<TypesT...>{}))
+    {
+        // Must be sure to set any array values
+        m_queue_counts.fill(0);
+    }
 
-    ZipBase(size_t max_outstanding = 64) :
-      m_upstream_holders(build_ingress(const_cast<ZipBase*>(this), std::index_sequence_for<InputT...>{})),
-      m_max_outstanding(max_outstanding)
-    {}
-
-    virtual ~ZipBase() = default;
+    ~Zip() override = default;
 
     template <size_t N>
-    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const
+    edge::IWritableProvider<NthTypeOf<N, TypesT...>>& get_sink() const
     {
-        return std::get<N>(m_upstream_holders);
+        return *std::get<N>(m_upstream_holders);
+    }
+
+    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<TypesT>>>...> get_children_refs()
+        const override
+    {
+        return build_child_pairs(const_cast<Zip*>(this), std::index_sequence_for<TypesT...>{});
     }
 
   protected:
     template <size_t N>
-    class Upstream : public WritableProvider<NthTypeOf<N, InputT...>>
+    class Upstream : public WritableProvider<NthTypeOf<N, TypesT...>>
     {
-        using upstream_t = NthTypeOf<N, InputT...>;
+        using upstream_t = NthTypeOf<N, TypesT...>;
 
       public:
-        Upstream(ZipBase& parent)
+        Upstream(Zip& parent)
         {
             this->init_owned_edge(std::make_shared<InnerEdge>(parent));
         }
 
       private:
-        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, InputT...>>
+        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, TypesT...>>
         {
           public:
-            InnerEdge(ZipBase& parent) : m_parent(parent) {}
+            InnerEdge(Zip& parent) : m_parent(parent) {}
             ~InnerEdge()
             {
-                m_parent.edge_complete();
+                m_parent.edge_complete<N>();
             }
 
-            channel::Status await_write(upstream_t&& data) override
+            virtual channel::Status await_write(upstream_t&& data)
             {
-                return m_parent.set_upstream_value<N>(std::move(data));
+                return m_parent.upstream_await_write<N>(std::move(data));
             }
 
           private:
-            ZipBase& m_parent;
+            Zip& m_parent;
         };
     };
 
   private:
     template <size_t N>
-    channel::Status set_upstream_value(NthTypeOf<N, InputT...> value)
+    channel::Status upstream_await_write(NthTypeOf<N, TypesT...> value)
     {
+        // Push before locking so we dont deadlock
+        auto push_status = std::get<N>(m_queues)->await_write(std::move(value));
+
+        if (push_status != channel::Status::success)
+        {
+            return push_status;
+        }
+
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
-        // Update the current value
-        auto& nth_vector = std::get<N>(m_state);
+        // Update the counts array
+        m_queue_counts[N]++;
 
-        // Ensure we have room, otherwise block
-        m_cv.wait(lock, [this, &nth_vector] {
-            return nth_vector.size() < m_max_outstanding;
-        });
+        if (m_queue_counts[N] == m_max_queue_count)
+        {
+            // Close the queue to prevent pushing more messages
+            std::get<N>(m_queues)->close_channel();
+        }
 
-        // Push the new value
-        nth_vector.push(std::move(value));
+        DCHECK_LE(m_queue_counts[N], m_max_queue_count) << "Queue count has surpassed the max count";
+
+        // See if we have values in every queue
+        auto all_queues_have_value = std::transform_reduce(m_queue_counts.begin(),
+                                                           m_queue_counts.end(),
+                                                           true,
+                                                           std::logical_and<>(),
+                                                           [this](const size_t& v) {
+                                                               return v > m_pull_count;
+                                                           });
 
         channel::Status status = channel::Status::success;
 
-        bool all_have_values = std::apply(
-            [](auto const&... vec) {
-                return (!vec.empty() && ...);
-            },
-            m_state);
-
-        // Check if we should push the new value
-        if (all_have_values)
+        if (all_queues_have_value)
         {
-            // Pop the front of each vector and push the tuple
-            input_tuple_t new_val = std::apply(
-                [](auto&... vec) {
-                    // Move the front of each vector into a tuple
-                    auto tmp_tuple = std::make_tuple(std::move(vec.front())...);
+            // For each tuple, pop a value off
+            std::tuple<TypesT...> new_val;
 
-                    // Pop the front of each vector
-                    (vec.pop(), ...);
+            auto channel_status = tuple_pop_each(m_queues, new_val);
 
-                    // Return the tuple
-                    return tmp_tuple;
-                },
-                m_state);
+            DCHECK_EQ(channel_status, channel::Status::success) << "Queues returned failed status";
 
-            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
+            // Push the new value
+            status = this->get_writable_edge()->await_write(std::move(new_val));
 
-            // Signal that we have room for more data
-            m_cv.notify_all();
+            m_pull_count++;
         }
 
         return status;
     }
 
+    template <size_t N>
     void edge_complete()
     {
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
+        if (m_queue_counts[N] < m_max_queue_count)
+        {
+            // We are setting a new lower limit. Check to make sure this isnt an issue
+            m_max_queue_count = m_queue_counts[N];
+
+            utils::tuple_for_each(m_queues,
+                                  [this]<typename QueueValueT>(std::unique_ptr<queue_t<QueueValueT>>& q, size_t idx) {
+                                      if (m_queue_counts[idx] >= m_max_queue_count)
+                                      {
+                                          // Close the channel
+                                          q->close_channel();
+
+                                          if (m_queue_counts[idx] > m_max_queue_count)
+                                          {
+                                              LOG(ERROR)
+                                                  << "Unbalanced count in upstream sources for Zip operator. Upstream '"
+                                                  << N << "' ended with " << m_queue_counts[N] << " elements but "
+                                                  << m_queue_counts[idx]
+                                                  << " elements have already been pushed by upstream '" << idx << "'";
+                                          }
+                                      }
+                                  });
+        }
+
         m_completions++;
 
-        if (m_completions == sizeof...(InputT))
+        if (m_completions == sizeof...(TypesT))
         {
-            WritableAcceptor<OutputT>::release_edge_connection();
+            // Warn on any left over values
+            auto left_over_messages = std::transform_reduce(m_queue_counts.begin(),
+                                                            m_queue_counts.end(),
+                                                            0,
+                                                            std::plus<>(),
+                                                            [this](const size_t& v) {
+                                                                return v - m_pull_count;
+                                                            });
+            if (left_over_messages > 0)
+            {
+                LOG(ERROR) << "Unbalanced count in upstream sources for Zip operator. " << left_over_messages
+                           << " messages were left in the queues";
+            }
+
+            // Finally, drain the queues of any remaining values
+            utils::tuple_for_each(m_queues,
+                                  []<typename QueueValueT>(std::unique_ptr<queue_t<QueueValueT>>& q, size_t idx) {
+                                      QueueValueT value;
+
+                                      while (q->await_read(value) == channel::Status::success) {}
+                                  });
+
+            WritableAcceptor<std::tuple<TypesT...>>::release_edge_connection();
         }
     }
 
-    virtual output_t convert_value(input_tuple_t&& data) = 0;
+    mutable Mutex m_mutex;
 
-    boost::fibers::mutex m_mutex;
-    boost::fibers::condition_variable m_cv;
-    size_t m_max_outstanding{64};
+    // Once an upstream is closed, this is set representing the max number of values in a queue before its closed
+    size_t m_max_queue_count{std::numeric_limits<size_t>::max()};
+
+    // Counts the number of upstream completions. When m_completions == sizeof...(TypesT), the downstream edges are
+    // released
     size_t m_completions{0};
-    std::tuple<std::queue<InputT>...> m_state;
 
-    std::tuple<std::shared_ptr<WritableProvider<InputT>>...> m_upstream_holders;
-};
+    // Holds the number of values pushed to each queue
+    std::array<size_t, sizeof...(TypesT)> m_queue_counts;
 
-template <typename...>
-class Zip;
+    // The number of messages pulled off the queue
+    size_t m_pull_count{0};
 
-template <typename... InputT, typename OutputT>
-class Zip<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
-{
-  public:
-    using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
-    using input_tuple_t = typename base_t::input_tuple_t;
-    using output_t      = typename base_t::output_t;
-};
+    // Queue used to allow backpressure to upstreams
+    queues_tuple_type m_queues;
 
-// Specialization for Zip with a default output type
-template <typename... InputT>
-class Zip<std::tuple<InputT...>> : public ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>
-{
-  public:
-    using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
-    using input_tuple_t = typename base_t::input_tuple_t;
-    using output_t      = typename base_t::output_t;
-
-  private:
-    output_t convert_value(input_tuple_t&& data) override
-    {
-        // No change to the output type
-        return std::move(data);
-    }
-};
-
-template <typename...>
-class ZipTransform;
-
-template <typename... InputT, typename OutputT>
-class ZipTransform<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
-{
-  public:
-    using base_t         = ZipBase<std::tuple<InputT...>, OutputT>;
-    using input_tuple_t  = typename base_t::input_tuple_t;
-    using output_t       = typename base_t::output_t;
-    using transform_fn_t = std::function<output_t(input_tuple_t&&)>;
-
-    ZipTransform(transform_fn_t transform_fn, size_t max_outstanding = 64) :
-      base_t(max_outstanding),
-      m_transform_fn(std::move(transform_fn))
-    {}
-
-  private:
-    output_t convert_value(input_tuple_t&& data) override
-    {
-        return m_transform_fn(std::move(data));
-    }
-
-    transform_fn_t m_transform_fn;
-};
-
-template <typename KeyT, typename InputT, typename OutputT = std::vector<InputT>>
-class DynamicZipComponent : public MultiWritableProvider<KeyT, InputT>, public WritableAcceptor<OutputT>
-{
-  public:
-    using input_t  = InputT;
-    using output_t = OutputT;
-
-    DynamicZipComponent(size_t max_outstanding = 64) : m_max_outstanding(max_outstanding) {}
-
-    std::shared_ptr<edge::IWritableProvider<input_t>> get_sink(const KeyT& key) const
-    {
-        // Simply return an object that will set the message to upstream and go away
-        return std::make_shared<Upstream>(*const_cast<DynamicZipComponent<KeyT, input_t, output_t>*>(this), key);
-    }
-
-    bool has_sink(const KeyT& key) const
-    {
-        return MultiWritableProvider<KeyT, input_t>::has_writable_edge(key);
-    }
-
-    void drop_edge(const KeyT& key)
-    {
-        MultiWritableProvider<KeyT, input_t>::release_writable_edge(key);
-    }
-
-  protected:
-    class Upstream : public edge::IWritableProvider<input_t>
-    {
-      public:
-        Upstream(DynamicZipComponent& parent, KeyT key) : m_parent(parent), m_key(key) {}
-
-        std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
-        {
-            m_parent.m_state[m_key] = std::queue<input_t>{};
-
-            m_parent.MultiWritableProvider<KeyT, input_t>::init_owned_edge(
-                m_key,
-                std::make_shared<InnerEdge>(m_parent, m_key));
-
-            return m_parent.get_writable_edge_handle(m_key);
-        }
-
-      private:
-        class InnerEdge : public edge::IEdgeWritable<input_t>
-        {
-          public:
-            InnerEdge(DynamicZipComponent& parent, KeyT key) : m_parent(parent), m_key(key) {}
-            ~InnerEdge()
-            {
-                m_parent.edge_complete(m_key);
-            }
-
-            channel::Status await_write(input_t&& data) override
-            {
-                return m_parent.set_upstream_value(m_key, std::move(data));
-            }
-
-          private:
-            DynamicZipComponent& m_parent;
-            KeyT m_key;
-        };
-
-        DynamicZipComponent& m_parent;
-        KeyT m_key;
-    };
-
-    channel::Status set_upstream_value(KeyT key, input_t value)
-    {
-        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
-
-        // Update the current value
-        auto& nth_vector = m_state.at(key);
-
-        // Ensure we have room, otherwise block
-        m_cv.wait(lock, [this, &nth_vector] {
-            return nth_vector.size() < m_max_outstanding;
-        });
-
-        // Push the new value
-        nth_vector.push(std::move(value));
-
-        channel::Status status = channel::Status::success;
-
-        bool all_have_values = true;
-
-        // Loop over the vectors and check if they all have values
-        for (auto const& [_, vec] : m_state)
-        {
-            if (vec.empty())
-            {
-                all_have_values = false;
-                break;
-            }
-        }
-
-        // Check if we should push the new value
-        if (all_have_values)
-        {
-            // Pop the front of each vector and push the tuple
-            std::vector<input_t> new_val;
-
-            for (auto& [_, vec] : m_state)
-            {
-                new_val.push_back(std::move(vec.front()));
-                vec.pop();
-            }
-
-            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
-
-            // Signal that we have room for more data
-            m_cv.notify_all();
-        }
-
-        return status;
-    }
-
-    void edge_complete(KeyT key)
-    {
-        std::unique_lock<decltype(m_mutex)> lock(m_mutex);
-
-        // Erase the key from the map. It must be there otherwise this is invalid
-        CHECK_EQ(m_state.erase(key), 1) << "Inconsistent state. Key not found in map";
-
-        // If the map is empty, release the downstream connections
-        if (m_state.empty())
-        {
-            WritableAcceptor<output_t>::release_edge_connection();
-        }
-    }
-
-    virtual output_t convert_value(std::vector<input_t>&& data)
-    {
-        return std::move(data);
-    }
-
-    boost::fibers::mutex m_mutex;
-    boost::fibers::condition_variable m_cv;
-    size_t m_max_outstanding{64};
-    size_t m_completions{0};
-    std::map<KeyT, std::queue<input_t>> m_state;
+    // Upstream edges
+    std::tuple<std::shared_ptr<WritableProvider<TypesT>>...> m_upstream_holders;
 };
 
 }  // namespace mrc::node

@@ -53,11 +53,14 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
 
   public:
     IngressPort(SegmentAddress address, PortName name) :
-      ObjectProperties(ObjectPropertiesState::create<node::RxSourceBase<T>>()),
+      ObjectProperties(Object<node::RxSourceBase<T>>::build_state()),
       m_segment_address(address),
       m_port_name(std::move(name)),
       m_source(std::make_unique<node::RxNode<T>>())
-    {}
+    {
+        // Must call after constructing Object<T>
+        this->init_children();
+    }
 
   private:
     node::RxSourceBase<T>* get_object() const final

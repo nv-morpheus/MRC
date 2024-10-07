@@ -288,6 +288,16 @@ def add_zip(seg: mrc.Builder, *upstream: mrc.SegmentObject):
     return node
 
 
+def add_zip(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node = mrc.core.node.Zip(seg, "Zip", len(upstream))
+
+    for i, u in enumerate(upstream):
+        seg.make_edge(u, node.get_sink(i))
+
+    return node
+
+
 # THIS TEST IS CAUSING ISSUES WHEN RUNNING ALL TESTS TOGETHER
 
 # @dataclasses.dataclass

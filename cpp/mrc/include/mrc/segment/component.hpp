@@ -32,10 +32,12 @@ class Component final : public Object<ResourceT>
 {
   public:
     Component(std::unique_ptr<ResourceT> resource) :
-      ObjectProperties(ObjectPropertiesState::create<ResourceT>()),
+      ObjectProperties(Object<ResourceT>::build_state()),
       Object<ResourceT>(),
       m_resource(std::move(resource))
-    {}
+    {
+        this->init_children();
+    }
     ~Component() final = default;
 
   private:

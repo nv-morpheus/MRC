@@ -48,7 +48,7 @@
 #include <deque>
 #include <functional>
 #include <initializer_list>
-#include <iterator>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <queue>
@@ -837,6 +837,24 @@ TEST_F(TestEdges, SourceToRouterToDifferentSinks)
     EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
 }
 
+TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::RoundRobinRouterTypeless>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router, *sink1);
+    mrc::make_edge(*router, *sink2);
+
+    source->run();
+    sink1->run();
+
+    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+}
+
 TEST_F(TestEdges, SourceToDynamicRouterToSinks)
 {
     auto source = std::make_shared<node::TestSource<int>>(10);
@@ -1141,7 +1159,6 @@ TEST_F(TestEdges, ZipEarlyClose)
     auto source1 = std::make_shared<node::TestSource<int>>(3);
     auto source2 = std::make_shared<node::TestSource<float>>(4);
 
-    auto zip = std::make_shared<node::Zip<std::tuple<int, float>>>();
 
     auto sink = std::make_shared<node::TestSink<std::tuple<int, float>>>();
 

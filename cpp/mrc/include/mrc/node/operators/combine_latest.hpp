@@ -20,6 +20,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <boost/fiber/mutex.hpp>
@@ -30,10 +31,8 @@
 #include <utility>
 
 namespace mrc::node {
-
 template <typename...>
 class CombineLatestBase;
-
 template <typename... InputT, typename OutputT>
 class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>
 {
@@ -110,16 +109,11 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
         channel::Status status = channel::Status::success;
 
         // Check if we should push the new value
-        if (m_values_set == sizeof...(InputT))
+        if (m_values_set == sizeof...(TypesT))
         {
-            // Copy the current state to push downstream
-            input_tuple_t new_val = std::apply(
-                [](const auto&... val) {
-                    return std::make_tuple(val.value()...);
-                },
-                m_state);
+            std::tuple<TypesT...> new_val = utils::tuple_surely(m_state);
 
-            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
+            status = this->get_writable_edge()->await_write(std::move(new_val));
         }
 
         return status;
@@ -133,6 +127,9 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
 
         if (m_completions == sizeof...(InputT))
         {
+            // Clear the held tuple to remove any dangling values
+            m_state = std::tuple<std::optional<TypesT>...>();
+
             WritableAcceptor<OutputT>::release_edge_connection();
         }
     }

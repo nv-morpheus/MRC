@@ -73,6 +73,26 @@ PYBIND11_MODULE(node, py_mod)
             return node;
         }));
 
+    py::class_<mrc::segment::Object<node::ZipBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
+            // std::shared_ptr<mrc::segment::ObjectProperties> node;
+
+            if (count == 2)
+            {
+                return builder.construct_object<node::Zip<PyObjectHolder, PyObjectHolder>>(name)->as<node::ZipBase>();
+            }
+            else
+            {
+                py::print("Unsupported count!");
+                throw std::runtime_error("Unsupported count!");
+            }
+        }))
+        .def("get_sink", [](mrc::segment::Object<node::ZipBase>& self, size_t index) {
+            return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+        });
+
     // py::class_<mrc::segment::Object<node::ZipBase<std::tuple<int>>>,
     //            mrc::segment::ObjectProperties,
     //            std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
