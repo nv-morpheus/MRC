@@ -32,7 +32,7 @@
 #include <sstream>
 #include <utility>  // for move
 
-// IWYU thinks we need vectir for py::class_<Executor, std::shared_ptr<Executor>>
+// IWYU thinks we need vector for py::class_<Executor, std::shared_ptr<Executor>>
 // IWYU pragma: no_include <vector>
 
 namespace mrc::pymrc {
