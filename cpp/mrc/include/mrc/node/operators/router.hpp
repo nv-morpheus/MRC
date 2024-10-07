@@ -23,9 +23,12 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/node/node_parent.hpp"
+#include "mrc/node/sink_channel_owner.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/runnable/forward.hpp"
+#include "mrc/runnable/runnable.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/condition_variable.hpp>
@@ -33,6 +36,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <stop_token>
 #include <type_traits>
 
 namespace mrc::node {
@@ -338,24 +342,19 @@ class RouterDownstreamNode : public edge::IWritableAcceptor<InputT>,
 {};
 
 template <typename KeyT, typename InputT>
-class DynamicRouter : public WritableProvider<InputT>,
-                      public ReadableAcceptor<InputT>,
-                      public SinkChannelOwner<InputT>,
-                      public MultiWritableAcceptor<KeyT, InputT>,
-                      public MultiReadableProvider<KeyT, InputT>,
-                      public MultiSourceChannelOwner<KeyT, InputT>,
-                      public DynamicNodeParent<RouterDownstreamNode<InputT>>
+class StaticRouterBase : public MultiWritableAcceptor<KeyT, InputT>,
+                         public MultiReadableProvider<KeyT, InputT>,
+                         public MultiSourceChannelOwner<KeyT, InputT>,
+                         public DynamicNodeParent<RouterDownstreamNode<InputT>>
 {
   public:
-    using this_t   = DynamicRouter<KeyT, InputT>;
+    using this_t   = StaticRouterBase<KeyT, InputT>;
     using key_t    = KeyT;
     using input_t  = InputT;
     using key_fn_t = std::function<key_t(const input_t&)>;
 
-    DynamicRouter(std::vector<key_t> route_keys, key_fn_t key_fn) : m_key_fn(std::move(key_fn))
+    StaticRouterBase(std::vector<key_t> route_keys)
     {
-        SinkChannelOwner<InputT>::set_channel(std::make_unique<mrc::channel::BufferedChannel<input_t>>());
-
         // Create a downstream for each key
         for (const auto& key : route_keys)
         {
@@ -373,14 +372,6 @@ class DynamicRouter : public WritableProvider<InputT>,
         return m_downstreams.contains(key);
     }
 
-    void drop_source(const key_t& key)
-    {
-        // TODO(MDD): Do we want to even support this?
-        m_downstreams.erase(key);
-
-        // MultiSourceProperties<key_t, input_t>::release_writable_edge(key);
-    }
-
     std::map<std::string, std::reference_wrapper<typename this_t::child_node_t>> get_children_refs(
         std::optional<std::string> child_name = std::nullopt) const override
     {
@@ -388,7 +379,8 @@ class DynamicRouter : public WritableProvider<InputT>,
 
         for (const auto& [key, downstream] : m_downstreams)
         {
-            children.emplace(key, std::ref(*downstream));
+            // Utilize MRC_CONCAT_STR to convert the type to a string as best we can
+            children.emplace(MRC_CONCAT_STR(key), std::ref(*downstream));
         }
 
         return children;
@@ -398,7 +390,7 @@ class DynamicRouter : public WritableProvider<InputT>,
     class Downstream : public RouterDownstreamNode<input_t>
     {
       public:
-        Downstream(DynamicRouter& parent, KeyT key) : m_parent(parent), m_key(std::move(key))
+        Downstream(StaticRouterBase& parent, KeyT key) : m_parent(parent), m_key(std::move(key))
         {
             this->set_channel(std::make_unique<mrc::channel::BufferedChannel<input_t>>());
         }
@@ -419,18 +411,152 @@ class DynamicRouter : public WritableProvider<InputT>,
         }
 
       private:
-        DynamicRouter& m_parent;
+        StaticRouterBase& m_parent;
         KeyT m_key;
     };
 
-    key_t determine_key_for_value(const InputT& t)
+    channel::Status process_one(InputT&& data)
+    {
+        key_t key = this->determine_key_for_value(data);
+
+        return MultiSourceProperties<key_t, input_t>::get_writable_edge(key)->await_write(std::move(data));
+    }
+
+    virtual key_t determine_key_for_value(const InputT& t) = 0;
+
+    std::map<key_t, std::shared_ptr<Downstream>> m_downstreams;
+};
+
+template <typename KeyT, typename InputT>
+class StaticRouterComponentBase : public ForwardingWritableProvider<InputT>, public StaticRouterBase<KeyT, InputT>
+{
+  public:
+    using base_t   = StaticRouterBase<KeyT, InputT>;
+    using key_t    = KeyT;
+    using input_t  = InputT;
+    using key_fn_t = std::function<key_t(const input_t&)>;
+
+    using base_t::base_t;
+
+  protected:
+    channel::Status on_next(InputT&& data) override
+    {
+        return this->process_one(std::move(data));
+    }
+
+    void on_complete() override
+    {
+        MultiSourceProperties<KeyT, InputT>::release_edge_connections();
+    }
+};
+
+template <typename KeyT, typename InputT>
+class LambdaStaticRouterComponent : public StaticRouterComponentBase<KeyT, InputT>
+{
+  public:
+    using base_t   = StaticRouterComponentBase<KeyT, InputT>;
+    using key_t    = KeyT;
+    using input_t  = InputT;
+    using key_fn_t = std::function<key_t(const input_t&)>;
+
+    LambdaStaticRouterComponent(std::vector<key_t> route_keys, key_fn_t key_fn) :
+      base_t(std::move(route_keys)),
+      m_key_fn(std::move(key_fn))
+    {}
+
+  protected:
+    key_t determine_key_for_value(const InputT& t) override
     {
         return m_key_fn(t);
     }
 
     key_fn_t m_key_fn;
+};
 
-    std::map<key_t, std::shared_ptr<Downstream>> m_downstreams;
+template <typename KeyT, typename InputT>
+class StaticRouterRunnableBase : public WritableProvider<InputT>,
+                                 public ReadableAcceptor<InputT>,
+                                 public SinkChannelOwner<InputT>,
+                                 public StaticRouterBase<KeyT, InputT>,
+                                 public mrc::runnable::RunnableWithContext<>
+{
+  public:
+    using this_t   = StaticRouterRunnableBase<KeyT, InputT>;
+    using base_t   = StaticRouterBase<KeyT, InputT>;
+    using key_t    = KeyT;
+    using input_t  = InputT;
+    using key_fn_t = std::function<key_t(const input_t&)>;
+
+    StaticRouterRunnableBase(std::vector<key_t> route_keys) : base_t(std::move(route_keys))
+    {
+        SinkChannelOwner<InputT>::set_channel(std::make_unique<mrc::channel::BufferedChannel<input_t>>());
+    }
+
+  private:
+    /**
+     * @brief Runnable's entrypoint.
+     */
+    void run(mrc::runnable::Context& ctx) override
+    {
+        InputT data;
+        channel::Status status;
+
+        // Loop until either the node has been killed or the upstream terminated
+        while (!m_stop_source.stop_requested() &&
+               (status = this->get_readable_edge()->await_read(data)) == channel::Status::success)
+        {
+            this->process_one(std::move(data));
+        }
+
+        // Drop all connections
+        MultiSourceProperties<KeyT, InputT>::release_edge_connections();
+    }
+
+    /**
+     * @brief Runnable's state control, for stopping from MRC.
+     */
+    void on_state_update(const mrc::runnable::Runnable::State& state) final
+    {
+        switch (state)
+        {
+        case mrc::runnable::Runnable::State::Stop:
+            // Do nothing, we wait for the upstream channel to return closed
+            // m_stop_source.request_stop();
+            break;
+
+        case mrc::runnable::Runnable::State::Kill:
+            m_stop_source.request_stop();
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    std::stop_source m_stop_source;
+};
+
+template <typename KeyT, typename InputT>
+class LambdaStaticRouterRunnable : public StaticRouterRunnableBase<KeyT, InputT>
+{
+  public:
+    using base_t   = StaticRouterRunnableBase<KeyT, InputT>;
+    using key_t    = KeyT;
+    using input_t  = InputT;
+    using key_fn_t = std::function<key_t(const input_t&)>;
+
+    LambdaStaticRouterRunnable(std::vector<key_t> route_keys, key_fn_t key_fn) :
+      base_t(std::move(route_keys)),
+      m_key_fn(std::move(key_fn))
+    {}
+
+  protected:
+    key_t determine_key_for_value(const InputT& t) override
+    {
+        return m_key_fn(t);
+    }
+
+    key_fn_t m_key_fn;
 };
 
 }  // namespace mrc::node

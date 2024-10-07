@@ -115,14 +115,16 @@ PYBIND11_MODULE(node, py_mod)
     //         return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
     //     });
 
-    py::class_<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>,
+    py::class_<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, py::object>>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<node::DynamicRouter<std::string, py::object>>>>(py_mod, "Router")
+               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, py::object>>>>(
+        py_mod,
+        "RouterComponent")
         .def(py::init<>([](mrc::segment::IBuilder& builder,
                            std::string name,
                            std::vector<std::string> router_keys,
                            OnDataFunction key_fn) {
-                 return builder.construct_object<node::DynamicRouter<std::string, py::object>>(
+                 return builder.construct_object<node::LambdaStaticRouterComponent<std::string, py::object>>(
                      name,
                      router_keys,
                      [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
@@ -136,7 +138,7 @@ PYBIND11_MODULE(node, py_mod)
              py::arg("key_fn"))
         .def(
             "get_source",
-            [](mrc::segment::Object<node::DynamicRouter<std::string, py::object>>& self, py::object key) {
+            [](mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, py::object>>& self, py::object key) {
                 std::string key_str = py::str(key);
 
                 return self.get_child(MRC_CONCAT_STR("source[" << key_str << "]"));
