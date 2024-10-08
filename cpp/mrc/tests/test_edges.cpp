@@ -445,9 +445,9 @@ TEST_F(TestEdges, SourceToDynamicRouterToSinks)
     sink2->run();
     sink3->run();
 
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
     EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink3->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastToSink)
