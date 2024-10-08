@@ -18,6 +18,7 @@
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
 
+#include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/router.hpp"
 
 #include <gtest/gtest.h>
@@ -130,6 +131,56 @@ TEST_F(TestRouter, LambdaStaticRouterComponent_SourceToRouterToDifferentSinks)
     EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
     EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
     EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
+}
+
+// two possible errors, either the key function throws an error, or the key function returns a key that is invalid
+TEST_F(TestRouter, LambdaRouterOnKeyError)
+{
+    auto source = std::make_shared<node::TestSource<int>>(3);
+    auto router = std::make_shared<node::LambdaRouter<int, int>>([](const int& data) {
+        if (data == 2)
+        {
+            throw std::runtime_error("Test Error");
+        }
+
+        return data + 1;
+    });
+
+    auto sink1 = std::make_shared<node::TestSink<int>>();
+    auto sink2 = std::make_shared<node::TestSink<int>>();
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source(1), *sink1);
+    mrc::make_edge(*router->get_source(2), *sink2);
+
+    EXPECT_THROW(
+        {
+            source->run();
+            sink2->run();
+            sink2->run();
+        },
+        exceptions::MrcRuntimeError);
+}
+
+TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
+{
+    auto source = std::make_shared<node::TestSource<int>>(3);
+    auto router = std::make_shared<node::LambdaRouter<int, int>>([](const int& data) {
+        return data + 1;  // On the third value, this will return 4, which is not a valid key
+    });
+
+    auto sink1 = std::make_shared<node::TestSink<int>>();
+    auto sink2 = std::make_shared<node::TestSink<int>>();
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source(1), *sink1);
+    mrc::make_edge(*router->get_source(2), *sink2);
+
+    EXPECT_THROW(
+        {
+            source->run();
+            sink2->run();
+            sink2->run();
+        },
+        exceptions::MrcRuntimeError);
 }
 
 }  // namespace mrc
