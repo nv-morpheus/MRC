@@ -423,8 +423,8 @@ TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
     source->run();
     sink1->run();
 
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{1}), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToDynamicRouterToSinks)
