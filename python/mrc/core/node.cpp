@@ -74,47 +74,32 @@ PYBIND11_MODULE(node, py_mod)
             return node;
         }));
 
-    // py::class_<mrc::segment::Object<node::ZipBase>,
-    //            mrc::segment::ObjectProperties,
-    //            std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
-    //     .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
-    //         // std::shared_ptr<mrc::segment::ObjectProperties> node;
+    py::class_<mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<
+                   node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>>>(py_mod, "Zip")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
+            if (count == 2)
+            {
+                return builder
+                    .construct_object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>(
+                        name,
+                        [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
+                            py::gil_scoped_acquire gil;
 
-    //         if (count == 2)
-    //         {
-    //             return builder.construct_object<node::Zip<PyObjectHolder,
-    //             PyObjectHolder>>(name)->as<node::ZipBase>();
-    //         }
-    //         else
-    //         {
-    //             py::print("Unsupported count!");
-    //             throw std::runtime_error("Unsupported count!");
-    //         }
-    //     }))
-    //     .def("get_sink", [](mrc::segment::Object<node::ZipBase>& self, size_t index) {
-    //         return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
-    //     });
+                            return PyObjectHolder(py::make_tuple(std::get<0>(input_data), std::get<1>(input_data)));
+                        });
+            }
 
-    // py::class_<mrc::segment::Object<node::ZipBase<std::tuple<int>>>,
-    //            mrc::segment::ObjectProperties,
-    //            std::shared_ptr<mrc::segment::Object<node::ZipBase>>>(py_mod, "Zip")
-    //     .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
-    //         // std::shared_ptr<mrc::segment::ObjectProperties> node;
-
-    //         if (count == 2)
-    //         {
-    //             return builder.construct_object<node::Zip<PyObjectHolder,
-    //             PyObjectHolder>>(name)->as<node::ZipBase>();
-    //         }
-    //         else
-    //         {
-    //             py::print("Unsupported count!");
-    //             throw std::runtime_error("Unsupported count!");
-    //         }
-    //     }))
-    //     .def("get_sink", [](mrc::segment::Object<node::ZipBase>& self, size_t index) {
-    //         return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
-    //     });
+            py::print("Unsupported count!");
+            throw std::runtime_error("Unsupported count!");
+        }))
+        .def("get_sink",
+             [](mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>&
+                    self,
+                size_t index) {
+                 return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+             });
 
     py::class_<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, py::object>>,
                mrc::segment::ObjectProperties,
