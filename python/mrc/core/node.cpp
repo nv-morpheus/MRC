@@ -136,22 +136,23 @@ PYBIND11_MODULE(node, py_mod)
             },
             py::arg("key"));
 
-    py::class_<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>,
+    py::class_<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>,
                mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>>>(py_mod,
-                                                                                                                 "Route"
-                                                                                                                 "r")
+               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>>>(
+        py_mod,
+        "Route"
+        "r")
         .def(py::init<>([](mrc::segment::IBuilder& builder,
                            std::string name,
                            std::vector<std::string> router_keys,
                            OnDataFunction key_fn) {
-                 return builder.construct_object<node::LambdaStaticRouterRunnable<std::string, py::object>>(
+                 return builder.construct_object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>(
                      name,
                      router_keys,
-                     [key_fn_cap = std::move(key_fn)](const py::object& data) -> std::string {
+                     [key_fn_cap = std::move(key_fn)](const PyObjectHolder& data) -> std::string {
                          py::gil_scoped_acquire gil;
 
-                         auto ret_key     = key_fn_cap(data);
+                         auto ret_key     = key_fn_cap(data.copy_obj());
                          auto ret_key_str = py::str(ret_key);
 
                          return std::string(ret_key_str);
@@ -164,7 +165,8 @@ PYBIND11_MODULE(node, py_mod)
              py::arg("key_fn"))
         .def(
             "get_source",
-            [](mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, py::object>>& self, py::object key) {
+            [](mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>& self,
+               py::object key) {
                 std::string key_str = py::str(key);
 
                 return self.get_child(key_str);
