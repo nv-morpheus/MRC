@@ -142,7 +142,6 @@ add_library(libmrc
   src/public/modules/sample_modules.cpp
   src/public/modules/segment_modules.cpp
   src/public/node/port_registry.cpp
-  src/public/node/rx_source.cpp
   src/public/options/engine_groups.cpp
   src/public/options/fiber_pool.cpp
   src/public/options/options.cpp
