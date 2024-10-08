@@ -87,7 +87,7 @@ PYBIND11_MODULE(node, py_mod)
                         [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
                             py::gil_scoped_acquire gil;
 
-                            return PyObjectHolder(py::make_tuple(std::get<0>(input_data), std::get<1>(input_data)));
+                            return PyObjectHolder(py::cast(std::move(input_data)));
                         });
             }
 
