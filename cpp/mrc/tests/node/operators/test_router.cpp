@@ -24,6 +24,13 @@
 #include <gtest/gtest.h>
 
 TEST_CLASS(Router);
+namespace {
+template <typename T>
+std::string even_odd(const T& t)
+{
+    return t % 2 == 1 ? "odd" : "even";
+}
+};  // namespace
 
 namespace mrc::node {
 
@@ -38,7 +45,7 @@ class TestStaticRouterComponent : public StaticRouterComponentBase<std::string, 
   protected:
     std::string determine_key_for_value(const T& t) override
     {
-        return t % 2 == 1 ? "odd" : "even";
+        return even_odd(t);
     }
 };
 
@@ -131,6 +138,43 @@ TEST_F(TestRouter, LambdaStaticRouterComponent_SourceToRouterToDifferentSinks)
     EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
     EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
     EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
+}
+
+TEST_F(TestRouter, LambdaRouter_SourceToRouterToSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::LambdaRouter<std::string, int>>(&even_odd<int>);
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+}
+
+TEST_F(TestRouter, LambdaRouter_SourceToRouterToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::LambdaRouter<std::string, int>>(&even_odd<int>);
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+
+    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
 }
 
 // two possible errors, either the key function throws an error, or the key function returns a key that is invalid
