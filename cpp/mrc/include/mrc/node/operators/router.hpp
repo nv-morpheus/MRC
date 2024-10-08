@@ -203,6 +203,7 @@ class LambdaRouter<KeyT,
     convert_fn_t m_convert_fn;
 };
 
+// TODO: Ask MDD why we need an is_convertible_v and an is_same_v specialization if the impl is the same
 template <typename KeyT, typename InputT, typename OutputT>
 class LambdaRouter<KeyT,
                    InputT,
