@@ -229,6 +229,25 @@ TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
         exceptions::MrcRuntimeError);
 }
 
+TEST_F(TestRouter, LambdaRouterConvetable)
+{
+    auto source = std::make_shared<node::TestSource<int>>();
+    auto router = std::make_shared<node::LambdaRouter<std::string, int, float>>(&even_odd<int>);
+    auto sink1  = std::make_shared<node::TestSink<float>>();
+    auto sink2  = std::make_shared<node::TestSink<float>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ((std::vector<float>{1.0}), sink1->get_values());
+    EXPECT_EQ((std::vector<float>{0.0, 2.0}), sink2->get_values());
+}
+
 TEST_F(TestRouter, LambdaRouterConvestion)
 {
     auto conversion_call_count = std::atomic<std::size_t>(0);
