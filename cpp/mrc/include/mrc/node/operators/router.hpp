@@ -171,6 +171,11 @@ class LambdaRouter<KeyT,
         return this->m_key_fn(t);
     }
 
+    OutputT convert_value(InputT&& data) override
+    {
+        return this->m_convert_fn(std::move(data));
+    }
+
     key_fn_t m_key_fn;
     convert_fn_t m_convert_fn;
 };

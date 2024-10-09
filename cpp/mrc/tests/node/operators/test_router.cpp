@@ -23,6 +23,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>  // for size_t
+
 TEST_CLASS(Router);
 namespace {
 template <typename T>
@@ -225,6 +227,32 @@ TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
             sink2->run();
         },
         exceptions::MrcRuntimeError);
+}
+
+TEST_F(TestRouter, LambdaRouterConvestion)
+{
+    auto conversion_call_count = std::atomic<std::size_t>(0);
+    auto source                = std::make_shared<node::TestSource<int>>();
+    auto router                = std::make_shared<node::LambdaRouter<std::string, int, std::string>>(
+        &even_odd<int>,
+        [&conversion_call_count](int&& data) {
+            conversion_call_count++;
+            return std::to_string(data);
+        });
+    auto sink1 = std::make_shared<node::TestSink<std::string>>();
+    auto sink2 = std::make_shared<node::TestSink<std::string>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source("odd"), *sink1);
+    mrc::make_edge(*router->get_source("even"), *sink2);
+
+    source->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ(conversion_call_count, 3);
+    EXPECT_EQ((std::vector<std::string>{"1"}), sink1->get_values());
+    EXPECT_EQ((std::vector<std::string>{"0", "2"}), sink2->get_values());
 }
 
 }  // namespace mrc
