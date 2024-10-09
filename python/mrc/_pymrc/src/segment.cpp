@@ -27,14 +27,10 @@
 
 #include "mrc/channel/status.hpp"
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_readable.hpp"
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/port_registry.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
-#include "mrc/utils/string_utils.hpp"
-#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <pybind11/cast.h>

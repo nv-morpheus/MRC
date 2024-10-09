@@ -51,7 +51,7 @@ class ZipBase
 
 template <typename... InputT, typename OutputT>
 class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>,
-                                                public NodeParent<edge::IWritableProvider<InputT>...>
+                                                public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
   public:
     using input_tuple_t = std::tuple<InputT...>;

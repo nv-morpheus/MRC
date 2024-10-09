@@ -421,7 +421,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
 
     void init_children() override
     {
-        if constexpr (is_base_of_template<node::DynamicNodeParent, ObjectT>::value)
+        if constexpr (is_base_of_template<node::HomogeneousNodeParent, ObjectT>::value)
         {
             using child_node_t = typename ObjectT::child_node_t;
 
@@ -437,7 +437,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
             }
         }
 
-        if constexpr (is_base_of_template<node::NodeParent, ObjectT>::value)
+        if constexpr (is_base_of_template<node::HeterogeneousNodeParent, ObjectT>::value)
         {
             using child_types_t = typename ObjectT::child_types_t;
 
