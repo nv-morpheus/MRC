@@ -126,28 +126,7 @@ template <typename KeyT, typename InputT, typename OutputT>
 class Router<KeyT,
              InputT,
              OutputT,
-             std::enable_if_t<!std::is_same_v<InputT, OutputT> && std::is_convertible_v<InputT, OutputT>>>
-  : public RouterBase<KeyT, InputT, OutputT>
-{
-  protected:
-    channel::Status on_next(InputT&& data) override
-    {
-        try
-        {
-            KeyT key = this->determine_key_for_value(data);
-            return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
-        } catch (const std::exception& e)
-        {
-            LOG(ERROR) << "Caught exception: " << e.what() << std::endl;
-            return channel::Status::error;
-        }
-    }
-
-    virtual KeyT determine_key_for_value(const InputT& t) = 0;
-};
-
-template <typename KeyT, typename InputT, typename OutputT>
-class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_same_v<InputT, OutputT>>>
+             std::enable_if_t<std::is_same_v<InputT, OutputT> || std::is_convertible_v<InputT, OutputT>>>
   : public RouterBase<KeyT, InputT, OutputT>
 {
   protected:
@@ -196,30 +175,11 @@ class LambdaRouter<KeyT,
     convert_fn_t m_convert_fn;
 };
 
-// TODO: Ask MDD why we need an is_convertible_v and an is_same_v specialization if the impl is the same
 template <typename KeyT, typename InputT, typename OutputT>
 class LambdaRouter<KeyT,
                    InputT,
                    OutputT,
-                   std::enable_if_t<!std::is_same_v<InputT, OutputT> && std::is_convertible_v<InputT, OutputT>>>
-  : public Router<KeyT, InputT, OutputT>
-{
-  public:
-    using key_fn_t = std::function<KeyT(const InputT&)>;
-
-    LambdaRouter(key_fn_t key_fn) : m_key_fn(std::move(key_fn)) {}
-
-  protected:
-    KeyT determine_key_for_value(const InputT& t) override
-    {
-        return this->m_key_fn(t);
-    }
-
-    key_fn_t m_key_fn;
-};
-
-template <typename KeyT, typename InputT, typename OutputT>
-class LambdaRouter<KeyT, InputT, OutputT, std::enable_if_t<std::is_same_v<InputT, OutputT>>>
+                   std::enable_if_t<std::is_same_v<InputT, OutputT> || std::is_convertible_v<InputT, OutputT>>>
   : public Router<KeyT, InputT, OutputT>
 {
   public:
