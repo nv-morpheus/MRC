@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>  // for size_t
+#include <vector>
 
 TEST_CLASS(Router);
 namespace {
