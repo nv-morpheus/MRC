@@ -32,8 +32,8 @@
 #include <hwloc.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
+#include <cstdlib>  // for getenv, size_t
 #include <map>
 #include <memory>
 #include <ostream>
