@@ -487,17 +487,29 @@ class StaticRouterRunnableBase : public WritableProvider<InputT>,
     void run(mrc::runnable::Context& ctx) override
     {
         InputT data;
-        channel::Status status;
+        channel::Status read_status;
+        channel::Status write_status = channel::Status::success;  // give an initial value
 
         // Loop until either the node has been killed or the upstream terminated
         while (!m_stop_source.stop_requested() &&
-               (status = this->get_readable_edge()->await_read(data)) == channel::Status::success)
+               (read_status = this->get_readable_edge()->await_read(data)) == channel::Status::success &&
+               write_status == channel::Status::success)
         {
-            this->process_one(std::move(data));
+            write_status = this->process_one(std::move(data));
         }
 
         // Drop all connections
         MultiSourceProperties<KeyT, InputT>::release_edge_connections();
+
+        if (read_status == channel::Status::error)
+        {
+            throw exceptions::MrcRuntimeError("Failed to read from upstream");
+        }
+
+        if (write_status == channel::Status::error)
+        {
+            throw exceptions::MrcRuntimeError("Failed to write to downstream");
+        }
     }
 
     /**
