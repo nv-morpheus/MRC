@@ -40,6 +40,7 @@
 
 #include <array>
 #include <atomic>
+#include <cstddef>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -47,6 +48,14 @@
 #include <vector>
 
 using namespace std::literals::string_literals;
+
+namespace {
+template <typename T>
+std::string even_odd(const T& t)
+{
+    return t % 2 == 1 ? "odd"s : "even"s;
+}
+};  // namespace
 
 namespace mrc {
 
@@ -839,7 +848,7 @@ TEST_F(TestSegment, ChildObjects)
             "router",
             std::vector<std::string>{"even", "odd"},
             [](const std::string& s) {
-                return s.size() % 2 == 0 ? "even"s : "odd"s;
+                return even_odd<std::size_t>(s.size());
             });
 
         segment.make_edge(src, router);
@@ -861,6 +870,157 @@ TEST_F(TestSegment, ChildObjects)
     auto pipeline = mrc::make_pipeline();
     pipeline->register_segment(std::move(segdef));
     execute_pipeline(std::move(pipeline));
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnable)
+{
+    std::vector<int> sink1_results;
+    std::vector<int> sink2_results;
+
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [&sink1_results](int x) {
+            sink1_results.push_back(x);
+        });
+
+        auto sink2 = segment.make_sink<int>("sink2", [&sink2_results](int x) {
+            sink2_results.push_back(x);
+        });
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
+
+    EXPECT_EQ((std::vector<int>{1}), sink1_results);
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2_results);
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnableOnKeyError)
+{
+    // Test coverin the situation where the on_key function throws an exception
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                if (v == 2)
+                {
+                    throw std::runtime_error("KeyError");
+                }
+
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [](int x) {});
+        auto sink2 = segment.make_sink<int>("sink2", [](int x) {});
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+
+    EXPECT_THROW({ execute_pipeline(std::move(pipeline)); }, exceptions::MrcRuntimeError);
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnableOnKeyInvalidValue)
+{
+    // Test coverin the situation where the on_key function returns an invalid key
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                if (v == 2)
+                {
+                    return "fraud"s;
+                }
+
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [](int x) {});
+        auto sink2 = segment.make_sink<int>("sink2", [](int x) {});
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+
+    EXPECT_THROW({ execute_pipeline(std::move(pipeline)); }, exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, EnsureMoveMultiChildren)

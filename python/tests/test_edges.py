@@ -679,7 +679,7 @@ def test_multi_source_to_zip_to_sink(run_segment, source_cpp: bool):
         source1 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
         source2 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="2")
         zip = add_zip(seg, source1, source2)
-        add_sink(seg, zip, is_cpp=False, data_type=m.Base, is_component=False)
+        add_sink(seg, zip, is_cpp=False, data_type=tuple, is_component=False)
 
     results = run_segment(segment_init)
 

@@ -104,11 +104,17 @@ class Router<KeyT,
   protected:
     channel::Status on_next(InputT&& data) override
     {
-        KeyT key = this->determine_key_for_value(data);
+        try
+        {
+            KeyT key    = this->determine_key_for_value(data);
+            auto output = this->convert_value(std::move(data));
 
-        auto output = this->convert_value(std::move(data));
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(output));
+            return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(output));
+        } catch (const std::exception& e)
+        {
+            LOG(ERROR) << "Caught exception: " << e.what() << std::endl;
+            return channel::Status::error;
+        }
     }
 
     virtual KeyT determine_key_for_value(const InputT& t) = 0;
@@ -120,30 +126,21 @@ template <typename KeyT, typename InputT, typename OutputT>
 class Router<KeyT,
              InputT,
              OutputT,
-             std::enable_if_t<!std::is_same_v<InputT, OutputT> && std::is_convertible_v<InputT, OutputT>>>
+             std::enable_if_t<std::is_same_v<InputT, OutputT> || std::is_convertible_v<InputT, OutputT>>>
   : public RouterBase<KeyT, InputT, OutputT>
 {
   protected:
     channel::Status on_next(InputT&& data) override
     {
-        KeyT key = this->determine_key_for_value(data);
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
-    }
-
-    virtual KeyT determine_key_for_value(const InputT& t) = 0;
-};
-
-template <typename KeyT, typename InputT, typename OutputT>
-class Router<KeyT, InputT, OutputT, std::enable_if_t<std::is_same_v<InputT, OutputT>>>
-  : public RouterBase<KeyT, InputT, OutputT>
-{
-  protected:
-    channel::Status on_next(InputT&& data) override
-    {
-        KeyT key = this->determine_key_for_value(data);
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
+        try
+        {
+            KeyT key = this->determine_key_for_value(data);
+            return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
+        } catch (const std::exception& e)
+        {
+            LOG(ERROR) << "Caught exception: " << e.what() << std::endl;
+            return channel::Status::error;
+        }
     }
 
     virtual KeyT determine_key_for_value(const InputT& t) = 0;
@@ -157,7 +154,7 @@ class LambdaRouter<KeyT,
                    InputT,
                    OutputT,
                    std::enable_if_t<!std::is_same_v<InputT, OutputT> && !std::is_convertible_v<InputT, OutputT>>>
-  : public RouterBase<KeyT, InputT, OutputT>
+  : public Router<KeyT, InputT, OutputT>
 {
   public:
     using key_fn_t     = std::function<KeyT(const InputT&)>;
@@ -169,13 +166,14 @@ class LambdaRouter<KeyT,
     {}
 
   protected:
-    channel::Status on_next(InputT&& data) override
+    KeyT determine_key_for_value(const InputT& t) override
     {
-        KeyT key = this->m_key_fn(data);
+        return this->m_key_fn(t);
+    }
 
-        auto output = this->m_convert_fn(std::move(data));
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(output));
+    OutputT convert_value(InputT&& data) override
+    {
+        return this->m_convert_fn(std::move(data));
     }
 
     key_fn_t m_key_fn;
@@ -186,8 +184,8 @@ template <typename KeyT, typename InputT, typename OutputT>
 class LambdaRouter<KeyT,
                    InputT,
                    OutputT,
-                   std::enable_if_t<!std::is_same_v<InputT, OutputT> && std::is_convertible_v<InputT, OutputT>>>
-  : public RouterBase<KeyT, InputT, OutputT>
+                   std::enable_if_t<std::is_same_v<InputT, OutputT> || std::is_convertible_v<InputT, OutputT>>>
+  : public Router<KeyT, InputT, OutputT>
 {
   public:
     using key_fn_t = std::function<KeyT(const InputT&)>;
@@ -195,31 +193,9 @@ class LambdaRouter<KeyT,
     LambdaRouter(key_fn_t key_fn) : m_key_fn(std::move(key_fn)) {}
 
   protected:
-    channel::Status on_next(InputT&& data) override
+    KeyT determine_key_for_value(const InputT& t) override
     {
-        KeyT key = this->m_key_fn(data);
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
-    }
-
-    key_fn_t m_key_fn;
-};
-
-template <typename KeyT, typename InputT, typename OutputT>
-class LambdaRouter<KeyT, InputT, OutputT, std::enable_if_t<std::is_same_v<InputT, OutputT>>>
-  : public RouterBase<KeyT, InputT, OutputT>
-{
-  public:
-    using key_fn_t = std::function<KeyT(const InputT&)>;
-
-    LambdaRouter(key_fn_t key_fn) : m_key_fn(std::move(key_fn)) {}
-
-  protected:
-    channel::Status on_next(InputT&& data) override
-    {
-        KeyT key = this->m_key_fn(data);
-
-        return MultiSourceProperties<KeyT, OutputT>::get_writable_edge(key)->await_write(std::move(data));
+        return this->m_key_fn(t);
     }
 
     key_fn_t m_key_fn;
@@ -315,9 +291,15 @@ class DynamicRouterComponent : public ForwardingWritableProvider<InputT>,
 
     channel::Status on_next(input_t&& data) override
     {
-        key_t key = this->determine_key_for_value(data);
-
-        return MultiSourceProperties<key_t, input_t>::get_writable_edge(key)->await_write(std::move(data));
+        try
+        {
+            key_t key = this->determine_key_for_value(data);
+            return MultiSourceProperties<key_t, input_t>::get_writable_edge(key)->await_write(std::move(data));
+        } catch (const std::exception& e)
+        {
+            LOG(ERROR) << "Caught exception: " << e.what() << std::endl;
+            return channel::Status::error;
+        }
     }
 
     key_t determine_key_for_value(const InputT& t)
@@ -417,9 +399,15 @@ class StaticRouterBase : public MultiWritableAcceptor<KeyT, InputT>,
 
     channel::Status process_one(InputT&& data)
     {
-        key_t key = this->determine_key_for_value(data);
-
-        return MultiSourceProperties<key_t, input_t>::get_writable_edge(key)->await_write(std::move(data));
+        try
+        {
+            key_t key = this->determine_key_for_value(data);
+            return MultiSourceProperties<key_t, input_t>::get_writable_edge(key)->await_write(std::move(data));
+        } catch (const std::exception& e)
+        {
+            LOG(ERROR) << "Caught exception: " << e.what() << std::endl;
+            return channel::Status::error;
+        }
     }
 
     virtual key_t determine_key_for_value(const InputT& t) = 0;
@@ -499,17 +487,29 @@ class StaticRouterRunnableBase : public WritableProvider<InputT>,
     void run(mrc::runnable::Context& ctx) override
     {
         InputT data;
-        channel::Status status;
+        channel::Status read_status;
+        channel::Status write_status = channel::Status::success;  // give an initial value
 
         // Loop until either the node has been killed or the upstream terminated
         while (!m_stop_source.stop_requested() &&
-               (status = this->get_readable_edge()->await_read(data)) == channel::Status::success)
+               (read_status = this->get_readable_edge()->await_read(data)) == channel::Status::success &&
+               write_status == channel::Status::success)
         {
-            this->process_one(std::move(data));
+            write_status = this->process_one(std::move(data));
         }
 
         // Drop all connections
         MultiSourceProperties<KeyT, InputT>::release_edge_connections();
+
+        if (read_status == channel::Status::error)
+        {
+            throw exceptions::MrcRuntimeError("Failed to read from upstream");
+        }
+
+        if (write_status == channel::Status::error)
+        {
+            throw exceptions::MrcRuntimeError("Failed to write to downstream");
+        }
     }
 
     /**

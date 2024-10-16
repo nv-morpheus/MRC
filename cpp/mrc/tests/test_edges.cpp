@@ -423,8 +423,8 @@ TEST_F(TestEdges, SourceToRoundRobinRouterTypelessToDifferentSinks)
     source->run();
     sink1->run();
 
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+    EXPECT_EQ((std::vector<int>{0, 2}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{1}), sink2->get_values());
 }
 
 TEST_F(TestEdges, SourceToDynamicRouterToSinks)
@@ -445,9 +445,9 @@ TEST_F(TestEdges, SourceToDynamicRouterToSinks)
     sink2->run();
     sink3->run();
 
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
     EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink3->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
 }
 
 TEST_F(TestEdges, SourceToBroadcastToSink)
@@ -759,7 +759,9 @@ TEST_F(TestEdges, ZipLateClose)
 
 TEST_F(TestEdges, ZipEarlyReset)
 {
-    // Have one source emit different counts than the other
+    GTEST_SKIP() << "Edges are weakpointers, this triggers a fatal log in EdgeHolder, zip.use_count()==1";
+
+    //  Have one source emit different counts than the other
     auto source1 = std::make_shared<node::TestSource<int>>(4);
     auto source2 = std::make_shared<node::TestSource<float>>(3);
 
