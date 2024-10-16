@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
 
+#include <glog/logging.h>
+
 #include <memory>
 
 namespace mrc::manifold {
@@ -31,6 +33,7 @@ struct IngressDelegate
 {
     virtual ~IngressDelegate()                                                                       = default;
     virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
+    virtual void shutdown(){};
 };
 
 template <typename T>
@@ -51,6 +54,13 @@ class TypedIngress : public IngressDelegate
 template <typename T>
 class MuxedIngress : public node::Muxer<T>, public TypedIngress<T>
 {
+  public:
+    void shutdown() final
+    {
+        DVLOG(10) << "Releasing edges from manifold ingress";
+        node::SourceProperties<T>::release_edge_connection();
+    }
+
   protected:
     void do_add_input(const SegmentAddress& address, edge::IWritableAcceptor<T>* source) final
     {

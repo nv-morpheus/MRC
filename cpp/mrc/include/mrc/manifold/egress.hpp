@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,7 @@ struct EgressDelegate
 {
     virtual ~EgressDelegate()                                                                        = default;
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
+    virtual void shutdown(){};
 };
 
 template <typename T>
@@ -55,6 +56,13 @@ class TypedEgress : public EgressDelegate
 template <typename T>
 class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
 {
+  public:
+    void shutdown() final
+    {
+        DVLOG(10) << "Releasing edges from manifold egress";
+        node::Router<SegmentAddress, T>::release_edge_connections();
+    }
+
   protected:
     SegmentAddress determine_key_for_value(const T& t) override
     {

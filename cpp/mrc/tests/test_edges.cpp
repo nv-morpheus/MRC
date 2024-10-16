@@ -380,7 +380,7 @@ namespace mrc {
 TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
 {
     // Reset the sink before the source which will cause an exception
-    EXPECT_DEATH(
+    EXPECT_DEBUG_DEATH(
         {
             auto source = std::make_shared<node::TestSource<int>>();
             auto sink   = std::make_shared<node::TestSink<int>>();
@@ -388,7 +388,7 @@ TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
             mrc::make_edge(*source, *sink);
             sink.reset();
         },
-        "");
+        "A node was destructed which still had dependent connections.*");
 }
 
 TEST_F(TestEdges, SourceToSink)
@@ -1032,6 +1032,21 @@ class TestEdgeHolder : public edge::EdgeHolder<T>
     {
         this->init_owned_edge(std::move(edge));
     }
+
+    void call_init_connected_edge(std::shared_ptr<edge::Edge<T>> edge)
+    {
+        this->init_connected_edge(std::move(edge));
+    }
+};
+
+template <typename T>
+class TestEdge : public edge::Edge<T>
+{
+  public:
+    void call_connect()
+    {
+        this->connect();
+    }
 };
 
 TEST_F(TestEdges, EdgeHolderIsConnected)
@@ -1046,4 +1061,30 @@ TEST_F(TestEdges, EdgeHolderIsConnected)
     edge_holder.call_release_edge_connection();
     EXPECT_FALSE(edge_holder.has_active_connection());
 }
+
+TEST_F(TestEdges, EdgeHolderConnectRelase)
+{
+    TestEdgeHolder<int> edge_holder;
+    auto edge = std::make_shared<TestEdge<int>>();
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_connected_edge(std::make_shared<node::NullWritableEdge<int>>());
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge_holder.call_init_owned_edge(edge);
+    EXPECT_FALSE(edge_holder.has_active_connection());
+
+    edge->call_connect();
+    EXPECT_TRUE(edge_holder.has_active_connection());
+
+    edge_holder.call_release_edge_connection();
+
+    // EdgeHolder is disconnected, but someone is still holding a reference to the edge
+    EXPECT_TRUE(edge_holder.has_active_connection());
+
+    edge.reset();
+
+    EXPECT_FALSE(edge_holder.has_active_connection());
+}
+
 }  // namespace mrc

@@ -119,6 +119,7 @@ class BuilderDefinition : public IBuilder
     const SegmentDefinition& definition() const;
 
     void initialize();
+    void shutdown();
 
     const std::map<std::string, std::shared_ptr<runnable::Launchable>>& nodes() const;
     const std::map<std::string, std::shared_ptr<EgressPortBase>>& egress_ports() const;

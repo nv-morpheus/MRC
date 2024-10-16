@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,11 @@ class Queue : public WritableProvider<T>, public ReadableProvider<T>
     {
         this->set_channel(std::make_unique<mrc::channel::BufferedChannel<T>>());
     }
-    ~Queue() override = default;
+    ~Queue() override
+    {
+        SinkProperties<T>::release_edge_connection();
+        SourceProperties<T>::release_edge_connection();
+    };
 
     void set_channel(std::unique_ptr<mrc::channel::Channel<T>> channel)
     {

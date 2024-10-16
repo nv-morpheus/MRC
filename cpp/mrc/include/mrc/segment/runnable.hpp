@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,6 +40,12 @@ class Runnable : public Object<NodeT>, public runnable::Launchable
     template <typename... ArgsT>
     Runnable(ArgsT&&... args) : m_node(std::make_unique<NodeT>(std::forward<ArgsT>(args)...))
     {}
+
+    void destroy() final
+    {
+        DVLOG(10) << "Destroying runnable " << this->type_name();
+        m_node.reset();
+    }
 
     Runnable(std::unique_ptr<NodeT> node) : m_node(std::move(node))
     {

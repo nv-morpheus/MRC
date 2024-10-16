@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
+#include "mrc/types.hpp"  // for Mutex
 #include "mrc/utils/type_utils.hpp"
 
 #include <memory>
@@ -208,37 +209,68 @@ template <typename T>
 class ForwardingEgressProvider : public ReadableProvider<T>
 {
   protected:
+    struct State
+    {
+        Mutex m_mutex;
+        bool m_is_destroyed{false};
+    };
+
     class ForwardingEdge : public edge::IEdgeReadable<T>
     {
       public:
-        ForwardingEdge(ForwardingEgressProvider<T>& parent) : m_parent(parent) {}
+        ForwardingEdge(ForwardingEgressProvider<T>& parent, std::shared_ptr<State> state) :
+          m_parent(parent),
+          m_state(std::move(state))
+        {}
 
         ~ForwardingEdge() = default;
 
         channel::Status await_read(T& t) override
         {
-            return m_parent.get_next(t);
+            std::lock_guard<decltype(m_state->m_mutex)> lock(m_state->m_mutex);
+            if (!(m_state->m_is_destroyed))
+            {
+                return m_parent.get_next(t);
+            }
+
+            return channel::Status::closed;
         }
 
       private:
         ForwardingEgressProvider<T>& m_parent;
+        std::shared_ptr<State> m_state;
     };
 
-    ForwardingEgressProvider()
+    ForwardingEgressProvider() : m_state(std::make_shared<State>())
     {
-        auto inner_edge = std::make_shared<ForwardingEdge>(*this);
+        auto inner_edge = std::make_shared<ForwardingEdge>(*this, m_state);
 
-        inner_edge->add_disconnector([this]() {
-            // Only call the on_complete if we have been connected
-            this->on_complete();
+        inner_edge->add_disconnector([this, state = m_state]() {
+            std::lock_guard<decltype(state->m_mutex)> lock(state->m_mutex);
+            if (!(state->m_is_destroyed))
+            {
+                // Only call the on_complete if we have been connected and `this` is still alive
+                this->on_complete();
+            }
         });
 
         ReadableProvider<T>::init_owned_edge(inner_edge);
     }
 
+    ~ForwardingEgressProvider()
+    {
+        SourceProperties<T>::disconnect();
+        {
+            std::lock_guard<decltype(m_state->m_mutex)> lock(m_state->m_mutex);
+            m_state->m_is_destroyed = true;
+        }
+    }
+
     virtual channel::Status get_next(T& t) = 0;
 
     virtual void on_complete() {}
+
+    std::shared_ptr<State> m_state;
 };
 
 }  // namespace mrc::node
