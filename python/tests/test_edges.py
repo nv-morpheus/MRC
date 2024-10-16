@@ -252,12 +252,42 @@ def add_broadcast(seg: mrc.Builder, *upstream: mrc.SegmentObject):
     return node
 
 
+def add_router(seg: mrc.Builder,
+               *upstream: mrc.SegmentObject,
+               router_keys: list[str],
+               key_fn: typing.Callable[[typing.Any], str] = None,
+               is_component: bool):
+
+    if (key_fn is None):
+        key_fn = lambda _: "a"
+
+    if (is_component):
+        node = mrc.core.node.RouterComponent(seg, "RouterComponent", router_keys=router_keys, key_fn=key_fn)
+    else:
+        node = mrc.core.node.Router(seg, "Router", router_keys=router_keys, key_fn=key_fn)
+
+    for u in upstream:
+        seg.make_edge(u, node)
+
+    return node
+
+
 def add_round_robin_router(seg: mrc.Builder, *upstream: mrc.SegmentObject):
 
     node = mrc.core.node.RoundRobinRouter(seg, "RoundRobinRouter")
 
     for u in upstream:
         seg.make_edge(u, node)
+
+    return node
+
+
+def add_zip(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node = mrc.core.node.Zip(seg, "Zip", len(upstream))
+
+    for i, u in enumerate(upstream):
+        seg.make_edge(u, node.get_sink(i))
 
     return node
 
@@ -635,6 +665,46 @@ def test_source_to_node_to_null(run_segment,
         # Add a large enough count to fill a buffered channel
         source = add_source(seg, is_cpp=source_cpp, data_type=source_type, is_component=source_component, msg_count=500)
         add_node(seg, source, is_cpp=node_cpp, data_type=node_type, is_component=node_component, msg_count=500)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+def test_multi_source_to_zip_to_sink(run_segment, source_cpp: bool):
+
+    def segment_init(seg: mrc.Builder):
+
+        source1 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
+        source2 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="2")
+        zip = add_zip(seg, source1, source2)
+        add_sink(seg, zip, is_cpp=False, data_type=tuple, is_component=False)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("router_component", gen_parameters("router", is_fail_fn=lambda x: False))
+def test_source_to_router_to_multi_sink(run_segment, source_cpp: bool, router_component: bool):
+
+    def segment_init(seg: mrc.Builder):
+
+        def determine_key(x):
+
+            return "a"
+
+        source = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
+        router = add_router(seg,
+                            source,
+                            router_keys=["a", "b", "c"],
+                            key_fn=determine_key,
+                            is_component=router_component)
+        add_sink(seg, router.get_source("a"), is_cpp=False, data_type=m.Base, is_component=False, suffix="a")
+        add_sink(seg, router.get_source("b"), is_cpp=False, data_type=m.Base, is_component=False, suffix="b", count=0)
+        add_sink(seg, router.get_source("c"), is_cpp=False, data_type=m.Base, is_component=False, suffix="c", count=0)
 
     results = run_segment(segment_init)
 

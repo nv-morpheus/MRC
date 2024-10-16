@@ -115,6 +115,10 @@ template <template <typename...> class BaseT, typename DerivedT>
 // NOLINTNEXTLINE(readability-identifier-naming)
 using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::type;
 
+template <template <typename...> class BaseT, typename DerivedT>
+// NOLINTNEXTLINE(readability-identifier-naming)
+inline constexpr bool is_base_of_template_v = is_base_of_template<BaseT, DerivedT>::value;
+
 template <typename T, typename... TsT>
 struct first_non_void_type  // NOLINT
 {
