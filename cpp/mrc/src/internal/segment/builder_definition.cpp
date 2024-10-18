@@ -100,8 +100,8 @@ const std::string& BuilderDefinition::name() const
     return m_definition->name();
 }
 
-std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std::string& name,
-                                                                       bool ignore_namespace) const
+std::tuple<std::string, std::string, std::string> BuilderDefinition::normalize_name(const std::string& name,
+                                                                                    bool ignore_namespace) const
 {
     // Prefix all nodes with `/<SegmentName>/`
     auto global_prefix = "/" + this->name() + "/";
@@ -109,20 +109,32 @@ std::tuple<std::string, std::string> BuilderDefinition::normalize_name(const std
     // Check and see if the name starts with "/" which means its global
     bool is_global = name.starts_with(global_prefix);
 
+    std::string local_name;
+    std::string child_name;
+
     if (is_global)
     {
         // Local is everything after the global prefix
-        auto local_name = name.substr(global_prefix.length());
-
-        return std::make_tuple(name, local_name);
+        local_name = name.substr(global_prefix.length());
     }
-
-    // Otherwise build up the local name from any module prefix
-    auto local_name = (ignore_namespace || m_namespace_prefix.empty()) ? name : m_namespace_prefix + "/" + name;
+    else
+    {
+        // Otherwise build up the local name from any module prefix
+        local_name = (ignore_namespace || m_namespace_prefix.empty()) ? name : m_namespace_prefix + "/" + name;
+    }
 
     auto global_name = global_prefix + local_name;
 
-    return std::make_tuple(global_name, local_name);
+    // Check for a child name
+    auto child_name_start_idx = local_name.find("/");
+
+    if (child_name_start_idx != std::string::npos)
+    {
+        child_name = local_name.substr(child_name_start_idx + 1);
+        local_name = local_name.substr(0, child_name_start_idx);
+    }
+
+    return std::make_tuple(global_name, local_name, child_name);
 }
 
 std::shared_ptr<ObjectProperties> BuilderDefinition::get_ingress(std::string name, std::type_index type_index)
@@ -307,15 +319,25 @@ const std::map<std::string, std::shared_ptr<::mrc::segment::IngressPortBase>>& B
 
 bool BuilderDefinition::has_object(const std::string& name) const
 {
-    auto [global_name, local_name] = this->normalize_name(name);
+    auto [global_name, local_name, child_name] = this->normalize_name(name);
 
     auto search = m_objects.find(local_name);
-    return bool(search != m_objects.end());
+    if (search == m_objects.end())
+    {
+        return false;
+    }
+
+    if (child_name.empty())
+    {
+        return true;
+    }
+
+    return search->second->has_child(child_name);
 }
 
 mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string& name)
 {
-    auto [global_name, local_name] = this->normalize_name(name);
+    auto [global_name, local_name, child_name] = this->normalize_name(name);
 
     auto search = m_objects.find(local_name);
     if (search == m_objects.end())
@@ -323,7 +345,20 @@ mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string
         LOG(ERROR) << "Unable to find segment object with name: " << name;
         throw exceptions::MrcRuntimeError("unable to find segment object with name " + name);
     }
-    return *(search->second);
+
+    if (child_name.empty())
+    {
+        return *(search->second);
+    }
+    auto found_child = search->second->get_child(child_name);
+
+    if (!found_child)
+    {
+        throw exceptions::MrcRuntimeError(
+            MRC_CONCAT_STR("Unable to find segment object with name: " << name << ". Child not found: " << child_name));
+    }
+
+    return *found_child;
 }
 
 void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object)
@@ -337,12 +372,18 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
 
-    auto [global_name, local_name] = this->normalize_name(name);
+    auto [global_name, local_name, child_name] = this->normalize_name(name);
+
+    if (!child_name.empty())
+    {
+        throw exceptions::MrcRuntimeError(
+            MRC_CONCAT_STR("Object names cannot contain '/' characters. Found: " << local_name << "/" << child_name));
+    }
 
     m_objects[local_name] = object;
 
     // Now initialize the object with the name (this will generate children as well)
-    object->initialize(global_name);
+    object->initialize(global_name, this);
 
     if (object->is_runnable())
     {
@@ -368,54 +409,68 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         m_egress_ports[local_name] = egress_port;
     }
 
-    // Now register any child objects
-    auto children = object->get_children();
+    // // Now register any child objects
+    // auto children = object->get_children();
 
-    if (!children.empty())
-    {
-        // Push the namespace for this object
-        this->ns_push(local_name);
+    // if (!children.empty())
+    // {
+    //     // Push the namespace for this object
+    //     this->ns_push(local_name);
 
-        for (auto& [child_name, child_object] : children)
-        {
-            // Add the child object
-            this->add_object(child_name, child_object);
-        }
+    //     for (auto& [child_name, child_object] : children)
+    //     {
+    //         // Add the child object
+    //         this->add_object(child_name, child_object);
+    //     }
 
-        // Pop the namespace for this object
-        this->ns_pop(local_name);
-    }
+    //     // Pop the namespace for this object
+    //     this->ns_pop(local_name);
+    // }
 }
 
 std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_base(const std::string& name)
 {
-    auto [global_name, local_name] = this->normalize_name(name, true);
+    auto [global_name, local_name, child_name] = this->normalize_name(name, true);
+
+    DCHECK_EQ(child_name, "") << "Child names are not supported for ingress ports. Found: " << local_name << "/"
+                              << child_name;
 
     auto search = m_ingress_ports.find(local_name);
+
     if (search != m_ingress_ports.end())
     {
         return search->second;
     }
+
     return nullptr;
 }
 
 std::shared_ptr<::mrc::segment::EgressPortBase> BuilderDefinition::get_egress_base(const std::string& name)
 {
-    auto [global_name, local_name] = this->normalize_name(name, true);
+    auto [global_name, local_name, child_name] = this->normalize_name(name, true);
+
+    DCHECK_EQ(child_name, "") << "Child names are not supported for egress ports. Found: " << local_name << "/"
+                              << child_name;
 
     auto search = m_egress_ports.find(local_name);
+
     if (search != m_egress_ports.end())
     {
         return search->second;
     }
+
     return nullptr;
 }
 
 std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(const std::string& name)
 {
-    auto [global_name, local_name] = this->normalize_name(name);
+    auto [global_name, local_name, child_name] = this->normalize_name(name);
+
+    DCHECK_EQ(child_name, "") << "Child names are not supported for throughput counters ports. Found: " << local_name
+                              << "/" << child_name;
 
     auto counter = m_resources.metrics_registry().make_throughput_counter(global_name);
+
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };

@@ -66,8 +66,8 @@ class BuilderDefinition : public IBuilder
 
     const std::string& name() const override;
 
-    std::tuple<std::string, std::string> normalize_name(const std::string& name,
-                                                        bool ignore_namespace = false) const override;
+    std::tuple<std::string, std::string, std::string> normalize_name(const std::string& name,
+                                                                     bool ignore_namespace = false) const override;
 
     std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
 

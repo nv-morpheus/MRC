@@ -52,37 +52,64 @@ class ReferencedObject;
 
 struct ObjectPropertiesState
 {
-    // Will be set by the builder class when the object is added to a segment
-    bool is_initialized{false};
+    const std::string type_name;
 
-    std::string name;
-
-    std::string type_name;
-
-    bool is_sink;
-    bool is_source;
+    const bool is_sink;
+    const bool is_source;
 
     // std::optional<std::type_index> sink_type             = std::nullopt;
     // std::optional<std::type_index> sink_type_no_holder   = std::nullopt;
     // std::optional<std::type_index> source_type           = std::nullopt;
     // std::optional<std::type_index> source_type_no_holder = std::nullopt;
 
-    bool is_writable_acceptor;
-    bool is_writable_provider;
-    bool is_readable_acceptor;
-    bool is_readable_provider;
+    const bool is_writable_acceptor;
+    const bool is_writable_provider;
+    const bool is_readable_acceptor;
+    const bool is_readable_provider;
 
-    bool is_runnable;
+    const bool is_runnable;
+
+    bool is_initialized() const
+    {
+        return m_is_initialized;
+    }
+
+    const std::string& name() const
+    {
+        return m_name;
+    }
+
+    IBuilder* owning_builder() const
+    {
+        return m_owning_builder;
+    }
+
+    void initialize(std::string name, IBuilder* owning_builder)
+    {
+        MRC_CHECK2(!m_is_initialized) << "Object '" << name << "' is already initialized.";
+
+        m_name           = std::move(name);
+        m_owning_builder = owning_builder;
+        m_is_initialized = true;
+    }
 
     template <typename ObjectT>
     static std::shared_ptr<ObjectPropertiesState> create()
     {
-        auto state = std::shared_ptr<ObjectPropertiesState>(new ObjectPropertiesState());
+        auto state = std::shared_ptr<ObjectPropertiesState>(new ObjectPropertiesState(
+            /*.type_name            = */ std::string(::mrc::type_name<ObjectT>()),
+            /*.is_sink              = */ std::is_base_of_v<node::SinkPropertiesBase, ObjectT>,
+            /*.is_source            = */ std::is_base_of_v<node::SourcePropertiesBase, ObjectT>,
+            /*.is_writable_acceptor = */ std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>,
+            /*.is_writable_provider = */ std::is_base_of_v<edge::IWritableProviderBase, ObjectT>,
+            /*.is_readable_acceptor = */ std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>,
+            /*.is_readable_provider = */ std::is_base_of_v<edge::IReadableProviderBase, ObjectT>,
+            /*.is_runnable          = */ std::is_base_of_v<runnable::Runnable, ObjectT>));
 
-        state->type_name = std::string(::mrc::type_name<ObjectT>());
+        // state->type_name = std::string(::mrc::type_name<ObjectT>());
 
-        state->is_sink   = std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
-        state->is_source = std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
+        // state->is_sink   = std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
+        // state->is_source = std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
 
         // if constexpr (is_base_of_template_v<node::SinkProperties, ObjectT>)
         // {
@@ -108,18 +135,42 @@ struct ObjectPropertiesState
         //     CHECK(!state->is_source) << "Object is a source but does not have source properties";
         // }
 
-        state->is_writable_acceptor = std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
-        state->is_writable_provider = std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
-        state->is_readable_acceptor = std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
-        state->is_readable_provider = std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
+        // state->is_writable_acceptor = std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
+        // state->is_writable_provider = std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
+        // state->is_readable_acceptor = std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
+        // state->is_readable_provider = std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
 
-        state->is_runnable = std::is_base_of_v<runnable::Runnable, ObjectT>;
+        // state->is_runnable = std::is_base_of_v<runnable::Runnable, ObjectT>;
 
         return state;
     }
 
   private:
-    ObjectPropertiesState() = default;
+    ObjectPropertiesState(std::string type_name,
+                          bool is_sink,
+                          bool is_source,
+                          bool is_writable_acceptor,
+                          bool is_writable_provider,
+                          bool is_readable_acceptor,
+                          bool is_readable_provider,
+                          bool is_runnable) :
+      type_name(std::move(type_name)),
+      is_sink(is_sink),
+      is_source(is_source),
+      is_writable_acceptor(is_writable_acceptor),
+      is_writable_provider(is_writable_provider),
+      is_readable_acceptor(is_readable_acceptor),
+      is_readable_provider(is_readable_provider),
+      is_runnable(is_runnable)
+    {}
+
+    // Will be set by the builder class when the object is added to a segment
+    bool m_is_initialized{false};
+
+    std::string m_name{""};
+
+    // The owning builder. Once set, name cannot be changed
+    IBuilder* m_owning_builder{nullptr};
 };
 
 class ObjectProperties
@@ -127,28 +178,18 @@ class ObjectProperties
   public:
     virtual ~ObjectProperties() = default;
 
-    void initialize(std::string name)
+    void initialize(std::string name, IBuilder* owning_builder)
     {
-        MRC_CHECK2(!this->get_state().is_initialized) << "Object '" << name << "' is already initialized.";
-
         // Set our name first
-        this->get_state().name = name;
+        this->get_state().initialize(name, owning_builder);
 
         // Initialize the children
         this->init_children();
-
-        // Set the initialized flag
-        this->get_state().is_initialized = true;
     }
-
-    // virtual void set_name(const std::string& name)
-    // {
-    //     m_state->name = name;
-    // }
 
     virtual std::string name() const
     {
-        return this->get_state().name;
+        return this->get_state().name();
     }
 
     virtual std::string type_name() const
@@ -209,9 +250,15 @@ class ObjectProperties
         return this->get_state().is_runnable;
     }
 
+    virtual IBuilder* owning_builder() const
+    {
+        return this->get_state().owning_builder();
+    }
+
     virtual runnable::LaunchOptions& launch_options()             = 0;
     virtual const runnable::LaunchOptions& launch_options() const = 0;
 
+    virtual bool has_child(const std::string& name) const                                        = 0;
     virtual std::shared_ptr<ObjectProperties> get_child(const std::string& name) const           = 0;
     virtual const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const = 0;
 
@@ -223,6 +270,8 @@ class ObjectProperties
 
   private:
     virtual void init_children() = 0;
+
+    friend class IBuilder;
 };
 
 template <typename T>
@@ -233,9 +282,9 @@ edge::IWritableAcceptor<T>& ObjectProperties::writable_acceptor_typed()
 
     if (writable_acceptor == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "IWritableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
-                   << "IWritableAcceptor<" << ::mrc::type_name(base.writable_acceptor_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IWritableAcceptor<"
+                   << std::string(mrc::type_name<T>()) << ">" << "IWritableAcceptor<"
+                   << ::mrc::type_name(base.writable_acceptor_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableAcceptor<T>");
     }
 
@@ -250,9 +299,9 @@ edge::IWritableProvider<T>& ObjectProperties::writable_provider_typed()
 
     if (writable_provider == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "IWritableProvider<" << std::string(mrc::type_name<T>()) << ">"
-                   << "IWritableProvider<" << ::mrc::type_name(base.writable_provider_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IWritableProvider<"
+                   << std::string(mrc::type_name<T>()) << ">" << "IWritableProvider<"
+                   << ::mrc::type_name(base.writable_provider_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableProvider<T>");
     }
 
@@ -267,9 +316,9 @@ edge::IReadableAcceptor<T>& ObjectProperties::readable_acceptor_typed()
 
     if (readable_acceptor == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "IReadableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
-                   << "IReadableAcceptor<" << ::mrc::type_name(base.readable_acceptor_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IReadableAcceptor<"
+                   << std::string(mrc::type_name<T>()) << ">" << "IReadableAcceptor<"
+                   << ::mrc::type_name(base.readable_acceptor_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableAcceptor<T>");
     }
 
@@ -284,9 +333,9 @@ edge::IReadableProvider<T>& ObjectProperties::readable_provider_typed()
 
     if (readable_provider == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to "
-                   << "IReadableProvider<" << std::string(mrc::type_name<T>()) << ">"
-                   << "IReadableProvider<" << ::mrc::type_name(base.readable_provider_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IReadableProvider<"
+                   << std::string(mrc::type_name<T>()) << ">" << "IReadableProvider<"
+                   << ::mrc::type_name(base.readable_provider_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableProvider<T>");
     }
 
@@ -364,11 +413,58 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
         return m_launch_options;
     }
 
+    bool has_child(const std::string& name) const override
+    {
+        // First, split the name into the local and child names
+        auto child_name_start_idx = name.find("/");
+
+        if (child_name_start_idx != std::string::npos)
+        {
+            auto local_name = name.substr(0, child_name_start_idx);
+            auto child_name = name.substr(child_name_start_idx + 1);
+
+            // Check if the local name matches
+            auto found = m_children.find(local_name);
+
+            if (found == m_children.end())
+            {
+                return false;
+            }
+
+            // Now check if the child exists
+            return found->second->has_child(child_name);
+        }
+
+        return m_children.contains(name);
+    }
+
     std::shared_ptr<ObjectProperties> get_child(const std::string& name) const override
     {
-        MRC_CHECK2(m_children.contains(name)) << "Child " << name << " not found in " << this->name();
+        auto local_name = name;
+        std::string child_name;
 
-        return m_children.at(name);
+        // First, split the name into the local and child names
+        auto child_name_start_idx = name.find("/");
+
+        if (child_name_start_idx != std::string::npos)
+        {
+            local_name = name.substr(0, child_name_start_idx);
+            child_name = name.substr(child_name_start_idx + 1);
+        }
+
+        auto found = m_children.find(local_name);
+
+        if (found == m_children.end())
+        {
+            throw exceptions::MrcRuntimeError("Child " + local_name + " not found in " + this->name());
+        }
+
+        if (!child_name.empty())
+        {
+            return found->second->get_child(child_name);
+        }
+
+        return found->second;
     }
 
     const std::map<std::string, std::shared_ptr<ObjectProperties>>& get_children() const override
@@ -433,6 +529,8 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
             {
                 auto child_obj = std::make_shared<SharedObject<child_node_t>>(this->shared_from_this(), child_ref);
 
+                child_obj->initialize(name, this->owning_builder());
+
                 m_children.emplace(name, std::move(child_obj));
             }
         }
@@ -450,6 +548,8 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
                 [this]<typename ChildIndexT>(std::pair<std::string, std::reference_wrapper<ChildIndexT>>& pair,
                                              size_t idx) {
                     auto child_obj = std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(), pair.second);
+
+                    child_obj->initialize(pair.first, this->owning_builder());
 
                     m_children.emplace(pair.first, std::move(child_obj));
                 });
