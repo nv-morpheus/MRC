@@ -89,7 +89,7 @@ void MirrorTapStreamModule<DataTypeT>::initialize(segment::IBuilder& builder)
 
     builder.make_edge(mirror_ingress, m_stream_buffer->input_port("input"));
 
-    register_output_port("output", m_stream_buffer->output_port("output"));
+    builder.register_module_output("output", m_stream_buffer->output_port("output"));
 }
 
 template <typename DataTypeT>

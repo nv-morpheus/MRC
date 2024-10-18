@@ -21,6 +21,7 @@
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 
@@ -180,6 +181,48 @@ void SegmentModule::register_input_port(std::string input_name, std::shared_ptr<
     }
 
     throw std::invalid_argument("Input port object must be a writable provider or readable acceptor");
+}
+
+void SegmentModule::register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object)
+{
+    if (!name.starts_with(MRC_CONCAT_STR(m_module_instance_registered_namespace << "/")))
+    {
+        throw std::invalid_argument(MRC_CONCAT_STR("Attempt to register object with invalid name: "
+                                                   << name
+                                                   << " for module: " << m_module_instance_registered_namespace));
+    }
+
+    auto local_name = name.substr(m_module_instance_registered_namespace.size() + 1);
+
+    if (m_objects.find(local_name) != m_objects.end())
+    {
+        throw std::invalid_argument(MRC_CONCAT_STR("Attempt to register duplicate module object: " << std::move(name)));
+    }
+
+    m_objects[local_name] = object;
+}
+
+segment::ObjectProperties& SegmentModule::find_object(const std::string& name) const
+{
+    if (!name.starts_with(MRC_CONCAT_STR(m_module_instance_registered_namespace << "/")))
+    {
+        throw std::invalid_argument(MRC_CONCAT_STR("Attempt to find object with invalid name: "
+                                                   << name
+                                                   << " for module: " << m_module_instance_registered_namespace));
+    }
+
+    auto local_name = name.substr(m_module_instance_registered_namespace.size() + 1);
+
+    auto found = m_objects.find(local_name);
+
+    if (found == m_objects.end())
+    {
+        throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Unable to find segment object with name "
+                                                         << name << " in module "
+                                                         << m_module_instance_registered_namespace));
+    }
+
+    return *found->second;
 }
 
 void SegmentModule::register_typed_input_port(std::string input_name,

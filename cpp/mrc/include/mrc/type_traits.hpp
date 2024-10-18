@@ -131,6 +131,9 @@ struct first_non_void_type<T>
     using type_t = T;
 };
 
+template <typename T, typename... TsT>
+using first_non_void_type_t = typename first_non_void_type<T, TsT...>::type_t;
+
 template <typename... TsT>
 struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
 {
@@ -139,6 +142,6 @@ struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
 };
 
 template <typename T, typename... TsT>
-using first_non_void_type_t = typename first_non_void_type_error_check<T, TsT...>::type_t;
+using first_non_void_type_error_check_t = typename first_non_void_type_error_check<T, TsT...>::type_t;
 
 }  // namespace mrc

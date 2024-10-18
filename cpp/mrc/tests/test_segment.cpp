@@ -40,6 +40,7 @@
 #include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include <array>
@@ -898,18 +899,18 @@ TEST_F(TestSegment, ChildObjectsByName)
                     return even_odd<std::size_t>(s.size());
                 });
 
-            this->register_input_port("input", router->get_child("input"));
+            builder.register_module_input("input", router);
 
             auto node = builder.make_node<std::string, std::string>("node", rxcpp::operators::map([](std::string x) {
                                                                         return x;
                                                                     }));
 
             // Connect via name
-            builder.make_edge(MRC_CONCAT_STR(router->name() << "/odd"), node);
+            builder.make_edge("router/odd", node);
 
             // Register output port
-            this->register_output_port("odd", node);
-            this->register_output_port("even", router->get_child("even"));
+            builder.register_module_output("odd_module", node);
+            builder.register_module_output("even_module", router->get_child("even"));
         }
 
         std::string module_type_name() const override
@@ -920,7 +921,11 @@ TEST_F(TestSegment, ChildObjectsByName)
 
     auto init = [&](segment::IBuilder& segment) {
         auto src = segment.make_source<std::string>("src", [](rxcpp::subscriber<std::string>& s) {
-            s.on_next("data");
+            s.on_next("1");
+            s.on_next("11");
+            s.on_next("111");
+            s.on_next("1111");
+            s.on_next("11111");
             s.on_completed();
         });
 
@@ -936,19 +941,23 @@ TEST_F(TestSegment, ChildObjectsByName)
         auto router_module = segment.make_module<RouterModule>("router_module");
 
         // Connect even to the router module
-        std::shared_ptr<segment::ObjectProperties> router_even_child = router->get_child("even");
-        std::shared_ptr<segment::ObjectProperties> module_input_port = router_module->input_port("input");
-        segment.make_edge<segment::ObjectProperties, segment::ObjectProperties>(router_even_child, module_input_port);
+        segment.make_edge(router->get_child("even"), router_module->input_port("input"));
 
         // Connect the router module to the sink
-        auto sink_odd1 = segment.make_sink<std::string>("sink_odd1", [](std::string x) {});
-        auto sink_odd2 = segment.make_sink<std::string>("sink_odd2", [](std::string x) {});
-        auto sink_even = segment.make_sink<std::string>("sink_even", [](std::string x) {});
+        auto sink_odd1 = segment.make_sink<std::string>("sink_odd1", [](std::string x) {
+            EXPECT_EQ(x.size() % 2, 1);
+        });
+        auto sink_odd2 = segment.make_sink<std::string>("sink_odd2", [](std::string x) {
+            ASSERT_TRUE(false) << "This sink should not be called";
+        });
+        auto sink_even = segment.make_sink<std::string>("sink_even", [](std::string x) {
+            EXPECT_EQ(x.size() % 2, 0);
+        });
 
         // Connect via names
         segment.make_edge(MRC_CONCAT_STR(router->name() << "/odd"), sink_odd1);
-        segment.make_edge(MRC_CONCAT_STR(router->name() << "/" << router_module->name() << "/odd"), sink_odd2);
-        segment.make_edge(MRC_CONCAT_STR(router->name() << "/" << router_module->name() << "/even"), sink_even);
+        segment.make_edge(MRC_CONCAT_STR(router_module->component_prefix() << "/odd_module"), sink_odd2);
+        segment.make_edge(MRC_CONCAT_STR(router_module->component_prefix() << "/even_module"), sink_even);
     };
 
     auto segdef = Segment::create("segment_test", init);

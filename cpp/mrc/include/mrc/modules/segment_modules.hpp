@@ -140,6 +140,10 @@ class SegmentModule
      */
     virtual void initialize(segment::IBuilder& builder) = 0;
 
+  private:
+    void register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object);
+    segment::ObjectProperties& find_object(const std::string& name) const;
+
     /* Interface Functions */
     /**
      * Register an input port that should be exposed for the module
@@ -154,9 +158,6 @@ class SegmentModule
      * @param object ObjectProperties object associated with the port
      */
     void register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
-
-  private:
-    void register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object);
 
     /**
      * Register an input port that should be exposed for the module, with explicit type index. This is

@@ -482,10 +482,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
     }
 
   protected:
-    Object() : m_state(ObjectPropertiesState::create<ObjectT>())
-    {
-        LOG(INFO) << "Creating Object '" << this->name() << "' with type: " << this->type_name();
-    }
+    Object() : m_state(ObjectPropertiesState::create<ObjectT>()) {}
 
     template <typename U>
         requires std::derived_from<U, ObjectT>
@@ -494,10 +491,7 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
       m_state(ObjectPropertiesState::create<U>()),
       m_launch_options(other.m_launch_options),
       m_children(other.m_children)
-    {
-        LOG(INFO) << "Copying Object '" << this->name() << "' from type: " << other.type_name()
-                  << " to type: " << this->type_name();
-    }
+    {}
 
     const ObjectPropertiesState& get_state() const override
     {
@@ -529,8 +523,6 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
             {
                 auto child_obj = std::make_shared<SharedObject<child_node_t>>(this->shared_from_this(), child_ref);
 
-                child_obj->initialize(name, this->owning_builder());
-
                 m_children.emplace(name, std::move(child_obj));
             }
         }
@@ -548,8 +540,6 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
                 [this]<typename ChildIndexT>(std::pair<std::string, std::reference_wrapper<ChildIndexT>>& pair,
                                              size_t idx) {
                     auto child_obj = std::make_shared<SharedObject<ChildIndexT>>(this->shared_from_this(), pair.second);
-
-                    child_obj->initialize(pair.first, this->owning_builder());
 
                     m_children.emplace(pair.first, std::move(child_obj));
                 });

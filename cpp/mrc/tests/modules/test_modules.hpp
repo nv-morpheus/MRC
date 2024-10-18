@@ -118,7 +118,7 @@ void MultiSourceModule<DataTypeT, SourceCountV, EmissionCountV>::initialize(segm
 
         builder.make_edge(internal, output);
 
-        register_output_port("output_" + std::to_string(i), output);
+        builder.register_module_output("output_" + std::to_string(i), output);
     }
 }
 
@@ -167,7 +167,7 @@ void MultiSinkModule<DataTypeT, SinkCountV>::initialize(segment::IBuilder& build
             m_received_count[i]++;
         });
 
-        register_input_port("input_" + std::to_string(i), input);
+        builder.register_module_input("input_" + std::to_string(i), input);
     }
 }
 

@@ -66,8 +66,8 @@ class BuilderDefinition : public IBuilder
 
     const std::string& name() const override;
 
-    std::tuple<std::string, std::string, std::string> normalize_name(const std::string& name,
-                                                                     bool ignore_namespace = false) const override;
+    std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                        bool ignore_namespace = false) const override;
 
     std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) override;
 
@@ -158,7 +158,7 @@ class BuilderDefinition : public IBuilder
     std::map<std::string, std::shared_ptr<ObjectProperties>> m_referenceable_objects;
 
     // Saved modules to guarantee lifetime
-    std::vector<std::shared_ptr<modules::PersistentModule>> m_modules;
+    std::vector<std::shared_ptr<modules::SegmentModule>> m_modules;
 
     // only runnables
     std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>> m_nodes;

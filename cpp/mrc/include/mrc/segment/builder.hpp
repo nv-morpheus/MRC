@@ -134,8 +134,8 @@ class IBuilder
      * @param ignore_namespace Whether or not to ignore the '<m_namespace_prefix>' portion. Useful for ports.
      * @return std::tuple<std::string, std::string> Global name, Local name
      */
-    virtual std::tuple<std::string, std::string, std::string> normalize_name(const std::string& name,
-                                                                             bool ignore_namespace = false) const = 0;
+    virtual std::tuple<std::string, std::string> normalize_name(const std::string& name,
+                                                                bool ignore_namespace = false) const = 0;
 
     virtual std::shared_ptr<ObjectProperties> get_ingress(std::string name, std::type_index type_index) = 0;
 
@@ -487,21 +487,46 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     VLOG(2) << "Deduced source type: " << mrc::type_name<deduced_source_type_t>() << std::endl;
     VLOG(2) << "Deduced sink type: " << mrc::type_name<deduced_sink_type_t>() << std::endl;
 
-    if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+    if constexpr (std::is_void_v<deduced_source_type_t> || std::is_void_v<deduced_sink_type_t>)
     {
-        mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
-                       sink_object.template writable_provider_typed<deduced_sink_type_t>());
-        return;
-    }
+        // Try typeless edge creation
+        VLOG(2) << "Attempting to create typeless edge";
 
-    if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+        if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+        {
+            mrc::make_edge_typeless(source_object.writable_acceptor_base(), sink_object.writable_provider_base());
+        }
+        else if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+        {
+            mrc::make_edge_typeless(source_object.readable_provider_base(), sink_object.readable_acceptor_base());
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+                "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        }
+    }
+    else
     {
-        mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
-                       sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
-        return;
-    }
+        if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+        {
+            mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
+                           sink_object.template writable_provider_typed<deduced_sink_type_t>());
+        }
 
-    LOG(ERROR) << "Incompatible node types";
+        else if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+        {
+            mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
+                           sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+                "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        }
+    }
 }
 
 template <typename EdgeDataTypeT,
