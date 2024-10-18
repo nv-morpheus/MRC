@@ -209,6 +209,12 @@ void BuilderDefinition::register_module_input(std::string input_name, std::share
 
     auto current_module = m_module_stack.back();
     current_module->register_input_port(std::move(input_name), object);
+
+    // Calculate the global name
+    auto global_name = accum_merge(m_namespace_prefix, input_name);
+
+    // Save this as a referencable object
+    m_referenceable_objects[global_name] = object;
 }
 
 [[maybe_unused]] nlohmann::json BuilderDefinition::get_current_module_config()
@@ -246,6 +252,12 @@ void BuilderDefinition::register_module_input(std::string input_name, std::share
     auto current_module = m_module_stack.back();
 
     current_module->register_output_port(std::move(output_name), object);
+
+    // Calculate the global name
+    auto global_name = accum_merge(m_namespace_prefix, output_name);
+
+    // Save this as a referencable object
+    m_referenceable_objects[global_name] = object;
 }
 
 std::shared_ptr<mrc::modules::SegmentModule> BuilderDefinition::load_module_from_registry(
@@ -321,8 +333,8 @@ bool BuilderDefinition::has_object(const std::string& name) const
 {
     auto [global_name, local_name, child_name] = this->normalize_name(name);
 
-    auto search = m_objects.find(local_name);
-    if (search == m_objects.end())
+    auto search = m_referenceable_objects.find(local_name);
+    if (search == m_referenceable_objects.end())
     {
         return false;
     }
@@ -339,8 +351,8 @@ mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string
 {
     auto [global_name, local_name, child_name] = this->normalize_name(name);
 
-    auto search = m_objects.find(local_name);
-    if (search == m_objects.end())
+    auto search = m_referenceable_objects.find(local_name);
+    if (search == m_referenceable_objects.end())
     {
         LOG(ERROR) << "Unable to find segment object with name: " << name;
         throw exceptions::MrcRuntimeError("unable to find segment object with name " + name);
@@ -366,21 +378,15 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
     // First, ensure that the name is properly formatted
     validate_name(name);
 
-    if (has_object(name))
+    auto global_name = accum_merge(m_namespace_prefix, name);
+
+    if (this->has_object(global_name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
 
-    auto [global_name, local_name, child_name] = this->normalize_name(name);
-
-    if (!child_name.empty())
-    {
-        throw exceptions::MrcRuntimeError(
-            MRC_CONCAT_STR("Object names cannot contain '/' characters. Found: " << local_name << "/" << child_name));
-    }
-
-    m_objects[local_name] = object;
+    m_referenceable_objects[global_name] = object;
 
     // Now initialize the object with the name (this will generate children as well)
     object->initialize(global_name, this);
@@ -392,40 +398,40 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         CHECK(launchable) << "Invalid conversion. Object returned is_runnable() == true, but was not of type "
                              "Launchable";
 
-        m_nodes[local_name] = launchable;
+        m_nodes[global_name] = launchable;
     }
 
     // Add to ingress ports list if it is the right type
     if (auto ingress_port = std::dynamic_pointer_cast<IngressPortBase>(object))
     {
         // Save by the original name
-        m_ingress_ports[local_name] = ingress_port;
+        m_ingress_ports[name] = ingress_port;
     }
 
     // Add to egress ports list if it is the right type
     if (auto egress_port = std::dynamic_pointer_cast<EgressPortBase>(object))
     {
         // Save by the original name
-        m_egress_ports[local_name] = egress_port;
+        m_egress_ports[name] = egress_port;
     }
 
-    // // Now register any child objects
-    // auto children = object->get_children();
+    // Now register any child objects
+    auto children = object->get_children();
 
-    // if (!children.empty())
-    // {
-    //     // Push the namespace for this object
-    //     this->ns_push(local_name);
+    if (!children.empty())
+    {
+        // Push the namespace for this object
+        this->ns_push(name);
 
-    //     for (auto& [child_name, child_object] : children)
-    //     {
-    //         // Add the child object
-    //         this->add_object(child_name, child_object);
-    //     }
+        for (auto& [child_name, child_object] : children)
+        {
+            // Add the child object
+            this->add_object(child_name, child_object);
+        }
 
-    //     // Pop the namespace for this object
-    //     this->ns_pop(local_name);
-    // }
+        // Pop the namespace for this object
+        this->ns_pop(name);
+    }
 }
 
 std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_base(const std::string& name)

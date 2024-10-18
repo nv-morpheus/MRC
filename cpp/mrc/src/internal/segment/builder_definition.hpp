@@ -154,8 +154,8 @@ class BuilderDefinition : public IBuilder
     std::vector<std::string> m_namespace_stack{};
     std::vector<std::shared_ptr<mrc::modules::SegmentModule>> m_module_stack{};
 
-    // all objects - ports, runnables, etc.
-    std::map<std::string, std::shared_ptr<ObjectProperties>> m_objects;
+    // all objects that can be referenced by name from the builder
+    std::map<std::string, std::shared_ptr<ObjectProperties>> m_referenceable_objects;
 
     // Saved modules to guarantee lifetime
     std::vector<std::shared_ptr<modules::PersistentModule>> m_modules;

@@ -464,6 +464,16 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
+    if (source_object.owning_builder() != this)
+    {
+        throw exceptions::MrcRuntimeError("Source object does not belong to this builder");
+    }
+
+    if (sink_object.owning_builder() != this)
+    {
+        throw exceptions::MrcRuntimeError("Sink object does not belong to this builder");
+    }
+
     // If we can determine the type from the actual object, use that, then fall back to hints or defaults.
     using deduced_source_type_t = first_non_void_type_t<source_sp_type_t,  // Deduced type (if possible)
                                                         SourceNodeTypeT,   // Explicit type hint
