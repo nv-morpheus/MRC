@@ -72,7 +72,7 @@ void DynamicSourceModule::initialize(segment::IBuilder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source);
+    builder.register_module_output("source", source);
 }
 
 std::string DynamicSourceModule::module_type_name() const

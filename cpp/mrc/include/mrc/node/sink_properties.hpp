@@ -20,6 +20,7 @@
 #include "mrc/channel/status.hpp"  // IWYU pragma: export
 #include "mrc/edge/edge_builder.hpp"
 #include "mrc/edge/edge_readable.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/forward.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/type_utils.hpp"
@@ -121,6 +122,36 @@ class SinkProperties : public edge::EdgeHolder<T>, public SinkPropertiesBase
     }
 };
 
+template <typename KeyT, typename T>
+class MultiSinkProperties : public edge::MultiEdgeHolder<KeyT, T>, public SinkPropertiesBase
+{
+  public:
+    using sink_type_t = T;
+
+    std::type_index sink_type(bool ignore_holder = false) const final
+    {
+        if (ignore_holder)
+        {
+            if constexpr (is_smart_ptr<T>::value)
+            {
+                return typeid(typename T::element_type);
+            }
+        }
+        return typeid(T);
+    }
+
+    std::string sink_type_name() const final
+    {
+        return std::string(type_name<T>());
+    }
+
+  protected:
+    std::shared_ptr<edge::IEdgeReadable<T>> get_readable_edge(KeyT edge_key) const
+    {
+        return std::dynamic_pointer_cast<edge::IEdgeReadable<T>>(this->get_connected_edge(edge_key));
+    }
+};
+
 template <typename T>
 class ReadableAcceptor : public virtual SinkProperties<T>, public edge::IReadableAcceptor<T>
 {
@@ -131,7 +162,7 @@ class ReadableAcceptor : public virtual SinkProperties<T>, public edge::IReadabl
         SinkProperties<T>::operator=(std::move(other));
     }
 
-  private:
+  protected:
     void set_readable_edge_handle(std::shared_ptr<edge::ReadableEdgeHandle> egress) override
     {
         // Do any conversion to the correct type here
@@ -151,10 +182,87 @@ class WritableProvider : public virtual SinkProperties<T>, public edge::IWritabl
         SinkProperties<T>::operator=(std::move(other));
     }
 
-  private:
+  protected:
     std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle() const override
     {
         return edge::WritableEdgeHandle::from_typeless(SinkProperties<T>::get_edge_connection());
+    }
+};
+
+template <typename T>
+class ReadableWritableSink : public WritableProvider<T>, public ReadableAcceptor<T>
+{};
+
+template <typename KeyT, typename T>
+class MultiReadableAcceptor : public virtual MultiSinkProperties<KeyT, T>, public edge::IMultiReadableAcceptor<KeyT, T>
+{
+  public:
+  protected:
+    bool has_readable_edge(const KeyT& key) const override
+    {
+        return MultiSinkProperties<KeyT, T>::has_edge_connection(key);
+    }
+
+    void release_readable_edge(const KeyT& key) override
+    {
+        return MultiSinkProperties<KeyT, T>::release_edge_connection(key);
+    }
+
+    void release_readable_edges() override
+    {
+        return MultiSinkProperties<KeyT, T>::release_edge_connections();
+    }
+
+    size_t readable_edge_count() const override
+    {
+        return MultiSinkProperties<KeyT, T>::edge_connection_count();
+    }
+
+    std::vector<KeyT> readable_edge_keys() const override
+    {
+        return MultiSinkProperties<KeyT, T>::edge_connection_keys();
+    }
+
+    void set_readable_edge_handle(KeyT key, std::shared_ptr<edge::WritableEdgeHandle> egress) override
+    {
+        auto adapted_egress = edge::EdgeBuilder::adapt_readable_edge<T>(egress);
+        MultiSinkProperties<KeyT, T>::make_edge_connection(key, adapted_egress);
+    }
+};
+
+template <typename KeyT, typename T>
+class MultiWritableProvider : public virtual MultiSinkProperties<KeyT, T>, public edge::IMultiWritableProvider<KeyT, T>
+{
+  public:
+  protected:
+    bool has_writable_edge(const KeyT& key) const override
+    {
+        return MultiSinkProperties<KeyT, T>::has_edge_connection(key);
+    }
+
+    void release_writable_edge(const KeyT& key) override
+    {
+        return MultiSinkProperties<KeyT, T>::release_edge_connection(key);
+    }
+
+    void release_writable_edges() override
+    {
+        return MultiSinkProperties<KeyT, T>::release_edge_connections();
+    }
+
+    size_t writable_edge_count() const override
+    {
+        return MultiSinkProperties<KeyT, T>::edge_connection_count();
+    }
+
+    std::vector<KeyT> writable_edge_keys() const override
+    {
+        return MultiSinkProperties<KeyT, T>::edge_connection_keys();
+    }
+
+    std::shared_ptr<edge::WritableEdgeHandle> get_writable_edge_handle(KeyT key) const override
+    {
+        return edge::WritableEdgeHandle::from_typeless(MultiSinkProperties<KeyT, T>::get_edge_connection(key));
     }
 };
 

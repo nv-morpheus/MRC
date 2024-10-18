@@ -17,17 +17,23 @@
 
 #include "pymrc/node.hpp"
 
+#include "pymrc/utilities/function_wrappers.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
+#include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
+#include <pybind11/cast.h>
+#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
+#include <pybind11/stl.h>  // IWYU pragma: keep
 
 #include <memory>
 #include <sstream>
@@ -67,6 +73,106 @@ PYBIND11_MODULE(node, py_mod)
 
             return node;
         }));
+
+    py::class_<mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<
+                   node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>>>(py_mod, "Zip")
+        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
+            if (count == 2)
+            {
+                return builder
+                    .construct_object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>(
+                        name,
+                        [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
+                            py::gil_scoped_acquire gil;
+
+                            return PyObjectHolder(py::cast(std::move(input_data)));
+                        });
+            }
+
+            py::print("Unsupported count!");
+            throw std::runtime_error("Unsupported count!");
+        }))
+        .def("get_sink",
+             [](mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>&
+                    self,
+                size_t index) {
+                 return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+             });
+
+    py::class_<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, PyObjectHolder>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, PyObjectHolder>>>>(
+        py_mod,
+        "RouterComponent")
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           std::vector<std::string> router_keys,
+                           OnDataFunction key_fn) {
+                 return builder.construct_object<node::LambdaStaticRouterComponent<std::string, PyObjectHolder>>(
+                     name,
+                     router_keys,
+                     [key_fn_cap = std::move(key_fn)](const PyObjectHolder& data) -> std::string {
+                         py::gil_scoped_acquire gil;
+
+                         auto ret_key     = key_fn_cap(data.copy_obj());
+                         auto ret_key_str = py::str(ret_key);
+
+                         return std::string(ret_key_str);
+                     });
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("router_keys"),
+             py::arg("key_fn"))
+        .def(
+            "get_source",
+            [](mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, PyObjectHolder>>& self,
+               py::object key) {
+                std::string key_str = py::str(key);
+
+                return self.get_child(key_str);
+            },
+            py::arg("key"));
+
+    py::class_<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>>>(
+        py_mod,
+        "Route"
+        "r")
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           std::vector<std::string> router_keys,
+                           OnDataFunction key_fn) {
+                 return builder.construct_object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>(
+                     name,
+                     router_keys,
+                     [key_fn_cap = std::move(key_fn)](const PyObjectHolder& data) -> std::string {
+                         py::gil_scoped_acquire gil;
+
+                         auto ret_key     = key_fn_cap(data.copy_obj());
+                         auto ret_key_str = py::str(ret_key);
+
+                         return std::string(ret_key_str);
+                     });
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("router_keys"),
+             py::arg("key_fn"))
+        .def(
+            "get_source",
+            [](mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>& self,
+               py::object key) {
+                std::string key_str = py::str(key);
+
+                return self.get_child(key_str);
+            },
+            py::arg("key"));
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);

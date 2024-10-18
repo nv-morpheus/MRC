@@ -138,8 +138,8 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::IBuil
             }
         });
 
-    register_input_port("input", buffer_sink);
-    register_output_port("output", buffer_source);
+    builder.register_module_input("input", buffer_sink);
+    builder.register_module_output("output", buffer_source);
 }
 
 template <typename DataTypeT, template <typename> class StreamBufferTypeT>

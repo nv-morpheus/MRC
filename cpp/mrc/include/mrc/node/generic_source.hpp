@@ -68,7 +68,7 @@ GenericSource<T, ContextT>::GenericSource() :
 {}
 
 template <typename T>
-class GenericSourceComponent : public ForwardingEgressProvider<T>
+class GenericSourceComponent : public ForwardingReadableProvider<T>
 {
   public:
     GenericSourceComponent()           = default;

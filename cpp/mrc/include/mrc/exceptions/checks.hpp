@@ -17,39 +17,18 @@
 
 #pragma once
 
-#include <ostream>
+#include <string>
 
-namespace mrc::channel {
+namespace mrc::exceptions {
 
-enum class Status
-{
-    success = 0,
-    empty,
-    full,
-    closed,
-    timeout,
-    error
-};
+void throw_failed_check_exception(const std::string& file,
+                                  const std::string& function,
+                                  unsigned int line,
+                                  const std::string& msg = "");
 
-static inline std::ostream& operator<<(std::ostream& os, const Status& s)
-{
-    switch (s)
-    {
-    case Status::success:
-        return os << "success";
-    case Status::empty:
-        return os << "empty";
-    case Status::full:
-        return os << "full";
-    case Status::closed:
-        return os << "closed";
-    case Status::timeout:
-        return os << "timeout";
-    case Status::error:
-        return os << "error";
-    default:
-        throw std::logic_error("Unsupported channel::Status enum. Was a new value added recently?");
-    }
-}
+#define MRC_CHECK2(condition)                                                                     \
+    for (std::stringstream ss; !(condition);                                                      \
+         ::mrc::exceptions::throw_failed_check_exception(__FILE__, __func__, __LINE__, ss.str())) \
+    ss
 
-}  // namespace mrc::channel
+}  // namespace mrc::exceptions

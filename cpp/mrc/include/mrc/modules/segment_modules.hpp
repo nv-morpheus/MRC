@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mrc/segment/object.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <map>
@@ -138,6 +140,10 @@ class SegmentModule
      */
     virtual void initialize(segment::IBuilder& builder) = 0;
 
+  private:
+    void register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object);
+    segment::ObjectProperties& find_object(const std::string& name) const;
+
     /* Interface Functions */
     /**
      * Register an input port that should be exposed for the module
@@ -153,7 +159,6 @@ class SegmentModule
      */
     void register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
-  private:
     /**
      * Register an input port that should be exposed for the module, with explicit type index. This is
      * necessary for Objects that aren't explicit Source or Sink types (e.g. a custom object type)
@@ -187,6 +192,9 @@ class SegmentModule
 
     segment_module_port_map_t m_input_ports{};
     segment_module_port_map_t m_output_ports{};
+
+    // Maintain a map of all objects to keep them alive. These are registered as internal names
+    std::map<std::string, std::shared_ptr<segment::ObjectProperties>> m_objects;
 
     const nlohmann::json m_config;
 

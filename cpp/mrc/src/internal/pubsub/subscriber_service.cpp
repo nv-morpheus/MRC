@@ -74,7 +74,7 @@ void SubscriberService::do_subscription_service_teardown()
 {
     // disconnect from the deserialize source router
     // this will create a cascading shutdown
-    resources().network()->data_plane().server().deserialize_source().drop_edge(tag());
+    resources().network()->data_plane().server().deserialize_source().drop_source(tag());
 }
 
 void SubscriberService::do_subscription_service_join()

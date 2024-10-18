@@ -323,7 +323,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     auto recv_sink = std::make_unique<node::RxSink<memory::TransientBuffer>>([&](memory::TransientBuffer buffer) {
         EXPECT_EQ(buffer.bytes(), 128);
         counter++;
-        r0.server().deserialize_source().drop_edge(tag);
+        r0.server().deserialize_source().drop_source(tag);
     });
 
     auto deser_source = r0.server().deserialize_source().get_source(tag);

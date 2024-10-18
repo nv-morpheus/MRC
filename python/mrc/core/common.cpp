@@ -18,6 +18,7 @@
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 
@@ -44,6 +45,18 @@ PYBIND11_MODULE(common, py_mod)
     )pbdoc";
 
     PortBuilderUtil::register_port_util<PyHolder>();
+
+    py::class_<mrc::edge::IWritableAcceptorBase, std::shared_ptr<mrc::edge::IWritableAcceptorBase>>(py_mod,
+                                                                                                    "WritableAcceptor");
+
+    py::class_<mrc::edge::IWritableProviderBase, std::shared_ptr<mrc::edge::IWritableProviderBase>>(py_mod,
+                                                                                                    "WritableProvider");
+
+    py::class_<mrc::edge::IReadableAcceptorBase, std::shared_ptr<mrc::edge::IReadableAcceptorBase>>(py_mod,
+                                                                                                    "ReadableAcceptor");
+
+    py::class_<mrc::edge::IReadableProviderBase, std::shared_ptr<mrc::edge::IReadableProviderBase>>(py_mod,
+                                                                                                    "ReadableProvider");
 
     py_mod.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
                                                                   << mrc_VERSION_PATCH);
