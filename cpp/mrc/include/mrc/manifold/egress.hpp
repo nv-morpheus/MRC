@@ -53,7 +53,7 @@ class TypedEgress : public EgressDelegate
 };
 
 template <typename T>
-class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
+class RoundRobinEgress : public node::DynamicRouterComponentBase<SegmentAddress, T>, public TypedEgress<T>
 {
   protected:
     SegmentAddress determine_key_for_value(const T& t) override

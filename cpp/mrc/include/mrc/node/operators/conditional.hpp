@@ -22,19 +22,12 @@
 namespace mrc::node {
 
 template <typename CaseT, typename T>
-class Conditional : public Router<CaseT, T>
+class Conditional : public LambdaDynamicRouterComponent<CaseT, T>
 {
+    using base_t = LambdaDynamicRouterComponent<CaseT, T>;
+
   public:
-    Conditional(std::function<CaseT(const T&)> predicate) : m_predicate(std::move(predicate)) {}
-
-  protected:
-    virtual CaseT determine_key_for_value(const T& t)
-    {
-        return m_predicate(t);
-    }
-
-  private:
-    std::function<CaseT(const T&)> m_predicate;
+    using base_t::base_t;
 };
 
 }  // namespace mrc::node

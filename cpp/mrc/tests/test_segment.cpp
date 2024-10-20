@@ -850,7 +850,7 @@ TEST_F(TestSegment, ChildObjects)
             s.on_completed();
         });
 
-        auto router = segment.construct_object<node::DynamicRouterComponent<std::string, std::string>>(
+        auto router = segment.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
             "router",
             std::vector<std::string>{"even", "odd"},
             [](const std::string& s) {
@@ -892,7 +892,7 @@ TEST_F(TestSegment, ChildObjectsByName)
       protected:
         void initialize(segment::IBuilder& builder) override
         {
-            auto router = builder.construct_object<node::DynamicRouterComponent<std::string, std::string>>(
+            auto router = builder.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
                 "router",
                 std::vector<std::string>{"even", "odd"},
                 [](const std::string& s) {
@@ -929,7 +929,7 @@ TEST_F(TestSegment, ChildObjectsByName)
             s.on_completed();
         });
 
-        auto router = segment.construct_object<node::DynamicRouterComponent<std::string, std::string>>(
+        auto router = segment.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
             "router",
             std::vector<std::string>{"even", "odd"},
             [](const std::string& s) {

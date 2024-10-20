@@ -242,14 +242,14 @@ class TestRouterTypes : public testing::Test
     std::shared_ptr<node::TestSink<int>> sink2;
 };
 
-using RouterTypes = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase2<int, int>>,
-                                     node::DerivedRouterBase<int, node::StaticRouterRunnableBase2<int, int>>,
-                                     node::DerivedRouterBase<int, node::DynamicRouterComponentBase2<int, int>>,
-                                     node::DerivedRouterBase<int, node::DynamicRouterRunnableBase2<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaStaticRouterComponent2<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable2<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent2<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable2<int, int>>>;
+using RouterTypes = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>,
+                                     node::DerivedRouterBase<int, node::StaticRouterRunnableBase<int, int>>,
+                                     node::DerivedRouterBase<int, node::DynamicRouterComponentBase<int, int>>,
+                                     node::DerivedRouterBase<int, node::DynamicRouterRunnableBase<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaStaticRouterComponent<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable<int, int>>>;
 
 class RouterTypesNameGenerator
 {
@@ -257,21 +257,21 @@ class RouterTypesNameGenerator
     template <typename T>
     static std::string GetName(int)
     {
-        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterComponentBase2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>>)
             return "StaticComponentBase";
-        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterRunnableBase2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterRunnableBase<int, int>>>)
             return "StaticRunnableBase";
-        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterComponentBase2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterComponentBase<int, int>>>)
             return "DynamicComponentBase";
-        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterRunnableBase2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterRunnableBase<int, int>>>)
             return "DynamicRunnableBase";
-        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterComponent2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterComponent<int, int>>>)
             return "LambdaStaticComponent";
-        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable<int, int>>>)
             return "LambdaStaticRunnable";
-        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent<int, int>>>)
             return "LambdaDynamicComponent";
-        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable2<int, int>>>)
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable<int, int>>>)
             return "LambdaDynamicRunnable";
     }
 };
@@ -279,6 +279,13 @@ class RouterTypesNameGenerator
 TYPED_TEST_SUITE(TestRouterTypes, RouterTypes, RouterTypesNameGenerator);
 
 TYPED_TEST(TestRouterTypes, CorrectValues)
+{
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), this->sink0->get_values());
+    EXPECT_EQ((std::vector<int>{1, 4, 7}), this->sink1->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), this->sink2->get_values());
+}
+
+TYPED_TEST(TestRouterTypes, ErrorHandling)
 {
     EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), this->sink0->get_values());
     EXPECT_EQ((std::vector<int>{1, 4, 7}), this->sink1->get_values());
@@ -375,7 +382,7 @@ TEST_F(TestRouter, LambdaStaticRouterComponent_SourceToRouterToDifferentSinks)
 TEST_F(TestRouter, LambdaRouter_SourceToRouterToSinks)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaRouter<std::string, int>>(&even_odd<int>);
+    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int>>(&even_odd<int>);
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
@@ -394,7 +401,7 @@ TEST_F(TestRouter, LambdaRouter_SourceToRouterToSinks)
 TEST_F(TestRouter, LambdaRouter_SourceToRouterToDifferentSinks)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaRouter<std::string, int>>(&even_odd<int>);
+    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int>>(&even_odd<int>);
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
 
@@ -413,7 +420,7 @@ TEST_F(TestRouter, LambdaRouter_SourceToRouterToDifferentSinks)
 TEST_F(TestRouter, LambdaRouterOnKeyError)
 {
     auto source = std::make_shared<node::TestSource<int>>(3);
-    auto router = std::make_shared<node::LambdaRouter<int, int>>([](const int& data) {
+    auto router = std::make_shared<node::LambdaDynamicRouterComponent<int, int>>([](const int& data) {
         if (data == 2)
         {
             throw std::runtime_error("Test Error");
@@ -440,7 +447,7 @@ TEST_F(TestRouter, LambdaRouterOnKeyError)
 TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
 {
     auto source = std::make_shared<node::TestSource<int>>(3);
-    auto router = std::make_shared<node::LambdaRouter<int, int>>([](const int& data) {
+    auto router = std::make_shared<node::LambdaDynamicRouterComponent<int, int>>([](const int& data) {
         return data + 1;  // On the third value, this will return 4, which is not a valid key
     });
 
@@ -462,7 +469,7 @@ TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
 TEST_F(TestRouter, LambdaRouterConvetable)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaRouter<std::string, int, float>>(&even_odd<int>);
+    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int, float>>(&even_odd<int>);
     auto sink1  = std::make_shared<node::TestSink<float>>();
     auto sink2  = std::make_shared<node::TestSink<float>>();
 
@@ -482,7 +489,7 @@ TEST_F(TestRouter, LambdaRouterConvestion)
 {
     auto conversion_call_count = std::atomic<std::size_t>(0);
     auto source                = std::make_shared<node::TestSource<int>>();
-    auto router                = std::make_shared<node::LambdaRouter<std::string, int, std::string>>(
+    auto router                = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int, std::string>>(
         &even_odd<int>,
         [&conversion_call_count](int&& data) {
             conversion_call_count++;

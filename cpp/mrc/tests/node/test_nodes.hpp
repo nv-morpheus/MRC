@@ -434,8 +434,11 @@ class TestSinkComponent : public WritableProvider<T>
     std::vector<T> m_values;
 };
 
-class TestRouter : public Router<std::string, int>
+class TestRouter : public StaticRouterComponentBase<std::string, int>
 {
+  public:
+    TestRouter() : StaticRouterComponentBase<std::string, int>(std::vector<std::string>{"odd", "even"}) {}
+
   protected:
     std::string determine_key_for_value(const int& t) override
     {
@@ -444,12 +447,12 @@ class TestRouter : public Router<std::string, int>
 };
 
 template <typename T>
-class TestDynamicRouter : public Router<std::string, T>
+class TestDynamicRouter : public DynamicRouterComponentBase<std::string, T>
 {
   protected:
     std::string determine_key_for_value(const T& t) override
     {
-        auto keys = Router<std::string, T>::edge_connection_keys();
+        auto keys = DynamicRouterComponentBase<std::string, T>::edge_connection_keys();
 
         return keys[t % keys.size()];
     }
