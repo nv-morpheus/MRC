@@ -24,6 +24,8 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>  // for size_t
+#include <memory>
+#include <type_traits>
 #include <vector>
 
 TEST_CLASS(Router);
@@ -33,17 +35,135 @@ std::string even_odd(const T& t)
 {
     return t % 2 == 1 ? "odd" : "even";
 }
+
+template <typename T>
+int mod_three(const T& data)
+{
+    return data % 3;
+}
 };  // namespace
 
 namespace mrc::node {
 
+template <typename T, typename BaseT>
+class DerivedRouterBase : public BaseT
+{
+  public:
+    using this_t = DerivedRouterBase<T, BaseT>;
+    using BaseT::BaseT;
+
+    void run()
+    {
+        constexpr bool has_do_run = requires(this_t& t) { t.do_run(); };
+
+        if constexpr (has_do_run)
+        {
+            this->do_run();
+        }
+    }
+
+  protected:
+    int determine_key_for_value(const T& t) override
+    {
+        return mod_three(t);
+    }
+};
+
+template <typename BaseT>
+class DerivedLambdaRouter : public BaseT
+{
+  public:
+    using this_t = DerivedLambdaRouter<BaseT>;
+    using BaseT::BaseT;
+
+    void run()
+    {
+        constexpr bool has_do_run = requires(this_t& t) { t.do_run(); };
+
+        if constexpr (has_do_run)
+        {
+            this->do_run();
+        }
+    }
+};
+
+// template <typename T>
+// class TestStaticRouterComponent : public StaticRouterComponentBase2<int, T>
+// {
+//   public:
+//     using base_t = StaticRouterComponentBase2<int, T>;
+
+//     TestStaticRouterComponent() : base_t(std::vector<int>{0, 1, 2}) {}
+
+//   protected:
+//     int determine_key_for_value(const T& t) override
+//     {
+//         return mod_three(t);
+//     }
+// };
+
+// template <typename T>
+// class TestStaticRouterRunnable : public StaticRouterRunnableBase2<int, T>
+// {
+//   public:
+//     using base_t = StaticRouterRunnableBase2<int, T>;
+
+//     TestStaticRouterRunnable() : base_t(std::vector<int>{0, 1, 2}) {}
+
+//     void run()
+//     {
+//         this->do_run();
+//     }
+
+//   protected:
+//     int determine_key_for_value(const T& t) override
+//     {
+//         return mod_three(t);
+//     }
+// };
+
+// template <typename T>
+// class TestDynamicRouterComponent : public DynamicRouterComponentBase2<int, T>
+// {
+//   public:
+//     using base_t = DynamicRouterComponentBase2<int, T>;
+
+//     TestDynamicRouterComponent() : base_t() {}
+
+//   protected:
+//     int determine_key_for_value(const T& t) override
+//     {
+//         return mod_three(t);
+//     }
+// };
+
+// template <typename T>
+// class TestDynamicRouterRunnable : public DynamicRouterRunnableBase2<int, T>
+// {
+//   public:
+//     using base_t = DynamicRouterRunnableBase2<int, T>;
+
+//     TestDynamicRouterRunnable() : base_t() {}
+
+//     void run()
+//     {
+//         this->do_run();
+//     }
+
+//   protected:
+//     int determine_key_for_value(const T& t) override
+//     {
+//         return mod_three(t);
+//     }
+// };
+
 template <typename T>
-class TestStaticRouterComponent : public StaticRouterComponentBase<std::string, T>
+class TestStaticRouterComponentString : public StaticRouterComponentBase<std::string, T>
 {
   public:
     using base_t = StaticRouterComponentBase<std::string, T>;
 
-    TestStaticRouterComponent() : base_t(std::vector<std::string>{"odd", "even"}) {}
+    TestStaticRouterComponentString() : base_t(std::vector<std::string>{"odd", "even"}) {}
 
   protected:
     std::string determine_key_for_value(const T& t) override
@@ -56,10 +176,119 @@ class TestStaticRouterComponent : public StaticRouterComponentBase<std::string, 
 
 namespace mrc {
 
+template <typename T>
+class TestRouterTypes : public testing::Test
+{
+  public:
+    void SetUp() override
+    {
+        auto source = std::make_shared<node::TestSource<int>>(10);
+        auto router = this->create_router();
+        this->sink0 = std::make_shared<node::TestSink<int>>();
+        this->sink1 = std::make_shared<node::TestSink<int>>();
+        this->sink2 = std::make_shared<node::TestSink<int>>();
+
+        mrc::make_edge(*source, *router);
+        mrc::make_edge(*router->get_source(0), *this->sink0);
+        mrc::make_edge(*router->get_source(1), *this->sink1);
+        mrc::make_edge(*router->get_source(2), *this->sink2);
+
+        constexpr bool has_run = requires(T& t) { t.run(); };
+
+        source->run();
+
+        // If it has the run method, then call that
+        if constexpr (has_run)
+        {
+            router->run();
+        }
+
+        this->sink0->run();
+        this->sink1->run();
+        this->sink2->run();
+    }
+
+  protected:
+    std::shared_ptr<T> create_router()
+    {
+        if constexpr (std::is_constructible_v<T, std::vector<int>, std::function<int(const int&)>>)
+        {
+            return std::make_shared<T>(std::vector<int>{0, 1, 2}, [](const int& data) {
+                return mod_three(data);
+            });
+        }
+        else if constexpr (std::is_constructible_v<T, std::vector<int>>)
+        {
+            return std::make_shared<T>(std::vector<int>{0, 1, 2});
+        }
+        else if constexpr (std::is_constructible_v<T, std::function<int(const int&)>>)
+        {
+            return std::make_shared<T>([](const int& data) {
+                return mod_three(data);
+            });
+        }
+        else if constexpr (std::is_default_constructible_v<T>)
+        {
+            return std::make_shared<T>();
+        }
+        else
+        {
+            static_assert(!sizeof(T), "Unsupported router type");
+        }
+    }
+
+    std::shared_ptr<node::TestSink<int>> sink0;
+    std::shared_ptr<node::TestSink<int>> sink1;
+    std::shared_ptr<node::TestSink<int>> sink2;
+};
+
+using RouterTypes = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase2<int, int>>,
+                                     node::DerivedRouterBase<int, node::StaticRouterRunnableBase2<int, int>>,
+                                     node::DerivedRouterBase<int, node::DynamicRouterComponentBase2<int, int>>,
+                                     node::DerivedRouterBase<int, node::DynamicRouterRunnableBase2<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaStaticRouterComponent2<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable2<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent2<int, int>>,
+                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable2<int, int>>>;
+
+class RouterTypesNameGenerator
+{
+  public:
+    template <typename T>
+    static std::string GetName(int)
+    {
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterComponentBase2<int, int>>>)
+            return "StaticComponentBase";
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterRunnableBase2<int, int>>>)
+            return "StaticRunnableBase";
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterComponentBase2<int, int>>>)
+            return "DynamicComponentBase";
+        if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterRunnableBase2<int, int>>>)
+            return "DynamicRunnableBase";
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterComponent2<int, int>>>)
+            return "LambdaStaticComponent";
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable2<int, int>>>)
+            return "LambdaStaticRunnable";
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent2<int, int>>>)
+            return "LambdaDynamicComponent";
+        if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable2<int, int>>>)
+            return "LambdaDynamicRunnable";
+    }
+};
+
+TYPED_TEST_SUITE(TestRouterTypes, RouterTypes, RouterTypesNameGenerator);
+
+TYPED_TEST(TestRouterTypes, CorrectValues)
+{
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), this->sink0->get_values());
+    EXPECT_EQ((std::vector<int>{1, 4, 7}), this->sink1->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), this->sink2->get_values());
+}
+
 TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToSinks)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::TestStaticRouterComponent<int>>();
+    auto router = std::make_shared<node::TestStaticRouterComponentString<int>>();
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSink<int>>();
 
@@ -78,7 +307,7 @@ TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToSinks)
 TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToDifferentSinks)
 {
     auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::TestStaticRouterComponent<int>>();
+    auto router = std::make_shared<node::TestStaticRouterComponentString<int>>();
     auto sink1  = std::make_shared<node::TestSink<int>>();
     auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
 
