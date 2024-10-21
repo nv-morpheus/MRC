@@ -141,8 +141,7 @@ PYBIND11_MODULE(node, py_mod)
                mrc::segment::ObjectProperties,
                std::shared_ptr<mrc::segment::Object<node::LambdaStaticRouterRunnable<std::string, PyObjectHolder>>>>(
         py_mod,
-        "Route"
-        "r")
+        "Router")
         .def(py::init<>([](mrc::segment::IBuilder& builder,
                            std::string name,
                            std::vector<std::string> router_keys,

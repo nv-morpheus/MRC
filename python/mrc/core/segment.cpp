@@ -99,7 +99,8 @@ PYBIND11_MODULE(segment, py_mod)
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
-                               py::return_value_policy::reference_internal);
+                               py::return_value_policy::reference_internal)
+        .def("get_child", &PyNode::get_child, py::return_value_policy::reference_internal, py::arg("name"));
 
     auto Builder = py::class_<mrc::segment::IBuilder>(py_mod, "Builder");
     auto Segment = py::class_<mrc::pipeline::ISegment>(py_mod, "Segment");

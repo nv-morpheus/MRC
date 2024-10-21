@@ -226,6 +226,11 @@ class StaticRouterBase : public virtual ConvertingRouterBase<KeyT, InputT, Outpu
 
     std::shared_ptr<RouterDownstreamNode<OutputT>> get_source(const KeyT& key) const override
     {
+        if (!m_downstreams.contains(key))
+        {
+            throw exceptions::MrcRuntimeError(MRC_CONCAT_STR("Key '" << key << "' found in router"));
+        }
+
         return m_downstreams.at(key);
     }
 

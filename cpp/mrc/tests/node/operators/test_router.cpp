@@ -20,6 +20,7 @@
 
 #include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/router.hpp"
+#include "mrc/type_traits.hpp"
 
 #include <gtest/gtest.h>
 
@@ -177,6 +178,7 @@ class TestStaticRouterComponentString : public StaticRouterComponentBase<std::st
 namespace mrc {
 
 template <typename T>
+    requires is_base_of_template_v<node::RouterBase, T>
 class TestRouterTypes : public testing::Test
 {
   public:
@@ -285,11 +287,11 @@ TYPED_TEST(TestRouterTypes, CorrectValues)
     EXPECT_EQ((std::vector<int>{2, 5, 8}), this->sink2->get_values());
 }
 
-TYPED_TEST(TestRouterTypes, ErrorHandling)
+TYPED_TEST(TestRouterTypes, NonExistentSource)
 {
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), this->sink0->get_values());
-    EXPECT_EQ((std::vector<int>{1, 4, 7}), this->sink1->get_values());
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), this->sink2->get_values());
+    auto router = this->create_router();
+
+    EXPECT_THROW({ router->get_source(-1); }, exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToSinks)
