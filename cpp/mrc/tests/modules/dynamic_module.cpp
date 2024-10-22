@@ -26,6 +26,7 @@
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>

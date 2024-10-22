@@ -37,6 +37,7 @@
 
 #include <glog/logging.h>
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <numeric>

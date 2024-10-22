@@ -43,14 +43,14 @@ class FiberPool
     [[nodiscard]] virtual std::size_t thread_count() const = 0;
 
     template <class F, class... ArgsT>
-    auto enqueue(std::uint32_t index, F&& f, ArgsT&&... args) -> Future<typename std::result_of<F(ArgsT...)>::type>
+    auto enqueue(std::uint32_t index, F&& f, ArgsT&&... args) -> Future<typename std::invoke_result_t<F, ArgsT...>>
     {
         return task_queue(index).enqueue(f, std::forward<ArgsT>(args)...);
     }
 
     template <class MetaDataT, class F, class... ArgsT>
     auto enqueue(std::uint32_t index, MetaDataT&& md, F&& f, ArgsT&&... args)
-        -> Future<typename std::result_of<F(ArgsT...)>::type>
+        -> Future<typename std::invoke_result_t<F, ArgsT...>>
     {
         return task_queue(index).enqueue(std::forward<MetaDataT>(md), std::forward<F>(f), std::forward<ArgsT>(args)...);
     }

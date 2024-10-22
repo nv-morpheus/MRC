@@ -52,9 +52,9 @@ class FiberManager final
 
     template <class F>
     [[nodiscard]] auto enqueue_fiber(std::uint32_t queue_idx, const F& to_enqueue) const
-        -> Future<typename std::result_of<F(std::uint32_t)>::type>
+        -> Future<typename std::invoke_result_t<F, std::uint32_t>>
     {
-        using return_vec_t = Future<typename std::result_of<F(std::uint32_t)>::type>;
+        using return_vec_t = Future<typename std::invoke_result_t<F, std::uint32_t>>;
         return_vec_t future;
 
         auto found = m_queues.find(queue_idx);
@@ -73,16 +73,16 @@ class FiberManager final
     // Runs a function on each thread in this manager. Each function will receive the thread index as the only argument
     template <class F>
     [[nodiscard]] auto enqueue_fiber_on_all(const F& to_enqueue) const
-        -> std::vector<Future<typename std::result_of<F(std::uint32_t)>::type>>
+        -> std::vector<Future<typename std::invoke_result_t<F, std::uint32_t>>>
     {
         return enqueue_fiber_on_cpuset(m_cpu_set, std::move(to_enqueue));
     }
 
     template <class F>
     [[nodiscard]] auto enqueue_fiber_on_cpuset(const CpuSet& cpu_set, const F& to_enqueue) const
-        -> std::vector<Future<typename std::result_of<F(std::uint32_t)>::type>>
+        -> std::vector<Future<typename std::invoke_result_t<F, std::uint32_t>>>
     {
-        using return_vec_t = std::vector<Future<typename std::result_of<F(std::uint32_t)>::type>>;
+        using return_vec_t = std::vector<Future<typename std::invoke_result_t<F, std::uint32_t>>>;
         return_vec_t futures;
 
         CHECK(m_cpu_set.contains(cpu_set));
