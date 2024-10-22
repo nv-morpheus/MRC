@@ -38,7 +38,6 @@ class PipelineResources;
 
 namespace mrc::modules {
 class SegmentModule;
-class PersistentModule;
 }  // namespace mrc::modules
 
 namespace mrc::runnable {

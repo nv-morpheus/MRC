@@ -18,12 +18,16 @@
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
 
+#include "mrc/edge/edge_builder.hpp"
+#include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/zip.hpp"
 
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace mrc {

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,6 @@
  */
 
 #include "test_segment.hpp"
-
-#include "rxcpp/operators/rx-map.hpp"
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
@@ -46,9 +44,11 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
-#include <iostream>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>

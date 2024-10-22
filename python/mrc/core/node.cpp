@@ -18,12 +18,12 @@
 #include "pymrc/node.hpp"
 
 #include "pymrc/utilities/function_wrappers.hpp"
-#include "pymrc/utilities/object_wrappers.hpp"
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
 #include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
+#include "mrc/node/operators/router.hpp"
 #include "mrc/node/operators/with_latest_from.hpp"
 #include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
@@ -38,9 +38,13 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>  // IWYU pragma: keep
 
+#include <cstddef>
+#include <map>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace mrc::pymrc {
 namespace py = pybind11;

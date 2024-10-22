@@ -18,15 +18,17 @@
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
 
+#include "mrc/edge/edge_builder.hpp"
 #include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/router.hpp"
-#include "mrc/type_traits.hpp"
 
 #include <gtest/gtest.h>
 
 #include <cstddef>  // for size_t
+#include <functional>
 #include <memory>
-#include <type_traits>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 TEST_CLASS(Router);
