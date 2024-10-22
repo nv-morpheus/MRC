@@ -19,6 +19,7 @@
 
 #include "mrc/channel/buffered_channel.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/core/utils.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
@@ -326,7 +327,6 @@ class RunnableRouterBase : public WritableProvider<InputT>,
         }
 
         // Drop all connections
-        MultiSourceProperties<KeyT, OutputT>::release_edge_connections();
 
         if (read_status == channel::Status::error)
         {
@@ -345,6 +345,15 @@ class RunnableRouterBase : public WritableProvider<InputT>,
      */
     void run(mrc::runnable::Context& ctx) override
     {
+        Unwinder unwinder([&] {
+            ctx.barrier();
+
+            if (ctx.rank() == 0)
+            {
+                MultiSourceProperties<KeyT, OutputT>::release_edge_connections();
+            }
+        });
+
         this->do_run();
     }
 

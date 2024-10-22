@@ -490,8 +490,6 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     if constexpr (std::is_void_v<deduced_source_type_t> || std::is_void_v<deduced_sink_type_t>)
     {
         // Try typeless edge creation
-        VLOG(2) << "Attempting to create typeless edge";
-
         if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
         {
             mrc::make_edge_typeless(source_object.writable_acceptor_base(), sink_object.writable_provider_base());

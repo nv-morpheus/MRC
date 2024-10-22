@@ -26,7 +26,7 @@ void throw_failed_check_exception(const std::string& file,
                                   unsigned int line,
                                   const std::string& msg = "");
 
-#define MRC_CHECK2(condition)                                                                     \
+#define MRC_CHECK_THROW(condition)                                                                \
     for (std::stringstream ss; !(condition);                                                      \
          ::mrc::exceptions::throw_failed_check_exception(__FILE__, __func__, __LINE__, ss.str())) \
     ss

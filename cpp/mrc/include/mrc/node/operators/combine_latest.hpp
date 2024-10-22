@@ -18,8 +18,10 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
+#include "mrc/node/node_parent.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/types.hpp"
 #include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
@@ -31,15 +33,26 @@
 #include <utility>
 
 namespace mrc::node {
+
 template <typename...>
 class CombineLatestBase;
+
 template <typename... InputT, typename OutputT>
-class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>
+class CombineLatestBase<std::tuple<InputT...>, OutputT>
+  : public WritableAcceptor<OutputT>, public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
     template <std::size_t... Is>
     static auto build_ingress(CombineLatestBase* self, std::index_sequence<Is...> /*unused*/)
     {
         return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
+    }
+
+    template <std::size_t... Is>
+    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...>
+    build_child_pairs(CombineLatestBase* self, std::index_sequence<Is...> /*unused*/)
+    {
+        return std::make_tuple(
+            std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(*self->get_sink<Is>()))...);
     }
 
   public:
@@ -58,41 +71,39 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
         return std::get<N>(m_upstream_holders);
     }
 
+    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...> get_children_refs()
+        const override
+    {
+        return build_child_pairs(const_cast<CombineLatestBase*>(this), std::index_sequence_for<InputT...>{});
+    }
+
   protected:
     template <size_t N>
-    class Upstream : public WritableProvider<NthTypeOf<N, InputT...>>
+    class Upstream : public ForwardingWritableProvider<NthTypeOf<N, InputT...>>
     {
         using upstream_t = NthTypeOf<N, InputT...>;
 
       public:
-        Upstream(CombineLatestBase& parent)
+        Upstream(CombineLatestBase& parent) : m_parent(parent) {}
+
+      protected:
+        channel::Status on_next(upstream_t&& data) override
         {
-            this->init_owned_edge(std::make_shared<InnerEdge>(parent));
+            return m_parent.upstream_await_write<N>(std::move(data));
+        }
+
+        void on_complete() override
+        {
+            m_parent.edge_complete();
         }
 
       private:
-        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, InputT...>>
-        {
-          public:
-            InnerEdge(CombineLatestBase& parent) : m_parent(parent) {}
-            ~InnerEdge()
-            {
-                m_parent.edge_complete();
-            }
-
-            virtual channel::Status await_write(upstream_t&& data)
-            {
-                return m_parent.set_upstream_value<N>(std::move(data));
-            }
-
-          private:
-            CombineLatestBase& m_parent;
-        };
+        CombineLatestBase& m_parent;
     };
 
   private:
     template <size_t N>
-    channel::Status set_upstream_value(NthTypeOf<N, InputT...> value)
+    channel::Status upstream_await_write(NthTypeOf<N, InputT...> value)
     {
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
@@ -136,19 +147,27 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT> : public WritableAccepto
 
     virtual output_t convert_value(input_tuple_t&& data) = 0;
 
-    boost::fibers::mutex m_mutex;
+    mutable Mutex m_mutex;
+
+    // The number of elements that have been set. Can start emitting when m_values_set == sizeof...(TypesT)
     size_t m_values_set{0};
+
+    // Counts the number of upstream completions. When m_completions == sizeof...(TypesT), the downstream edges are
+    // released
     size_t m_completions{0};
+
+    // Holds onto the latest values to eventually push when new ones are emitted
     std::tuple<std::optional<InputT>...> m_state;
 
+    // Upstream edges
     std::tuple<std::shared_ptr<WritableProvider<InputT>>...> m_upstream_holders;
 };
 
 template <typename...>
-class CombineLatest;
+class CombineLatestComponent;
 
 template <typename... InputT, typename OutputT>
-class CombineLatest<std::tuple<InputT...>, OutputT> : public CombineLatestBase<std::tuple<InputT...>, OutputT>
+class CombineLatestComponent<std::tuple<InputT...>, OutputT> : public CombineLatestBase<std::tuple<InputT...>, OutputT>
 {
   public:
     using base_t        = CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>;
@@ -158,7 +177,8 @@ class CombineLatest<std::tuple<InputT...>, OutputT> : public CombineLatestBase<s
 
 // Specialization for CombineLatest with a default output type
 template <typename... InputT>
-class CombineLatest<std::tuple<InputT...>> : public CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>
+class CombineLatestComponent<std::tuple<InputT...>>
+  : public CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>
 {
   public:
     using base_t        = CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>;
@@ -174,10 +194,11 @@ class CombineLatest<std::tuple<InputT...>> : public CombineLatestBase<std::tuple
 };
 
 template <typename...>
-class CombineLatestTransform;
+class CombineLatestTransformComponent;
 
 template <typename... InputT, typename OutputT>
-class CombineLatestTransform<std::tuple<InputT...>, OutputT> : public CombineLatestBase<std::tuple<InputT...>, OutputT>
+class CombineLatestTransformComponent<std::tuple<InputT...>, OutputT>
+  : public CombineLatestBase<std::tuple<InputT...>, OutputT>
 {
   public:
     using base_t         = CombineLatestBase<std::tuple<InputT...>, OutputT>;
@@ -185,7 +206,7 @@ class CombineLatestTransform<std::tuple<InputT...>, OutputT> : public CombineLat
     using output_t       = typename base_t::output_t;
     using transform_fn_t = std::function<output_t(input_tuple_t&&)>;
 
-    CombineLatestTransform(transform_fn_t transform_fn) : base_t(), m_transform_fn(std::move(transform_fn)) {}
+    CombineLatestTransformComponent(transform_fn_t transform_fn) : base_t(), m_transform_fn(std::move(transform_fn)) {}
 
   private:
     output_t convert_value(input_tuple_t&& data) override

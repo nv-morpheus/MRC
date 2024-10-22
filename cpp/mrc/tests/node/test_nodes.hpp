@@ -401,7 +401,7 @@ class TestSinkComponent : public WritableProvider<T>
     TestSinkComponent()
     {
         this->init_owned_edge(std::make_shared<EdgeWritableLambda<T>>(
-            [this](int&& t) {
+            [this](T&& t) {
                 // Call this object
                 return this->await_write(std::move(t));
             },
@@ -416,7 +416,7 @@ class TestSinkComponent : public WritableProvider<T>
     }
 
   protected:
-    channel::Status await_write(int&& t)
+    channel::Status await_write(T&& t)
     {
         VLOG(10) << "TestSinkComponent got value: " << t;
 
@@ -458,37 +458,26 @@ class TestDynamicRouter : public DynamicRouterComponentBase<std::string, T>
     }
 };
 
-template <typename T>
-class TestConditional : public ForwardingWritableProvider<T>, public WritableAcceptor<T>
+template <size_t n, typename... T>
+typename std::enable_if<(n >= sizeof...(T))>::type print_tuple(std::ostream&, const std::tuple<T...>&)
+{}
+
+template <size_t n, typename... T>
+typename std::enable_if<(n < sizeof...(T))>::type print_tuple(std::ostream& os, const std::tuple<T...>& tup)
 {
-  public:
-    TestConditional() = default;
+    if (n != 0)
+        os << ", ";
+    os << std::get<n>(tup);
+    print_tuple<n + 1>(os, tup);
+}
 
-    ~TestConditional() override
-    {
-        // Debug print
-        VLOG(10) << "Destroying TestConditional";
-    }
-
-    channel::Status on_next(T&& t) override
-    {
-        VLOG(10) << "TestConditional got value: " << t;
-
-        // Skip on condition
-        if (t % 2 == 0)
-        {
-            return channel::Status::success;
-        }
-
-        return this->get_writable_edge()->await_write(t + 1);
-    }
-
-    void on_complete() override
-    {
-        VLOG(10) << "TestConditional completed";
-
-        WritableAcceptor<T>::release_edge_connection();
-    }
-};
+// Utility function to print tuples
+template <typename... T>
+std::ostream& operator<<(std::ostream& os, const std::tuple<T...>& tup)
+{
+    os << "[";
+    print_tuple<0>(os, tup);
+    return os << "]";
+}
 
 }  // namespace mrc::node

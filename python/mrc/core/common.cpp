@@ -18,7 +18,6 @@
 #include "pymrc/port_builders.hpp"
 #include "pymrc/types.hpp"
 
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/utils/string_utils.hpp"
 #include "mrc/version.hpp"
 

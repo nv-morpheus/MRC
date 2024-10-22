@@ -74,29 +74,30 @@ PYBIND11_MODULE(node, py_mod)
             return node;
         }));
 
-    py::class_<mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>,
-               mrc::segment::ObjectProperties,
-               std::shared_ptr<mrc::segment::Object<
-                   node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>>>(py_mod, "Zip")
+    py::class_<
+        mrc::segment::Object<node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>,
+        mrc::segment::ObjectProperties,
+        std::shared_ptr<mrc::segment::Object<
+            node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>>>(py_mod, "Zip")
         .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
             if (count == 2)
             {
-                return builder
-                    .construct_object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>(
-                        name,
-                        [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
-                            py::gil_scoped_acquire gil;
+                return builder.construct_object<
+                    node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>(
+                    name,
+                    [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
+                        py::gil_scoped_acquire gil;
 
-                            return PyObjectHolder(py::cast(std::move(input_data)));
-                        });
+                        return PyObjectHolder(py::cast(std::move(input_data)));
+                    });
             }
 
             py::print("Unsupported count!");
             throw std::runtime_error("Unsupported count!");
         }))
         .def("get_sink",
-             [](mrc::segment::Object<node::ZipTransform<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>&
-                    self,
+             [](mrc::segment::Object<
+                    node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>& self,
                 size_t index) {
                  return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
              });

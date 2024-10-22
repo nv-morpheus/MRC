@@ -125,34 +125,26 @@ class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>
 
   protected:
     template <size_t N>
-    class Upstream : public WritableProvider<NthTypeOf<N, InputT...>>
+    class Upstream : public ForwardingWritableProvider<NthTypeOf<N, InputT...>>
     {
         using upstream_t = NthTypeOf<N, InputT...>;
 
       public:
-        Upstream(ZipBase& parent)
+        Upstream(ZipBase& parent) : m_parent(parent) {}
+
+      protected:
+        channel::Status on_next(upstream_t&& data) override
         {
-            this->init_owned_edge(std::make_shared<InnerEdge>(parent));
+            return m_parent.upstream_await_write<N>(std::move(data));
+        }
+
+        void on_complete() override
+        {
+            m_parent.edge_complete<N>();
         }
 
       private:
-        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, InputT...>>
-        {
-          public:
-            InnerEdge(ZipBase& parent) : m_parent(parent) {}
-            ~InnerEdge()
-            {
-                m_parent.edge_complete<N>();
-            }
-
-            channel::Status await_write(upstream_t&& data) override
-            {
-                return m_parent.upstream_await_write<N>(std::move(data));
-            }
-
-          private:
-            ZipBase& m_parent;
-        };
+        ZipBase& m_parent;
     };
 
   private:
@@ -293,10 +285,10 @@ class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>
 };
 
 template <typename...>
-class Zip;
+class ZipComponent;
 
 template <typename... InputT, typename OutputT>
-class Zip<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
+class ZipComponent<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
 {
   public:
     using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
@@ -306,7 +298,7 @@ class Zip<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>
 
 // Specialization for Zip with a default output type
 template <typename... InputT>
-class Zip<std::tuple<InputT...>> : public ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>
+class ZipComponent<std::tuple<InputT...>> : public ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>
 {
   public:
     using base_t        = ZipBase<std::tuple<InputT...>, std::tuple<InputT...>>;
@@ -322,10 +314,10 @@ class Zip<std::tuple<InputT...>> : public ZipBase<std::tuple<InputT...>, std::tu
 };
 
 template <typename...>
-class ZipTransform;
+class ZipTransformComponent;
 
 template <typename... InputT, typename OutputT>
-class ZipTransform<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
+class ZipTransformComponent<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<InputT...>, OutputT>
 {
   public:
     using base_t         = ZipBase<std::tuple<InputT...>, OutputT>;
@@ -333,7 +325,7 @@ class ZipTransform<std::tuple<InputT...>, OutputT> : public ZipBase<std::tuple<I
     using output_t       = typename base_t::output_t;
     using transform_fn_t = std::function<output_t(input_tuple_t&&)>;
 
-    ZipTransform(transform_fn_t transform_fn, size_t max_outstanding = 64) :
+    ZipTransformComponent(transform_fn_t transform_fn, size_t max_outstanding = 64) :
       base_t(max_outstanding),
       m_transform_fn(std::move(transform_fn))
     {}

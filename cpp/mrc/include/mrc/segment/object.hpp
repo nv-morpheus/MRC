@@ -86,7 +86,7 @@ struct ObjectPropertiesState
 
     void initialize(std::string name, IBuilder* owning_builder)
     {
-        MRC_CHECK2(!m_is_initialized) << "Object '" << name << "' is already initialized.";
+        MRC_CHECK_THROW(!m_is_initialized) << "Object '" << name << "' is already initialized.";
 
         m_name           = std::move(name);
         m_owning_builder = owning_builder;
@@ -105,42 +105,6 @@ struct ObjectPropertiesState
             /*.is_readable_acceptor = */ std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>,
             /*.is_readable_provider = */ std::is_base_of_v<edge::IReadableProviderBase, ObjectT>,
             /*.is_runnable          = */ std::is_base_of_v<runnable::Runnable, ObjectT>));
-
-        // state->type_name = std::string(::mrc::type_name<ObjectT>());
-
-        // state->is_sink   = std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
-        // state->is_source = std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
-
-        // if constexpr (is_base_of_template_v<node::SinkProperties, ObjectT>)
-        // {
-        //     using sink_t = typename ObjectT::sink_type_t;
-
-        //     state->sink_type_no_holder = deduce_type_index<sink_t>(true);
-        //     state->sink_type           = deduce_type_index<sink_t>(false);
-        // }
-        // else
-        // {
-        //     CHECK(!state->is_sink) << "Object is a sink but does not have sink properties";
-        // }
-
-        // if constexpr (is_base_of_template_v<node::SourceProperties, ObjectT>)
-        // {
-        //     using source_t = typename ObjectT::source_type_t;
-
-        //     state->source_type_no_holder = deduce_type_index<source_t>(true);
-        //     state->source_type           = deduce_type_index<source_t>(false);
-        // }
-        // else
-        // {
-        //     CHECK(!state->is_source) << "Object is a source but does not have source properties";
-        // }
-
-        // state->is_writable_acceptor = std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
-        // state->is_writable_provider = std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
-        // state->is_readable_acceptor = std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
-        // state->is_readable_provider = std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
-
-        // state->is_runnable = std::is_base_of_v<runnable::Runnable, ObjectT>;
 
         return state;
     }

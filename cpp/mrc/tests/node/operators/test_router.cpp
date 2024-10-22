@@ -17,6 +17,7 @@
 
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
+#include "gtest/gtest.h"
 
 #include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/router.hpp"
@@ -61,6 +62,8 @@ class DerivedRouterBase : public BaseT
         {
             this->do_run();
         }
+
+        this_t::release_edge_connections();
     }
 
   protected:
@@ -85,91 +88,8 @@ class DerivedLambdaRouter : public BaseT
         {
             this->do_run();
         }
-    }
-};
 
-// template <typename T>
-// class TestStaticRouterComponent : public StaticRouterComponentBase2<int, T>
-// {
-//   public:
-//     using base_t = StaticRouterComponentBase2<int, T>;
-
-//     TestStaticRouterComponent() : base_t(std::vector<int>{0, 1, 2}) {}
-
-//   protected:
-//     int determine_key_for_value(const T& t) override
-//     {
-//         return mod_three(t);
-//     }
-// };
-
-// template <typename T>
-// class TestStaticRouterRunnable : public StaticRouterRunnableBase2<int, T>
-// {
-//   public:
-//     using base_t = StaticRouterRunnableBase2<int, T>;
-
-//     TestStaticRouterRunnable() : base_t(std::vector<int>{0, 1, 2}) {}
-
-//     void run()
-//     {
-//         this->do_run();
-//     }
-
-//   protected:
-//     int determine_key_for_value(const T& t) override
-//     {
-//         return mod_three(t);
-//     }
-// };
-
-// template <typename T>
-// class TestDynamicRouterComponent : public DynamicRouterComponentBase2<int, T>
-// {
-//   public:
-//     using base_t = DynamicRouterComponentBase2<int, T>;
-
-//     TestDynamicRouterComponent() : base_t() {}
-
-//   protected:
-//     int determine_key_for_value(const T& t) override
-//     {
-//         return mod_three(t);
-//     }
-// };
-
-// template <typename T>
-// class TestDynamicRouterRunnable : public DynamicRouterRunnableBase2<int, T>
-// {
-//   public:
-//     using base_t = DynamicRouterRunnableBase2<int, T>;
-
-//     TestDynamicRouterRunnable() : base_t() {}
-
-//     void run()
-//     {
-//         this->do_run();
-//     }
-
-//   protected:
-//     int determine_key_for_value(const T& t) override
-//     {
-//         return mod_three(t);
-//     }
-// };
-
-template <typename T>
-class TestStaticRouterComponentString : public StaticRouterComponentBase<std::string, T>
-{
-  public:
-    using base_t = StaticRouterComponentBase<std::string, T>;
-
-    TestStaticRouterComponentString() : base_t(std::vector<std::string>{"odd", "even"}) {}
-
-  protected:
-    std::string determine_key_for_value(const T& t) override
-    {
-        return even_odd(t);
+        this_t::release_edge_connections();
     }
 };
 
@@ -182,52 +102,33 @@ template <typename T>
 class TestRouterTypes : public testing::Test
 {
   public:
-    void SetUp() override
+    void SetUp() override {}
+
+    static constexpr bool is_dynamic()
     {
-        auto source = std::make_shared<node::TestSource<int>>(10);
-        auto router = this->create_router();
-        this->sink0 = std::make_shared<node::TestSink<int>>();
-        this->sink1 = std::make_shared<node::TestSink<int>>();
-        this->sink2 = std::make_shared<node::TestSink<int>>();
+        return is_base_of_template_v<node::DynamicRouterBase, T>;
+    }
 
-        mrc::make_edge(*source, *router);
-        mrc::make_edge(*router->get_source(0), *this->sink0);
-        mrc::make_edge(*router->get_source(1), *this->sink1);
-        mrc::make_edge(*router->get_source(2), *this->sink2);
-
-        constexpr bool has_run = requires(T& t) { t.run(); };
-
-        source->run();
-
-        // If it has the run method, then call that
-        if constexpr (has_run)
-        {
-            router->run();
-        }
-
-        this->sink0->run();
-        this->sink1->run();
-        this->sink2->run();
+    static constexpr bool is_runnable()
+    {
+        return is_base_of_template_v<node::RunnableRouterBase, T>;
     }
 
   protected:
-    std::shared_ptr<T> create_router()
+    template <typename KeyT, typename InputT, typename OutputT = InputT>
+    std::shared_ptr<T> create_router(std::vector<KeyT> keys, std::function<KeyT(const InputT&)> key_fn)
     {
-        if constexpr (std::is_constructible_v<T, std::vector<int>, std::function<int(const int&)>>)
+        if constexpr (std::is_constructible_v<T, std::vector<KeyT>, std::function<KeyT(const InputT&)>>)
         {
-            return std::make_shared<T>(std::vector<int>{0, 1, 2}, [](const int& data) {
-                return mod_three(data);
-            });
+            return std::make_shared<T>(std::move(keys), std::move(key_fn));
         }
         else if constexpr (std::is_constructible_v<T, std::vector<int>>)
         {
-            return std::make_shared<T>(std::vector<int>{0, 1, 2});
+            return std::make_shared<T>(std::move(keys));
         }
         else if constexpr (std::is_constructible_v<T, std::function<int(const int&)>>)
         {
-            return std::make_shared<T>([](const int& data) {
-                return mod_three(data);
-            });
+            return std::make_shared<T>(std::move(key_fn));
         }
         else if constexpr (std::is_default_constructible_v<T>)
         {
@@ -238,10 +139,6 @@ class TestRouterTypes : public testing::Test
             static_assert(!sizeof(T), "Unsupported router type");
         }
     }
-
-    std::shared_ptr<node::TestSink<int>> sink0;
-    std::shared_ptr<node::TestSink<int>> sink1;
-    std::shared_ptr<node::TestSink<int>> sink2;
 };
 
 using RouterTypes = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>,
@@ -280,142 +177,126 @@ class RouterTypesNameGenerator
 
 TYPED_TEST_SUITE(TestRouterTypes, RouterTypes, RouterTypesNameGenerator);
 
-TYPED_TEST(TestRouterTypes, CorrectValues)
+TYPED_TEST(TestRouterTypes, SourceToRouterToSinks)
 {
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), this->sink0->get_values());
-    EXPECT_EQ((std::vector<int>{1, 4, 7}), this->sink1->get_values());
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), this->sink2->get_values());
+    auto source = std::make_shared<node::TestSource<int>>(10);
+    auto router = this->template create_router<int, int>(std::vector<int>{0, 1, 2}, mod_three<int>);
+    auto sink0  = std::make_shared<node::TestSink<int>>();
+    auto sink1  = std::make_shared<node::TestSink<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source(0), *sink0);
+    mrc::make_edge(*router->get_source(1), *sink1);
+    mrc::make_edge(*router->get_source(2), *sink2);
+
+    source->run();
+    router->run();
+    sink0->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink0->get_values());
+    EXPECT_EQ((std::vector<int>{1, 4, 7}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink2->get_values());
+}
+
+TYPED_TEST(TestRouterTypes, SourceToRouterToDifferentSinks)
+{
+    auto source = std::make_shared<node::TestSource<int>>(10);
+    auto router = this->template create_router<int, int>(std::vector<int>{0, 1, 2}, mod_three<int>);
+    auto sink0  = std::make_shared<node::TestSink<int>>();
+    auto sink1  = std::make_shared<node::TestSinkComponent<int>>();
+    auto sink2  = std::make_shared<node::TestSink<int>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source(0), *sink0);
+    mrc::make_edge(*router->get_source(1), *sink1);
+    mrc::make_edge(*router->get_source(2), *sink2);
+
+    source->run();
+    router->run();
+    sink0->run();
+    sink2->run();
+
+    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink0->get_values());
+    EXPECT_EQ((std::vector<int>{1, 4, 7}), sink1->get_values());
+    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink2->get_values());
+}
+
+TYPED_TEST(TestRouterTypes, AutomaticTypeConversion)
+{
+    auto source = std::make_shared<node::TestSource<int>>(10);
+    auto router = this->template create_router<int, int, float>(std::vector<int>{0, 1, 2}, mod_three<int>);
+    auto sink0  = std::make_shared<node::TestSink<float>>();
+    auto sink1  = std::make_shared<node::TestSink<float>>();
+    auto sink2  = std::make_shared<node::TestSink<float>>();
+
+    mrc::make_edge(*source, *router);
+    mrc::make_edge(*router->get_source(0), *sink0);
+    mrc::make_edge(*router->get_source(1), *sink1);
+    mrc::make_edge(*router->get_source(2), *sink2);
+
+    source->run();
+    router->run();
+    sink0->run();
+    sink1->run();
+    sink2->run();
+
+    EXPECT_EQ((std::vector<float>{0.0f, 3.0f, 6.0f, 9.0f}), sink0->get_values());
+    EXPECT_EQ((std::vector<float>{1.0f, 4.0f, 7.0f}), sink1->get_values());
+    EXPECT_EQ((std::vector<float>{2.0f, 5.0f, 8.0f}), sink2->get_values());
+}
+
+TYPED_TEST(TestRouterTypes, SourceComponentToRouterToDifferentSinks)
+{
+    if constexpr (TestFixture::is_runnable())
+    {
+        auto source = std::make_shared<node::TestSourceComponent<int>>(10);
+        auto router = this->template create_router<int, int, float>(std::vector<int>{0, 1, 2}, mod_three<int>);
+        auto sink0  = std::make_shared<node::TestSink<float>>();
+        auto sink1  = std::make_shared<node::TestSinkComponent<float>>();
+        auto sink2  = std::make_shared<node::TestSink<float>>();
+
+        mrc::make_edge(*source, *router);
+        mrc::make_edge(*router->get_source(0), *sink0);
+        mrc::make_edge(*router->get_source(1), *sink1);
+        mrc::make_edge(*router->get_source(2), *sink2);
+
+        router->run();
+        sink0->run();
+        sink2->run();
+
+        EXPECT_EQ((std::vector<float>{0.0f, 3.0f, 6.0f, 9.0f}), sink0->get_values());
+        EXPECT_EQ((std::vector<float>{1.0f, 4.0f, 7.0f}), sink1->get_values());
+        EXPECT_EQ((std::vector<float>{2.0f, 5.0f, 8.0f}), sink2->get_values());
+    }
+    else
+    {
+        GTEST_SKIP() << "Non-Runnable routers do not support source components";
+    }
 }
 
 TYPED_TEST(TestRouterTypes, NonExistentSource)
 {
-    auto router = this->create_router();
+    auto router = this->template create_router<int, int>(std::vector<int>{0, 1, 2}, mod_three<int>);
 
-    EXPECT_THROW({ router->get_source(-1); }, exceptions::MrcRuntimeError);
+    if (!this->is_dynamic())
+    {
+        EXPECT_THROW({ router->get_source(-1); }, exceptions::MrcRuntimeError);
+    }
+    else
+    {
+        // Otherwise it should pass
+        router->get_source(-1);
+    }
 }
 
-TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToSinks)
+TYPED_TEST(TestRouterTypes, CreateAndDestroy)
 {
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::TestStaticRouterComponentString<int>>();
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSink<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source("odd"), *sink1);
-    mrc::make_edge(*router->get_source("even"), *sink2);
-
-    source->run();
-    sink1->run();
-    sink2->run();
-
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
-}
-
-TEST_F(TestRouter, StaticRouterComponent_SourceToRouterToDifferentSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::TestStaticRouterComponentString<int>>();
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source("odd"), *sink1);
-    mrc::make_edge(*router->get_source("even"), *sink2);
-
-    source->run();
-    sink1->run();
-
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
-}
-
-TEST_F(TestRouter, LambdaStaticRouterComponent_SourceToRouterToSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>(10);
-    auto router = std::make_shared<node::LambdaStaticRouterComponent<int, int>>(std::vector<int>{1, 2, 3},
-                                                                                [](const int& data) {
-                                                                                    return (data % 3) + 1;
-                                                                                });
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSink<int>>();
-    auto sink3  = std::make_shared<node::TestSink<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source(1), *sink1);
-    mrc::make_edge(*router->get_source(2), *sink2);
-    mrc::make_edge(*router->get_source(3), *sink3);
-
-    source->run();
-    sink1->run();
-    sink2->run();
-    sink3->run();
-
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
-}
-
-TEST_F(TestRouter, LambdaStaticRouterComponent_SourceToRouterToDifferentSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>(10);
-    auto router = std::make_shared<node::LambdaStaticRouterComponent<int, int>>(std::vector<int>{1, 2, 3},
-                                                                                [](const int& data) {
-                                                                                    return (data % 3) + 1;
-                                                                                });
-    auto sink1  = std::make_shared<node::TestSinkComponent<int>>();
-    auto sink2  = std::make_shared<node::TestSink<int>>();
-    auto sink3  = std::make_shared<node::TestSinkComponent<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source(1), *sink1);
-    mrc::make_edge(*router->get_source(2), *sink2);
-    mrc::make_edge(*router->get_source(3), *sink3);
-
-    source->run();
-    sink2->run();
-
-    EXPECT_EQ((std::vector<int>{0, 3, 6, 9}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{1, 4, 7}), sink2->get_values());
-    EXPECT_EQ((std::vector<int>{2, 5, 8}), sink3->get_values());
-}
-
-TEST_F(TestRouter, LambdaRouter_SourceToRouterToSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int>>(&even_odd<int>);
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSink<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source("odd"), *sink1);
-    mrc::make_edge(*router->get_source("even"), *sink2);
-
-    source->run();
-    sink1->run();
-    sink2->run();
-
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
-}
-
-TEST_F(TestRouter, LambdaRouter_SourceToRouterToDifferentSinks)
-{
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int>>(&even_odd<int>);
-    auto sink1  = std::make_shared<node::TestSink<int>>();
-    auto sink2  = std::make_shared<node::TestSinkComponent<int>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source("odd"), *sink1);
-    mrc::make_edge(*router->get_source("even"), *sink2);
-
-    source->run();
-    sink1->run();
-
-    EXPECT_EQ((std::vector<int>{1}), sink1->get_values());
-    EXPECT_EQ((std::vector<int>{0, 2}), sink2->get_values());
+    {
+        auto router = this->template create_router<int, int>(std::vector<int>{0, 1, 2}, mod_three<int>);
+    }
 }
 
 // two possible errors, either the key function throws an error, or the key function returns a key that is invalid
@@ -466,25 +347,6 @@ TEST_F(TestRouter, LambdaRouterOnKeyInvalidValue)
             sink2->run();
         },
         exceptions::MrcRuntimeError);
-}
-
-TEST_F(TestRouter, LambdaRouterConvetable)
-{
-    auto source = std::make_shared<node::TestSource<int>>();
-    auto router = std::make_shared<node::LambdaDynamicRouterComponent<std::string, int, float>>(&even_odd<int>);
-    auto sink1  = std::make_shared<node::TestSink<float>>();
-    auto sink2  = std::make_shared<node::TestSink<float>>();
-
-    mrc::make_edge(*source, *router);
-    mrc::make_edge(*router->get_source("odd"), *sink1);
-    mrc::make_edge(*router->get_source("even"), *sink2);
-
-    source->run();
-    sink1->run();
-    sink2->run();
-
-    EXPECT_EQ((std::vector<float>{1.0}), sink1->get_values());
-    EXPECT_EQ((std::vector<float>{0.0, 2.0}), sink2->get_values());
 }
 
 TEST_F(TestRouter, LambdaRouterConvestion)

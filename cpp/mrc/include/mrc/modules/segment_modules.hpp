@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mrc/segment/object.hpp"
-
 #include <nlohmann/json.hpp>
 
 #include <map>
@@ -141,7 +139,20 @@ class SegmentModule
     virtual void initialize(segment::IBuilder& builder) = 0;
 
   private:
+    /**
+     * @brief Registers an object with the module to keep it alive
+     *
+     * @param name The name of the object
+     * @param object The object to register
+     */
     void register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object);
+
+    /**
+     * @brief Find an object by name. Must be registered with the module
+     *
+     * @param name The name of the object
+     * @return segment::ObjectProperties&
+     */
     segment::ObjectProperties& find_object(const std::string& name) const;
 
     /* Interface Functions */

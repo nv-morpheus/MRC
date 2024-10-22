@@ -28,7 +28,10 @@ add_executable(test_mrc
   modules/test_module_util.cpp
   modules/test_segment_modules.cpp
   modules/test_stream_buffer_modules.cpp
+  node/operators/test_combine_latest.cpp
   node/operators/test_router.cpp
+  node/operators/test_with_latest_from.cpp
+  node/operators/test_zip.cpp
   test_channel.cpp
   test_edges.cpp
   test_executor.cpp
