@@ -35,6 +35,8 @@
 #include <tuple>
 #include <utility>
 
+// IWYU pragma: begin_exports
+
 namespace mrc::node {
 
 class WithLatestFromTypelessBase
@@ -303,3 +305,5 @@ class WithLatestFromTransformComponent<std::tuple<InputT...>, OutputT>
 };
 
 }  // namespace mrc::node
+
+// IWYU pragma: end_exports

@@ -40,6 +40,8 @@
 #include <stop_token>
 #include <type_traits>
 
+// IWYU pragma: begin_exports
+
 namespace mrc::node {
 
 template <typename InputT>
@@ -497,3 +499,5 @@ class TaggedRouter : public DynamicRouterComponentBase<KeyT, std::pair<KeyT, T>,
 };
 
 }  // namespace mrc::node
+
+// IWYU pragma: end_exports

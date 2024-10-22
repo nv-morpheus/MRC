@@ -16,45 +16,25 @@
  */
 
 #include "./node/test_nodes.hpp"
-#include "./test_mrc.hpp"  // IWYU pragma: associated
+#include "./test_mrc.hpp"
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
-#include "mrc/channel/forward.hpp"
-#include "mrc/edge/edge.hpp"  // for Edge
+#include "mrc/edge/edge.hpp"                 // for Edge
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_channel.hpp"
 #include "mrc/edge/edge_holder.hpp"  // for EdgeHolder
 #include "mrc/edge/edge_readable.hpp"
-#include "mrc/edge/edge_writable.hpp"
-#include "mrc/exceptions/runtime_error.hpp"
-#include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/broadcast.hpp"
-#include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/node_component.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
 #include "mrc/node/operators/router.hpp"
-#include "mrc/node/operators/with_latest_from.hpp"
-#include "mrc/node/operators/zip.hpp"
-#include "mrc/node/rx_node.hpp"
-#include "mrc/node/sink_channel_owner.hpp"
-#include "mrc/node/sink_properties.hpp"
-#include "mrc/node/source_channel_owner.hpp"
 #include "mrc/node/source_properties.hpp"
 
-#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>  // for observable_member
 
-#include <deque>
-#include <functional>
-#include <initializer_list>
-#include <map>
+#include <chrono>
 #include <memory>
-#include <ostream>
-#include <queue>
 #include <stdexcept>
-#include <string>
-#include <tuple>
 #include <utility>
 
 // IWYU pragma: no_forward_declare mrc::channel::Channel

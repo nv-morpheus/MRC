@@ -43,6 +43,8 @@
 #include <type_traits>
 #include <utility>
 
+// IWYU pragma: begin_exports
+
 namespace mrc::node {
 
 class ZipTypelessBase
@@ -347,3 +349,5 @@ class ZipTransformComponent<std::tuple<InputT...>, OutputT> : public ZipBase<std
 };
 
 }  // namespace mrc::node
+
+// IWYU pragma: end_exports
