@@ -71,7 +71,7 @@ class CombineLatestBase<std::tuple<InputT...>, OutputT>
       m_upstream_holders(build_ingress(const_cast<CombineLatestBase*>(this), std::index_sequence_for<InputT...>{}))
     {}
 
-    virtual ~CombineLatestBase() = default;
+    ~CombineLatestBase() override = default;
 
     template <size_t N>
     std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const

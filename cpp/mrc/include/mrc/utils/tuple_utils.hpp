@@ -66,6 +66,9 @@ void tuple_for_each(TupleT&& tuple, FuncT&& f)
                    std::make_index_sequence<std::tuple_size<std::decay_t<TupleT>>::value>());
 }
 
+// NOLINTBEGIN(readability-identifier-naming)
+// Disable naming conventions for std library-like functions
+
 /**
  * @brief Creates a tuple of N elements of type T. For example, `repeat_tuple_type<int, 3>` would be `std::tuple<int,
  * int, int>`
@@ -94,5 +97,7 @@ class repeat_tuple_type
 
 template <typename T, size_t N>
 using repeat_tuple_type_t = typename repeat_tuple_type<T, N>::type;
+
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace mrc::utils

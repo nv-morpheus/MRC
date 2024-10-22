@@ -480,9 +480,9 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
                                                         sink_sp_type_t,    // Fallback to Sink deduced type
                                                         SinkNodeTypeT>;    // Fallback to Sink explicit hint
     using deduced_sink_type_t   = first_non_void_type_t<sink_sp_type_t,    // Deduced type (if possible)
-                                                        SinkNodeTypeT,     // Explicit type hint
-                                                        source_sp_type_t,  // Fallback to Source deduced type
-                                                        SourceNodeTypeT>;  // Fallback to Source explicit hint
+                                                      SinkNodeTypeT,     // Explicit type hint
+                                                      source_sp_type_t,  // Fallback to Source deduced type
+                                                      SourceNodeTypeT>;  // Fallback to Source explicit hint
 
     VLOG(2) << "Deduced source type: " << mrc::type_name<deduced_source_type_t>() << std::endl;
     VLOG(2) << "Deduced sink type: " << mrc::type_name<deduced_sink_type_t>() << std::endl;

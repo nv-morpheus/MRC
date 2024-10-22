@@ -17,7 +17,6 @@
 
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
-#include "gtest/gtest.h"
 
 #include "mrc/node/operators/combine_latest.hpp"
 

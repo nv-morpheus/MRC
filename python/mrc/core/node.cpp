@@ -114,15 +114,15 @@ PYBIND11_MODULE(node, py_mod)
                 {
                     return make_node.template operator()<1>(name);
                 }
-                else if (count == 2)
+                if (count == 2)
                 {
                     return make_node.template operator()<2>(name);
                 }
-                else if (count == 3)
+                if (count == 3)
                 {
                     return make_node.template operator()<3>(name);
                 }
-                else if (count == 4)
+                if (count == 4)
                 {
                     return make_node.template operator()<4>(name);
                 }
@@ -176,15 +176,15 @@ PYBIND11_MODULE(node, py_mod)
                  {
                      return make_node.template operator()<1>(name);
                  }
-                 else if (count == 2)
+                 if (count == 2)
                  {
                      return make_node.template operator()<2>(name);
                  }
-                 else if (count == 3)
+                 if (count == 3)
                  {
                      return make_node.template operator()<3>(name);
                  }
-                 else if (count == 4)
+                 if (count == 4)
                  {
                      return make_node.template operator()<4>(name);
                  }
@@ -237,15 +237,15 @@ PYBIND11_MODULE(node, py_mod)
                  {
                      return make_node.template operator()<1>(name);
                  }
-                 else if (count == 2)
+                 if (count == 2)
                  {
                      return make_node.template operator()<2>(name);
                  }
-                 else if (count == 3)
+                 if (count == 3)
                  {
                      return make_node.template operator()<3>(name);
                  }
-                 else if (count == 4)
+                 if (count == 4)
                  {
                      return make_node.template operator()<4>(name);
                  }

@@ -259,7 +259,11 @@ def add_router(seg: mrc.Builder,
                is_component: bool):
 
     if (key_fn is None):
-        key_fn = lambda _: "a"
+
+        def inner_key_fn(x):
+            return "a"
+
+        key_fn = inner_key_fn
 
     if (is_component):
         node = mrc.core.node.RouterComponent(seg, "RouterComponent", router_keys=router_keys, key_fn=key_fn)

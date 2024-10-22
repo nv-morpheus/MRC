@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "../test_mrc.hpp"  // IWYU pragma: associated
 
 #include "mrc/channel/buffered_channel.hpp"  // IWYU pragma: keep
@@ -64,6 +66,31 @@
 using namespace std::chrono_literals;
 
 namespace mrc::node {
+
+template <size_t N, typename... T>
+typename std::enable_if<(N >= sizeof...(T))>::type print_tuple(std::ostream& /*unused*/,
+                                                               const std::tuple<T...>& /*unused*/)
+{}
+
+template <size_t N, typename... T>
+typename std::enable_if<(N < sizeof...(T))>::type print_tuple(std::ostream& os, const std::tuple<T...>& tup)
+{
+    if (N != 0)
+    {
+        os << ", ";
+    }
+    os << std::get<N>(tup);
+    print_tuple<N + 1>(os, tup);
+}
+
+// Utility function to print tuples
+template <typename... T>
+std::ostream& operator<<(std::ostream& os, const std::tuple<T...>& tup)
+{
+    os << "[";
+    print_tuple<0>(os, tup);
+    return os << "]";
+}
 
 template <typename T>
 class EdgeReadableLambda : public edge::IEdgeReadable<T>
@@ -457,27 +484,4 @@ class TestDynamicRouter : public DynamicRouterComponentBase<std::string, T>
         return keys[t % keys.size()];
     }
 };
-
-template <size_t n, typename... T>
-typename std::enable_if<(n >= sizeof...(T))>::type print_tuple(std::ostream&, const std::tuple<T...>&)
-{}
-
-template <size_t n, typename... T>
-typename std::enable_if<(n < sizeof...(T))>::type print_tuple(std::ostream& os, const std::tuple<T...>& tup)
-{
-    if (n != 0)
-        os << ", ";
-    os << std::get<n>(tup);
-    print_tuple<n + 1>(os, tup);
-}
-
-// Utility function to print tuples
-template <typename... T>
-std::ostream& operator<<(std::ostream& os, const std::tuple<T...>& tup)
-{
-    os << "[";
-    print_tuple<0>(os, tup);
-    return os << "]";
-}
-
 }  // namespace mrc::node

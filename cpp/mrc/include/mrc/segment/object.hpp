@@ -126,7 +126,7 @@ struct ObjectPropertiesState
     // Will be set by the builder class when the object is added to a segment
     bool m_is_initialized{false};
 
-    std::string m_name{""};
+    std::string m_name;
 
     // The owning builder. Once set, name cannot be changed
     IBuilder* m_owning_builder{nullptr};
@@ -241,9 +241,9 @@ edge::IWritableAcceptor<T>& ObjectProperties::writable_acceptor_typed()
 
     if (writable_acceptor == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IWritableAcceptor<"
-                   << std::string(mrc::type_name<T>()) << ">" << "IWritableAcceptor<"
-                   << ::mrc::type_name(base.writable_acceptor_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IWritableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IWritableAcceptor<" << ::mrc::type_name(base.writable_acceptor_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableAcceptor<T>");
     }
 
@@ -258,9 +258,9 @@ edge::IWritableProvider<T>& ObjectProperties::writable_provider_typed()
 
     if (writable_provider == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IWritableProvider<"
-                   << std::string(mrc::type_name<T>()) << ">" << "IWritableProvider<"
-                   << ::mrc::type_name(base.writable_provider_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IWritableProvider<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IWritableProvider<" << ::mrc::type_name(base.writable_provider_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IWritableProvider<T>");
     }
 
@@ -275,9 +275,9 @@ edge::IReadableAcceptor<T>& ObjectProperties::readable_acceptor_typed()
 
     if (readable_acceptor == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IReadableAcceptor<"
-                   << std::string(mrc::type_name<T>()) << ">" << "IReadableAcceptor<"
-                   << ::mrc::type_name(base.readable_acceptor_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IReadableAcceptor<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IReadableAcceptor<" << ::mrc::type_name(base.readable_acceptor_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableAcceptor<T>");
     }
 
@@ -292,9 +292,9 @@ edge::IReadableProvider<T>& ObjectProperties::readable_provider_typed()
 
     if (readable_provider == nullptr)
     {
-        LOG(ERROR) << "Failed to cast " << type_name() << " to " << "IReadableProvider<"
-                   << std::string(mrc::type_name<T>()) << ">" << "IReadableProvider<"
-                   << ::mrc::type_name(base.readable_provider_type().full_type()) << ">.";
+        LOG(ERROR) << "Failed to cast " << type_name() << " to "
+                   << "IReadableProvider<" << std::string(mrc::type_name<T>()) << ">"
+                   << "IReadableProvider<" << ::mrc::type_name(base.readable_provider_type().full_type()) << ">.";
         throw exceptions::MrcRuntimeError("Failed to cast Sink to requested IReadableProvider<T>");
     }
 

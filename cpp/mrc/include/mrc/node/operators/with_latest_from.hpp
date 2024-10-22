@@ -89,7 +89,7 @@ class WithLatestFromBase<std::tuple<InputT...>, OutputT>
       m_upstream_holders(build_ingress(const_cast<WithLatestFromBase*>(this), std::index_sequence_for<InputT...>{}))
     {}
 
-    virtual ~WithLatestFromBase() = default;
+    ~WithLatestFromBase() override = default;
 
     template <size_t N>
     std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const

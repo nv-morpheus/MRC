@@ -17,7 +17,6 @@
 
 #include "../../test_mrc.hpp"  // IWYU pragma: associated
 #include "../test_nodes.hpp"
-#include "gtest/gtest.h"
 
 #include "mrc/exceptions/runtime_error.hpp"  // for MrcRuntimeError
 #include "mrc/node/operators/router.hpp"
@@ -56,9 +55,9 @@ class DerivedRouterBase : public BaseT
 
     void run()
     {
-        constexpr bool has_do_run = requires(this_t& t) { t.do_run(); };
+        constexpr bool HasDoRun = requires(this_t& t) { t.do_run(); };
 
-        if constexpr (has_do_run)
+        if constexpr (HasDoRun)
         {
             this->do_run();
         }
@@ -82,9 +81,9 @@ class DerivedLambdaRouter : public BaseT
 
     void run()
     {
-        constexpr bool has_do_run = requires(this_t& t) { t.do_run(); };
+        constexpr bool HasDoRun = requires(this_t& t) { t.do_run(); };
 
-        if constexpr (has_do_run)
+        if constexpr (HasDoRun)
         {
             this->do_run();
         }
@@ -141,41 +140,57 @@ class TestRouterTypes : public testing::Test
     }
 };
 
-using RouterTypes = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>,
-                                     node::DerivedRouterBase<int, node::StaticRouterRunnableBase<int, int>>,
-                                     node::DerivedRouterBase<int, node::DynamicRouterComponentBase<int, int>>,
-                                     node::DerivedRouterBase<int, node::DynamicRouterRunnableBase<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaStaticRouterComponent<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent<int, int>>,
-                                     node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable<int, int>>>;
+using router_types_t = ::testing::Types<node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>,
+                                        node::DerivedRouterBase<int, node::StaticRouterRunnableBase<int, int>>,
+                                        node::DerivedRouterBase<int, node::DynamicRouterComponentBase<int, int>>,
+                                        node::DerivedRouterBase<int, node::DynamicRouterRunnableBase<int, int>>,
+                                        node::DerivedLambdaRouter<node::LambdaStaticRouterComponent<int, int>>,
+                                        node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable<int, int>>,
+                                        node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent<int, int>>,
+                                        node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable<int, int>>>;
 
 class RouterTypesNameGenerator
 {
   public:
     template <typename T>
-    static std::string GetName(int)
+    static std::string GetName(int /*unused*/)  // NOLINT(readability-identifier-naming)
     {
         if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterComponentBase<int, int>>>)
+        {
             return "StaticComponentBase";
+        }
         if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::StaticRouterRunnableBase<int, int>>>)
+        {
             return "StaticRunnableBase";
+        }
         if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterComponentBase<int, int>>>)
+        {
             return "DynamicComponentBase";
+        }
         if constexpr (std::is_same_v<T, node::DerivedRouterBase<int, node::DynamicRouterRunnableBase<int, int>>>)
+        {
             return "DynamicRunnableBase";
+        }
         if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterComponent<int, int>>>)
+        {
             return "LambdaStaticComponent";
+        }
         if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaStaticRouterRunnable<int, int>>>)
+        {
             return "LambdaStaticRunnable";
+        }
         if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterComponent<int, int>>>)
+        {
             return "LambdaDynamicComponent";
+        }
         if constexpr (std::is_same_v<T, node::DerivedLambdaRouter<node::LambdaDynamicRouterRunnable<int, int>>>)
+        {
             return "LambdaDynamicRunnable";
+        }
     }
 };
 
-TYPED_TEST_SUITE(TestRouterTypes, RouterTypes, RouterTypesNameGenerator);
+TYPED_TEST_SUITE(TestRouterTypes, router_types_t, RouterTypesNameGenerator);
 
 TYPED_TEST(TestRouterTypes, SourceToRouterToSinks)
 {
@@ -243,9 +258,9 @@ TYPED_TEST(TestRouterTypes, AutomaticTypeConversion)
     sink1->run();
     sink2->run();
 
-    EXPECT_EQ((std::vector<float>{0.0f, 3.0f, 6.0f, 9.0f}), sink0->get_values());
-    EXPECT_EQ((std::vector<float>{1.0f, 4.0f, 7.0f}), sink1->get_values());
-    EXPECT_EQ((std::vector<float>{2.0f, 5.0f, 8.0f}), sink2->get_values());
+    EXPECT_EQ((std::vector<float>{0.0F, 3.0F, 6.0F, 9.0F}), sink0->get_values());
+    EXPECT_EQ((std::vector<float>{1.0F, 4.0F, 7.0F}), sink1->get_values());
+    EXPECT_EQ((std::vector<float>{2.0F, 5.0F, 8.0F}), sink2->get_values());
 }
 
 TYPED_TEST(TestRouterTypes, SourceComponentToRouterToDifferentSinks)
@@ -267,9 +282,9 @@ TYPED_TEST(TestRouterTypes, SourceComponentToRouterToDifferentSinks)
         sink0->run();
         sink2->run();
 
-        EXPECT_EQ((std::vector<float>{0.0f, 3.0f, 6.0f, 9.0f}), sink0->get_values());
-        EXPECT_EQ((std::vector<float>{1.0f, 4.0f, 7.0f}), sink1->get_values());
-        EXPECT_EQ((std::vector<float>{2.0f, 5.0f, 8.0f}), sink2->get_values());
+        EXPECT_EQ((std::vector<float>{0.0F, 3.0F, 6.0F, 9.0F}), sink0->get_values());
+        EXPECT_EQ((std::vector<float>{1.0F, 4.0F, 7.0F}), sink1->get_values());
+        EXPECT_EQ((std::vector<float>{2.0F, 5.0F, 8.0F}), sink2->get_values());
     }
     else
     {

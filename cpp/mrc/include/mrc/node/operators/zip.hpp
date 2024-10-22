@@ -116,7 +116,7 @@ class ZipBase<std::tuple<InputT...>, OutputT> : public ZipTypelessBase,
         m_queue_counts.fill(0);
     }
 
-    virtual ~ZipBase() = default;
+    ~ZipBase() override = default;
 
     template <size_t N>
     std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const
