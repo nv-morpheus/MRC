@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +19,11 @@
 # from functools import partial
 
 # import numpy as np
-# import pytest
+import pytest
 
 import mrc
+# Required to register sample modules with the ModuleRegistry
+import mrc.tests.sample_modules
 import mrc.tests.test_edges_cpp as m
 
 # from mrc.core.options import PlacementStrategy
@@ -445,9 +447,49 @@ def test_dynamic_port_with_type_get_ingress_egress():
     executor.join()
 
 
+def test_segment_init_error():
+    """
+    Test for issue #360
+    """
+
+    def gen_data():
+        yield 1
+
+    def init1(builder: mrc.Builder):
+        source = builder.make_source("source", gen_data)
+        egress = builder.get_egress("b")
+        builder.make_edge(source, egress)
+        raise RuntimeError("Test for #360")
+
+    def init2(builder: mrc.Builder):
+
+        def on_next(input):
+            pass
+
+        ingress = builder.get_ingress("b")
+        sink = builder.make_sink("sink", on_next)
+
+        builder.make_edge(ingress, sink)
+
+    pipe = mrc.Pipeline()
+
+    pipe.make_segment("TestSegment1", [], [("b", int, False)], init1)
+    pipe.make_segment("TestSegment2", [("b", int, False)], [], init2)
+
+    options = mrc.Options()
+
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipe)
+
+    with pytest.raises(RuntimeError):
+        executor.start()
+        executor.join()
+
+
 if (__name__ in ("__main__", )):
     test_dynamic_port_creation_good()
     test_dynamic_port_creation_bad()
     test_ingress_egress_custom_type_construction()
     test_dynamic_port_get_ingress_egress()
     test_dynamic_port_with_type_get_ingress_egress()
+    test_segment_init_error()

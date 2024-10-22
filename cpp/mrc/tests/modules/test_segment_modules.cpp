@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#include "test_modules.hpp"
+#include "../test_mrc.hpp"   // for EXPECT_DEATH_OR_THROW
+#include "test_modules.hpp"  // IWYU pragma: associated
 
 #include "mrc/modules/properties/persistent.hpp"
 #include "mrc/modules/sample_modules.hpp"
@@ -216,6 +217,76 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
     EXPECT_EQ(packets_1, 4);
     EXPECT_EQ(packets_2, 6);
     EXPECT_EQ(packets_3, 4);
+}
+
+TEST_F(TestSegmentModulesDeathTest, ModuleInitError)
+{
+    using namespace modules;
+
+    auto init_wrapper = [](segment::IBuilder& builder) {
+        auto simple_mod = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
+
+        auto source1 = builder.make_source<bool>("src1", [](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                sub.on_next(true);
+                sub.on_next(false);
+                sub.on_next(true);
+                sub.on_next(true);
+            }
+
+            sub.on_completed();
+        });
+
+        // Ex1. Partially dynamic edge construction
+        builder.make_edge(source1, simple_mod->input_port("input1"));
+
+        auto source2 = builder.make_source<bool>("src2", [](rxcpp::subscriber<bool>& sub) {
+            if (sub.is_subscribed())
+            {
+                sub.on_next(true);
+                sub.on_next(false);
+                sub.on_next(false);
+                sub.on_next(false);
+                sub.on_next(true);
+                sub.on_next(false);
+            }
+
+            sub.on_completed();
+        });
+
+        // Ex2. Dynamic edge construction -- requires type specification
+        builder.make_edge(source2, simple_mod->input_port("input2"));
+
+        auto sink1 = builder.make_sink<std::string>("sink1", [](std::string input) {
+            VLOG(20) << "Sinking " << input;
+        });
+
+        builder.make_edge(simple_mod->output_port("output1"), sink1);
+
+        auto sink2 = builder.make_sink<std::string>("sink2", [](std::string input) {
+            VLOG(20) << "Sinking " << input;
+        });
+
+        builder.make_edge(simple_mod->output_port("output2"), sink2);
+
+        VLOG(10) << "Throwing";
+        throw std::runtime_error("Test exception");
+    };
+
+    EXPECT_DEATH_OR_THROW(
+        {
+            m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
+
+            auto options = m_resources->make_options();
+
+            Executor executor(std::move(options));
+            executor.register_pipeline(std::move(m_pipeline));
+            executor.start();
+            executor.join();
+        },
+        "A node was destructed which still had dependent connections.*",
+        std::runtime_error);
 }
 
 TEST_F(TestSegmentModules, ModuleAsSourceTest)

@@ -28,7 +28,7 @@
 #include "mrc/modules/properties/persistent.hpp"  // IWYU pragma: keep
 #include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/port_registry.hpp"
-#include "mrc/runnable/launchable.hpp"
+#include "mrc/runnable/launchable.hpp"  // for Launchable
 #include "mrc/segment/egress_port.hpp"   // IWYU pragma: keep
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/object.hpp"
@@ -284,9 +284,30 @@ void BuilderDefinition::initialize()
                    << ", Segment Rank: " << m_rank << ". Exception message:\n"
                    << e.what();
 
+        shutdown();
         // Rethrow after logging
         std::rethrow_exception(std::current_exception());
     }
+}
+
+void BuilderDefinition::shutdown()
+{
+    DVLOG(10) << "Shutting down segment: " << m_definition->name();
+    for (auto& [name, obj_prop] : m_objects)
+    {
+        if (obj_prop->is_source() && !obj_prop->is_sink())
+        {
+            DVLOG(10) << "Destroying: " << name;
+            obj_prop->destroy();
+        }
+    }
+
+    m_ingress_ports.clear();
+    m_egress_ports.clear();
+    m_nodes.clear();
+    m_objects.clear();
+
+    DVLOG(10) << "Shutting down segment: " << m_definition->name() << " - done";
 }
 
 const std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>>& BuilderDefinition::nodes() const

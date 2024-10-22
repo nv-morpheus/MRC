@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -83,6 +83,13 @@ class IngressPort : public Object<node::RxSourceBase<T>>, public IngressPortBase
         std::lock_guard<decltype(m_mutex)> lock(m_mutex);
         CHECK(m_source);
         manifold->add_output(m_segment_address, m_source.get());
+    }
+
+    void destroy() final
+    {
+        DVLOG(10) << "Destroying ingress port " << this->type_name();
+        m_source->on_shutdown_critical_section();
+        m_source.reset();
     }
 
     SegmentAddress m_segment_address;

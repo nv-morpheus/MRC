@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,6 +57,17 @@ class CompositeManifold : public Manifold
     {
         // Already created, link them together
         mrc::make_edge(*m_ingress, *m_egress);
+    }
+
+    ~CompositeManifold() override
+    {
+        kill();
+    };
+
+    void kill() final
+    {
+        m_ingress->shutdown();
+        m_egress->shutdown();
     }
 
   protected:

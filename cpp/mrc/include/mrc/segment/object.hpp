@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,6 +74,8 @@ struct ObjectProperties
 
     virtual runnable::LaunchOptions& launch_options()             = 0;
     virtual const runnable::LaunchOptions& launch_options() const = 0;
+
+    virtual void destroy(){};
 };
 
 inline ObjectProperties::~ObjectProperties() = default;

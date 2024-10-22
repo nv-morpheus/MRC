@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,7 @@ struct Interface
 
     virtual void start() = 0;
     virtual void join()  = 0;
+    virtual void kill()  = 0;
 
     virtual void add_input(const SegmentAddress& address, edge::IWritableAcceptorBase* input_source) = 0;
     virtual void add_output(const SegmentAddress& address, edge::IWritableProviderBase* output_sink) = 0;
