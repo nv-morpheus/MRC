@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -206,5 +206,24 @@ constexpr auto type_name() noexcept
     //
     //    return name;
 }
+
+// NOLINTBEGIN(readability-identifier-naming)
+// Disable naming conventions for std library-like functions
+template <class... VariantsT>
+struct dispatch : VariantsT...
+{
+    using VariantsT::operator()...;
+};
+template <class... VariantsT>
+dispatch(VariantsT...) -> dispatch<VariantsT...>;
+// NOLINTEND(readability-identifier-naming)
+
+template <class T, class = void>
+struct IsComplete : std::false_type
+{};
+
+template <class T>
+struct IsComplete<T, decltype(void(sizeof(T)))> : std::true_type
+{};
 
 }  // namespace mrc

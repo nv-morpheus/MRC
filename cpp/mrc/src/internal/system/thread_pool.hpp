@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,9 +64,9 @@ class ThreadPool final
     ~ThreadPool();
 
     template <class F, class... ArgsT>
-    auto enqueue(F&& f, ArgsT&&... args) -> boost::fibers::future<typename std::result_of<F(ArgsT...)>::type>
+    auto enqueue(F&& f, ArgsT&&... args) -> boost::fibers::future<typename std::invoke_result_t<F, ArgsT...>>
     {
-        using return_type_t = typename std::result_of<F(ArgsT...)>::type;
+        using return_type_t = typename std::invoke_result_t<F, ArgsT...>;
 
         boost::fibers::packaged_task<return_type_t()> task(std::bind(std::forward<F>(f), std::forward<ArgsT>(args)...));
         boost::fibers::future<return_type_t> future = task.get_future();
