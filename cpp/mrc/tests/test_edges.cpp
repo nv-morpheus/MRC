@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>  // for observable_member
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <utility>
