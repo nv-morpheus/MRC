@@ -105,6 +105,11 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
         return m_cpp_fn(std::forward<ArgsT>(args)...);
     }
 
+    operator bool() const
+    {
+        return !m_is_none;
+    }
+
     static constexpr auto Signature = pybind11::detail::_("Callable[[") +
                                       pybind11::detail::concat(pybind11::detail::make_caster<ArgsT>::name...) +
                                       pybind11::detail::_("], ") + pybind11::detail::make_caster<return_t>::name +
@@ -155,7 +160,8 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
         // Save the name of the function to help debugging
         if (py_fn)
         {
-            m_repr = pybind11::str(py_fn);
+            m_repr    = pybind11::str(py_fn);
+            m_is_none = false;
         }
 
         m_cpp_fn = this->build_cpp_function(std::move(py_fn));
@@ -163,6 +169,7 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
 
     cpp_fn_t m_cpp_fn;
     std::string m_repr;
+    bool m_is_none{true};
 };
 
 struct OnNextFunction : public PyFuncHolder<void(PyObjectHolder)>

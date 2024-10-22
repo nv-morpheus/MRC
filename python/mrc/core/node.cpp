@@ -22,11 +22,14 @@
 #include "pymrc/utils.hpp"
 
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/combine_latest.hpp"
 #include "mrc/node/operators/round_robin_router_typeless.hpp"
+#include "mrc/node/operators/with_latest_from.hpp"
 #include "mrc/node/operators/zip.hpp"
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/version.hpp"
 
 #include <pybind11/cast.h>
@@ -74,33 +77,189 @@ PYBIND11_MODULE(node, py_mod)
             return node;
         }));
 
-    py::class_<
-        mrc::segment::Object<node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>,
-        mrc::segment::ObjectProperties,
-        std::shared_ptr<mrc::segment::Object<
-            node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>>>(py_mod, "Zip")
-        .def(py::init<>([](mrc::segment::IBuilder& builder, std::string name, size_t count) {
-            if (count == 2)
-            {
-                return builder.construct_object<
-                    node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>(
-                    name,
-                    [](std::tuple<PyObjectHolder, PyObjectHolder>&& input_data) {
-                        py::gil_scoped_acquire gil;
+    py::class_<mrc::segment::Object<node::ZipTypelessBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::ZipTypelessBase>>>(py_mod, "ZipComponent")
+        .def(
+            py::init<>([](mrc::segment::IBuilder& builder,
+                          std::string name,
+                          size_t count,
+                          PyFuncHolder<py::object(py::tuple)> convert_fn) {
+                std::function<PyObjectHolder(py::tuple)> convert_fn_wrapped =
+                    [convert_fn = std::move(convert_fn)](py::tuple input_data) {
+                        if (convert_fn)
+                        {
+                            return PyObjectHolder(convert_fn(std::move(input_data)));
+                        }
 
-                        return PyObjectHolder(py::cast(std::move(input_data)));
-                    });
-            }
+                        return PyObjectHolder(std::move(input_data));
+                    };
 
-            py::print("Unsupported count!");
-            throw std::runtime_error("Unsupported count!");
-        }))
-        .def("get_sink",
-             [](mrc::segment::Object<
-                    node::ZipTransformComponent<std::tuple<PyObjectHolder, PyObjectHolder>, PyObjectHolder>>& self,
-                size_t index) {
-                 return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
-             });
+                auto make_node = [&builder,
+                                  convert_fn_wrapped = std::move(convert_fn_wrapped)]<size_t N>(std::string name) {
+                    return builder
+                        .construct_object<
+                            node::ZipTransformComponent<utils::repeat_tuple_type_t<PyObjectHolder, N>, PyObjectHolder>>(
+                            name,
+                            [convert_fn_wrapped = std::move(convert_fn_wrapped)](
+                                utils::repeat_tuple_type_t<PyObjectHolder, N>&& input_data) {
+                                py::gil_scoped_acquire gil;
+
+                                return convert_fn_wrapped(py::cast(std::move(input_data)));
+                            })
+                        ->template as<node::ZipTypelessBase>();
+                };
+
+                if (count == 1)
+                {
+                    return make_node.template operator()<1>(name);
+                }
+                else if (count == 2)
+                {
+                    return make_node.template operator()<2>(name);
+                }
+                else if (count == 3)
+                {
+                    return make_node.template operator()<3>(name);
+                }
+                else if (count == 4)
+                {
+                    return make_node.template operator()<4>(name);
+                }
+
+                throw std::runtime_error("Unsupported count!");
+            }),
+            py::arg("builder"),
+            py::arg("name"),
+            py::kw_only(),
+            py::arg("count"),
+            py::arg("convert_fn") = py::none())
+        .def("get_sink", [](mrc::segment::Object<node::ZipTypelessBase>& self, size_t index) {
+            return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+        });
+
+    py::class_<mrc::segment::Object<node::WithLatestFromTypelessBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::WithLatestFromTypelessBase>>>(py_mod,
+                                                                                        "WithLatestFromComponent")
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           size_t count,
+                           PyFuncHolder<py::object(py::tuple)> convert_fn) {
+                 std::function<PyObjectHolder(py::tuple)> convert_fn_wrapped =
+                     [convert_fn = std::move(convert_fn)](py::tuple input_data) {
+                         if (convert_fn)
+                         {
+                             return PyObjectHolder(convert_fn(std::move(input_data)));
+                         }
+
+                         return PyObjectHolder(std::move(input_data));
+                     };
+
+                 auto make_node = [&builder,
+                                   convert_fn_wrapped = std::move(convert_fn_wrapped)]<size_t N>(std::string name) {
+                     return builder
+                         .construct_object<
+                             node::WithLatestFromTransformComponent<utils::repeat_tuple_type_t<PyObjectHolder, N>,
+                                                                    PyObjectHolder>>(
+                             name,
+                             [convert_fn_wrapped = std::move(convert_fn_wrapped)](
+                                 utils::repeat_tuple_type_t<PyObjectHolder, N>&& input_data) {
+                                 py::gil_scoped_acquire gil;
+
+                                 return convert_fn_wrapped(py::cast(std::move(input_data)));
+                             })
+                         ->template as<node::WithLatestFromTypelessBase>();
+                 };
+
+                 if (count == 1)
+                 {
+                     return make_node.template operator()<1>(name);
+                 }
+                 else if (count == 2)
+                 {
+                     return make_node.template operator()<2>(name);
+                 }
+                 else if (count == 3)
+                 {
+                     return make_node.template operator()<3>(name);
+                 }
+                 else if (count == 4)
+                 {
+                     return make_node.template operator()<4>(name);
+                 }
+
+                 throw std::runtime_error("Unsupported count!");
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("count"),
+             py::arg("convert_fn") = py::none())
+        .def("get_sink", [](mrc::segment::Object<node::WithLatestFromTypelessBase>& self, size_t index) {
+            return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+        });
+
+    py::class_<mrc::segment::Object<node::CombineLatestTypelessBase>,
+               mrc::segment::ObjectProperties,
+               std::shared_ptr<mrc::segment::Object<node::CombineLatestTypelessBase>>>(py_mod, "CombineLatestComponent")
+        .def(py::init<>([](mrc::segment::IBuilder& builder,
+                           std::string name,
+                           size_t count,
+                           PyFuncHolder<py::object(py::tuple)> convert_fn) {
+                 std::function<PyObjectHolder(py::tuple)> convert_fn_wrapped =
+                     [convert_fn = std::move(convert_fn)](py::tuple input_data) {
+                         if (convert_fn)
+                         {
+                             return PyObjectHolder(convert_fn(std::move(input_data)));
+                         }
+
+                         return PyObjectHolder(std::move(input_data));
+                     };
+
+                 auto make_node = [&builder,
+                                   convert_fn_wrapped = std::move(convert_fn_wrapped)]<size_t N>(std::string name) {
+                     return builder
+                         .construct_object<
+                             node::CombineLatestTransformComponent<utils::repeat_tuple_type_t<PyObjectHolder, N>,
+                                                                   PyObjectHolder>>(
+                             name,
+                             [convert_fn_wrapped = std::move(convert_fn_wrapped)](
+                                 utils::repeat_tuple_type_t<PyObjectHolder, N>&& input_data) {
+                                 py::gil_scoped_acquire gil;
+
+                                 return convert_fn_wrapped(py::cast(std::move(input_data)));
+                             })
+                         ->template as<node::CombineLatestTypelessBase>();
+                 };
+
+                 if (count == 1)
+                 {
+                     return make_node.template operator()<1>(name);
+                 }
+                 else if (count == 2)
+                 {
+                     return make_node.template operator()<2>(name);
+                 }
+                 else if (count == 3)
+                 {
+                     return make_node.template operator()<3>(name);
+                 }
+                 else if (count == 4)
+                 {
+                     return make_node.template operator()<4>(name);
+                 }
+
+                 throw std::runtime_error("Unsupported count!");
+             }),
+             py::arg("builder"),
+             py::arg("name"),
+             py::kw_only(),
+             py::arg("count"),
+             py::arg("convert_fn") = py::none())
+        .def("get_sink", [](mrc::segment::Object<node::CombineLatestTypelessBase>& self, size_t index) {
+            return self.get_child(MRC_CONCAT_STR("sink[" << index << "]"));
+        });
 
     py::class_<mrc::segment::Object<node::LambdaStaticRouterComponent<std::string, PyObjectHolder>>,
                mrc::segment::ObjectProperties,

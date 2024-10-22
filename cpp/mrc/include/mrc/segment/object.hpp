@@ -57,11 +57,6 @@ struct ObjectPropertiesState
     const bool is_sink;
     const bool is_source;
 
-    // std::optional<std::type_index> sink_type             = std::nullopt;
-    // std::optional<std::type_index> sink_type_no_holder   = std::nullopt;
-    // std::optional<std::type_index> source_type           = std::nullopt;
-    // std::optional<std::type_index> source_type_no_holder = std::nullopt;
-
     const bool is_writable_acceptor;
     const bool is_writable_provider;
     const bool is_readable_acceptor;
@@ -325,37 +320,16 @@ template <typename ObjectT>
 class Object : public virtual ObjectProperties, public std::enable_shared_from_this<Object<ObjectT>>
 {
   public:
-    // Object(const Object& other) : m_name(other.m_name), m_launch_options(other.m_launch_options) {}
-    // Object(Object&&)                 = delete;
-    // Object& operator=(const Object&) = delete;
-    // Object& operator=(Object&&)      = delete;
-
     ObjectT& object();
     const ObjectT& object() const;
 
-    // std::string name() const final;
-    // std::string type_name() const final;
-
-    // bool is_source() const final;
-    // bool is_sink() const final;
-
     std::type_index sink_type(bool ignore_holder) const final;
     std::type_index source_type(bool ignore_holder) const final;
-
-    // bool is_writable_acceptor() const final;
-    // bool is_writable_provider() const final;
-    // bool is_readable_acceptor() const final;
-    // bool is_readable_provider() const final;
 
     edge::IWritableAcceptorBase& writable_acceptor_base() final;
     edge::IWritableProviderBase& writable_provider_base() final;
     edge::IReadableAcceptorBase& readable_acceptor_base() final;
     edge::IReadableProviderBase& readable_provider_base() final;
-
-    // bool is_runnable() const final
-    // {
-    //     return static_cast<bool>(std::is_base_of_v<runnable::Runnable, ObjectT>);
-    // }
 
     runnable::LaunchOptions& launch_options() final
     {
@@ -467,9 +441,6 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
         return *m_state;
     }
 
-    // // Move to protected to allow only the IBuilder to set the name
-    // void set_name(const std::string& name) override;
-
   private:
     virtual ObjectT* get_object() const = 0;
 
@@ -515,7 +486,6 @@ class Object : public virtual ObjectProperties, public std::enable_shared_from_t
     runnable::LaunchOptions m_launch_options;
 
     std::map<std::string, std::shared_ptr<ObjectProperties>> m_children;
-    // std::map<std::string, std::function<std::shared_ptr<ObjectProperties>()>> m_create_children_fns;
 
     // Allows converting to base classes
     template <typename U>
@@ -548,36 +518,6 @@ const ObjectT& Object<ObjectT>::object() const
     return *node;
 }
 
-// template <typename ObjectT>
-// void Object<ObjectT>::set_name(const std::string& name)
-// {
-//     m_name = name;
-// }
-
-// template <typename ObjectT>
-// std::string Object<ObjectT>::name() const
-// {
-//     return m_name;
-// }
-
-// template <typename ObjectT>
-// std::string Object<ObjectT>::type_name() const
-// {
-//     return std::string(::mrc::type_name<ObjectT>());
-// }
-
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_source() const
-// {
-//     return std::is_base_of_v<node::SourcePropertiesBase, ObjectT>;
-// }
-
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_sink() const
-// {
-//     return std::is_base_of_v<node::SinkPropertiesBase, ObjectT>;
-// }
-
 template <typename ObjectT>
 std::type_index Object<ObjectT>::sink_type(bool ignore_holder) const
 {
@@ -602,39 +542,9 @@ std::type_index Object<ObjectT>::source_type(bool ignore_holder) const
     return base->source_type(ignore_holder);
 }
 
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_writable_acceptor() const
-// {
-//     return std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>;
-// }
-
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_writable_provider() const
-// {
-//     return std::is_base_of_v<edge::IWritableProviderBase, ObjectT>;
-// }
-
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_readable_acceptor() const
-// {
-//     return std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>;
-// }
-
-// template <typename ObjectT>
-// bool Object<ObjectT>::is_readable_provider() const
-// {
-//     return std::is_base_of_v<edge::IReadableProviderBase, ObjectT>;
-// }
-
 template <typename ObjectT>
 edge::IWritableAcceptorBase& Object<ObjectT>::writable_acceptor_base()
 {
-    // if constexpr (!std::is_base_of_v<edge::IWritableAcceptorBase, ObjectT>)
-    // {
-    //     LOG(ERROR) << type_name() << " is not a IIngressAcceptorBase";
-    //     throw exceptions::MrcRuntimeError("Object is not a IIngressAcceptorBase");
-    // }
-
     auto* base = dynamic_cast<edge::IWritableAcceptorBase*>(get_object());
     CHECK(base) << type_name() << " is not a IIngressAcceptorBase";
     return *base;
@@ -643,12 +553,6 @@ edge::IWritableAcceptorBase& Object<ObjectT>::writable_acceptor_base()
 template <typename ObjectT>
 edge::IWritableProviderBase& Object<ObjectT>::writable_provider_base()
 {
-    // if constexpr (!std::is_base_of_v<edge::IWritableProviderBase, ObjectT>)
-    // {
-    //     LOG(ERROR) << type_name() << " is not a IIngressProviderBase";
-    //     throw exceptions::MrcRuntimeError("Object is not a IIngressProviderBase");
-    // }
-
     auto* base = dynamic_cast<edge::IWritableProviderBase*>(get_object());
     CHECK(base) << type_name() << " is not a IWritableProviderBase";
     return *base;
@@ -657,12 +561,6 @@ edge::IWritableProviderBase& Object<ObjectT>::writable_provider_base()
 template <typename ObjectT>
 edge::IReadableAcceptorBase& Object<ObjectT>::readable_acceptor_base()
 {
-    // if constexpr (!std::is_base_of_v<edge::IReadableAcceptorBase, ObjectT>)
-    // {
-    //     LOG(ERROR) << type_name() << " is not a IEgressAcceptorBase";
-    //     throw exceptions::MrcRuntimeError("Object is not a IEgressAcceptorBase");
-    // }
-
     auto* base = dynamic_cast<edge::IReadableAcceptorBase*>(get_object());
     CHECK(base) << type_name() << " is not a IReadableAcceptorBase";
     return *base;
@@ -671,12 +569,6 @@ edge::IReadableAcceptorBase& Object<ObjectT>::readable_acceptor_base()
 template <typename ObjectT>
 edge::IReadableProviderBase& Object<ObjectT>::readable_provider_base()
 {
-    // if constexpr (!std::is_base_of_v<edge::IReadableProviderBase, ObjectT>)
-    // {
-    //     LOG(ERROR) << type_name() << " is not a IEgressProviderBase";
-    //     throw exceptions::MrcRuntimeError("Object is not a IEgressProviderBase");
-    // }
-
     auto* base = dynamic_cast<edge::IReadableProviderBase*>(get_object());
     CHECK(base) << type_name() << " is not a IReadableProviderBase";
     return *base;

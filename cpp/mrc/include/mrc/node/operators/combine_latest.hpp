@@ -34,12 +34,20 @@
 
 namespace mrc::node {
 
+class CombineLatestTypelessBase
+{
+  public:
+    virtual ~CombineLatestTypelessBase() = default;
+};
+
 template <typename...>
 class CombineLatestBase;
 
 template <typename... InputT, typename OutputT>
 class CombineLatestBase<std::tuple<InputT...>, OutputT>
-  : public WritableAcceptor<OutputT>, public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
+  : public CombineLatestTypelessBase,
+    public WritableAcceptor<OutputT>,
+    public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
     template <std::size_t... Is>
     static auto build_ingress(CombineLatestBase* self, std::index_sequence<Is...> /*unused*/)

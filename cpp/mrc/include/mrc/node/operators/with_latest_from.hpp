@@ -37,13 +37,21 @@
 
 namespace mrc::node {
 
+class WithLatestFromTypelessBase
+{
+  public:
+    virtual ~WithLatestFromTypelessBase() = default;
+};
+
 template <typename... TypesT>
 class WithLatestFromBase
 {};
 
 template <typename... InputT, typename OutputT>
 class WithLatestFromBase<std::tuple<InputT...>, OutputT>
-  : public WritableAcceptor<OutputT>, public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
+  : public WithLatestFromTypelessBase,
+    public WritableAcceptor<OutputT>,
+    public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
   public:
     using input_tuple_t = std::tuple<InputT...>;

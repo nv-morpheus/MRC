@@ -284,7 +284,51 @@ def add_round_robin_router(seg: mrc.Builder, *upstream: mrc.SegmentObject):
 
 def add_zip(seg: mrc.Builder, *upstream: mrc.SegmentObject):
 
-    node = mrc.core.node.Zip(seg, "Zip", len(upstream))
+    node_name = "Zip"
+
+    expected_node_counts.update({f"{node_name}.{k}": v for k, v in {"convert": 5}.items()})
+
+    def convert_fn(x):
+        increment_node_counter(f"{node_name}.convert")
+        return x
+
+    node = mrc.core.node.ZipComponent(seg, node_name, count=len(upstream), convert_fn=convert_fn)
+
+    for i, u in enumerate(upstream):
+        seg.make_edge(u, node.get_sink(i))
+
+    return node
+
+
+def add_combine_latest(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node_name = "CombineLatest"
+
+    expected_node_counts.update({f"{node_name}.{k}": v for k, v in {"convert": 5}.items()})
+
+    def convert_fn(x):
+        increment_node_counter(f"{node_name}.convert")
+        return x
+
+    node = mrc.core.node.CombineLatestComponent(seg, node_name, count=len(upstream), convert_fn=convert_fn)
+
+    for i, u in enumerate(upstream):
+        seg.make_edge(u, node.get_sink(i))
+
+    return node
+
+
+def add_with_latest_from(seg: mrc.Builder, *upstream: mrc.SegmentObject):
+
+    node_name = "WithLatestFrom"
+
+    expected_node_counts.update({f"{node_name}.{k}": v for k, v in {"convert": 5}.items()})
+
+    def convert_fn(x):
+        increment_node_counter(f"{node_name}.convert")
+        return x
+
+    node = mrc.core.node.WithLatestFromComponent(seg, node_name, count=len(upstream), convert_fn=convert_fn)
 
     for i, u in enumerate(upstream):
         seg.make_edge(u, node.get_sink(i))
@@ -672,13 +716,46 @@ def test_source_to_node_to_null(run_segment,
 
 
 @pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
-def test_multi_source_to_zip_to_sink(run_segment, source_cpp: bool):
+@pytest.mark.parametrize("upstream_count", range(1, 4), ids=[f"upstream_count_{i}" for i in range(1, 4)])
+def test_multi_source_to_zip_to_sink(run_segment, source_cpp: bool, upstream_count: int):
 
     def segment_init(seg: mrc.Builder):
 
-        source1 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="1")
-        source2 = add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix="2")
-        zip = add_zip(seg, source1, source2)
+        sources = (add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix=str(i))
+                   for i in range(upstream_count))
+        zip = add_zip(seg, *sources)
+        add_sink(seg, zip, is_cpp=False, data_type=tuple, is_component=False)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("upstream_count", range(1, 4), ids=[f"upstream_count_{i}" for i in range(1, 4)])
+def test_multi_source_to_combine_latest_to_sink(run_segment, source_cpp: bool, upstream_count: int):
+
+    def segment_init(seg: mrc.Builder):
+
+        sources = (add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix=str(i))
+                   for i in range(upstream_count))
+        zip = add_combine_latest(seg, *sources)
+        add_sink(seg, zip, is_cpp=False, data_type=tuple, is_component=False)
+
+    results = run_segment(segment_init)
+
+    assert results == expected_node_counts
+
+
+@pytest.mark.parametrize("source_cpp", [True, False], ids=["source_cpp", "source_py"])
+@pytest.mark.parametrize("upstream_count", range(1, 4), ids=[f"upstream_count_{i}" for i in range(1, 4)])
+def test_multi_source_to_with_latest_from_to_sink(run_segment, source_cpp: bool, upstream_count: int):
+
+    def segment_init(seg: mrc.Builder):
+
+        sources = (add_source(seg, is_cpp=source_cpp, data_type=m.Base, is_component=False, suffix=str(i))
+                   for i in range(upstream_count))
+        zip = add_with_latest_from(seg, *sources)
         add_sink(seg, zip, is_cpp=False, data_type=tuple, is_component=False)
 
     results = run_segment(segment_init)

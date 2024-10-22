@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <tuple>
 
 namespace mrc::utils {
@@ -64,4 +65,34 @@ void tuple_for_each(TupleT&& tuple, FuncT&& f)
                    std::forward<FuncT>(f),
                    std::make_index_sequence<std::tuple_size<std::decay_t<TupleT>>::value>());
 }
+
+/**
+ * @brief Creates a tuple of N elements of type T. For example, `repeat_tuple_type<int, 3>` would be `std::tuple<int,
+ * int, int>`
+ *
+ * @tparam T The type of the tuple
+ * @tparam N The number of elements in the tuple
+ */
+template <typename T, size_t N>
+class repeat_tuple_type
+{
+    template <typename = std::make_index_sequence<N>>
+    struct impl;
+
+    template <size_t... Is>
+    struct impl<std::index_sequence<Is...>>
+    {
+        template <size_t>
+        using wrap = T;
+
+        using type = std::tuple<wrap<Is>...>;
+    };
+
+  public:
+    using type = typename impl<>::type;
+};
+
+template <typename T, size_t N>
+using repeat_tuple_type_t = typename repeat_tuple_type<T, N>::type;
+
 }  // namespace mrc::utils

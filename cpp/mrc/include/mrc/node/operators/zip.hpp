@@ -45,12 +45,19 @@
 
 namespace mrc::node {
 
+class ZipTypelessBase
+{
+  public:
+    virtual ~ZipTypelessBase() = default;
+};
+
 template <typename... TypesT>
 class ZipBase
 {};
 
 template <typename... InputT, typename OutputT>
-class ZipBase<std::tuple<InputT...>, OutputT> : public WritableAcceptor<OutputT>,
+class ZipBase<std::tuple<InputT...>, OutputT> : public ZipTypelessBase,
+                                                public WritableAcceptor<OutputT>,
                                                 public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
   public:
