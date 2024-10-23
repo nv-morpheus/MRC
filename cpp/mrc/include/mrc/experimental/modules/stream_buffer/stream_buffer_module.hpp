@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,8 +138,8 @@ void StreamBufferModule<DataTypeT, StreamBufferTypeT>::initialize(segment::IBuil
             }
         });
 
-    register_input_port("input", buffer_sink);
-    register_output_port("output", buffer_source);
+    builder.register_module_input("input", buffer_sink);
+    builder.register_module_output("output", buffer_source);
 }
 
 template <typename DataTypeT, template <typename> class StreamBufferTypeT>

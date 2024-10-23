@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,6 @@
 #include "internal/runtime/partition.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/protos/codable.pb.h"
@@ -74,7 +73,7 @@ void SubscriberService::do_subscription_service_teardown()
 {
     // disconnect from the deserialize source router
     // this will create a cascading shutdown
-    resources().network()->data_plane().server().deserialize_source().drop_edge(tag());
+    resources().network()->data_plane().server().deserialize_source().drop_source(tag());
 }
 
 void SubscriberService::do_subscription_service_join()

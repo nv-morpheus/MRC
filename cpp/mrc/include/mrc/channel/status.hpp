@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <ostream>
+
 namespace mrc::channel {
 
 enum class Status
@@ -29,4 +31,25 @@ enum class Status
     error
 };
 
+static inline std::ostream& operator<<(std::ostream& os, const Status& s)
+{
+    switch (s)
+    {
+    case Status::success:
+        return os << "success";
+    case Status::empty:
+        return os << "empty";
+    case Status::full:
+        return os << "full";
+    case Status::closed:
+        return os << "closed";
+    case Status::timeout:
+        return os << "timeout";
+    case Status::error:
+        return os << "error";
+    default:
+        throw std::logic_error("Unsupported channel::Status enum. Was a new value added recently?");
+    }
 }
+
+}  // namespace mrc::channel

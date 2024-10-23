@@ -17,17 +17,18 @@
 
 #pragma once
 
-#include "mrc/node/operators/router.hpp"
+#include <string>
 
-namespace mrc::node {
+namespace mrc::exceptions {
 
-template <typename CaseT, typename T>
-class Conditional : public LambdaDynamicRouterComponent<CaseT, T>
-{
-    using base_t = LambdaDynamicRouterComponent<CaseT, T>;
+void throw_failed_check_exception(const std::string& file,
+                                  const std::string& function,
+                                  unsigned int line,
+                                  const std::string& msg = "");
 
-  public:
-    using base_t::base_t;
-};
+#define MRC_CHECK_THROW(condition)                                                                \
+    for (std::stringstream ss; !(condition);                                                      \
+         ::mrc::exceptions::throw_failed_check_exception(__FILE__, __func__, __LINE__, ss.str())) \
+    ss
 
-}  // namespace mrc::node
+}  // namespace mrc::exceptions

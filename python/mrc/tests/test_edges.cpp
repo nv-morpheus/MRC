@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -114,8 +114,6 @@ template <typename T>
 class TestSourceImpl : public PythonTestNodeMixin
 {
   public:
-    using source_t = std::shared_ptr<T>;
-
     TestSourceImpl(std::string name, pymrc::PyHolder counter, size_t msg_count = 5) :
       PythonTestNodeMixin(std::move(name), std::move(counter)),
       m_msg_count(msg_count)
@@ -128,7 +126,7 @@ class TestSourceImpl : public PythonTestNodeMixin
   protected:
     auto build()
     {
-        return rxcpp::observable<>::create<source_t>([this](rxcpp::subscriber<source_t>& output) {
+        return rxcpp::observable<>::create<std::shared_ptr<T>>([this](rxcpp::subscriber<std::shared_ptr<T>>& output) {
             for (size_t i = 0; i < m_msg_count; ++i)
             {
                 output.on_next(std::make_shared<T>());
@@ -195,9 +193,6 @@ template <typename T>
 class TestNodeImpl : public PythonTestNodeMixin
 {
   public:
-    using sink_type_t   = std::shared_ptr<T>;
-    using source_type_t = std::shared_ptr<T>;
-
     TestNodeImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
         this->init_counter("on_next");
@@ -208,8 +203,8 @@ class TestNodeImpl : public PythonTestNodeMixin
   protected:
     auto build_operator()
     {
-        return [this](rxcpp::observable<sink_type_t> input) {
-            return input | rxcpp::operators::tap([this](sink_type_t x) {
+        return [this](rxcpp::observable<std::shared_ptr<T>> input) {
+            return input | rxcpp::operators::tap([this](std::shared_ptr<T> x) {
                        // Forward on
                        this->increment_counter("on_next");
                    }) |
@@ -251,8 +246,6 @@ template <typename T>
 class TestSinkImpl : public PythonTestNodeMixin
 {
   public:
-    using sink_type_t = std::shared_ptr<T>;
-
     TestSinkImpl(std::string name, pymrc::PyHolder counter) : PythonTestNodeMixin(std::move(name), std::move(counter))
     {
         this->init_counter("on_next");
@@ -262,8 +255,8 @@ class TestSinkImpl : public PythonTestNodeMixin
 
     rxcpp::observer<std::shared_ptr<T>> build()
     {
-        return rxcpp::make_observer_dynamic<sink_type_t>(
-            [this](sink_type_t x) {
+        return rxcpp::make_observer_dynamic<std::shared_ptr<T>>(
+            [this](std::shared_ptr<T> x) {
                 this->increment_counter("on_next");
             },
             [this](std::exception_ptr ex) {

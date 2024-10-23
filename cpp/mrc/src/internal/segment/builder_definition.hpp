@@ -38,7 +38,6 @@ class PipelineResources;
 
 namespace mrc::modules {
 class SegmentModule;
-class PersistentModule;
 }  // namespace mrc::modules
 
 namespace mrc::runnable {
@@ -135,8 +134,11 @@ class BuilderDefinition : public IBuilder
     // Local methods
     bool has_object(const std::string& name) const;
 
-    void ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
-    void ns_pop();
+    std::string module_push(std::shared_ptr<mrc::modules::SegmentModule> smodule);
+    std::string module_pop(std::shared_ptr<mrc::modules::SegmentModule> smodule);
+
+    std::string ns_push(const std::string& name);
+    std::string ns_pop(const std::string& name);
 
     // definition
     std::shared_ptr<const SegmentDefinition> m_definition;
@@ -151,11 +153,11 @@ class BuilderDefinition : public IBuilder
     std::vector<std::string> m_namespace_stack{};
     std::vector<std::shared_ptr<mrc::modules::SegmentModule>> m_module_stack{};
 
-    // all objects - ports, runnables, etc.
-    std::map<std::string, std::shared_ptr<ObjectProperties>> m_objects;
+    // all objects that can be referenced by name from the builder
+    std::map<std::string, std::shared_ptr<ObjectProperties>> m_referenceable_objects;
 
     // Saved modules to guarantee lifetime
-    std::vector<std::shared_ptr<modules::PersistentModule>> m_modules;
+    std::vector<std::shared_ptr<modules::SegmentModule>> m_modules;
 
     // only runnables
     std::map<std::string, std::shared_ptr<mrc::runnable::Launchable>> m_nodes;
