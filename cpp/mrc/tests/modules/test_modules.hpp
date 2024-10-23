@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -118,7 +118,7 @@ void MultiSourceModule<DataTypeT, SourceCountV, EmissionCountV>::initialize(segm
 
         builder.make_edge(internal, output);
 
-        register_output_port("output_" + std::to_string(i), output);
+        builder.register_module_output("output_" + std::to_string(i), output);
     }
 }
 
@@ -167,7 +167,7 @@ void MultiSinkModule<DataTypeT, SinkCountV>::initialize(segment::IBuilder& build
             m_received_count[i]++;
         });
 
-        register_input_port("input_" + std::to_string(i), input);
+        builder.register_module_input("input_" + std::to_string(i), input);
     }
 }
 

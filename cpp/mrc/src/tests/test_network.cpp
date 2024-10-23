@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,6 @@
 #include "internal/ucx/registration_cache.hpp"
 
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/memory/adaptors.hpp"
 #include "mrc/memory/buffer.hpp"
 #include "mrc/memory/literals.hpp"
@@ -66,7 +65,6 @@
 #include <memory>
 #include <optional>
 #include <ostream>
-#include <thread>
 #include <utility>
 
 using namespace mrc;
@@ -323,7 +321,7 @@ TEST_F(TestNetwork, PersistentEagerDataPlaneTaggedRecv)
     auto recv_sink = std::make_unique<node::RxSink<memory::TransientBuffer>>([&](memory::TransientBuffer buffer) {
         EXPECT_EQ(buffer.bytes(), 128);
         counter++;
-        r0.server().deserialize_source().drop_edge(tag);
+        r0.server().deserialize_source().drop_source(tag);
     });
 
     auto deser_source = r0.server().deserialize_source().get_source(tag);

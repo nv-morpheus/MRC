@@ -29,7 +29,7 @@
     "launch": {
         "configurations": [
             {
-                "MIMode": "gdb",
+                "MIMode": "lldb",
                 "args": [],
                 "cwd": "${workspaceFolder}",
                 "environment": [
@@ -51,6 +51,10 @@
                     {
                         "description": "Skip stdio-common files",
                         "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                    },
+                    {
+                        "description": "Skip stdio-common files in Conda",
+                        "text": "-interpreter-exec console \"skip -rfu ^std::.*\""
                     }
                     // {
                     //     "description": "Stay on same thread when debugging",
@@ -254,41 +258,13 @@
             },
             "env": "${envObj}",
             "environment": "${envObjArray}",
-            "linux": {
-                "MIMode": "gdb",
-                "symbolLoadInfo": {
-                    "exceptionList": "*libmrc*.so",
-                    "loadAll": false
-                },
-                "type": "cppdbg"
-            },
             "program": "${exec}",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing"
-                },
-                {
-                    "description": "Skip stdio-common files",
-                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
-                }
-                // {
-                //     "description": "Stay on same thread when debugging",
-                //     "text": "-interpreter-exec console \"set scheduler-locking step\""
-                // }
-            ],
-            "sourceFileMap": {
-                "${workspaceFolder}": {
-                    "editorPath": "${workspaceFolder}",
-                    "useForBreakpoints": "true"
-                }
-            },
             "testMate.cpp.debug.setEnv": {
                 "GLOG_v": "10",
                 "GTEST_CATCH_EXCEPTIONS": "0", // Allow the debugger to catch exceptions
                 "UCX_ERROR_SIGNALS": "" // Prevent UCX from capturing errors
             },
-            "type": "cppvsdbg",
+            "type": "lldb",
             "win32": {
                 "type": "cppvsdbg"
             }

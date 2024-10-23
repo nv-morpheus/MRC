@@ -33,13 +33,15 @@
 #include "mrc/segment/ingress_port.hpp"  // IWYU pragma: keep
 #include "mrc/segment/object.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <numeric>
-#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 
@@ -69,6 +71,18 @@ void validate_name(const std::string& name)
         throw mrc::exceptions::MrcRuntimeError("Invalid name `" + name +
                                                "'. Cannot contain any of these characters: '/'");
     }
+}
+
+std::tuple<std::string, std::string> split_child(const std::string& input_name)
+{
+    auto found_slash = input_name.find_first_of("/");
+
+    if (found_slash == std::string::npos)
+    {
+        return std::make_tuple(input_name, "");
+    }
+
+    return std::make_tuple(input_name.substr(0, found_slash), input_name.substr(found_slash + 1));
 }
 
 }  // namespace
@@ -164,20 +178,17 @@ std::shared_ptr<ObjectProperties> BuilderDefinition::get_egress(std::string name
 
 void BuilderDefinition::init_module(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
-    this->ns_push(smodule);
+    this->module_push(smodule);
+
     VLOG(2) << "Initializing module: " << m_namespace_prefix;
+
     smodule->m_module_instance_registered_namespace = m_namespace_prefix;
+
+    m_modules.push_back(smodule);
+
     smodule->initialize(*this);
 
-    // TODO(Devin): Maybe a better way to do this with compile time type ledger.
-    if (auto persist = std::dynamic_pointer_cast<modules::PersistentModule>(smodule))
-    {
-        VLOG(2) << "Registering persistent module -> '" << m_namespace_prefix << "'";
-
-        // Just save to a vector to keep it alive
-        m_modules.push_back(persist);
-    }
-    this->ns_pop();
+    this->module_pop(smodule);
 }
 
 void BuilderDefinition::register_module_input(std::string input_name, std::shared_ptr<segment::ObjectProperties> object)
@@ -195,7 +206,19 @@ void BuilderDefinition::register_module_input(std::string input_name, std::share
     }
 
     auto current_module = m_module_stack.back();
-    current_module->register_input_port(std::move(input_name), object);
+    current_module->register_input_port(input_name, object);
+
+    auto [actual_global, actual_local] = this->normalize_name(object->name());
+    auto [mapped_global, mapped_local] = this->normalize_name(input_name);
+
+    if (m_referenceable_objects.contains(mapped_global))
+    {
+        throw std::invalid_argument(
+            MRC_CONCAT_STR("Failed to register module input '" << input_name << "' -> name already exists"));
+    }
+
+    // Save this as a referencable object
+    m_referenceable_objects[mapped_global] = object;
 }
 
 [[maybe_unused]] nlohmann::json BuilderDefinition::get_current_module_config()
@@ -232,7 +255,19 @@ void BuilderDefinition::register_module_input(std::string input_name, std::share
 
     auto current_module = m_module_stack.back();
 
-    current_module->register_output_port(std::move(output_name), object);
+    current_module->register_output_port(output_name, object);
+
+    auto [actual_global, actual_local] = this->normalize_name(object->name());
+    auto [mapped_global, mapped_local] = this->normalize_name(output_name);
+
+    if (m_referenceable_objects.contains(mapped_global))
+    {
+        throw std::invalid_argument(
+            MRC_CONCAT_STR("Failed to register module output '" << output_name << "' -> name already exists"));
+    }
+
+    // Save this as a referencable object
+    m_referenceable_objects[mapped_global] = object;
 }
 
 std::shared_ptr<mrc::modules::SegmentModule> BuilderDefinition::load_module_from_registry(
@@ -308,21 +343,28 @@ bool BuilderDefinition::has_object(const std::string& name) const
 {
     auto [global_name, local_name] = this->normalize_name(name);
 
-    auto search = m_objects.find(local_name);
-    return bool(search != m_objects.end());
+    return m_referenceable_objects.contains(global_name);
 }
 
 mrc::segment::ObjectProperties& BuilderDefinition::find_object(const std::string& name)
 {
     auto [global_name, local_name] = this->normalize_name(name);
 
-    auto search = m_objects.find(local_name);
-    if (search == m_objects.end())
+    if (!m_module_stack.empty())
+    {
+        auto current_module = m_module_stack.back();
+
+        return current_module->find_object(local_name);
+    }
+
+    auto search = m_referenceable_objects.find(global_name);
+    if (search == m_referenceable_objects.end())
     {
         LOG(ERROR) << "Unable to find segment object with name: " << name;
-        throw exceptions::MrcRuntimeError("unable to find segment object with name " + name);
+        throw exceptions::MrcRuntimeError("Unable to find segment object with name " + name);
     }
-    return *(search->second);
+
+    return *search->second;
 }
 
 void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mrc::segment::ObjectProperties> object)
@@ -330,18 +372,31 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
     // First, ensure that the name is properly formatted
     validate_name(name);
 
-    if (has_object(name))
+    auto [global_name, local_name] = this->normalize_name(name);
+
+    if (this->has_object(global_name))
     {
         LOG(ERROR) << "A Object named " << name << " is already registered";
         throw exceptions::MrcRuntimeError("duplicate name detected - name owned by a node");
     }
 
-    auto [global_name, local_name] = this->normalize_name(name);
+    // Now initialize the object with the name (this will generate children as well)
+    object->initialize(global_name, this);
 
-    m_objects[local_name] = object;
+    // If the module stack is not empty, then we are in a module context. Dont add to the referenceable objects
+    if (m_module_stack.empty())
+    {
+        DCHECK(!m_referenceable_objects.contains(global_name)) << "Should not have duplicate object names";
 
-    // Now set the name on the object
-    object->set_name(global_name);
+        m_referenceable_objects[global_name] = object;
+    }
+    else
+    {
+        // Add it as a reference in the module so it doesnt go out of scope
+        auto current_module = m_module_stack.back();
+
+        current_module->register_object(local_name, object);
+    }
 
     if (object->is_runnable())
     {
@@ -350,21 +405,39 @@ void BuilderDefinition::add_object(const std::string& name, std::shared_ptr<::mr
         CHECK(launchable) << "Invalid conversion. Object returned is_runnable() == true, but was not of type "
                              "Launchable";
 
-        m_nodes[local_name] = launchable;
+        m_nodes[global_name] = launchable;
     }
 
     // Add to ingress ports list if it is the right type
     if (auto ingress_port = std::dynamic_pointer_cast<IngressPortBase>(object))
     {
         // Save by the original name
-        m_ingress_ports[local_name] = ingress_port;
+        m_ingress_ports[name] = ingress_port;
     }
 
     // Add to egress ports list if it is the right type
     if (auto egress_port = std::dynamic_pointer_cast<EgressPortBase>(object))
     {
         // Save by the original name
-        m_egress_ports[local_name] = egress_port;
+        m_egress_ports[name] = egress_port;
+    }
+
+    // Now register any child objects
+    auto children = object->get_children();
+
+    if (!children.empty())
+    {
+        // Push the namespace for this object
+        this->ns_push(name);
+
+        for (auto& [child_name, child_object] : children)
+        {
+            // Add the child object
+            this->add_object(child_name, child_object);
+        }
+
+        // Pop the namespace for this object
+        this->ns_pop(name);
     }
 }
 
@@ -373,10 +446,12 @@ std::shared_ptr<::mrc::segment::IngressPortBase> BuilderDefinition::get_ingress_
     auto [global_name, local_name] = this->normalize_name(name, true);
 
     auto search = m_ingress_ports.find(local_name);
+
     if (search != m_ingress_ports.end())
     {
         return search->second;
     }
+
     return nullptr;
 }
 
@@ -385,10 +460,12 @@ std::shared_ptr<::mrc::segment::EgressPortBase> BuilderDefinition::get_egress_ba
     auto [global_name, local_name] = this->normalize_name(name, true);
 
     auto search = m_egress_ports.find(local_name);
+
     if (search != m_egress_ports.end())
     {
         return search->second;
     }
+
     return nullptr;
 }
 
@@ -397,25 +474,49 @@ std::function<void(std::int64_t)> BuilderDefinition::make_throughput_counter(con
     auto [global_name, local_name] = this->normalize_name(name);
 
     auto counter = m_resources.metrics_registry().make_throughput_counter(global_name);
+
     return [counter](std::int64_t ticks) mutable {
         counter.increment(ticks);
     };
 }
 
-void BuilderDefinition::ns_push(std::shared_ptr<mrc::modules::SegmentModule> smodule)
+std::string BuilderDefinition::module_push(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
     m_module_stack.push_back(smodule);
-    m_namespace_stack.push_back(smodule->component_prefix());
-    m_namespace_prefix =
-        std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return this->ns_push(smodule->component_prefix());
 }
 
-void BuilderDefinition::ns_pop()
+std::string BuilderDefinition::module_pop(std::shared_ptr<mrc::modules::SegmentModule> smodule)
 {
+    CHECK_EQ(smodule, m_module_stack.back())
+        << "Namespace stack mismatch. Expected " << m_module_stack.back()->component_prefix() << " but got "
+        << smodule->component_prefix();
+
     m_module_stack.pop_back();
+
+    return this->ns_pop(smodule->component_prefix());
+}
+
+std::string BuilderDefinition::ns_push(const std::string& name)
+{
+    m_namespace_stack.push_back(name);
+    m_namespace_prefix =
+        std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return m_namespace_prefix;
+}
+
+std::string BuilderDefinition::ns_pop(const std::string& name)
+{
+    CHECK_EQ(name, m_namespace_stack.back())
+        << "Namespace stack mismatch. Expected " << m_namespace_stack.back() << " but got " << name;
+
     m_namespace_stack.pop_back();
     m_namespace_prefix =
         std::accumulate(m_namespace_stack.begin(), m_namespace_stack.end(), std::string(""), ::accum_merge);
+
+    return m_namespace_prefix;
 }
 
 }  // namespace mrc::segment

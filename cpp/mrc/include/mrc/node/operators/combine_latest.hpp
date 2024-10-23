@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,11 @@
 #pragma once
 
 #include "mrc/channel/status.hpp"
+#include "mrc/node/node_parent.hpp"
 #include "mrc/node/sink_properties.hpp"
 #include "mrc/node/source_properties.hpp"
+#include "mrc/types.hpp"
+#include "mrc/utils/tuple_utils.hpp"
 #include "mrc/utils/type_utils.hpp"
 
 #include <boost/fiber/mutex.hpp>
@@ -29,152 +32,88 @@
 #include <tuple>
 #include <utility>
 
+// IWYU pragma: begin_exports
+
 namespace mrc::node {
 
-// template <typename... TypesT>
-// class ParameterPackIndexer
-// {
-//   public:
-//     ParameterPackIndexer(TypesT... ts) : ParameterPackIndexer(std::make_index_sequence<sizeof...(TypesT)>{}, ts...)
-//     {}
-
-//     std::tuple<std::tuple<TypesT, std::size_t>...> tup;
-
-//   private:
-//     template <std::size_t... Is>
-//     ParameterPackIndexer(std::index_sequence<Is...> const& /*unused*/, TypesT... ts) : tup{std::make_tuple(ts,
-//     Is)...}
-//     {}
-// };
-
-// template <typename TargetT, typename ListHeadT, typename... ListTailsT>
-// constexpr size_t getTypeIndexInTemplateList()
-// {
-//     if constexpr (std::is_same<TargetT, ListHeadT>::value)
-//     {
-//         return 0;
-//     }
-//     else
-//     {
-//         return 1 + getTypeIndexInTemplateList<TargetT, ListTailsT...>();
-//     }
-// }
-
-namespace detail {
-struct Surely
+class CombineLatestTypelessBase
 {
-    template <class... T>
-    auto operator()(const T&... t) const -> decltype(std::make_tuple(t.value()...))
-    {
-        return std::make_tuple(t.value()...);
-    }
+  public:
+    virtual ~CombineLatestTypelessBase() = default;
 };
-}  // namespace detail
 
-// template <class... T>
-// inline auto surely(const std::tuple<T...>& tpl) -> decltype(rxcpp::util::apply(tpl, detail::surely()))
-// {
-//     return rxcpp::util::apply(tpl, detail::surely());
-// }
+template <typename...>
+class CombineLatestBase;
 
-template <class... T>
-inline auto surely2(const std::tuple<T...>& tpl)
-{
-    return std::apply([](auto... args) {
-        return std::make_tuple(args.value()...);
-    });
-}
-
-// template <typename... TypesT>
-// static auto surely2(const std::tuple<TypesT...>& tpl, std::index_sequence<Is...>)
-// {
-//     return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
-// }
-
-// template <size_t i, typename T>
-// struct IndexTypePair
-// {
-//     static constexpr size_t index{i};
-//     using Type = T;
-// };
-
-// template <typename... T>
-// struct make_index_type_tuple_helper
-// {
-//     template <typename V>
-//     struct idx;
-
-//     template <size_t... Indices>
-//     struct idx<std::index_sequence<Indices...>>
-//     {
-//         using tuple_type = std::tuple<IndexTypePair<Indices, T>...>;
-//     };
-
-//     using tuple_type = typename idx<std::make_index_sequence<sizeof...(T)>>::tuple_type;
-// };
-
-// template <typename... T>
-// using make_index_type_tuple = typename make_index_type_tuple_helper<T...>::tuple_type;
-
-template <typename... TypesT>
-class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
+template <typename... InputT, typename OutputT>
+class CombineLatestBase<std::tuple<InputT...>, OutputT>
+  : public CombineLatestTypelessBase,
+    public WritableAcceptor<OutputT>,
+    public HeterogeneousNodeParent<edge::IWritableProvider<InputT>...>
 {
     template <std::size_t... Is>
-    static auto build_ingress(CombineLatest* self, std::index_sequence<Is...> /*unused*/)
+    static auto build_ingress(CombineLatestBase* self, std::index_sequence<Is...> /*unused*/)
     {
         return std::make_tuple(std::make_shared<Upstream<Is>>(*self)...);
     }
 
-  public:
-    CombineLatest() :
-      m_upstream_holders(build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{}))
+    template <std::size_t... Is>
+    static std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...>
+    build_child_pairs(CombineLatestBase* self, std::index_sequence<Is...> /*unused*/)
     {
-        // auto a = build_ingress(const_cast<CombineLatest*>(this), std::index_sequence_for<TypesT...>{});
+        return std::make_tuple(
+            std::make_pair(MRC_CONCAT_STR("sink[" << Is << "]"), std::ref(*self->get_sink<Is>()))...);
     }
 
-    virtual ~CombineLatest() = default;
+  public:
+    using input_tuple_t = std::tuple<InputT...>;
+    using output_t      = OutputT;
+
+    CombineLatestBase() :
+      m_upstream_holders(build_ingress(const_cast<CombineLatestBase*>(this), std::index_sequence_for<InputT...>{}))
+    {}
+
+    ~CombineLatestBase() override = default;
 
     template <size_t N>
-    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, TypesT...>>> get_sink() const
+    std::shared_ptr<edge::IWritableProvider<NthTypeOf<N, InputT...>>> get_sink() const
     {
         return std::get<N>(m_upstream_holders);
     }
 
+    std::tuple<std::pair<std::string, std::reference_wrapper<edge::IWritableProvider<InputT>>>...> get_children_refs()
+        const override
+    {
+        return build_child_pairs(const_cast<CombineLatestBase*>(this), std::index_sequence_for<InputT...>{});
+    }
+
   protected:
     template <size_t N>
-    class Upstream : public WritableProvider<NthTypeOf<N, TypesT...>>
+    class Upstream : public ForwardingWritableProvider<NthTypeOf<N, InputT...>>
     {
-        using upstream_t = NthTypeOf<N, TypesT...>;
+        using upstream_t = NthTypeOf<N, InputT...>;
 
       public:
-        Upstream(CombineLatest& parent)
+        Upstream(CombineLatestBase& parent) : m_parent(parent) {}
+
+      protected:
+        channel::Status on_next(upstream_t&& data) override
         {
-            this->init_owned_edge(std::make_shared<InnerEdge>(parent));
+            return m_parent.upstream_await_write<N>(std::move(data));
+        }
+
+        void on_complete() override
+        {
+            m_parent.edge_complete();
         }
 
       private:
-        class InnerEdge : public edge::IEdgeWritable<NthTypeOf<N, TypesT...>>
-        {
-          public:
-            InnerEdge(CombineLatest& parent) : m_parent(parent) {}
-            ~InnerEdge()
-            {
-                m_parent.edge_complete();
-            }
-
-            virtual channel::Status await_write(upstream_t&& data)
-            {
-                return m_parent.set_upstream_value<N>(std::move(data));
-            }
-
-          private:
-            CombineLatest& m_parent;
-        };
+        CombineLatestBase& m_parent;
     };
 
   private:
     template <size_t N>
-    channel::Status set_upstream_value(NthTypeOf<N, TypesT...> value)
+    channel::Status upstream_await_write(NthTypeOf<N, InputT...> value)
     {
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
@@ -191,11 +130,11 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
         channel::Status status = channel::Status::success;
 
         // Check if we should push the new value
-        if (m_values_set == sizeof...(TypesT))
+        if (m_values_set == sizeof...(InputT))
         {
-            // std::tuple<TypesT...> new_val = surely2(m_state);
+            std::tuple<InputT...> new_val = utils::tuple_surely(m_state);
 
-            // status = this->get_writable_edge()->await_write(std::move(new_val));
+            status = this->get_writable_edge()->await_write(this->convert_value(std::move(new_val)));
         }
 
         return status;
@@ -207,18 +146,87 @@ class CombineLatest : public WritableAcceptor<std::tuple<TypesT...>>
 
         m_completions++;
 
-        if (m_completions == sizeof...(TypesT))
+        if (m_completions == sizeof...(InputT))
         {
-            WritableAcceptor<std::tuple<TypesT...>>::release_edge_connection();
+            // Clear the held tuple to remove any dangling values
+            m_state = std::tuple<std::optional<InputT>...>();
+
+            WritableAcceptor<OutputT>::release_edge_connection();
         }
     }
 
-    boost::fibers::mutex m_mutex;
-    size_t m_values_set{0};
-    size_t m_completions{0};
-    std::tuple<std::optional<TypesT>...> m_state;
+    virtual output_t convert_value(input_tuple_t&& data) = 0;
 
-    std::tuple<std::shared_ptr<WritableProvider<TypesT>>...> m_upstream_holders;
+    mutable Mutex m_mutex;
+
+    // The number of elements that have been set. Can start emitting when m_values_set == sizeof...(TypesT)
+    size_t m_values_set{0};
+
+    // Counts the number of upstream completions. When m_completions == sizeof...(TypesT), the downstream edges are
+    // released
+    size_t m_completions{0};
+
+    // Holds onto the latest values to eventually push when new ones are emitted
+    std::tuple<std::optional<InputT>...> m_state;
+
+    // Upstream edges
+    std::tuple<std::shared_ptr<WritableProvider<InputT>>...> m_upstream_holders;
+};
+
+template <typename...>
+class CombineLatestComponent;
+
+template <typename... InputT, typename OutputT>
+class CombineLatestComponent<std::tuple<InputT...>, OutputT> : public CombineLatestBase<std::tuple<InputT...>, OutputT>
+{
+  public:
+    using base_t        = CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>;
+    using input_tuple_t = typename base_t::input_tuple_t;
+    using output_t      = typename base_t::output_t;
+};
+
+// Specialization for CombineLatest with a default output type
+template <typename... InputT>
+class CombineLatestComponent<std::tuple<InputT...>>
+  : public CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>
+{
+  public:
+    using base_t        = CombineLatestBase<std::tuple<InputT...>, std::tuple<InputT...>>;
+    using input_tuple_t = typename base_t::input_tuple_t;
+    using output_t      = typename base_t::output_t;
+
+  private:
+    output_t convert_value(input_tuple_t&& data) override
+    {
+        // No change to the output type
+        return std::move(data);
+    }
+};
+
+template <typename...>
+class CombineLatestTransformComponent;
+
+template <typename... InputT, typename OutputT>
+class CombineLatestTransformComponent<std::tuple<InputT...>, OutputT>
+  : public CombineLatestBase<std::tuple<InputT...>, OutputT>
+{
+  public:
+    using base_t         = CombineLatestBase<std::tuple<InputT...>, OutputT>;
+    using input_tuple_t  = typename base_t::input_tuple_t;
+    using output_t       = typename base_t::output_t;
+    using transform_fn_t = std::function<output_t(input_tuple_t&&)>;
+
+    CombineLatestTransformComponent(transform_fn_t transform_fn) : base_t(), m_transform_fn(std::move(transform_fn)) {}
+
+  private:
+    output_t convert_value(input_tuple_t&& data) override
+    {
+        return m_transform_fn(std::move(data));
+    }
+
+    transform_fn_t m_transform_fn;
 };
 
 }  // namespace mrc::node
+
+// IWYU pragma: end_exports

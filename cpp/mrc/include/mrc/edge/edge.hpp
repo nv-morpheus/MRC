@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,7 @@
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/type_traits.hpp"
 #include "mrc/utils/string_utils.hpp"
+#include "mrc/utils/type_utils.hpp"
 
 #include <glog/logging.h>
 #include <sys/types.h>
@@ -257,13 +258,25 @@ class EdgeTypeInfo
       m_unwrapped_type(unwrapped_type),
       m_is_deferred(is_deferred)
     {
+        if (m_full_type.has_value())
+        {
+            m_full_type_str = type_name(m_full_type.value());
+        }
+
+        if (m_unwrapped_type.has_value())
+        {
+            m_unwrapped_type_str = type_name(m_unwrapped_type.value());
+        }
+
         CHECK((m_is_deferred && !m_full_type.has_value() && !m_unwrapped_type.has_value()) ||
               (!m_is_deferred && m_full_type.has_value() && m_unwrapped_type.has_value()))
             << "Inconsistent deferred setting with concrete types";
     }
 
     std::optional<std::type_index> m_full_type;       // Includes any wrappers like shared_ptr
+    std::string m_full_type_str;                      // For debugging purposes only
     std::optional<std::type_index> m_unwrapped_type;  // Excludes any wrappers like shared_ptr if they exist
+    std::string m_unwrapped_type_str;                 // For debugging purposes only
     bool m_is_deferred{false};                        // Whether or not this type is deferred or concrete
 };
 

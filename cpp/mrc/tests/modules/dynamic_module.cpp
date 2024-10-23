@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@
 #include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -72,7 +73,7 @@ void DynamicSourceModule::initialize(segment::IBuilder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source);
+    builder.register_module_output("source", source);
 }
 
 std::string DynamicSourceModule::module_type_name() const

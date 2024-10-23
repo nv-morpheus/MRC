@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,13 +38,13 @@ class SinkChannelOwner : public virtual SinkProperties<T>
     {
         edge::EdgeChannel<T> edge_channel(std::move(channel));
 
-        this->do_set_channel(edge_channel);
+        this->do_set_channel(std::move(edge_channel));
     }
 
   protected:
     SinkChannelOwner() = default;
 
-    void do_set_channel(edge::EdgeChannel<T>& edge_channel)
+    void do_set_channel(edge::EdgeChannel<T> edge_channel)
     {
         // Create 2 edges, one for reading and writing. On connection, persist the other to allow the node to still use
         // get_readable+edge
