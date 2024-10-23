@@ -22,4 +22,4 @@ BUILD_DIR="build-conda"
 echo "Installing C++ components"
 
 # Install the C++ components
-cmake --install ${BUILD_DIR}
+cmake --install ${BUILD_DIR} --component core

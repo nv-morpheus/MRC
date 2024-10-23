@@ -259,9 +259,10 @@ include(GNUInstallDirs)
 
 install(
   TARGETS libmrc
-  DESTINATION ${lib_dir}
   EXPORT ${PROJECT_NAME}-exports
-  COMPONENT Core
+  COMPONENT core
+  LIBRARY
+    DESTINATION ${lib_dir}
   FILE_SET public_headers
 )
 
