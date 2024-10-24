@@ -14,9 +14,23 @@
 
 include(GenerateExportHeader)
 
-find_package(Python 3.8 REQUIRED COMPONENTS Development Interpreter)
-find_package(pybind11 REQUIRED)
-find_package(prometheus-cpp REQUIRED)
+rapids_find_package(Python 3.8 REQUIRED
+  COMPONENTS
+    Development
+    Interpreter
+  BUILD_EXPORT_SET ${PROJECT_NAME}-python-exports
+  INSTALL_EXPORT_SET ${PROJECT_NAME}-python-exports
+)
+
+rapids_find_package(pybind11 REQUIRED
+  BUILD_EXPORT_SET ${PROJECT_NAME}-python-exports
+  INSTALL_EXPORT_SET ${PROJECT_NAME}-python-exports
+)
+
+rapids_find_package(prometheus-cpp REQUIRED
+  BUILD_EXPORT_SET ${PROJECT_NAME}-python-exports
+  INSTALL_EXPORT_SET ${PROJECT_NAME}-python-exports
+)
 
 # Keep all source files sorted!!!
 add_library(pymrc
@@ -120,9 +134,10 @@ include(GNUInstallDirs)
 
 install(
   TARGETS pymrc
-  DESTINATION ${lib_dir}
   EXPORT ${PROJECT_NAME}-python-exports
-  COMPONENT Python
+  COMPONENT python
+  LIBRARY
+    DESTINATION ${lib_dir}
   FILE_SET public_headers
 )
 
