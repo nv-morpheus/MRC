@@ -16,11 +16,6 @@
 # Need to start by sourcing the host environment
 BUILD_DIR="build-conda"
 
-echo "Installing pymrc C++ components"
-
-# Install the C++ components
-cmake --install ${BUILD_DIR} --component python
-
 echo "Installing Python components"
 
 # Install the python library
