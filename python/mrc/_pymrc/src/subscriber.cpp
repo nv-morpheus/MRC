@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,6 +110,12 @@ void SubscriberProxy::on_error(PyObjectSubscriber* self, py::object&& value)
 };
 
 bool SubscriberProxy::is_subscribed(PyObjectSubscriber* self)
+{
+    // No GIL here
+    return self->is_subscribed();
+}
+
+bool SubscriptionProxy::is_subscribed(PySubscription* self)
 {
     // No GIL here
     return self->is_subscribed();

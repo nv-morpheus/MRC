@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -487,6 +487,40 @@ def test_sink_function_unpacking(single_segment_pipeline, node_type: str, use_pa
     }
     assert on_error_count == 0
     assert on_completed_count == 1
+
+
+def test_source_with_bound_value():
+    """
+    This test ensures that the bound values isn't confused with a subscription object
+    """
+    on_next_value = None
+
+    def segment_init(seg: mrc.Builder):
+
+        def source_gen(a):
+            yield a
+
+        bound_gen = functools.partial(source_gen, a=1)
+        source = seg.make_source("my_src", bound_gen)
+
+        def on_next(x: int):
+            nonlocal on_next_value
+            on_next_value = x
+
+        sink = seg.make_sink("sink", on_next)
+        seg.make_edge(source, sink)
+
+    pipeline = mrc.Pipeline()
+    pipeline.make_segment("my_seg", segment_init)
+
+    options = mrc.Options()
+    executor = mrc.Executor(options)
+    executor.register_pipeline(pipeline)
+
+    executor.start()
+    executor.join()
+
+    assert on_next_value == 1
 
 
 if (__name__ == "__main__"):

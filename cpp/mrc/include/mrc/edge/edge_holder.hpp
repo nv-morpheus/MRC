@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -209,6 +209,18 @@ class MultiEdgeHolder
         auto& edge_pair = this->get_edge_pair(key, true);
 
         edge_pair.init_owned_edge(std::move(edge));
+    }
+
+    void init_connected_edge(KeyT key, std::shared_ptr<Edge<T>> edge)
+    {
+        auto& edge_pair = this->get_edge_pair(key, true);
+
+        edge_pair.init_connected_edge(std::move(edge));
+    }
+
+    bool has_edge_connection(const KeyT& key) const
+    {
+        return m_edges.contains(key);
     }
 
     std::shared_ptr<EdgeHandle> get_edge_connection(const KeyT& key) const

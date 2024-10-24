@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ class FiberTaskQueue
     virtual ~FiberTaskQueue() = default;
 
     template <class F, class... ArgsT>
-    auto enqueue(F&& f, ArgsT&&... args) -> Future<typename std::result_of<F(ArgsT...)>::type>
+    auto enqueue(F&& f, ArgsT&&... args) -> Future<typename std::invoke_result_t<F, ArgsT...>>
     {
         FiberMetaData meta_data;
         return enqueue(meta_data, std::forward<F>(f), std::forward<ArgsT>(args)...);
@@ -48,7 +48,7 @@ class FiberTaskQueue
 
     template <class F, class... ArgsT>
     auto enqueue(const FiberMetaData& meta_data, F&& f, ArgsT&&... args)
-        -> Future<typename std::result_of<F(ArgsT...)>::type>
+        -> Future<typename std::invoke_result_t<F, ArgsT...>>
     {
         FiberMetaData copy = meta_data;
         return enqueue(std::move(copy), std::forward<F>(f), std::forward<ArgsT>(args)...);
@@ -56,7 +56,7 @@ class FiberTaskQueue
 
     template <class F, class... ArgsT>
     auto enqueue(FiberMetaData&& meta_data, F&& f, ArgsT&&... args)
-        -> Future<typename std::result_of<F(ArgsT...)>::type>
+        -> Future<typename std::invoke_result_t<F, ArgsT...>>
     {
         if (task_queue().is_closed())
         {
@@ -64,7 +64,7 @@ class FiberTaskQueue
         }
 
         using namespace boost::fibers;
-        using return_type_t = typename std::result_of<F(ArgsT...)>::type;
+        using return_type_t = typename std::invoke_result_t<F, ArgsT...>;
 
         packaged_task<return_type_t()> task(std::bind(std::forward<F>(f), std::forward<ArgsT>(args)...));
         future<return_type_t> future = task.get_future();

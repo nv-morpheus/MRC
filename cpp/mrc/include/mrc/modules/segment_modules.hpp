@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,6 +138,23 @@ class SegmentModule
      */
     virtual void initialize(segment::IBuilder& builder) = 0;
 
+  private:
+    /**
+     * @brief Registers an object with the module to keep it alive
+     *
+     * @param name The name of the object
+     * @param object The object to register
+     */
+    void register_object(std::string name, std::shared_ptr<segment::ObjectProperties> object);
+
+    /**
+     * @brief Find an object by name. Must be registered with the module
+     *
+     * @param name The name of the object
+     * @return segment::ObjectProperties&
+     */
+    segment::ObjectProperties& find_object(const std::string& name) const;
+
     /* Interface Functions */
     /**
      * Register an input port that should be exposed for the module
@@ -153,7 +170,6 @@ class SegmentModule
      */
     void register_output_port(std::string output_name, std::shared_ptr<segment::ObjectProperties> object);
 
-  private:
     /**
      * Register an input port that should be exposed for the module, with explicit type index. This is
      * necessary for Objects that aren't explicit Source or Sink types (e.g. a custom object type)
@@ -187,6 +203,9 @@ class SegmentModule
 
     segment_module_port_map_t m_input_ports{};
     segment_module_port_map_t m_output_ports{};
+
+    // Maintain a map of all objects to keep them alive. These are registered as internal names
+    std::map<std::string, std::shared_ptr<segment::ObjectProperties>> m_objects;
 
     const nlohmann::json m_config;
 

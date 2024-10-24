@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@
 #include <sstream>
 #include <utility>  // for move
 
-// IWYU thinks we need vectir for py::class_<Executor, std::shared_ptr<Executor>>
+// IWYU thinks we need vector for py::class_<Executor, std::shared_ptr<Executor>>
 // IWYU pragma: no_include <vector>
 
 namespace mrc::pymrc {

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,9 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
+#include "mrc/modules/segment_modules.hpp"
 #include "mrc/node/operators/broadcast.hpp"
+#include "mrc/node/operators/router.hpp"
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
@@ -33,19 +35,33 @@
 #include "mrc/segment/object.hpp"
 #include "mrc/segment/ports.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 #include <array>
 #include <atomic>
-#include <iostream>
+#include <cstddef>
+#include <map>
+#include <memory>
 #include <mutex>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace std::literals::string_literals;
+
+namespace {
+template <typename T>
+std::string even_odd(const T& t)
+{
+    return t % 2 == 1 ? "odd"s : "even"s;
+}
+};  // namespace
 
 namespace mrc {
 
@@ -813,6 +829,293 @@ TEST_F(TestSegment, EnsureMove)
     auto pipeline = mrc::make_pipeline();
     pipeline->register_segment(std::move(segdef));
     execute_pipeline(std::move(pipeline));
+}
+
+TEST_F(TestSegment, ChildObjects)
+{
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<std::string>("src", [](rxcpp::subscriber<std::string>& s) {
+            if (s.is_subscribed())
+            {
+                std::string data{"this should be moved"};
+                s.on_next(std::move(data));
+
+                EXPECT_EQ(data, ""s);
+            }
+            else
+            {
+                FAIL() << "is_subscrived returned a false";
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const std::string& s) {
+                return even_odd<std::size_t>(s.size());
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<std::string>("sink1", [](std::string x) {
+            EXPECT_EQ(x, "this should be moved"s);
+        });
+
+        auto sink2 = segment.make_sink<std::string>("sink2", [](std::string x) {
+            EXPECT_EQ(x, "this should be moved"s);
+        });
+
+        segment.make_edge(router->get_child("even"), sink1);
+        segment.make_edge(router->get_child("odd"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
+}
+
+TEST_F(TestSegment, ChildObjectsByName)
+{
+    class RouterModule : public modules::SegmentModule
+    {
+      public:
+        RouterModule(std::string module_name) : SegmentModule(std::move(module_name)) {}
+
+        RouterModule(std::string module_name, nlohmann::json config) :
+          SegmentModule(std::move(module_name), std::move(config))
+        {}
+
+      protected:
+        void initialize(segment::IBuilder& builder) override
+        {
+            auto router = builder.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
+                "router",
+                std::vector<std::string>{"even", "odd"},
+                [](const std::string& s) {
+                    return even_odd<std::size_t>(s.size());
+                });
+
+            builder.register_module_input("input", router);
+
+            auto node = builder.make_node<std::string, std::string>("node", rxcpp::operators::map([](std::string x) {
+                                                                        return x;
+                                                                    }));
+
+            // Connect via name
+            builder.make_edge("router/odd", node);
+
+            // Register output port
+            builder.register_module_output("odd_module", node);
+            builder.register_module_output("even_module", router->get_child("even"));
+        }
+
+        std::string module_type_name() const override
+        {
+            return "RouterModule";
+        }
+    };
+
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<std::string>("src", [](rxcpp::subscriber<std::string>& s) {
+            s.on_next("1");
+            s.on_next("11");
+            s.on_next("111");
+            s.on_next("1111");
+            s.on_next("11111");
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterComponent<std::string, std::string>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const std::string& s) {
+                return even_odd<std::size_t>(s.size());
+            });
+
+        segment.make_edge(src, router);
+
+        auto router_module = segment.make_module<RouterModule>("router_module");
+
+        // Connect even to the router module
+        segment.make_edge(router->get_child("even"), router_module->input_port("input"));
+
+        // Connect the router module to the sink
+        auto sink_odd1 = segment.make_sink<std::string>("sink_odd1", [](std::string x) {
+            EXPECT_EQ(x.size() % 2, 1);
+        });
+        auto sink_odd2 = segment.make_sink<std::string>("sink_odd2", [](std::string x) {
+            ASSERT_TRUE(false) << "This sink should not be called";
+        });
+        auto sink_even = segment.make_sink<std::string>("sink_even", [](std::string x) {
+            EXPECT_EQ(x.size() % 2, 0);
+        });
+
+        // Connect via names
+        segment.make_edge(MRC_CONCAT_STR(router->name() << "/odd"), sink_odd1);
+        segment.make_edge(MRC_CONCAT_STR(router_module->component_prefix() << "/odd_module"), sink_odd2);
+        segment.make_edge(MRC_CONCAT_STR(router_module->component_prefix() << "/even_module"), sink_even);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnable)
+{
+    std::vector<int> sink1_results;
+    std::vector<int> sink2_results;
+
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [&sink1_results](int x) {
+            sink1_results.push_back(x);
+        });
+
+        auto sink2 = segment.make_sink<int>("sink2", [&sink2_results](int x) {
+            sink2_results.push_back(x);
+        });
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+    execute_pipeline(std::move(pipeline));
+
+    EXPECT_EQ((std::vector<int>{1}), sink1_results);
+    EXPECT_EQ((std::vector<int>{0, 2}), sink2_results);
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnableOnKeyError)
+{
+    // Test coverin the situation where the on_key function throws an exception
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                if (v == 2)
+                {
+                    throw std::runtime_error("KeyError");
+                }
+
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [](int x) {});
+        auto sink2 = segment.make_sink<int>("sink2", [](int x) {});
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+
+    EXPECT_THROW({ execute_pipeline(std::move(pipeline)); }, exceptions::MrcRuntimeError);
+}
+
+TEST_F(TestSegment, LambdaStaticRouterRunnableOnKeyInvalidValue)
+{
+    // Test coverin the situation where the on_key function returns an invalid key
+    auto init = [&](segment::IBuilder& segment) {
+        auto src = segment.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                if (s.is_subscribed())
+                {
+                    s.on_next(i);
+                }
+                else
+                {
+                    FAIL() << "is_subscrived returned a false";
+                }
+            }
+
+            s.on_completed();
+        });
+
+        auto router = segment.construct_object<node::LambdaStaticRouterRunnable<std::string, int>>(
+            "router",
+            std::vector<std::string>{"even", "odd"},
+            [](const int& v) {
+                if (v == 2)
+                {
+                    return "fraud"s;
+                }
+
+                return even_odd<int>(v);
+            });
+
+        segment.make_edge(src, router);
+
+        auto sink1 = segment.make_sink<int>("sink1", [](int x) {});
+        auto sink2 = segment.make_sink<int>("sink2", [](int x) {});
+
+        segment.make_edge(router->get_child("odd"), sink1);
+        segment.make_edge(router->get_child("even"), sink2);
+    };
+
+    auto segdef = Segment::create("segment_test", init);
+
+    auto pipeline = mrc::make_pipeline();
+    pipeline->register_segment(std::move(segdef));
+
+    EXPECT_THROW({ execute_pipeline(std::move(pipeline)); }, exceptions::MrcRuntimeError);
 }
 
 TEST_F(TestSegment, EnsureMoveMultiChildren)

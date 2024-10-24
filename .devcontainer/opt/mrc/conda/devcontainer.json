@@ -35,7 +35,7 @@
         "MRC_ROOT": "${containerWorkspaceFolder}",
         "DEFAULT_CONDA_ENV": "mrc",
         "MAMBA_NO_BANNER": "1",
-        "VAULT_HOST": "https://vault.ops.k8s.rapids.ai"
+        "AWS_ROLE_ARN": "arn:aws:iam::279114543810:role/nv-gha-token-sccache-devs"
     },
     "initializeCommand": [ "${localWorkspaceFolder}/.devcontainer/initialize-command.sh" ],
     "remoteUser": "coder",

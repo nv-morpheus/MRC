@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,11 +88,11 @@ void SimpleModule::initialize(segment::IBuilder& builder)
 
     builder.make_edge(internal2, output2);
 
-    register_input_port("input1", input1);
-    register_output_port("output1", output1);
+    builder.register_module_input("input1", input1);
+    builder.register_module_output("output1", output1);
 
-    register_input_port("input2", input2);
-    register_output_port("output2", output2);
+    builder.register_module_input("input2", input2);
+    builder.register_module_output("output2", output2);
 
     m_initialized = true;
 }
@@ -136,8 +136,8 @@ void ConfigurableModule::initialize(segment::IBuilder& builder)
 
     builder.make_edge(internal1, output1);
 
-    register_input_port("configurable_input_a", input1);
-    register_output_port("configurable_output_x", output1);
+    builder.register_module_input("configurable_input_a", input1);
+    builder.register_module_output("configurable_output_x", output1);
 
     m_initialized = true;
 }
@@ -174,7 +174,7 @@ void SourceModule::initialize(segment::IBuilder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source);
+    builder.register_module_output("source", source);
 }
 
 std::string SourceModule::module_type_name() const
@@ -195,7 +195,7 @@ void SinkModule::initialize(segment::IBuilder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("sink", sink);
+    builder.register_module_input("sink", sink);
 }
 
 std::string SinkModule::module_type_name() const
@@ -221,7 +221,7 @@ void NestedModule::initialize(segment::IBuilder& builder)
     builder.make_edge<bool>(source1->output_port("source"), configurable_mod->input_port("configurable_input_a"));
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("nested_module_output", configurable_mod->output_port("configurable_output_x"));
+    builder.register_module_output("nested_module_output", configurable_mod->output_port("configurable_output_x"));
 }
 
 std::string NestedModule::module_type_name() const

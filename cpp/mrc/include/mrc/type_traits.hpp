@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,6 +115,10 @@ template <template <typename...> class BaseT, typename DerivedT>
 // NOLINTNEXTLINE(readability-identifier-naming)
 using is_base_of_template = typename is_base_of_template_impl<BaseT, DerivedT>::type;
 
+template <template <typename...> class BaseT, typename DerivedT>
+// NOLINTNEXTLINE(readability-identifier-naming)
+inline constexpr bool is_base_of_template_v = is_base_of_template<BaseT, DerivedT>::value;
+
 template <typename T, typename... TsT>
 struct first_non_void_type  // NOLINT
 {
@@ -127,6 +131,9 @@ struct first_non_void_type<T>
     using type_t = T;
 };
 
+template <typename T, typename... TsT>
+using first_non_void_type_t = typename first_non_void_type<T, TsT...>::type_t;
+
 template <typename... TsT>
 struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
 {
@@ -135,6 +142,6 @@ struct first_non_void_type_error_check : first_non_void_type<TsT...>  // NOLINT
 };
 
 template <typename T, typename... TsT>
-using first_non_void_type_t = typename first_non_void_type_error_check<T, TsT...>::type_t;
+using first_non_void_type_error_check_t = typename first_non_void_type_error_check<T, TsT...>::type_t;
 
 }  // namespace mrc

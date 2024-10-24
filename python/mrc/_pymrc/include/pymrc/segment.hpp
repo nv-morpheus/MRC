@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -142,11 +142,6 @@ class BuilderProxy
     static std::shared_ptr<mrc::segment::ObjectProperties> make_source(mrc::segment::IBuilder& self,
                                                                        const std::string& name,
                                                                        pybind11::function gen_factory);
-
-    static std::shared_ptr<mrc::segment::ObjectProperties> make_source(
-        mrc::segment::IBuilder& self,
-        const std::string& name,
-        const std::function<void(pymrc::PyObjectSubscriber& sub)>& f);
 
     static std::shared_ptr<mrc::segment::ObjectProperties> make_source_component(mrc::segment::IBuilder& self,
                                                                                  const std::string& name,

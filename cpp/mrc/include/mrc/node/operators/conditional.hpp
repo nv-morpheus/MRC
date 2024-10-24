@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,19 +22,12 @@
 namespace mrc::node {
 
 template <typename CaseT, typename T>
-class Conditional : public Router<CaseT, T>
+class Conditional : public LambdaDynamicRouterComponent<CaseT, T>
 {
+    using base_t = LambdaDynamicRouterComponent<CaseT, T>;
+
   public:
-    Conditional(std::function<CaseT(const T&)> predicate) : m_predicate(std::move(predicate)) {}
-
-  protected:
-    virtual CaseT determine_key_for_value(const T& t)
-    {
-        return m_predicate(t);
-    }
-
-  private:
-    std::function<CaseT(const T&)> m_predicate;
+    using base_t::base_t;
 };
 
 }  // namespace mrc::node

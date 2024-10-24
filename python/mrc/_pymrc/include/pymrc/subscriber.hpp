@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +45,12 @@ class SubscriberProxy
     static void on_next(PyObjectSubscriber* self, pybind11::object&& value);
     static void on_error(PyObjectSubscriber* self, pybind11::object&& value);
     static bool is_subscribed(PyObjectSubscriber* self);
+};
+
+class SubscriptionProxy
+{
+  public:
+    static bool is_subscribed(PySubscription* self);
 };
 
 class ObservableProxy

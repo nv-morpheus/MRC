@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,6 @@
 #include "pymrc/utilities/function_wrappers.hpp"
 
 #include "pymrc/utilities/object_wrappers.hpp"
-
-#include <pybind11/detail/internals.h>
 
 #include <cstddef>
 
@@ -165,7 +163,7 @@ OnErrorFunction::cpp_fn_t OnErrorFunction::build_cpp_function(pybind11::function
     };
 }
 
-OnDataFunction::cpp_fn_t OnDataFunction::build_cpp_function(pybind11::function&& py_fn) const
+UnaryFunction::cpp_fn_t UnaryFunction::build_cpp_function(pybind11::function&& py_fn) const
 {
     if (!py_fn)
     {

@@ -15,7 +15,7 @@
 
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
 {% set py_version = environ.get('CONDA_PY', '3.10') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '12.1').split('.')[:2]) %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '12.5').split('.')[:2]) %}
 
 package:
   name: libmrc-split
@@ -42,9 +42,9 @@ requirements:
     - cmake =3.27
     - libtool
     - ninja =1.11
-    - numactl-libs-cos7-x86_64
+    - numactl =2.0.18
     - pkg-config =0.29
-    - sysroot_linux-64 >=2.17
+    - sysroot_linux-64 >=2.28
   host:
     # Libraries necessary to build. Keep sorted!
     - boost-cpp =1.84
@@ -53,8 +53,8 @@ requirements:
     - cuda-nvrtc-dev {{ cuda_version }}.*
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
-    - glog =0.6
-    - libgrpc =1.59
+    - glog>=0.7.1,<0.8
+    - libgrpc =1.62.2
     - gtest =1.14
     - libhwloc =2.9.2
     - librmm {{ rapids_version }}
@@ -80,14 +80,14 @@ outputs:
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
         - cmake =3.27
-        - numactl-libs-cos7-x86_64
-        - sysroot_linux-64 =2.17
+        - numactl =2.0.18
+        - sysroot_linux-64 >=2.28
       host:
         # Any libraries with weak run_exports need to go here to be added to the run. Keep sorted!
         - boost-cpp =1.84
         - cuda-version # Needed to allow pin_compatible to work
-        - glog =0.6
-        - libgrpc =1.59
+        - glog>=0.7.1,<0.8
+        - libgrpc =1.62.2
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
         - nlohmann_json =3.11

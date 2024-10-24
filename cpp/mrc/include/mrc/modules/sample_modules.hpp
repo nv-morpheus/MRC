@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -183,7 +183,7 @@ void TemplateModule<OutputTypeT>::initialize(segment::IBuilder& builder)
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source);
+    builder.register_module_output("source", source);
 }
 
 template <typename OutputTypeT>
@@ -248,7 +248,7 @@ void TemplateWithInitModule<OutputTypeT, Initializer>::initialize(segment::IBuil
     });
 
     // Register the submodules output as one of this module's outputs
-    register_output_port("source", source);
+    builder.register_module_output("source", source);
 }
 
 template <typename OutputTypeT, OutputTypeT (*Initializer)()>

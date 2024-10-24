@@ -4,7 +4,7 @@ To build the Conda packages, it's recommended to run the provided scripts from a
 
 ```bash
 cd ${MRC_ROOT}
-docker buildx build --target developement -t mrc-conda-build .
+docker buildx build --target development -t mrc-conda-build .
 ```
 
 This will create the image `mrc-conda-build` that can be used to build MRC conda packages. When running this container, is recommended to set the environment variable `CONDA_PKGS_DIRS` to a path mounted on the host to speed up the build process. Without this variable set, the packages needed during the build will need to be re-downloaded each time the container is run.
@@ -16,14 +16,14 @@ To build and save the MRC conda package, run the following:
 ```bash
 docker run --rm -ti -v $PWD:/work \
    -e CONDA_PKGS_DIRS=/work/.cache/conda_pkgs \
-   -e CONDA_ARGS="--output-folder=/work/.conda-bld" \
+   -e CONDA_ARGS="--output-folder=/work/.tmp/.conda-bld" \
    mrc-conda-build ./ci/conda/recipes/run_conda_build.sh
 ```
 
-This will save the conda packages to `${MRC_ROOT}/.conda-bld`. To install from this location, use the following:
+This will save the conda packages to `${MRC_ROOT}/.tmp/.conda-bld`. To install from this location, use the following:
 
 ```bash
-conda install -c file://${MRC_ROOT}/.conda-bld mrc
+conda install -c file://${MRC_ROOT}/.tmp/.conda-bld mrc
 ```
 
 ## Uploading the Conda Package

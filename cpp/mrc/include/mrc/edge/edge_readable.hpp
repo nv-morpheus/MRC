@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -192,8 +192,32 @@ class IReadableAcceptorBase
     virtual EdgeTypeInfo readable_acceptor_type() const = 0;
 };
 
+template <typename KeyT>
+class IMultiReadableProviderBase
+{
+  public:
+    virtual bool has_readable_edge(const KeyT& key) const                                = 0;
+    virtual void release_readable_edge(const KeyT& key)                                  = 0;
+    virtual void release_readable_edges()                                                = 0;
+    virtual size_t readable_edge_count() const                                           = 0;
+    virtual std::vector<KeyT> readable_edge_keys() const                                 = 0;
+    virtual std::shared_ptr<ReadableEdgeHandle> get_readable_edge_handle(KeyT key) const = 0;
+};
+
+template <typename KeyT>
+class IMultiReadableAcceptorBase
+{
+  public:
+    virtual bool has_readable_edge(const KeyT& key) const                                       = 0;
+    virtual void release_readable_edge(const KeyT& key)                                         = 0;
+    virtual void release_readable_edges()                                                       = 0;
+    virtual size_t readable_edge_count() const                                                  = 0;
+    virtual std::vector<KeyT> readable_edge_keys() const                                        = 0;
+    virtual void set_readable_edge_handle(KeyT key, std::shared_ptr<ReadableEdgeHandle> egress) = 0;
+};
+
 template <typename T>
-class IReadableProvider : public IReadableProviderBase
+class IReadableProvider : public virtual IReadableProviderBase
 {
   public:
     EdgeTypeInfo readable_provider_type() const override
@@ -203,7 +227,7 @@ class IReadableProvider : public IReadableProviderBase
 };
 
 template <typename T>
-class IReadableAcceptor : public IReadableAcceptorBase
+class IReadableAcceptor : public virtual IReadableAcceptorBase
 {
   public:
     EdgeTypeInfo readable_acceptor_type() const override
@@ -212,4 +236,11 @@ class IReadableAcceptor : public IReadableAcceptorBase
     }
 };
 
+template <typename KeyT, typename T>
+class IMultiReadableProvider : public virtual IMultiReadableProviderBase<KeyT>
+{};
+
+template <typename KeyT, typename T>
+class IMultiReadableAcceptor : public virtual IMultiReadableAcceptorBase<KeyT>
+{};
 }  // namespace mrc::edge

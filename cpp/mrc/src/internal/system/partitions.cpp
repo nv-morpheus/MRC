@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +32,8 @@
 #include <hwloc.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
+#include <cstdlib>  // for getenv, size_t
 #include <map>
 #include <memory>
 #include <ostream>
@@ -80,7 +80,18 @@ Partitions::Partitions(const Topology& topology, const Options& options)
         CHECK_NE(rc, -1);
         if (node_set.weight() != 0)
         {
-            CHECK_EQ(node_set.weight(), 1);
+            if (node_set.weight() != 1)
+            {
+                if (std::getenv("MRC_IGNORE_NUMA_CHECK") != nullptr)
+                {
+                    LOG(WARNING) << "warning: gpu_id: " << gpu_id << " is not associated with exactly 1 numa node";
+                }
+                else
+                {
+                    LOG(FATAL) << "fatal: gpu_id: " << gpu_id << " is not associated with exactly 1 numa node";
+                }
+            }
+
             gpus_per_numa_node.insert(node_set, gpu_id);
         }
     }

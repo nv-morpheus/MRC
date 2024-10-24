@@ -15,8 +15,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "tests")
 
-find_package(pybind11 REQUIRED)
-
 add_subdirectory(coro)
 
 # Keep all source files sorted!!!

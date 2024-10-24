@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,10 @@
  */
 #include "pymrc/coro.hpp"
 
+#include "mrc/coroutines/task.hpp"
+#include "mrc/version.hpp"
+
 #include <glog/logging.h>
-#include <mrc/coroutines/task.hpp>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -36,7 +38,7 @@ PYBIND11_MODULE(coro, _module)
 {
     _module.doc() = R"pbdoc(
         -----------------------
-        .. currentmodule:: morpheus.llm
+        .. currentmodule:: coro
         .. autosummary::
            :toctree: _generate
 
@@ -61,7 +63,7 @@ PYBIND11_MODULE(coro, _module)
         co_return strings[0];
     });
 
-    // _module.attr("__version__") =
-    //     MRC_CONCAT_STR(morpheus_VERSION_MAJOR << "." << morpheus_VERSION_MINOR << "." << morpheus_VERSION_PATCH);
+    _module.attr("__version__") = MRC_CONCAT_STR(mrc_VERSION_MAJOR << "." << mrc_VERSION_MINOR << "."
+                                                                   << mrc_VERSION_PATCH);
 }
 }  // namespace mrc::pymrc::coro

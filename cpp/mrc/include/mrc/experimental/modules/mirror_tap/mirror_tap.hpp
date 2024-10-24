@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,8 +88,8 @@ void MirrorTapModule<DataTypeT>::initialize(segment::IBuilder& builder)
     builder.make_edge(bcast, builder.get_egress<DataTypeT>(m_egress_name));  // to mirror tap
 
     // Register the submodules output as one of this module's outputs
-    register_input_port("input", bcast);
-    register_output_port("output", bcast);
+    builder.register_module_input("input", bcast);
+    builder.register_module_output("output", bcast);
 }
 
 template <typename DataTypeT>

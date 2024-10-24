@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,6 @@
 #include "mrc/utils/string_utils.hpp"
 
 #include <pybind11/cast.h>
-#include <pybind11/detail/descr.h>
 #include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -82,7 +81,7 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
 {
   public:
     using cpp_fn_t       = std::function<ReturnT(ArgsT...)>;
-    using return_t       = std::conditional_t<std::is_same<ReturnT, void>::value, pybind11::detail::void_type, ReturnT>;
+    using return_t       = std::conditional_t<std::is_same_v<ReturnT, void>, pybind11::detail::void_type, ReturnT>;
     using function_ptr_t = ReturnT (*)(ArgsT...);
 
     // Default construct with an empty object. Needed by pybind11 casters
@@ -103,6 +102,11 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
         }
 
         return m_cpp_fn(std::forward<ArgsT>(args)...);
+    }
+
+    operator bool() const
+    {
+        return !m_is_none;
     }
 
     static constexpr auto Signature = pybind11::detail::_("Callable[[") +
@@ -155,7 +159,8 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
         // Save the name of the function to help debugging
         if (py_fn)
         {
-            m_repr = pybind11::str(py_fn);
+            m_repr    = pybind11::str(py_fn);
+            m_is_none = false;
         }
 
         m_cpp_fn = this->build_cpp_function(std::move(py_fn));
@@ -163,6 +168,7 @@ struct PyFuncHolder<ReturnT(ArgsT...)>
 
     cpp_fn_t m_cpp_fn;
     std::string m_repr;
+    bool m_is_none{true};
 };
 
 struct OnNextFunction : public PyFuncHolder<void(PyObjectHolder)>
@@ -210,12 +216,12 @@ struct OnCompleteFunction : public PyFuncHolder<void()>
 
 // OnDataFunction, like other lambdas for operators, takes normal pybind11::object. This is because these functions will
 // be interfacing directly with user python code and is never holding the objects in memory after the call is made
-struct OnDataFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
+struct UnaryFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
 {
   public:
     using base_t = PyFuncHolder<pybind11::object(pybind11::object)>;
 
-    OnDataFunction() = default;
+    UnaryFunction() = default;
 
     static constexpr auto Signature = pybind11::detail::_("Callable[[object], object]");
 
@@ -224,6 +230,9 @@ struct OnDataFunction : public PyFuncHolder<pybind11::object(pybind11::object)>
 
     cpp_fn_t build_cpp_function(pybind11::function&& py_fn) const override;
 };
+
+struct OnDataFunction : public UnaryFunction
+{};
 
 #pragma GCC visibility pop
 
@@ -383,6 +392,10 @@ class type_caster<mrc::pymrc::OnErrorFunction> : public PyFuncWrapperCasterBase<
 
 template <>
 class type_caster<mrc::pymrc::OnCompleteFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::OnCompleteFunction>
+{};
+
+template <>
+class type_caster<mrc::pymrc::UnaryFunction> : public PyFuncWrapperCasterBase<mrc::pymrc::UnaryFunction>
 {};
 
 template <>

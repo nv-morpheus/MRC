@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import typing
 
 import pytest
@@ -49,6 +50,9 @@ def configure_tests_logging(is_debugger_attached: bool):
     # Check if a debugger is attached. If so, choose DEBUG for the logging level. Otherwise, only WARN
     if (is_debugger_attached):
         log_level = logging.INFO
+
+    if (os.environ.get('GLOG_v') is not None):
+        log_level = logging.DEBUG
 
     mrc_logging.init_logging("mrc_testing", py_level=log_level)
 

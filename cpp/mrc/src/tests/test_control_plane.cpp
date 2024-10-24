@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,7 @@
 #include "internal/system/partitions.hpp"
 #include "internal/system/system.hpp"
 #include "internal/system/system_provider.hpp"
+#include "internal/system/topology.hpp"
 
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/core/task_queue.hpp"
@@ -43,6 +44,7 @@
 #include "mrc/pubsub/publisher.hpp"
 #include "mrc/pubsub/subscriber.hpp"
 #include "mrc/types.hpp"
+#include "mrc/utils/string_utils.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -53,7 +55,8 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <ostream>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -62,11 +65,24 @@ using namespace mrc;
 using namespace mrc::pubsub;
 using namespace mrc::memory::literals;
 
+/**
+ * @brief Gets the CPU set for the number of GPUs available on the system. Allows running with minimum number of cores
+ * that support the number of GPUs
+ *
+ * @return std::string
+ */
+static std::string get_cpuset_for_gpu_count()
+{
+    auto topo = system::Topology::Create();
+
+    return MRC_CONCAT_STR("0-" << topo->gpu_count());
+}
+
 static auto make_runtime(std::function<void(Options& options)> options_lambda = [](Options& options) {})
 {
     auto resources = std::make_unique<resources::Manager>(
         system::SystemProvider(tests::make_system([&](Options& options) {
-            options.topology().user_cpuset("0");
+            options.topology().user_cpuset(get_cpuset_for_gpu_count());
             options.topology().restrict_gpus(true);
             options.placement().resources_strategy(PlacementResources::Dedicated);
             options.placement().cpu_strategy(PlacementStrategy::PerMachine);
@@ -129,7 +145,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnectSingleCore)
     // Similar to SingleClientConnectDisconnect except both client & server are locked to the same core
     // making issue #379 easier to reproduce.
     auto sr     = make_runtime([](Options& options) {
-        options.topology().user_cpuset("0");
+        options.topology().user_cpuset(get_cpuset_for_gpu_count());
     });
     auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
@@ -137,7 +153,7 @@ TEST_F(TestControlPlane, SingleClientConnectDisconnectSingleCore)
     server->service_await_live();
 
     auto cr = make_runtime([](Options& options) {
-        options.topology().user_cpuset("0");
+        options.topology().user_cpuset(get_cpuset_for_gpu_count());
         options.architect_url("localhost:13337");
     });
 

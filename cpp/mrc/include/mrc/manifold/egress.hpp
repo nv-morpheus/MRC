@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,7 +53,7 @@ class TypedEgress : public EgressDelegate
 };
 
 template <typename T>
-class RoundRobinEgress : public node::Router<SegmentAddress, T>, public TypedEgress<T>
+class RoundRobinEgress : public node::DynamicRouterComponentBase<SegmentAddress, T>, public TypedEgress<T>
 {
   protected:
     SegmentAddress determine_key_for_value(const T& t) override

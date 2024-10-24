@@ -80,9 +80,8 @@ if [[ -n "${MRC_MODIFIED_FILES}" ]]; then
 
    # Include What You Use
    if [[ "${SKIP_IWYU}" == "" ]]; then
-      # Remove .h, .hpp, and .cu files from the modified list
       shopt -s extglob
-      IWYU_MODIFIED_FILES=( "${MRC_MODIFIED_FILES[@]/*.@(h|hpp|cu)/}" )
+      IWYU_MODIFIED_FILES=( "${MRC_MODIFIED_FILES[@]}" )
 
       if [[ -n "${IWYU_MODIFIED_FILES}" ]]; then
          # Get the list of compiled files relative to this directory
