@@ -32,9 +32,11 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 
+#include <boost/fiber/context.hpp>  // for operator<<
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
+#include <pybind11/pybind11.h>  // for module
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
@@ -46,6 +48,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>  // for operator<<
 #include <type_traits>
 #include <typeindex>
 #include <utility>
