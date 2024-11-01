@@ -15,6 +15,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
+# MRC 24.10.00 (01 Nov 2024)
+
+## 🐛 Bug Fixes
+
+- fix build interface includes ([#514](https://github.com/nv-morpheus/MRC/pull/514)) [@cwharris](https://github.com/cwharris)
+- Fix CMake issue which installed headers incorrectly during conda build ([#511](https://github.com/nv-morpheus/MRC/pull/511)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Adding environment variable to allow skip NUMA node check ([#505](https://github.com/nv-morpheus/MRC/pull/505)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Fix get-pr-info gha reference ([#500](https://github.com/nv-morpheus/MRC/pull/500)) [@cwharris](https://github.com/cwharris)
+- Stop a python source once the subscriber is no longer subscribed ([#493](https://github.com/nv-morpheus/MRC/pull/493)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Ensure proper initialization of `CMAKE_INSTALL_PREFIX` if needed ([#485](https://github.com/nv-morpheus/MRC/pull/485)) [@dagardner-nv](https://github.com/dagardner-nv)
+- IWYU fixes ([#517](https://github.com/nv-morpheus/MRC/pull/517)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 📖 Documentation
+
+- Fix Incorrect docstring in `mrc.core.coro` ([#503](https://github.com/nv-morpheus/MRC/pull/503)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 🚀 New Features
+
+- Add Router nodes to support single input, multi output routing. ([#502](https://github.com/nv-morpheus/MRC/pull/502)) [@mdemoret-nv](https://github.com/mdemoret-nv)
+- Update to RAPIDS 24.10 ([#494](https://github.com/nv-morpheus/MRC/pull/494)) [@cwharris](https://github.com/cwharris)
+
+## 🛠️ Improvements
+
+- devcontainer: replace VAULT_HOST with AWS_ROLE_ARN ([#506](https://github.com/nv-morpheus/MRC/pull/506)) [@jjacobelli](https://github.com/jjacobelli)
+- Pass a `mrc.Subscription` object to sources rather than a `mrc.Subscriber` ([#499](https://github.com/nv-morpheus/MRC/pull/499)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Change `LOG(WARNING)` to `VLOG(1)` when no GPUs are detected ([#497](https://github.com/nv-morpheus/MRC/pull/497)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Define a Python source which receives a reference to a subscriber ([#496](https://github.com/nv-morpheus/MRC/pull/496)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+
 # MRC 24.06.00 (03 Jul 2024)
 
 ## 🚀 New Features
