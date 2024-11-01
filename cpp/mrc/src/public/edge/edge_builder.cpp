@@ -87,7 +87,7 @@ std::shared_ptr<WritableEdgeHandle> EdgeBuilder::do_adapt_ingress(const EdgeType
     }
 
     // If static conversion failed, now try runtime conversion
-    VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
+    VLOG(2) << "Looking for ingress edge adapter: (" << type_name(target_type.full_type()) << ", "
             << type_name(ingress->get_type().full_type()) << ")";
     VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << ingress->get_type().full_type().hash_code()
             << ")";
@@ -115,9 +115,9 @@ std::shared_ptr<WritableEdgeHandle> EdgeBuilder::do_adapt_ingress(const EdgeType
     }
 
     // Unfortunately, no converter was found
-    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No conversion found from "
-                                                          << type_name(ingress->get_type().full_type()) << " to "
-                                                          << type_name(target_type.full_type())));
+    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No ingress conversion found from "
+                                                          << type_name(target_type.full_type()) << " to "
+                                                          << type_name(ingress->get_type().full_type())));
 }
 
 std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeInfo& target_type,
@@ -153,9 +153,9 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
     }
 
     // If static conversion failed, now try runtime conversion
-    VLOG(2) << "Looking for edge adapter: (" << type_name(target_type.full_type()) << ", "
-            << type_name(egress->get_type().full_type()) << ")";
-    VLOG(2) << "- (" << target_type.full_type().hash_code() << ", " << egress->get_type().full_type().hash_code()
+    VLOG(2) << "Looking for egress edge adapter: (" << type_name(egress->get_type().full_type()) << ", "
+            << type_name(target_type.full_type()) << ")";
+    VLOG(2) << "- (" << egress->get_type().full_type().hash_code() << ", " << target_type.full_type().hash_code()
             << ")";
 
     // Loop over the registered adaptors
@@ -181,7 +181,7 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
     }
 
     // Unfortunately, no converter was found
-    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No conversion found from "
+    throw mrc::exceptions::MrcRuntimeError(MRC_CONCAT_STR("No egress conversion found from "
                                                           << type_name(egress->get_type().full_type()) << " to "
                                                           << type_name(target_type.full_type())));
 }

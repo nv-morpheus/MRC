@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import asyncio
+import os
+import time
 import typing
 
 import pytest
@@ -28,6 +30,53 @@ def pairwise(t):
 
 
 node_fn_type = typing.Callable[[mrc.Builder], mrc.SegmentObject]
+
+
+@pytest.fixture
+def source():
+
+    def build(builder: mrc.Builder):
+
+        def gen_data():
+            yield 1
+            yield 2
+            yield 3
+
+        return builder.make_source("source", gen_data)
+
+    return build
+
+
+@pytest.fixture
+def endless_source():
+
+    def build(builder: mrc.Builder):
+
+        def gen_data():
+            i = 0
+            while True:
+                yield i
+                i += 1
+                time.sleep(0.1)
+
+        return builder.make_source("endless_source", gen_data())
+
+    return build
+
+
+@pytest.fixture
+def blocking_source():
+
+    def build(builder: mrc.Builder):
+
+        def gen_data(subscription: mrc.Subscription):
+            yield 1
+            while subscription.is_subscribed():
+                time.sleep(0.1)
+
+        return builder.make_source("blocking_source", gen_data)
+
+    return build
 
 
 @pytest.fixture
@@ -60,6 +109,21 @@ def source_cppexception():
             throw_cpp_error()
 
         return builder.make_source("source", gen_data_and_raise)
+
+    return build
+
+
+@pytest.fixture
+def node_exception():
+
+    def build(builder: mrc.Builder):
+
+        def on_next(data):
+            time.sleep(1)
+            print("Received value: {}".format(data), flush=True)
+            raise RuntimeError("unittest")
+
+        return builder.make_node("node", mrc.core.operators.map(on_next))
 
     return build
 
@@ -112,6 +176,8 @@ def build_executor():
     def inner(pipe: mrc.Pipeline):
         options = mrc.Options()
 
+        options.topology.user_cpuset = f"0-{os.cpu_count() - 1}"
+        options.engine_factories.default_engine_type = mrc.core.options.EngineType.Thread
         executor = mrc.Executor(options)
         executor.register_pipeline(pipe)
 
@@ -181,6 +247,36 @@ def test_cppexception_in_source_async(source_cppexception: node_fn_type,
             await executor.join_async()
 
     asyncio.run(run_pipeline())
+
+
+@pytest.mark.parametrize("souce_name", ["source", "endless_source", "blocking_source"])
+def test_pyexception_in_node(source: node_fn_type,
+                             endless_source: node_fn_type,
+                             blocking_source: node_fn_type,
+                             node_exception: node_fn_type,
+                             build_pipeline: build_pipeline_type,
+                             build_executor: build_executor_type,
+                             souce_name: str):
+    """
+    Test to reproduce Morpheus issue #1838 where an exception raised in a node doesn't always shutdown the executor
+    when the source is intended to run indefinitely.
+    """
+
+    if souce_name == "endless_source":
+        source_fn = endless_source
+    elif souce_name == "blocking_source":
+        source_fn = blocking_source
+    else:
+        source_fn = source
+
+    pipe = build_pipeline(source_fn, node_exception)
+
+    executor: mrc.Executor = None
+
+    executor = build_executor(pipe)
+
+    with pytest.raises(RuntimeError):
+        executor.join()
 
 
 if (__name__ in ("__main__", )):

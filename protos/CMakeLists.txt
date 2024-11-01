@@ -94,8 +94,9 @@ add_dependencies(${PROJECT_NAME}_style_checks mrc_protos-headers-target)
 install(
   TARGETS mrc_protos mrc_architect_protos
   EXPORT ${PROJECT_NAME}-exports
+  COMPONENT core
   PUBLIC_HEADER
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/protos"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/protos"
 )
 
 list(REMOVE_ITEM CMAKE_MODULE_PATH ${MRC_PROTO_MODULE_PATH_EXTENSIONS})

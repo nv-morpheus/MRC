@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,7 +99,8 @@ PYBIND11_MODULE(segment, py_mod)
         .def_property_readonly("name", &PyNode::name)
         .def_property_readonly("launch_options",
                                py::overload_cast<>(&mrc::segment::ObjectProperties::launch_options),
-                               py::return_value_policy::reference_internal);
+                               py::return_value_policy::reference_internal)
+        .def("get_child", &PyNode::get_child, py::return_value_policy::reference_internal, py::arg("name"));
 
     auto Builder = py::class_<mrc::segment::IBuilder>(py_mod, "Builder");
     auto Segment = py::class_<mrc::pipeline::ISegment>(py_mod, "Segment");
@@ -218,8 +219,6 @@ PYBIND11_MODULE(segment, py_mod)
      * (py) @param name: Name of the ingress port
      */
     Builder.def("get_ingress", &BuilderProxy::get_ingress, py::arg("name"));
-
-    Builder.def("make_edge", &BuilderProxy::make_edge);
 
     Builder.def("make_edge", &BuilderProxy::make_edge, py::arg("source"), py::arg("sink"));
 

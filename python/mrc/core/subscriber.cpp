@@ -50,7 +50,8 @@ PYBIND11_MODULE(subscriber, py_mod)
     // Common must be first in every module
     pymrc::import(py_mod, "mrc.core.common");
 
-    py::class_<PySubscription>(py_mod, "Subscription");
+    py::class_<PySubscription>(py_mod, "Subscription")
+        .def("is_subscribed", &SubscriptionProxy::is_subscribed, py::call_guard<py::gil_scoped_release>());
 
     py::class_<PyObjectObserver>(py_mod, "Observer")
         .def("on_next",

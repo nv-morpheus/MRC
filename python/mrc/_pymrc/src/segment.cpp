@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,9 +32,11 @@
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 
+#include <boost/fiber/context.hpp>  // for operator<<
 #include <glog/logging.h>
 #include <pybind11/cast.h>
 #include <pybind11/gil.h>
+#include <pybind11/pybind11.h>  // for module
 #include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
@@ -43,8 +45,10 @@
 #include <functional>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>  // for operator<<
 #include <type_traits>
 #include <typeindex>
 #include <utility>
@@ -233,6 +237,11 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                 {
                     subscriber.on_next(std::move(next_val));
                 }
+                else
+                {
+                    DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
+                    break;
+                }
             }
 
         } catch (const std::exception& e)
@@ -251,6 +260,61 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
 
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
 }
+
+class SubscriberFuncWrapper : public mrc::pymrc::PythonSource<PyHolder>
+{
+  public:
+    using base_t = mrc::pymrc::PythonSource<PyHolder>;
+    using typename base_t::source_type_t;
+    using typename base_t::subscriber_fn_t;
+
+    SubscriberFuncWrapper(py::function gen_factory) : PythonSource(build()), m_gen_factory{std::move(gen_factory)} {}
+
+  private:
+    subscriber_fn_t build()
+    {
+        return [this](rxcpp::subscriber<source_type_t> subscriber) {
+            auto& ctx = runnable::Context::get_runtime_context();
+
+            try
+            {
+                DVLOG(10) << ctx.info() << " Starting source";
+                py::gil_scoped_acquire gil;
+                PySubscription subscription = subscriber.get_subscription();
+                py::object py_sub           = py::cast(subscription);
+                auto py_iter                = m_gen_factory.operator()<py::iterator>(std::move(py_sub));
+                PyIteratorWrapper iter_wrapper{std::move(py_iter)};
+
+                for (auto next_val : iter_wrapper)
+                {
+                    //  Only send if its subscribed. Very important to ensure the object has been moved!
+                    if (subscriber.is_subscribed())
+                    {
+                        py::gil_scoped_release no_gil;
+                        subscriber.on_next(std::move(next_val));
+                    }
+                    else
+                    {
+                        DVLOG(10) << ctx.info() << " Source unsubscribed. Stopping";
+                        break;
+                    }
+                }
+
+            } catch (const std::exception& e)
+            {
+                LOG(ERROR) << ctx.info() << "Error occurred in source. Error msg: " << e.what();
+
+                subscriber.on_error(std::current_exception());
+                return;
+            }
+            subscriber.on_completed();
+
+            DVLOG(10) << ctx.info() << " Source complete";
+        };
+    }
+
+    PyFuncWrapper m_gen_factory{};
+};
 
 std::shared_ptr<mrc::segment::ObjectProperties> build_source_component(mrc::segment::IBuilder& self,
                                                                        const std::string& name,
@@ -300,6 +364,32 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_source(mrc::s
                                                                           const std::string& name,
                                                                           py::function gen_factory)
 {
+    // Determine if the gen_factory is expecting to receive a subscription object
+    auto inspect_mod          = py::module::import("inspect");
+    auto signature            = inspect_mod.attr("signature")(gen_factory);
+    auto params               = signature.attr("parameters");
+    auto num_params           = py::len(params);
+    bool expects_subscription = false;
+
+    if (num_params > 0)
+    {
+        // We know there is at least one parameter. Check if the first parameter is a subscription object
+        // Note, when we receive a function that has been bound with `functools.partial(fn, arg1=some_value)`, the
+        // parameter is still visible in the signature of the partial object.
+        auto mrc_mod         = py::module::import("mrc");
+        auto param_values    = params.attr("values")();
+        auto first_param     = py::iter(param_values);
+        auto type_hint       = py::object((*first_param).attr("annotation"));
+        expects_subscription = (type_hint.is(mrc_mod.attr("Subscription")) ||
+                                type_hint.equal(py::str("mrc.Subscription")) ||
+                                type_hint.equal(py::str("Subscription")));
+    }
+
+    if (expects_subscription)
+    {
+        return self.construct_object<SubscriberFuncWrapper>(name, std::move(gen_factory));
+    }
+
     return build_source(self, name, PyIteratorWrapper(std::move(gen_factory)));
 }
 

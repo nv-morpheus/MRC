@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,8 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
-find_package(CUDAToolkit REQUIRED)
-
-
 # Ensure python is configured
 morpheus_utils_python_configure()
-
 
 morpheus_utils_print_python_info()
 
@@ -30,9 +26,9 @@ morpheus_utils_create_python_package(mrc)
 # Add a few additional files to be copied
 file(GLOB pymrc_test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.py")
 morpheus_utils_add_python_sources(
-    "pytest.ini"
-    "tests/string_reader_input.txt"
-    ${pymrc_test_files}
+  "pytest.ini"
+  "tests/string_reader_input.txt"
+  ${pymrc_test_files}
 )
 
 # Build the pymrc library

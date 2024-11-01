@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,7 +99,7 @@ struct EdgeConnector
         EdgeAdapterRegistry::register_egress_converter(
             typeid(InputT),
             typeid(OutputT),
-            [lambda_fn](std::shared_ptr<IEdgeWritableBase> channel) {
+            [lambda_fn](std::shared_ptr<IEdgeReadableBase> channel) {
                 std::shared_ptr<IEdgeReadable<InputT>> egress = std::dynamic_pointer_cast<IEdgeReadable<InputT>>(
                     channel);
 

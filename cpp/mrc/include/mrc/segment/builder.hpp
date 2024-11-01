@@ -464,6 +464,16 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     auto& source_object = to_object_properties(source);
     auto& sink_object   = to_object_properties(sink);
 
+    if (source_object.owning_builder() != this)
+    {
+        throw exceptions::MrcRuntimeError("Source object does not belong to this builder");
+    }
+
+    if (sink_object.owning_builder() != this)
+    {
+        throw exceptions::MrcRuntimeError("Sink object does not belong to this builder");
+    }
+
     // If we can determine the type from the actual object, use that, then fall back to hints or defaults.
     using deduced_source_type_t = first_non_void_type_t<source_sp_type_t,  // Deduced type (if possible)
                                                         SourceNodeTypeT,   // Explicit type hint
@@ -477,21 +487,44 @@ void IBuilder::make_edge(SourceObjectT source, SinkObjectT sink)
     VLOG(2) << "Deduced source type: " << mrc::type_name<deduced_source_type_t>() << std::endl;
     VLOG(2) << "Deduced sink type: " << mrc::type_name<deduced_sink_type_t>() << std::endl;
 
-    if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+    if constexpr (std::is_void_v<deduced_source_type_t> || std::is_void_v<deduced_sink_type_t>)
     {
-        mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
-                       sink_object.template writable_provider_typed<deduced_sink_type_t>());
-        return;
+        // Try typeless edge creation
+        if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+        {
+            mrc::make_edge_typeless(source_object.writable_acceptor_base(), sink_object.writable_provider_base());
+        }
+        else if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+        {
+            mrc::make_edge_typeless(source_object.readable_provider_base(), sink_object.readable_acceptor_base());
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+                "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        }
     }
-
-    if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+    else
     {
-        mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
-                       sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
-        return;
-    }
+        if (source_object.is_writable_acceptor() && sink_object.is_writable_provider())
+        {
+            mrc::make_edge(source_object.template writable_acceptor_typed<deduced_source_type_t>(),
+                           sink_object.template writable_provider_typed<deduced_sink_type_t>());
+        }
 
-    LOG(ERROR) << "Incompatible node types";
+        else if (source_object.is_readable_provider() && sink_object.is_readable_acceptor())
+        {
+            mrc::make_edge(source_object.template readable_provider_typed<deduced_source_type_t>(),
+                           sink_object.template readable_acceptor_typed<deduced_sink_type_t>());
+        }
+        else
+        {
+            throw std::runtime_error(
+                "Invalid edges. Arguments to make_edge were incorrect. Ensure you are providing either "
+                "WritableAcceptor->WritableProvider or ReadableProvider->ReadableAcceptor");
+        }
+    }
 }
 
 template <typename EdgeDataTypeT,
