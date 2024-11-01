@@ -17,6 +17,7 @@
 #include "pymrc/coro.hpp"
 
 #include "mrc/coroutines/task.hpp"
+#include "mrc/utils/string_utils.hpp"  // for MRC_CONCAT_STR
 #include "mrc/version.hpp"
 
 #include <glog/logging.h>
