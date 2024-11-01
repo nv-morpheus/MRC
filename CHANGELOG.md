@@ -25,6 +25,7 @@ limitations under the License.
 - Fix get-pr-info gha reference ([#500](https://github.com/nv-morpheus/MRC/pull/500)) [@cwharris](https://github.com/cwharris)
 - Stop a python source once the subscriber is no longer subscribed ([#493](https://github.com/nv-morpheus/MRC/pull/493)) [@dagardner-nv](https://github.com/dagardner-nv)
 - Ensure proper initialization of `CMAKE_INSTALL_PREFIX` if needed ([#485](https://github.com/nv-morpheus/MRC/pull/485)) [@dagardner-nv](https://github.com/dagardner-nv)
+- IWYU fixes ([#517](https://github.com/nv-morpheus/MRC/pull/517)) [@dagardner-nv](https://github.com/dagardner-nv)
 
 ## 📖 Documentation
 
