@@ -208,6 +208,9 @@ endif()
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
+# Avoid warning from the lto-wrapper about serial compilation
+target_link_options(libmrc PUBLIC "-flto=auto")
+
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 # Generates an include file for specifying external linkage since everything is hidden by default
