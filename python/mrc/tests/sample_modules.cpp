@@ -26,6 +26,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
+#include <algorithm>
 #include <sstream>
 #include <vector>
 

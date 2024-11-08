@@ -21,6 +21,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <mutex>
 
 namespace mrc::benchmarking {

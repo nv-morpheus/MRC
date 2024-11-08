@@ -19,6 +19,7 @@
 
 #include "mrc/core/logging.hpp"
 
+#include <glog/flags.h>
 #include <glog/logging.h>
 
 namespace mrc {

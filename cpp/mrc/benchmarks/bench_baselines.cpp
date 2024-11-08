@@ -21,6 +21,7 @@
 #include <benchmark/benchmark.h>
 #include <rxcpp/rx.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <iostream>

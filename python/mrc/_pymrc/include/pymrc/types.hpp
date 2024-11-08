@@ -22,6 +22,7 @@
 #include "mrc/segment/object.hpp"
 
 #include <nlohmann/json_fwd.hpp>
+#include <pybind11/pytypes.h>
 #include <rxcpp/rx.hpp>
 
 #include <functional>  // for function

@@ -24,6 +24,7 @@
 #include <pybind11/pytypes.h>
 #include <pylifecycle.h>
 
+#include <map>
 #include <mutex>
 #include <ostream>
 #include <stdexcept>

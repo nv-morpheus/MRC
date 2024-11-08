@@ -17,6 +17,8 @@
 
 #include "mrc/core/logging.hpp"
 
+#include <glog/flags.h>
+
 #include <atomic>
 
 namespace {

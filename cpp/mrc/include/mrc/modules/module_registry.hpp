@@ -19,6 +19,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <memory>
