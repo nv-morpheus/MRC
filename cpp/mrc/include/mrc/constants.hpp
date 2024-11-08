@@ -17,11 +17,8 @@
 
 #pragma once
 
-#define MRC_DEFAULT_BUFFERED_CHANNEL_SIZE 128
-#define MRC_DEFAULT_FIBER_PRIORITY 0
-#define MRC_MAX_EAGER_BUFFER_SIZE 128
+#include <cstddef>  // for std::size_t
+#include <cstdint>  // for UINT16_MAX, UINT32_MAX
 
-#define PORT_ID_MAX UINT16_MAX
-#define SEGMENT_ID_MAX UINT16_MAX
-#define SEGMENT_RANK_MAX UINT16_MAX
-#define SEGMENT_ADDRESS_MAX UINT32_MAX
+constexpr std::size_t MRC_DEFAULT_BUFFERED_CHANNEL_SIZE{128};  // NOLINT(readability-identifier-naming)
+constexpr int MRC_DEFAULT_FIBER_PRIORITY{0};                   // NOLINT(readability-identifier-naming)
