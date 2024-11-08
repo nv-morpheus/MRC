@@ -22,6 +22,10 @@
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
 
+#include <algorithm>  // for std::min
+#include <cstddef>    // for std::size_t
+#include <cstdint>    // for PTRDIFF_MAX
+
 namespace mrc::channel {
 
 template <typename T>
@@ -30,7 +34,11 @@ class BufferedChannel final : public Channel<T>
     using status_t = boost::fibers::channel_op_status;
 
   public:
-    BufferedChannel(std::size_t buffer_size = default_channel_size()) : m_channel(buffer_size) {}
+    BufferedChannel(std::size_t buffer_size = default_channel_size()) :
+      // This avoids a Walloc-size-larger-than warning about potentially allocating a size larger than PTRDIFF_MAX
+      m_channel(std::min(static_cast<std::size_t>(PTRDIFF_MAX), buffer_size))
+    {}
+
     ~BufferedChannel() final = default;
 
   private:
