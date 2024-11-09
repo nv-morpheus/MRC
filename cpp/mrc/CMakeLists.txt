@@ -208,8 +208,10 @@ endif()
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
 
-# Avoid warning from the lto-wrapper about serial compilation
-target_link_options(libmrc PUBLIC "-flto=auto")
+# Avoid GCC warning from the lto-wrapper about serial compilation
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_link_options(libmrc PUBLIC "-flto=auto")
+endif()
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
