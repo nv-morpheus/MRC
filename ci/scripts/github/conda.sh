@@ -19,6 +19,8 @@ set -e
 CI_SCRIPT_ARGS="$@"
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
+fetch_base_branch
+
 # Its important that we are in the base environment for the build
 rapids-logger "Activating Base Conda Environment"
 
