@@ -18,6 +18,7 @@
 #include "test_pymrc.hpp"
 
 #include "pymrc/utilities/object_cache.hpp"
+#include "pymrc/utilities/object_wrappers.hpp"
 
 #include <gtest/gtest.h>
 #include <pybind11/cast.h>

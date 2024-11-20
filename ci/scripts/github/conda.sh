@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@ set -e
 
 CI_SCRIPT_ARGS="$@"
 source ${WORKSPACE}/ci/scripts/github/common.sh
+
+fetch_base_branch
 
 # Its important that we are in the base environment for the build
 rapids-logger "Activating Base Conda Environment"

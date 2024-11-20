@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ cd mrc/
 git checkout ${GIT_BRANCH}
 git pull
 git checkout ${GIT_COMMIT}
+git fetch --tags
 
 export MRC_ROOT=$(pwd)
 export WORKSPACE=${MRC_ROOT}

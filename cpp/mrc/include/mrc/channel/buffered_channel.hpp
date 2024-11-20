@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,10 @@
 #include <boost/fiber/buffered_channel.hpp>
 #include <boost/fiber/channel_op_status.hpp>
 
+#include <algorithm>  // for std::min
+#include <cstddef>    // for std::ptrdiff_t, std::size_t
+#include <limits>     // for std::numeric_limits
+
 namespace mrc::channel {
 
 template <typename T>
@@ -30,7 +34,11 @@ class BufferedChannel final : public Channel<T>
     using status_t = boost::fibers::channel_op_status;
 
   public:
-    BufferedChannel(std::size_t buffer_size = default_channel_size()) : m_channel(buffer_size) {}
+    BufferedChannel(std::size_t buffer_size = default_channel_size()) :
+      // This avoids a Walloc-size-larger-than warning about potentially allocating a size larger than PTRDIFF_MAX
+      m_channel(std::min(static_cast<std::size_t>(std::numeric_limits<ptrdiff_t>::max()), buffer_size))
+    {}
+
     ~BufferedChannel() final = default;
 
   private:

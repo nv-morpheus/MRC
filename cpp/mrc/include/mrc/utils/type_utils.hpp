@@ -19,12 +19,13 @@
 
 #include <boost/type_index.hpp>
 
-#include <array>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <typeindex>
+#include <utility>
 #include <variant>
 
 namespace mrc {

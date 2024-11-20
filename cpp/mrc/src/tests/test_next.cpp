@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,11 @@
 #include "mrc/channel/ingress.hpp"
 #include "mrc/data/reusable_pool.hpp"
 #include "mrc/edge/edge_builder.hpp"
-#include "mrc/edge/edge_writable.hpp"
 #include "mrc/node/generic_node.hpp"
 #include "mrc/node/generic_sink.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/node/operators/conditional.hpp"
+#include "mrc/node/operators/router.hpp"
 #include "mrc/node/readable_endpoint.hpp"
 #include "mrc/node/rx_execute.hpp"
 #include "mrc/node/rx_node.hpp"
