@@ -23,8 +23,8 @@
 #include <boost/fiber/channel_op_status.hpp>
 
 #include <algorithm>  // for std::min
-#include <cstddef>    // for std::size_t
-#include <cstdint>    // for PTRDIFF_MAX
+#include <cstddef>    // for std::ptrdiff_t, std::size_t
+#include <limits>     // for std::numeric_limits
 
 namespace mrc::channel {
 
@@ -36,7 +36,7 @@ class BufferedChannel final : public Channel<T>
   public:
     BufferedChannel(std::size_t buffer_size = default_channel_size()) :
       // This avoids a Walloc-size-larger-than warning about potentially allocating a size larger than PTRDIFF_MAX
-      m_channel(std::min(static_cast<std::size_t>(PTRDIFF_MAX), buffer_size))
+      m_channel(std::min(static_cast<std::size_t>(std::numeric_limits<ptrdiff_t>::max()), buffer_size))
     {}
 
     ~BufferedChannel() final = default;
