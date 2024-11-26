@@ -16,7 +16,7 @@ files:
       - examples
       - documentation
       - python
-      - cudatoolkit
+      - cudatoolkit-dev
 
   ci:
     output: conda
@@ -31,7 +31,7 @@ files:
       - ci
       - documentation
       - python
-      - cudatoolkit
+      - cudatoolkit-dev
 
   checks:
     output: none
@@ -149,7 +149,7 @@ dependencies:
         packages:
           - python=3.10
 
-  cudatoolkit:
+  cudatoolkit-dev:
     specific:
       - output_types: [conda]
         matrices:
@@ -159,6 +159,17 @@ dependencies:
               - cuda-cudart-dev=12.5
               - cuda-nvml-dev=12.5
               - cuda-nvrtc-dev=12.5
+              - cuda-version=12.5
+
+  cudatoolkit:
+    specific:
+      - output_types: [conda]
+        matrices:
+          - matrix:
+              cuda: "12.5"
+            packages:
+              - cuda-cudart=12.5
+              - cuda-nvrtc=12.5
               - cuda-version=12.5
 
   runtime:

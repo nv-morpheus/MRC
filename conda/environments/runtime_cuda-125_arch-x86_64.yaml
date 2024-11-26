@@ -7,9 +7,8 @@ channels:
 - nvidia
 dependencies:
 - boost-cpp=1.84
-- cuda-cudart-dev=12.5
-- cuda-nvml-dev=12.5
-- cuda-nvrtc-dev=12.5
+- cuda-cudart=12.5
+- cuda-nvrtc=12.5
 - cuda-version=12.5
 - libgrpc=1.62.2
 - libhwloc=2.9.2
