@@ -38,6 +38,16 @@ files:
     includes:
       - checks
 
+  runtime:
+    output: conda
+    matrix:
+      cuda: ["12.5"]
+      arch: [x86_64]
+    includes:
+      - cudatoolkit
+      - python
+      - runtime
+
 channels:
   - conda-forge
   - rapidsai
@@ -150,3 +160,14 @@ dependencies:
               - cuda-nvml-dev=12.5
               - cuda-nvrtc-dev=12.5
               - cuda-version=12.5
+
+  runtime:
+    common:
+      - output_types: [conda]
+        packages:
+        - boost-cpp=1.84
+        - libgrpc=1.62.2
+        - libhwloc=2.9.2
+        - nlohmann_json=3.11
+        - rmm=24.10
+        - ucx=1.15
