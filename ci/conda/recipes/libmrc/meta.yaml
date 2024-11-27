@@ -60,7 +60,7 @@ requirements:
     - librmm {{ rapids_version }}
     - nlohmann_json =3.11
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
-    - pybind11-stubgen =0.10
+    - pybind11-stubgen =2.4.2
     - python {{ python }}
     - scikit-build =0.17
     - ucx =1.15
