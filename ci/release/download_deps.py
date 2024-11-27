@@ -33,6 +33,7 @@ UTILITIES_RELEASE_DIR = os.path.join(PROJ_ROOT, "external/utilities/ci/release")
 
 sys.path.append(UTILITIES_RELEASE_DIR)
 # pylint: disable=wrong-import-position
+from download_deps_lib import PACKAGE_TO_URL_FN_T  # noqa: E402
 from download_deps_lib import TAG_BARE  # noqa: E402
 from download_deps_lib import TAG_NAME_DASH_BARE  # noqa: E402
 from download_deps_lib import download_source_deps  # noqa: E402
@@ -54,7 +55,6 @@ PACKAGE_ALIASES = {  # <conda package nanme>: <upstream name>
 }
 
 KNOWN_GITHUB_URLS = {  # <package>: <github repo>, please keep sorted
-    'boost': 'https://github.com/boostorg/boost',
     'cpython': 'https://github.com/python/cpython',
     'gflags': 'https://github.com/gflags/gflags',
     'glog': 'https://github.com/google/glog',
@@ -75,13 +75,19 @@ KNOWN_GITLAB_URLS = {
     'pkg-config': 'https://gitlab.freedesktop.org/pkg-config/pkg-config',
 }
 
+OTHER_REPOS: dict[str, PACKAGE_TO_URL_FN_T] = {
+    # While boost is available on GitHub, the sub-libraries are in separate repos.
+    'boost': lambda name,
+             ver: f"https://archives.boost.io/release/{ver}/source/{name}_{ver.replace('.', '_')}.tar.bz2",
+}
+
 # Please keep sorted
 KNOWN_FIRST_PARTY = frozenset(
     {'cuda-cudart', 'cuda-nvrtc', 'cuda-nvtx', 'cuda-version', 'rapids-dask-dependency', 'rmm'})
 
 # Some of these packages are installed via CPM (pybind11), others are transitive deps who's version is determined by
 # other packages but we use directly (glog), while others exist in the build environment and are statically linked
-# (zlib) and not specified in the runtime environment.
+# and not specified in the runtime environment.
 # Unfortunately this means these versions will need to be updated manually, although any that exist in the resolved
 # environment will have their versions updated to match the resolved environment.
 KNOWN_NON_CONDA_DEPS = [
@@ -151,6 +157,7 @@ def main():
                                                 package_aliases=PACKAGE_ALIASES,
                                                 known_github_urls=KNOWN_GITHUB_URLS,
                                                 known_gitlab_urls=KNOWN_GITLAB_URLS,
+                                                other_repos=OTHER_REPOS,
                                                 known_first_party=KNOWN_FIRST_PARTY,
                                                 git_tag_format=GIT_TAG_FORMAT,
                                                 known_non_conda_deps=KNOWN_NON_CONDA_DEPS,
