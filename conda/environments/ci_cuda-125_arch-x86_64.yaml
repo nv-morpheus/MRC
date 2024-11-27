@@ -32,7 +32,7 @@ dependencies:
 - numactl=2.0.18
 - pkg-config=0.29
 - pre-commit
-- pybind11-stubgen=0.10
+- pybind11-stubgen=2.4.2
 - pytest
 - pytest-asyncio
 - pytest-timeout
