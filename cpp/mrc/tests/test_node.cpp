@@ -32,6 +32,7 @@
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
 
+#include <boost/fiber/operations.hpp>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include <rxcpp/rx.hpp>
@@ -743,7 +744,7 @@ TEST_P(ParallelTests, NodeMultiThread)
                                            }
 
                                            DVLOG(1) << context.info() << " Node got value: '" << x << "'" << std::endl;
-
+                                           boost::this_fiber::yield();
                                            EXPECT_TRUE(parallel_test.wait_for(250ms));
                                            // Double the value
                                            return x * 2;
