@@ -45,7 +45,7 @@ RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
-COPY ./conda/environments/all_cuda-125_arch-x86_64.yaml /opt/mrc/conda/environments/all_cuda-125_arch-x86_64.yaml
+COPY ./conda/environments /opt/mrc/conda/environments
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
     echo "create env: ${PROJ_NAME}" && \
