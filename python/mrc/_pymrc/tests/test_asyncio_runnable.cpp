@@ -47,6 +47,7 @@
 #include <atomic>
 #include <chrono>
 #include <coroutine>
+#include <cstddef>  // for size_t
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -345,9 +346,10 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows2086)
     py::exec(
         R"(
             async def fn(value):
+                print(f"Sink received value={value}")
                 if value == 1:
+                    print("Sink raising exception", flush=True)
                     raise RuntimeError("oops")
-                print(value)
         )",
         globals);
 
@@ -355,17 +357,20 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows2086)
 
     auto init = [&fn](mrc::segment::IBuilder& seg) {
         auto src = seg.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
-            int i = 0;
+            std::size_t i = 0;
             while (s.is_subscribed())
             {
                 if (i < 2)
                 {
                     s.on_next(i);
-                    ++i;
                 }
-                else
+
+                boost::this_fiber::sleep_for(10ms);
+
+                ++i;
+                if (i == 2)
                 {
-                    boost::this_fiber::sleep_for(10ms);
+                    DVLOG(1) << "source finished emitting values";
                 }
             }
 
