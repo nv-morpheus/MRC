@@ -63,7 +63,10 @@ class IEdgeReadable : public virtual Edge<T>, public IEdgeReadableBase
     }
 
     virtual channel::Status await_read(T& t) = 0;
-    // virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) = 0;
+    virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp)
+    {
+        throw std::runtime_error("Not implemented");
+    };
 };
 
 template <typename InputT, typename OutputT = InputT>
@@ -112,6 +115,20 @@ class ConvertingEdgeReadable<InputT, OutputT, std::enable_if_t<std::is_convertib
 
         return ret_val;
     }
+
+    channel::Status await_read_until(OutputT& data, const mrc::channel::time_point_t& tp) override
+    {
+        InputT source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = std::move(source_data);
+        }
+
+        return status;
+    }
 };
 
 template <typename InputT, typename OutputT>
@@ -137,6 +154,20 @@ class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<InputT, O
         data = m_lambda_fn(std::move(source_data));
 
         return ret_val;
+    }
+
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = m_lambda_fn(std::move(source_data));
+        }
+
+        return status;
     }
 
   private:

@@ -121,7 +121,7 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
     AsyncSink() :
       m_read_async([this](T& value, std::stop_source& stop_source) {
           using namespace std::chrono_literals;
-          auto edge              = std::static_pointer_cast<edge::EdgeChannelReader<T>>(this->get_readable_edge());
+          auto edge              = this->get_readable_edge();
           channel::Status status = channel::Status::timeout;
           while ((status == channel::Status::timeout || status == channel::Status::empty) &&
                  not stop_source.stop_requested())
