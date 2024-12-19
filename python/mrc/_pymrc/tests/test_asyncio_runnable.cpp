@@ -104,6 +104,11 @@ class __attribute__((visibility("default"))) PythonCallbackAsyncioRunnable : pub
             result = co_await pymrc::coro::PyTaskToCppAwaitable(std::move(coroutine));
         }
 
+        if (result.is_none())
+        {
+            co_return;
+        }
+
         auto result_casted = py::cast<int>(result);
 
         py::gil_scoped_release release;
