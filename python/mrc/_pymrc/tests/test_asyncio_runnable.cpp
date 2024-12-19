@@ -373,10 +373,6 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows2086)
                 boost::this_fiber::sleep_for(10ms);
 
                 ++i;
-                if (i == 2)
-                {
-                    DVLOG(1) << "source finished emitting values";
-                }
             }
 
             s.on_completed();
