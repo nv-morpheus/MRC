@@ -194,6 +194,25 @@ class ConvertingEdgeReadable<
 
         return ret_val;
     }
+
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            // We need to hold the GIL here, because casting from c++ -> pybind11::object allocates memory with
+            // Py_Malloc.
+            // Its also important to note that you do not want to hold the GIL when calling m_output->await_write, as
+            // that can trigger a deadlock with another fiber reading from the end of the channel
+            pymrc::AcquireGIL gil;
+
+            data = pybind11::cast(std::move(source_data));
+        }
+
+        return status;
+    }
 };
 
 template <typename OutputT>
@@ -224,6 +243,21 @@ struct ConvertingEdgeReadable<
         return ret_val;
     }
 
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            pymrc::AcquireGIL gil;
+
+            data = pybind11::cast<output_t>(pybind11::object(std::move(source_data)));
+        }
+
+        return status;
+    }
+
     static void register_converter()
     {
         EdgeConnector<input_t, output_t>::register_converter();
@@ -249,6 +283,19 @@ struct ConvertingEdgeReadable<pymrc::PyObjectHolder, pybind11::object, void>
 
         return ret_val;
     }
+
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            data = std::move(source_data);
+        }
+
+        return status;
+    }
 };
 
 template <>
@@ -269,6 +316,19 @@ struct ConvertingEdgeReadable<pybind11::object, pymrc::PyObjectHolder, void>
         data = pymrc::PyObjectHolder(std::move(source_data));
 
         return ret_val;
+    }
+
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            data = pymrc::PyObjectHolder(std::move(source_data));
+        }
+
+        return status;
     }
 
     static void register_converter()

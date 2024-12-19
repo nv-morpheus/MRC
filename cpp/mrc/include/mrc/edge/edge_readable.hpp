@@ -62,11 +62,8 @@ class IEdgeReadable : public virtual Edge<T>, public IEdgeReadableBase
         return EdgeTypeInfo::create<T>();
     }
 
-    virtual channel::Status await_read(T& t) = 0;
-    virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp)
-    {
-        throw std::runtime_error("Not implemented");
-    };
+    virtual channel::Status await_read(T& t)                                             = 0;
+    virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) = 0;
 };
 
 template <typename InputT, typename OutputT = InputT>

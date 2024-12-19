@@ -115,6 +115,12 @@ class EdgeReadableLambda : public edge::IEdgeReadable<T>
         return m_on_await_read(t);
     }
 
+    channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) override
+    {
+        throw std::runtime_error("Not implemented");
+        return channel::Status::error;
+    }
+
   private:
     std::function<channel::Status(T&)> m_on_await_read;
     std::function<void()> m_on_complete;
