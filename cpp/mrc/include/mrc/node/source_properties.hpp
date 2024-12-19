@@ -288,6 +288,11 @@ class ForwardingReadableProvider : public ReadableProvider<T>
             return m_parent.get_next(t);
         }
 
+        channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) override
+        {
+            throw std::runtime_error("Not implemented");
+        }
+
       private:
         ForwardingReadableProvider<T>& m_parent;
     };

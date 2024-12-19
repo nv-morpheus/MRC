@@ -47,6 +47,7 @@
 #include <atomic>
 #include <chrono>
 #include <coroutine>
+#include <cstddef>  // for size_t
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -60,6 +61,7 @@ class Scheduler;
 
 namespace py    = pybind11;
 namespace pymrc = mrc::pymrc;
+using namespace std::chrono_literals;
 using namespace std::string_literals;
 using namespace py::literals;
 
@@ -100,6 +102,11 @@ class __attribute__((visibility("default"))) PythonCallbackAsyncioRunnable : pub
             py::gil_scoped_release release;
 
             result = co_await pymrc::coro::PyTaskToCppAwaitable(std::move(coroutine));
+        }
+
+        if (result.is_none())
+        {
+            co_return;
         }
 
         auto result_casted = py::cast<int>(result);
@@ -316,7 +323,6 @@ auto run_operation(OperationT& operation) -> mrc::coroutines::Task<int>
 TEST_F(TestAsyncioRunnable, BoostFutureAwaitableOperationCanReturn)
 {
     auto operation = mrc::pymrc::BoostFutureAwaitableOperation<int()>([]() {
-        using namespace std::chrono_literals;
         boost::this_fiber::sleep_for(10ms);
         return 5;
     });
@@ -332,4 +338,62 @@ TEST_F(TestAsyncioRunnable, BoostFutureAwaitableOperationCanThrow)
     });
 
     ASSERT_THROW(mrc::coroutines::sync_wait(run_operation(operation)), std::runtime_error);
+}
+
+TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows2086)
+{
+    // Reproduces Morpheus issue #2086 where an exception is thrown in Async Python code, and the source does not emit
+    // any additional values. When the source emits an additional value or calls on_completed, the pipeline completes
+    // and the exception is thrown to the caller.
+    pymrc::Pipeline p;
+
+    py::object globals = py::globals();
+    py::exec(
+        R"(
+            async def fn(value):
+                print(f"Sink received value={value}")
+                if value == 1:
+                    print("Sink raising exception", flush=True)
+                    raise RuntimeError("oops")
+        )",
+        globals);
+
+    pymrc::PyObjectHolder fn = static_cast<py::object>(globals["fn"]);
+
+    auto init = [&fn](mrc::segment::IBuilder& seg) {
+        auto src = seg.make_source<int>("src", [](rxcpp::subscriber<int>& s) {
+            std::size_t i = 0;
+            while (s.is_subscribed())
+            {
+                if (i < 2)
+                {
+                    s.on_next(i);
+                }
+
+                boost::this_fiber::sleep_for(10ms);
+
+                ++i;
+            }
+
+            s.on_completed();
+        });
+
+        auto sink = seg.construct_object<PythonCallbackAsyncioRunnable>("sink", fn);
+
+        seg.make_edge(src, sink);
+    };
+
+    p.make_segment("seg1"s, init);
+
+    auto options = std::make_shared<mrc::Options>();
+
+    // AsyncioRunnable only works with the Thread engine due to asyncio loops being thread-specific.
+    options->engine_factories().set_default_engine_type(mrc::runnable::EngineType::Thread);
+
+    pymrc::Executor exec{options};
+    exec.register_pipeline(p);
+
+    exec.start();
+
+    ASSERT_THROW(exec.join(), std::runtime_error);
 }
