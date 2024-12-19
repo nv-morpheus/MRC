@@ -20,6 +20,7 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
+#include "mrc/channel/types.hpp"  // for time_point_t
 #include "mrc/edge/edge.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
@@ -62,6 +63,7 @@ class IEdgeReadable : public virtual Edge<T>, public IEdgeReadableBase
     }
 
     virtual channel::Status await_read(T& t) = 0;
+    // virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) = 0;
 };
 
 template <typename InputT, typename OutputT = InputT>
