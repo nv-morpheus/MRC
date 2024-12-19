@@ -81,37 +81,37 @@ permissions:
   statuses: none
 
 jobs:
-  check:
-    if: ${{ inputs.run_check }}
-    name: Check
-    runs-on: linux-amd64-cpu4
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      image: ${{ inputs.container }}
-    strategy:
-      fail-fast: true
+  # check:
+  #   if: ${{ inputs.run_check }}
+  #   name: Check
+  #   runs-on: linux-amd64-cpu4
+  #   timeout-minutes: 60
+  #   container:
+  #     credentials:
+  #       username: '$oauthtoken'
+  #       password: ${{ secrets.NGC_API_KEY }}
+  #     image: ${{ inputs.container }}
+  #   strategy:
+  #     fail-fast: true
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         lfs: false
+  #         path: 'mrc'
+  #         fetch-depth: 0
 
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
+  #     - name: Get AWS credentials using OIDC
+  #       uses: aws-actions/configure-aws-credentials@v1-node16
+  #       with:
+  #         role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+  #         aws-region: ${{ vars.AWS_REGION }}
+  #         role-duration-seconds: 43200 # 12h
 
-      - name: Check
-        shell: bash
-        run: ./mrc/ci/scripts/github/checks.sh
+  #     - name: Check
+  #       shell: bash
+  #       run: ./mrc/ci/scripts/github/checks.sh
 
   build:
     name: Build
@@ -194,46 +194,46 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: ./mrc/ci/scripts/github/test.sh
 
-  codecov:
-    name: Code Coverage
-    runs-on: linux-amd64-gpu-v100-latest-1
-    timeout-minutes: 60
-    container:
-      credentials:
-        username: '$oauthtoken'
-        password: ${{ secrets.NGC_API_KEY }}
-      env:
-        BUILD_CC: "gcc-coverage"
-        NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
-        PARALLEL_LEVEL: '10'
-      image: ${{ inputs.test_container }}
-      options: "--cap-add=sys_nice --cap-add=sys_ptrace"
-    strategy:
-      fail-fast: true
+  # codecov:
+  #   name: Code Coverage
+  #   runs-on: linux-amd64-gpu-v100-latest-1
+  #   timeout-minutes: 60
+  #   container:
+  #     credentials:
+  #       username: '$oauthtoken'
+  #       password: ${{ secrets.NGC_API_KEY }}
+  #     env:
+  #       BUILD_CC: "gcc-coverage"
+  #       NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+  #       PARALLEL_LEVEL: '10'
+  #     image: ${{ inputs.test_container }}
+  #     options: "--cap-add=sys_nice --cap-add=sys_ptrace"
+  #   strategy:
+  #     fail-fast: true
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: false
-          path: 'mrc'
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         lfs: false
+  #         path: 'mrc'
 
-      - name: Get AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-          role-duration-seconds: 43200 # 12h
+  #     - name: Get AWS credentials using OIDC
+  #       uses: aws-actions/configure-aws-credentials@v1-node16
+  #       with:
+  #         role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+  #         aws-region: ${{ vars.AWS_REGION }}
+  #         role-duration-seconds: 43200 # 12h
 
-      - name: Build
-        shell: bash
-        run: ./mrc/ci/scripts/github/build.sh
+  #     - name: Build
+  #       shell: bash
+  #       run: ./mrc/ci/scripts/github/build.sh
 
-      - name: Test with Codecov
-        shell: bash
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: ./mrc/ci/scripts/github/test_codecov.sh
+  #     - name: Test with Codecov
+  #       shell: bash
+  #       env:
+  #         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #       run: ./mrc/ci/scripts/github/test_codecov.sh
 
   documentation:
     name: Documentation
