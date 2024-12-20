@@ -22,9 +22,9 @@ REPORTS_DIR="${WORKSPACE_TMP}/reports"
 
 rapids-logger "Archiving benchmark reports"
 cd $(dirname ${REPORTS_DIR})
-tar cfj ${WORKSPACE_TMP}/benchmark_reports.tar.bz $(basename ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/benchmark_reports-${REAL_ARCH}.tar.bz $(basename ${REPORTS_DIR})
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-upload_artifact ${WORKSPACE_TMP}/benchmark_reports.tar.bz
+upload_artifact ${WORKSPACE_TMP}/benchmark_reports-${REAL_ARCH}.tar.bz
 
 exit $(cat ${WORKSPACE_TMP}/exit_status)

@@ -21,8 +21,8 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-download_artifact "build.tar.bz"
+download_artifact "build-${REAL_ARCH}.tar.bz"
 
-tar xf "${WORKSPACE_TMP}/build.tar.bz"
+tar xf "${WORKSPACE_TMP}/build-${REAL_ARCH}.tar.bz"
 
 mkdir -p ${WORKSPACE_TMP}/reports
