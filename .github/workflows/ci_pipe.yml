@@ -142,7 +142,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: Build:linux
+      - name: Build:linux:${{ matrix.arch }}-${{ matrix.build_cc }}
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
@@ -187,7 +187,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: Test:linux:x86_64
+      - name: Test:linux:${{ matrix.arch }}-${{ matrix.build_cc }}
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
