@@ -170,7 +170,7 @@ jobs:
         include:
           - runner: linux-amd64-gpu-v100-latest-1
             arch: "amd64"
-          - runner: linux-arm64-a100-latest-1
+          - runner: linux-arm64-gpu-a100-latest-1
             arch: "arm64"
 
     steps:
