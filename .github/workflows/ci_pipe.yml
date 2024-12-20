@@ -142,7 +142,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: Build:linux:${ matrix.arch }
+      - name: Build:linux
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
