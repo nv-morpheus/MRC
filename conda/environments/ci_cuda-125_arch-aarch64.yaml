@@ -22,7 +22,6 @@ dependencies:
 - glog>=0.7.1,<0.8
 - gtest=1.14
 - gxx=12.1
-- include-what-you-use=0.20
 - libgrpc=1.62.2
 - libhwloc=2.9.2
 - librmm=24.10

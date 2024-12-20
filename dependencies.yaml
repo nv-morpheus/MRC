@@ -93,10 +93,17 @@ dependencies:
           - yapf
 
   code_style:
-    common:
+    specific:
       - output_types: [conda]
-        packages:
-          - include-what-you-use=0.20
+        matrices:
+          - matrix:
+              arch: x86_64
+            packages:
+              # IWYU v0.20 doesn't support aarch64, but is supported in 0.21+
+              - include-what-you-use=0.20
+          - matrix:
+              arch: aarch64
+
 
   testing:
     common:
