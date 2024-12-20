@@ -172,7 +172,6 @@ jobs:
             arch: "amd64"
           - runner: linux-arm64-a100-latest-1
             arch: "arm64"
-            build_cc: "gcc"
 
     steps:
       - name: Checkout
