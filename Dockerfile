@@ -21,7 +21,7 @@ ARG CUDA_VER=12.5.1
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=22.04
 ARG PYTHON_VER=3.10
-ARG TARGETPLATFORM=linux/amd64
+ARG REAL_ARCH=notset
 
 # ============= base ===================
 FROM --platform=$TARGETPLATFORM ${FROM_IMAGE}:cuda${CUDA_VER}-${LINUX_DISTRO}${LINUX_VER}-py${PYTHON_VER} AS base
@@ -30,10 +30,12 @@ ARG PROJ_NAME=mrc
 ARG USERNAME=morpheus
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ARG REAL_ARCH
 
 SHELL ["/bin/bash",  "-c"]
+ENV REAL_ARCH=${REAL_ARCH}
 
-RUN --mount=type=cache,target=/var/cache/apt \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt_cache-${REAL_ARCH} \
     apt update &&\
     apt install --no-install-recommends -y \
     libnuma1 \
@@ -46,13 +48,14 @@ RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
-COPY ./conda/environments/all_cuda-125_arch-${NVARCH}.yaml /opt/mrc/conda/environments/all_cuda-125_arch-${NVARCH}.yaml
+COPY ./conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml /opt/mrc/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml
 
-RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked \
+RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked,id=conda_cache-${REAL_ARCH} \
     echo "create env: ${PROJ_NAME}" && \
     sudo -g conda -u $USERNAME \
     CONDA_ALWAYS_YES=true \
-    /opt/conda/bin/mamba env create -q -n ${PROJ_NAME} --file /opt/mrc/conda/environments/all_cuda-125_arch-${NVARCH}.yaml && \
+    /opt/conda/bin/conda env create --solver=libmamba -q -n ${PROJ_NAME} \
+        --file /opt/mrc/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
@@ -67,21 +70,22 @@ ENV CMAKE_CXX_COMPILER_LAUNCHER=
 ENV CMAKE_C_COMPILER_LAUNCHER=
 
 # ============ build ==================
-FROM base as build
+FROM --platform=$TARGETPLATFORM base as build
 
 # Add any build only dependencies here. For now there is none but we need the
 # target to get the CI runner build scripts to work
 
 # ============ test ==================
-FROM base as test
+FROM --platform=$TARGETPLATFORM base as test
 
 # Add any test only dependencies here. For now there is none but we need the
 # target to get the CI runner build scripts to work
 
 # ========= development ================
-FROM base as development
+FROM --platform=$TARGETPLATFORM base as development
+ARG REAL_ARCH
 
-RUN --mount=type=cache,target=/var/cache/apt \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt_cache-${REAL_ARCH} \
     apt-get update &&\
     apt-get install --no-install-recommends -y \
     gdb \
@@ -95,7 +99,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 # Install the .NET SDK. This is a workaround for https://github.com/dotnet/vscode-dotnet-runtime/issues/159
 # Once version 1.6.1 of the extension has been release, this can be removed
-RUN --mount=type=cache,target=/var/cache/apt \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt_cache-${REAL_ARCH} \
     wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb &&\
     sudo dpkg -i packages-microsoft-prod.deb &&\
     rm packages-microsoft-prod.deb &&\
