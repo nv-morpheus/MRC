@@ -151,7 +151,7 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: ${ matrix.runner }
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     container:
       credentials:
