@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -510,6 +510,9 @@ TEST_F(TestPipeline, Nodes1k)
 
 TEST_F(TestPipeline, EngineFactories)
 {
+#if defined(__aarch64__)
+    GTEST_SKIP() << "Skipping test for arm architectures ref: https://github.com/nv-morpheus/MRC/issues/525";
+#endif
     auto topology = mrc::system::Topology::Create();
 
     if (topology->core_count() < 8)

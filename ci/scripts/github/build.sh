@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,14 +35,14 @@ sccache --version
 
 if [[ "${BUILD_CC}" == "gcc" ]]; then
     rapids-logger "Building with GCC"
-    x86_64-conda-linux-gnu-cc --version
-    x86_64-conda-linux-gnu-c++ --version
+    ${REAL_ARCH}-conda-linux-gnu-cc --version
+    ${REAL_ARCH}-conda-linux-gnu-c++ --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_CACHE_FLAGS}"
 elif [[ "${BUILD_CC}" == "gcc-coverage" ]]; then
     rapids-logger "Building with GCC with gcov profile '-g -fprofile-arcs -ftest-coverage"
-    x86_64-conda-linux-gnu-cc --version
-    x86_64-conda-linux-gnu-c++ --version
-    x86_64-conda-linux-gnu-gcov --version
+    ${REAL_ARCH}-conda-linux-gnu-cc --version
+    ${REAL_ARCH}-conda-linux-gnu-c++ --version
+    ${REAL_ARCH}-conda-linux-gnu-gcov --version
     CMAKE_FLAGS="${CMAKE_BUILD_ALL_FEATURES} ${CMAKE_BUILD_WITH_CODECOV} ${CMAKE_CACHE_FLAGS}"
 else
     rapids-logger "Building with Clang"
@@ -68,13 +68,13 @@ fi
 
 if [[ "${BUILD_CC}" != "gcc-coverage" || ${LOCAL_CI} == "1" ]]; then
     rapids-logger "Archiving results"
-    tar cfj "${WORKSPACE_TMP}/dot_cache.tar.bz" .cache
-    tar cfj "${WORKSPACE_TMP}/build.tar.bz" build
+    tar cfj "${WORKSPACE_TMP}/dot_cache-${REAL_ARCH}.tar.bz" .cache
+    tar cfj "${WORKSPACE_TMP}/build-${REAL_ARCH}.tar.bz" build
     ls -lh ${WORKSPACE_TMP}/
 
     rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-    upload_artifact "${WORKSPACE_TMP}/build.tar.bz"
-    upload_artifact "${WORKSPACE_TMP}/dot_cache.tar.bz"
+    upload_artifact "${WORKSPACE_TMP}/build-${REAL_ARCH}.tar.bz"
+    upload_artifact "${WORKSPACE_TMP}/dot_cache-${REAL_ARCH}.tar.bz"
 fi
 
 rapids-logger "Success"
