@@ -309,7 +309,7 @@ jobs:
     name: Package
     if: ${{ inputs.conda_run_build }}
     needs: [benchmark, documentation, test]
-    runs-on: linux-amd64-cpu16
+    runs-on: linux-${{ matrix.arch }}-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -318,6 +318,8 @@ jobs:
       image: ${{ inputs.container }}
     strategy:
       fail-fast: true
+      matrix:
+        arch: ["amd64", "arm64"]
 
     steps:
       - name: Checkout
@@ -334,7 +336,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: conda
+      - name: conda:${{ matrix.arch }}
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"
