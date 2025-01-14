@@ -510,9 +510,6 @@ TEST_F(TestPipeline, Nodes1k)
 
 TEST_F(TestPipeline, EngineFactories)
 {
-#if defined(__aarch64__)
-    GTEST_SKIP() << "Skipping test for arm architectures ref: https://github.com/nv-morpheus/MRC/issues/525";
-#endif
     auto topology = mrc::system::Topology::Create();
 
     if (topology->core_count() < 8)
