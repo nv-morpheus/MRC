@@ -28,6 +28,8 @@ export PARALLEL_LEVEL=${PARALLEL_LEVEL:-${NUM_CORES}}
 # NUM_PROC is used by some of the other scripts
 export NUM_PROC=${PARALLEL_LEVEL}
 rapids-logger "Procs: ${NUM_CORES}"
+/usr/bin/lscpu
+
 rapids-logger "Memory"
 
 /usr/bin/free -g
