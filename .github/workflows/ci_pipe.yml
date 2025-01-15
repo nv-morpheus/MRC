@@ -115,7 +115,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: linux-amd64-cpu16
+    runs-on: linux-${{ matrix.arch }}-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -125,6 +125,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        arch: ["amd64", "arm64"]
         build_cc: ["gcc", "clang"]
 
     steps:
@@ -141,7 +142,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: Build:linux:x86_64
+      - name: Build:linux:${{ matrix.arch }}-${{ matrix.build_cc }}
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
@@ -150,7 +151,7 @@ jobs:
   test:
     name: Test
     needs: [build]
-    runs-on: linux-amd64-gpu-v100-latest-1
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     container:
       credentials:
@@ -164,7 +165,13 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        arch: ["amd64", "arm64"]
         build_cc: ["gcc", "clang"]
+        include:
+          - runner: linux-amd64-gpu-v100-latest-1
+            arch: "amd64"
+          - runner: linux-arm64-gpu-a100-latest-1
+            arch: "arm64"
 
     steps:
       - name: Checkout
@@ -180,7 +187,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: Test:linux:x86_64
+      - name: Test:linux:${{ matrix.arch }}-${{ matrix.build_cc }}
         shell: bash
         env:
           BUILD_CC: ${{ matrix.build_cc }}
@@ -302,7 +309,7 @@ jobs:
     name: Package
     if: ${{ inputs.conda_run_build }}
     needs: [benchmark, documentation, test]
-    runs-on: linux-amd64-cpu16
+    runs-on: linux-${{ matrix.arch }}-cpu16
     timeout-minutes: 60
     container:
       credentials:
@@ -311,6 +318,8 @@ jobs:
       image: ${{ inputs.container }}
     strategy:
       fail-fast: true
+      matrix:
+        arch: ["amd64", "arm64"]
 
     steps:
       - name: Checkout
@@ -327,7 +336,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 43200 # 12h
 
-      - name: conda
+      - name: conda:${{ matrix.arch }}
         shell: bash
         env:
           CONDA_TOKEN: "${{ secrets.CONDA_TOKEN }}"

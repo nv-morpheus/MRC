@@ -18,12 +18,18 @@ rapids-logger "Env Setup"
 source /opt/conda/etc/profile.d/conda.sh
 export MRC_ROOT=${MRC_ROOT:-$(git rev-parse --show-toplevel)}
 cd ${MRC_ROOT}
+export REAL_ARCH=${REAL_ARCH:-$(arch)}
+
 # For non-gpu hosts nproc will correctly report the number of cores we are able to use
 # On a GPU host however nproc will report the total number of cores and PARALLEL_LEVEL
 # will be defined specifying the subset we are allowed to use.
 NUM_CORES=$(nproc)
 export PARALLEL_LEVEL=${PARALLEL_LEVEL:-${NUM_CORES}}
+# NUM_PROC is used by some of the other scripts
+export NUM_PROC=${PARALLEL_LEVEL}
 rapids-logger "Procs: ${NUM_CORES}"
+/usr/bin/lscpu
+
 rapids-logger "Memory"
 
 /usr/bin/free -g
@@ -31,11 +37,9 @@ rapids-logger "Memory"
 rapids-logger "user info"
 id
 
-# NUM_PROC is used by some of the other scripts
-export NUM_PROC=${PARALLEL_LEVEL:-$(nproc)}
 export BUILD_CC=${BUILD_CC:-"gcc"}
 
-export CONDA_ENV_YML="${MRC_ROOT}/conda/environments/all_cuda-125_arch-x86_64.yaml"
+export CONDA_ENV_YML="${MRC_ROOT}/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml"
 
 export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON"
@@ -52,7 +56,7 @@ PR_NUM="${GITHUB_REF_NAME##*/}"
 # S3 vars
 export S3_URL="s3://rapids-downloads/ci/mrc"
 export DISPLAY_URL="https://downloads.rapids.ai/ci/mrc"
-export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${NVARCH}/${BUILD_CC}"
+export ARTIFACT_ENDPOINT="/pull-request/${PR_NUM}/${GIT_COMMIT}/${REAL_ARCH}/${BUILD_CC}"
 export ARTIFACT_URL="${S3_URL}${ARTIFACT_ENDPOINT}"
 
 if [[ "${LOCAL_CI}" == "1" ]]; then
@@ -62,7 +66,7 @@ else
 fi
 
 # Set sccache env vars
-export SCCACHE_S3_KEY_PREFIX=mrc-${NVARCH}-${BUILD_CC}
+export SCCACHE_S3_KEY_PREFIX=mrc-${REAL_ARCH}-${BUILD_CC}
 export SCCACHE_BUCKET=rapids-sccache-east
 export SCCACHE_REGION="us-east-2"
 export SCCACHE_IDLE_TIMEOUT=32768

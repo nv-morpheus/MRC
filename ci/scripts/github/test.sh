@@ -22,11 +22,11 @@ source ${WORKSPACE}/ci/scripts/github/common.sh
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
-download_artifact "dot_cache.tar.bz"
-download_artifact "build.tar.bz"
+download_artifact "dot_cache-${REAL_ARCH}.tar.bz"
+download_artifact "build-${REAL_ARCH}.tar.bz"
 
-tar xf "${WORKSPACE_TMP}/dot_cache.tar.bz"
-tar xf "${WORKSPACE_TMP}/build.tar.bz"
+tar xf "${WORKSPACE_TMP}/dot_cache-${REAL_ARCH}.tar.bz"
+tar xf "${WORKSPACE_TMP}/build-${REAL_ARCH}.tar.bz"
 
 REPORTS_DIR="${WORKSPACE_TMP}/reports"
 mkdir -p ${WORKSPACE_TMP}/reports
@@ -57,10 +57,10 @@ set -e
 
 rapids-logger "Archiving test reports"
 cd $(dirname ${REPORTS_DIR})
-tar cfj ${WORKSPACE_TMP}/test_reports.tar.bz $(basename ${REPORTS_DIR})
+tar cfj ${WORKSPACE_TMP}/test_reports-${REAL_ARCH}.tar.bz $(basename ${REPORTS_DIR})
 
 rapids-logger "Pushing results to ${DISPLAY_ARTIFACT_URL}/"
-upload_artifact ${WORKSPACE_TMP}/test_reports.tar.bz
+upload_artifact ${WORKSPACE_TMP}/test_reports-${REAL_ARCH}.tar.bz
 
 TEST_RESULTS=$(($CTEST_RESULTS+$PYTEST_RESULTS))
 exit ${TEST_RESULTS}
