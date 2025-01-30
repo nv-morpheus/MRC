@@ -28,6 +28,7 @@
 #include <coroutine>
 #include <cstdint>
 #include <memory>
+#include <ratio>
 #include <utility>
 #include <vector>
 
@@ -41,42 +42,69 @@ TEST_F(TestCoroIoScheduler, YieldFor)
 {
     auto scheduler = coroutines::IoScheduler::get_instance();
 
+    static constexpr std::chrono::milliseconds Delay{10};
+
     auto task = [scheduler]() -> coroutines::Task<> {
-        co_await scheduler->yield_for(10ms);
+        co_await scheduler->yield_for(Delay);
     };
 
+    auto start = coroutines::clock_t::now();
     coroutines::sync_wait(task());
+    auto stop = coroutines::clock_t::now();
+
+    ASSERT_GE(stop - start, Delay);
 }
 
 TEST_F(TestCoroIoScheduler, YieldUntil)
 {
     auto scheduler = coroutines::IoScheduler::get_instance();
 
-    auto task = [scheduler]() -> coroutines::Task<> {
-        co_await scheduler->yield_until(coroutines::clock_t::now() + 10ms);
+    coroutines::clock_t::time_point target_time{};
+
+    auto task = [scheduler, &target_time]() -> coroutines::Task<> {
+        target_time = coroutines::clock_t::now() + 10ms;
+        co_await scheduler->yield_until(target_time);
     };
 
     coroutines::sync_wait(task());
+
+    auto current_time = coroutines::clock_t::now();
+
+    ASSERT_GE(current_time, target_time);
 }
 
 TEST_F(TestCoroIoScheduler, Concurrent)
 {
     auto scheduler = coroutines::IoScheduler::get_instance();
 
+    auto per_task_overhead = [&] {
+        static constexpr std::chrono::milliseconds SmallestDelay{1};
+        auto start = coroutines::clock_t::now();
+        coroutines::sync_wait([scheduler]() -> coroutines::Task<> {
+            co_await scheduler->yield_for(SmallestDelay);
+        }());
+        auto stop = coroutines::clock_t::now();
+        return (stop - start) - SmallestDelay;
+    }();
+
+    static constexpr std::chrono::milliseconds TaskDuration{10};
+
     auto task = [scheduler]() -> coroutines::Task<> {
-        co_await scheduler->yield_for(10ms);
+        co_await scheduler->yield_for(TaskDuration);
     };
 
     auto start = coroutines::clock_t::now();
 
     std::vector<coroutines::Task<>> tasks;
 
-    for (uint32_t i = 0; i < 1000; i++)
+    const uint32_t NumTasks{1'000};
+    for (uint32_t i = 0; i < NumTasks; i++)
     {
         tasks.push_back(task());
     }
 
     coroutines::sync_wait(coroutines::when_all(std::move(tasks)));
+    auto stop = coroutines::clock_t::now();
 
-    ASSERT_LT(coroutines::clock_t::now() - start, 20ms);
+    ASSERT_LT(stop - start, TaskDuration + per_task_overhead * NumTasks);
 }
