@@ -7,13 +7,13 @@ channels:
 - nvidia
 dependencies:
 - boost-cpp=1.84
-- cuda-cudart=12.5
-- cuda-nvrtc=12.5
-- cuda-version=12.5
+- cuda-cudart=12.8
+- cuda-nvrtc=12.8
+- cuda-version=12.8
 - libgrpc=1.62.2
 - libhwloc=2.9.2
 - nlohmann_json=3.11
 - python=3.10
 - rmm=24.10
 - ucx=1.15
-name: runtime_cuda-125_arch-x86_64
+name: runtime_cuda-128_arch-x86_64

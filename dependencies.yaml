@@ -3,7 +3,7 @@ files:
   all:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64, aarch64]
     includes:
       - build
@@ -21,7 +21,7 @@ files:
   ci:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64, aarch64]
     includes:
       - build
@@ -41,7 +41,7 @@ files:
   runtime:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64]
     includes:
       - cudatoolkit
@@ -161,23 +161,23 @@ dependencies:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.5"
+              cuda: "12.8"
             packages:
-              - cuda-cudart-dev=12.5
-              - cuda-nvml-dev=12.5
-              - cuda-nvrtc-dev=12.5
-              - cuda-version=12.5
+              - cuda-cudart-dev=12.8
+              - cuda-nvml-dev=12.8
+              - cuda-nvrtc-dev=12.8
+              - cuda-version=12.8
 
   cudatoolkit:
     specific:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.5"
+              cuda: "12.8"
             packages:
-              - cuda-cudart=12.5
-              - cuda-nvrtc=12.5
-              - cuda-version=12.5
+              - cuda-cudart=12.8
+              - cuda-nvrtc=12.8
+              - cuda-version=12.8
 
   runtime:
     common:
