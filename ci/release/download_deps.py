@@ -127,7 +127,7 @@ def main():
     conda_json_cmd = CONDA_JSON_CMD.format(mrc_version=mrc_version)
     args = parse_args(conda_json_cmd=conda_json_cmd,
                       default_conda_yaml=os.path.join(PROJ_ROOT,
-                                                      "conda/environments/runtime_cuda-125_arch-x86_64.yaml"),
+                                                      "conda/environments/runtime_cuda-128_arch-x86_64.yaml"),
                       default_conda_json=os.path.join(PROJ_ROOT, ".tmp/conda_env_pkgs.json"))
     log_level = logging._nameToLevel[args.log_level.upper()]
     logging.basicConfig(level=log_level, format="%(message)s")
