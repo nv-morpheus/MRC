@@ -33,6 +33,7 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/core/task_queue.hpp"
 #include "mrc/memory/literals.hpp"
