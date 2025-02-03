@@ -15,6 +15,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
+# MRC 25.02.00 (03 Feb 2025)
+
+## 🐛 Bug Fixes
+
+- Bugfix: Fix `IoScheduler::yield_until` and improve tests ([#533](https://github.com/nv-morpheus/MRC/pull/533)) [@willkill07](https://github.com/willkill07)
+- Fix bug where `AsyncioRunnable` hangs if `process_one` throws and the source is not emitting new values ([#523](https://github.com/nv-morpheus/MRC/pull/523)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 🛠️ Improvements
+
+- Update CR year ([#526](https://github.com/nv-morpheus/MRC/pull/526)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Add Arm64 builds to CI ([#524](https://github.com/nv-morpheus/MRC/pull/524)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Chore: improve concept definitions ([#521](https://github.com/nv-morpheus/MRC/pull/521)) [@willkill07](https://github.com/willkill07)
+- Automate downloading of dependent source packages ([#519](https://github.com/nv-morpheus/MRC/pull/519)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Avoid compiler warnings ([#518](https://github.com/nv-morpheus/MRC/pull/518)) [@dagardner-nv](https://github.com/dagardner-nv)
+
 # MRC 24.10.00 (01 Nov 2024)
 
 ## 🐛 Bug Fixes
