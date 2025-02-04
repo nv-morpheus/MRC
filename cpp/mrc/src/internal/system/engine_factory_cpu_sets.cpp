@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,12 +51,18 @@ EngineFactoryCpuSets generate_engine_factory_cpu_sets(const Topology& topology,
 
     if (options.engine_factories().ignore_hyper_threads())
     {
-        auto core_count = hwloc_get_nbobjs_inside_cpuset_by_type(topology.handle(), &cpu_set.bitmap(), HWLOC_OBJ_CORE);
-        for (int i = 0; i < core_count; i++)
+        struct hwloc_obj* core_obj{nullptr};
+        while (true)
         {
-            auto* core_obj =
-                hwloc_get_obj_inside_cpuset_by_type(topology.handle(), &cpu_set.bitmap(), HWLOC_OBJ_CORE, i);
-            pe_set.on(core_obj->os_index);
+            core_obj = hwloc_get_next_obj_inside_cpuset_by_type(topology.handle(),
+                                                                &cpu_set.bitmap(),
+                                                                HWLOC_OBJ_CORE,
+                                                                core_obj);
+            if (core_obj == nullptr)
+            {
+                break;
+            }
+            pe_set.on(core_obj->logical_index);
         }
         DVLOG(10) << "hyper_threading [off]: " << pe_set;
     }

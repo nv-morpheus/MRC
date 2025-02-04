@@ -30,7 +30,7 @@ dependencies:
   - pkg-config=0.29
   - python=3.10
   - scikit-build>=0.12
-  - mrc=24.10
+  - mrc=25.02
   - sysroot_linux-64>=2.28
   - pip:
     - cython

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -207,6 +207,11 @@ if(MRC_ENABLE_CODECOV)
 endif()
 
 target_compile_features(libmrc PUBLIC cxx_std_20)
+
+# Avoid GCC warning from the lto-wrapper about serial compilation
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_link_options(libmrc PUBLIC "-flto=auto")
+endif()
 
 set_target_properties(libmrc PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 

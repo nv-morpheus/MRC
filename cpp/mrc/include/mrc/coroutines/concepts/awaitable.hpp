@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,14 @@
 #include <utility>
 
 namespace mrc::coroutines::concepts {
+
+// clang-format off
+/**
+ * The concept declares a type that is required to be one of the passed types
+ */
+template<typename T, typename ... CandidatesT>
+concept one_of = (... or std::same_as<T, CandidatesT>);
+
 /**
  * This concept declares a type that is required to meet the c++20 coroutine operator co_await()
  * retun type.  It requires the following three member functions:
@@ -52,14 +60,11 @@ namespace mrc::coroutines::concepts {
  *      await_resume() -> decltype(auto)
  *          Where the return type on await_resume is the requested return of the awaitable.
  */
-// clang-format off
 template<typename T>
 concept awaiter = requires(T t, std::coroutine_handle<> c)
 {
     { t.await_ready() } -> std::same_as<bool>;
-    requires std::same_as<decltype(t.await_suspend(c)), void> ||
-             std::same_as<decltype(t.await_suspend(c)), bool> ||
-             std::same_as<decltype(t.await_suspend(c)), std::coroutine_handle<>>;
+    { t.await_suspend(c) } -> one_of<void, bool, std::coroutine_handle<>>;
     { t.await_resume() };
 };
 
@@ -77,10 +82,8 @@ template<typename T>
 concept awaiter_void = requires(T t, std::coroutine_handle<> c)
 {
     { t.await_ready() } -> std::same_as<bool>;
-    requires std::same_as<decltype(t.await_suspend(c)), void> ||
-        std::same_as<decltype(t.await_suspend(c)), bool> ||
-        std::same_as<decltype(t.await_suspend(c)), std::coroutine_handle<>>;
-    {t.await_resume()} -> std::same_as<void>;
+    { t.await_suspend(c) } -> one_of<void, bool, std::coroutine_handle<>>;
+    { t.await_resume() } -> std::same_as<void>;
 };
 
 template<typename T>

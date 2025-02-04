@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2018-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2018-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +79,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 24.10.00
+  VERSION 25.02.00
   LANGUAGES C CXX
 )
 

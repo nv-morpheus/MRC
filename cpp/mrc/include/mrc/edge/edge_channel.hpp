@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "mrc/channel/types.hpp"  // for time_point_t
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
 #include "mrc/edge/forward.hpp"
@@ -43,6 +44,11 @@ class EdgeChannelReader : public IEdgeReadable<T>
     virtual channel::Status await_read(T& t)
     {
         return m_channel->await_read(t);
+    }
+
+    virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp)
+    {
+        return m_channel->await_read_until(t, tp);
     }
 
   private:

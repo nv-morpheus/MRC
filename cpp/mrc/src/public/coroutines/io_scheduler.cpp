@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,6 +179,19 @@ auto IoScheduler::yield_for(std::chrono::milliseconds amount) -> mrc::coroutines
     }
     else
     {
+        co_return co_await yield_until(coroutines::clock_t::now() + amount);
+    }
+}
+
+auto IoScheduler::yield_until(time_point_t time) -> mrc::coroutines::Task<void>
+{
+    // If the requested time is in the past (or now!) bail out!
+    if (time <= clock_t::now())
+    {
+        co_await schedule();
+    }
+    else
+    {
         // Yield/timeout tasks are considered live in the scheduler and must be accounted for. Note
         // that if the user gives an invalid amount and schedule() is directly called it will account
         // for the scheduled task there.
@@ -187,34 +200,9 @@ auto IoScheduler::yield_for(std::chrono::milliseconds amount) -> mrc::coroutines
         // Yielding does not requiring setting the timer position on the poll info since
         // it doesn't have a corresponding 'event' that can trigger, it always waits for
         // the timeout to occur before resuming.
-
-        detail::PollInfo pi{};
-        add_timer_token(clock_t::now() + amount, pi);
-        co_await pi;
-
-        m_size.fetch_sub(1, std::memory_order::release);
-    }
-    co_return;
-}
-
-auto IoScheduler::yield_until(time_point_t time) -> mrc::coroutines::Task<void>
-{
-    auto now = clock_t::now();
-
-    // If the requested time is in the past (or now!) bail out!
-    if (time <= now)
-    {
-        co_await schedule();
-    }
-    else
-    {
-        m_size.fetch_add(1, std::memory_order::release);
-
-        auto amount = std::chrono::duration_cast<std::chrono::milliseconds>(time - now);
-
-        detail::PollInfo pi{};
-        add_timer_token(now + amount, pi);
-        co_await pi;
+        detail::PollInfo poll_info{};
+        add_timer_token(time, poll_info);
+        co_await poll_info;
 
         m_size.fetch_sub(1, std::memory_order::release);
     }

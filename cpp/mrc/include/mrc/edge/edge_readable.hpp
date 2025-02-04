@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@
 #include "mrc/channel/channel.hpp"
 #include "mrc/channel/egress.hpp"
 #include "mrc/channel/ingress.hpp"
+#include "mrc/channel/types.hpp"  // for time_point_t
 #include "mrc/edge/edge.hpp"
 #include "mrc/exceptions/runtime_error.hpp"
 #include "mrc/node/forward.hpp"
@@ -61,7 +62,8 @@ class IEdgeReadable : public virtual Edge<T>, public IEdgeReadableBase
         return EdgeTypeInfo::create<T>();
     }
 
-    virtual channel::Status await_read(T& t) = 0;
+    virtual channel::Status await_read(T& t)                                             = 0;
+    virtual channel::Status await_read_until(T& t, const mrc::channel::time_point_t& tp) = 0;
 };
 
 template <typename InputT, typename OutputT = InputT>
@@ -110,6 +112,20 @@ class ConvertingEdgeReadable<InputT, OutputT, std::enable_if_t<std::is_convertib
 
         return ret_val;
     }
+
+    channel::Status await_read_until(OutputT& data, const mrc::channel::time_point_t& tp) override
+    {
+        InputT source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = std::move(source_data);
+        }
+
+        return status;
+    }
 };
 
 template <typename InputT, typename OutputT>
@@ -135,6 +151,20 @@ class LambdaConvertingEdgeReadable : public ConvertingEdgeReadableBase<InputT, O
         data = m_lambda_fn(std::move(source_data));
 
         return ret_val;
+    }
+
+    channel::Status await_read_until(output_t& data, const mrc::channel::time_point_t& tp) override
+    {
+        input_t source_data;
+        auto status = this->upstream().await_read_until(source_data, tp);
+
+        if (status == channel::Status::success)
+        {
+            // Convert to the sink type
+            data = m_lambda_fn(std::move(source_data));
+        }
+
+        return status;
     }
 
   private:

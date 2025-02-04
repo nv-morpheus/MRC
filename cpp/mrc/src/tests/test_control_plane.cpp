@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,7 @@
 #include "internal/system/system_provider.hpp"
 #include "internal/system/topology.hpp"
 
+#include "mrc/channel/status.hpp"
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
 #include "mrc/core/task_queue.hpp"
 #include "mrc/memory/literals.hpp"

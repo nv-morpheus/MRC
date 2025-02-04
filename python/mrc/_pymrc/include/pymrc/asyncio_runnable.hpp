@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@
 #include <mrc/coroutines/closable_ring_buffer.hpp>
 #include <mrc/coroutines/task.hpp>
 #include <mrc/coroutines/task_container.hpp>
+#include <mrc/edge/edge_channel.hpp>  // for EdgeChannelReader
 #include <mrc/exceptions/exception_catcher.hpp>
 #include <mrc/node/sink_properties.hpp>
 #include <mrc/runnable/forward.hpp>
@@ -118,8 +119,17 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
 {
   protected:
     AsyncSink() :
-      m_read_async([this](T& value) {
-          return this->get_readable_edge()->await_read(value);
+      m_read_async([this](T& value, std::stop_source& stop_source) {
+          using namespace std::chrono_literals;
+          auto edge              = this->get_readable_edge();
+          channel::Status status = channel::Status::timeout;
+          while ((status == channel::Status::timeout || status == channel::Status::empty) &&
+                 not stop_source.stop_requested())
+          {
+              status = edge->await_read_until(value, std::chrono::system_clock::now() + 10ms);
+          }
+
+          return status;
       })
     {
         // Set the default channel
@@ -129,13 +139,13 @@ class AsyncSink : public mrc::node::WritableProvider<T>,
     /**
      * @brief Asynchronously reads a value from the sink's channel
      */
-    coroutines::Task<mrc::channel::Status> read_async(T& value)
+    coroutines::Task<mrc::channel::Status> read_async(T& value, std::stop_source& stop_source)
     {
-        co_return co_await m_read_async(std::ref(value));
+        co_return co_await m_read_async(std::ref(value), std::ref(stop_source));
     }
 
   private:
-    BoostFutureAwaitableOperation<mrc::channel::Status(T&)> m_read_async;
+    BoostFutureAwaitableOperation<mrc::channel::Status(T&, std::stop_source&)> m_read_async;
 };
 
 /**
@@ -297,8 +307,8 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
     {
         InputT data;
 
-        auto read_status = co_await this->read_async(data);
-
+        mrc::channel::Status read_status = mrc::channel::Status::success;
+        read_status                      = co_await this->read_async(data, m_stop_source);
         if (read_status != mrc::channel::Status::success)
         {
             break;
@@ -309,6 +319,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::main_task(std::shared_ptr<m
 
     co_await outstanding_tasks.garbage_collect_and_yield_until_empty();
 
+    // this is a no-op if there are no exceptions
     catcher.rethrow_next_exception();
 }
 
@@ -339,6 +350,7 @@ coroutines::Task<> AsyncioRunnable<InputT, OutputT>::process_one(InputT value,
     } catch (...)
     {
         catcher.push_exception(std::current_exception());
+        on_state_update(state_t::Kill);
     }
 }
 
