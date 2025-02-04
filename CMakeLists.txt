@@ -79,7 +79,7 @@ morpheus_utils_initialize_package_manager(
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 25.02.00
+  VERSION 25.06.00
   LANGUAGES C CXX
 )
 
@@ -112,6 +112,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
   endif()
 
+  # Suppress unused argument during compilation due to -L being included
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-command-line-argument")
 endif()
 
 # Now enable CUDA
