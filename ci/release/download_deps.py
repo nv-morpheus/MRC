@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,8 +77,7 @@ KNOWN_GITLAB_URLS = {
 
 OTHER_REPOS: dict[str, PACKAGE_TO_URL_FN_T] = {
     # While boost is available on GitHub, the sub-libraries are in separate repos.
-    'boost': lambda name,
-             ver: f"https://archives.boost.io/release/{ver}/source/{name}_{ver.replace('.', '_')}.tar.bz2",
+    'boost': lambda name, ver: f"https://archives.boost.io/release/{ver}/source/{name}_{ver.replace('.', '_')}.tar.bz2",
 }
 
 # Please keep sorted
