@@ -24,6 +24,7 @@
 
 #include "mrc/channel/ingress.hpp"
 #include "mrc/channel/status.hpp"
+#include "mrc/channel/types.hpp"
 #include "mrc/edge/edge_connector.hpp"
 #include "mrc/edge/edge_readable.hpp"
 #include "mrc/edge/edge_writable.hpp"
