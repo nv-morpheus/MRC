@@ -26,17 +26,12 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_MESSAGE_CONTEXT_SHOW": "ON",
-                
-                "MRC_USE_CONDA": "ON",
                 "MRC_USE_IWYU": "OFF",
-
                 "MRC_BUILD_DOCS": "OFF",
-                
                 "MRC_BUILD_TESTS": "ON",
                 "MRC_BUILD_BENCHMARKS": "ON",
-                
                 "MRC_BUILD_PYTHON": "ON",
-                "MRC_PYTHON_PERFORM_INSTALL" : "ON"
+                "MRC_PYTHON_PERFORM_INSTALL": "ON"
             }
         },
         {
