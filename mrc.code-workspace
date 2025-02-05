@@ -177,7 +177,7 @@
                     "debug-test"
                 ],
                 "request": "launch",
-                "type": "python"
+                "type": "debugpy"
             }
         ],
         // Use IntelliSense to learn about possible attributes.
@@ -187,8 +187,7 @@
     },
     "settings": {
         "C_Cpp.files.exclude": {
-            "**/.vscode": true,
-            "**/vcpkg_installed": true
+            "**/.vscode": true
         },
         "[cmake]": {
             "editor.tabSize": 2
