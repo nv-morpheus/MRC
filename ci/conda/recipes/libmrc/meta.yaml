@@ -14,7 +14,7 @@
 # limitations under the License.
 
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
-{% set py_version = environ.get('CONDA_PY', '3.10') %}
+{% set py_version = environ.get('CONDA_PY', '3.12') %}
 {% set cuda_version = '.'.join(environ.get('CUDA', '12.8').split('.')[:2]) %}
 
 package:
