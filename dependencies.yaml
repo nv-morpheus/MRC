@@ -79,6 +79,7 @@ dependencies:
           - pybind11-stubgen=0.10
           - scikit-build=0.17
           - ucx=1.15
+          - versioneer=0.29
 
   checks:
     common:
