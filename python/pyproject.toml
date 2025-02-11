@@ -14,7 +14,19 @@
 # limitations under the License.
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "wheel", "versioneer[toml]==0.29"]
+build-backend = "setuptools.build_meta"
+
+# See the docstring in versioneer.py for instructions. Note that you must
+# re-run 'versioneer.py setup' after changing this section, and commit the
+# resulting files.
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "mrc/_version.py"
+versionfile_build = "mrc/_version.py"
+tag_prefix = "v"
+parentdir_prefix = "mrc-"
 
 [tool.yapfignore]
 ignore_patterns = [
