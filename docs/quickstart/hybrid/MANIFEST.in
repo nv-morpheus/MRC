@@ -1,3 +1,2 @@
 recursive-include mrc_qs_hybrid *.so
-include versioneer.py
 include mrc_qs_hybrid/_version.py
