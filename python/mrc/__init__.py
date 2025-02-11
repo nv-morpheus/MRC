@@ -31,3 +31,6 @@ from .core.subscriber import Observable
 from .core.subscriber import Observer
 from .core.subscriber import Subscriber
 from .core.subscriber import Subscription
+
+from . import _version
+__version__ = _version.get_versions()['version']
