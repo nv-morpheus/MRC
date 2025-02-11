@@ -40,4 +40,5 @@ dependencies:
 - python=3.12
 - scikit-build=0.17
 - ucx=1.15
+- versioneer=0.29
 name: ci_cuda-128_arch-x86_64

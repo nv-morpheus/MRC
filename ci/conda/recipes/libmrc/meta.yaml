@@ -64,6 +64,7 @@ requirements:
     - python {{ python }}
     - scikit-build =0.17
     - ucx =1.15
+    - versioneer =0.29
 
 outputs:
   - name: libmrc
