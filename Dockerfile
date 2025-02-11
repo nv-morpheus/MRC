@@ -17,7 +17,7 @@
 
 
 ARG FROM_IMAGE="rapidsai/ci-conda"
-ARG CUDA_VER=12.5.1
+ARG CUDA_VER=12.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=22.04
 ARG PYTHON_VER=3.10
@@ -48,14 +48,14 @@ RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
-COPY ./conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml /opt/mrc/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml
+COPY ./conda/environments/all_cuda-128_arch-${REAL_ARCH}.yaml /opt/mrc/conda/environments/all_cuda-128_arch-${REAL_ARCH}.yaml
 
 RUN --mount=type=cache,target=/opt/conda/pkgs,sharing=locked,id=conda_cache-${REAL_ARCH} \
     echo "create env: ${PROJ_NAME}" && \
     sudo -g conda -u $USERNAME \
     CONDA_ALWAYS_YES=true \
     /opt/conda/bin/conda env create --solver=libmamba -q -n ${PROJ_NAME} \
-        --file /opt/mrc/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml && \
+        --file /opt/mrc/conda/environments/all_cuda-128_arch-${REAL_ARCH}.yaml && \
     chmod -R a+rwX /opt/conda && \
     rm -rf /tmp/conda
 
