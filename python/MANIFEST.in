@@ -1,4 +1,3 @@
-include versioneer.py
 include mrc/_version.py
 recursive-include mrc py.typed *.pyi
 recursive-include mrc/_pymrc/tests *.so

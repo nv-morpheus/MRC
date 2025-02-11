@@ -30,6 +30,5 @@ parentdir_prefix = "mrc-"
 
 [tool.yapfignore]
 ignore_patterns = [
-  "**/versioneer.py",
   "**/_version.py"
 ]
