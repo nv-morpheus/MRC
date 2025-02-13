@@ -14,7 +14,7 @@
 
 include(GenerateExportHeader)
 
-rapids_find_package(Python 3.8 REQUIRED
+rapids_find_package(Python 3.12 REQUIRED
   COMPONENTS
     Development
     Interpreter
