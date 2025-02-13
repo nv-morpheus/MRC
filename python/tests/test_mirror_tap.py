@@ -15,7 +15,11 @@
 
 import mrc
 
-VERSION = [int(cmpt) for cmpt in mrc.__version__.split(".")]
+
+def get_numeric_version_parts(version: str):
+    parts = version.split(".")[:3]
+    parts[-1] = parts[-1].split("a")[0]  # remove any alpha tags
+    return [int(part) for part in parts]
 
 
 def test_mirror_tap_init():
@@ -186,7 +190,7 @@ def test_single_pipeline_tap_and_buffer_with_module():
     test_name = "test_single_pipeline_tap_and_buffer"
 
     registry = mrc.ModuleRegistry
-    release_version = [int(x) for x in mrc.__version__.split(".")]
+    release_version = get_numeric_version_parts(mrc.__version__)
 
     old_release_version = [22, 10, 0]
     no_version_patch = [22, 10]

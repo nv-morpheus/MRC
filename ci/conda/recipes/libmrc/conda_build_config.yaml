@@ -26,7 +26,7 @@ cuda_compiler_version:
   - 12.8
 
 python:
-  - 3.10
+  - 3.12
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -2

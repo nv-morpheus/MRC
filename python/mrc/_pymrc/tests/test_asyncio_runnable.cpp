@@ -230,7 +230,9 @@ TEST_F(TestAsyncioRunnable, UseAsyncioGeneratorThrows)
 
     exec.start();
 
-    ASSERT_THROW(exec.join(), std::runtime_error);
+    // Note: Python's RuntimeError gets wrapped in a pybind11::error_already_set exception.
+    //       This means that std::runtime_error should NOT be caught here.
+    ASSERT_THROW(exec.join(), pybind11::error_already_set);
 }
 
 TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
@@ -286,8 +288,18 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
 
     exec.start();
 
-    ASSERT_THROW(exec.join(), std::runtime_error);
+    // Note: Python's RuntimeError gets wrapped in a pybind11::error_already_set exception.
+    //       This means that std::runtime_error should NOT be caught here.
+    ASSERT_THROW(exec.join(), pybind11::error_already_set);
 }
+
+// Helper for always calling a function on scope exit
+template <typename FnT>
+struct OnScopeExit {
+    FnT fn;
+    OnScopeExit(FnT&& fn) : fn(std::move(fn)) {}
+    ~OnScopeExit() { fn(); }
+};
 
 template <typename OperationT>
 auto run_operation(OperationT& operation) -> mrc::coroutines::Task<int>
@@ -295,16 +307,8 @@ auto run_operation(OperationT& operation) -> mrc::coroutines::Task<int>
     auto stop_source = std::stop_source();
 
     auto coro = [](auto& operation, auto stop_source) -> mrc::coroutines::Task<int> {
-        try
-        {
-            auto value = co_await operation();
-            stop_source.request_stop();
-            co_return value;
-        } catch (...)
-        {
-            stop_source.request_stop();
-            throw;
-        }
+        OnScopeExit on_exit{[&] { stop_source.request_stop(); }};
+        co_return co_await operation();
     }(operation, stop_source);
 
     coro.resume();
@@ -395,5 +399,7 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows2086)
 
     exec.start();
 
-    ASSERT_THROW(exec.join(), std::runtime_error);
+    // Note: Python's RuntimeError gets wrapped in a pybind11::error_already_set exception.
+    //       This means that std::runtime_error should NOT be caught here.
+    ASSERT_THROW(exec.join(), pybind11::error_already_set);
 }

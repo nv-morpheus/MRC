@@ -20,7 +20,7 @@ ARG FROM_IMAGE="rapidsai/ci-conda"
 ARG CUDA_VER=12.8.0
 ARG LINUX_DISTRO=ubuntu
 ARG LINUX_VER=22.04
-ARG PYTHON_VER=3.10
+ARG PYTHON_VER=3.12
 ARG REAL_ARCH=notset
 
 # ============= base ===================
