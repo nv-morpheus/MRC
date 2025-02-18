@@ -61,6 +61,8 @@ add_library(pymrc
   src/watchers.cpp
 )
 
+add_compile_definitions("PYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF=1")
+
 add_library(${PROJECT_NAME}::pymrc ALIAS pymrc)
 
 target_link_libraries(pymrc
