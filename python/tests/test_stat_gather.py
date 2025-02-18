@@ -67,13 +67,13 @@ def double_float_type2(x):
 def init_double_segment(builder: mrc.Builder):
     # CXX double source with heterogeneous segment node composition
     python_source_double = builder.make_source("python_source_double", double_source)
-    python_node_2x_1 = builder.make_node("python_node_2x_1", double_float_type1)
+    python_node_2x_1 = builder.make_node("python_node_2x_1", mrc.core.operators.map(double_float_type1))
     builder.make_edge(python_source_double, python_node_2x_1)
 
-    python_node_2x_2 = builder.make_node("python_node_2x_2", double_float_type2)
+    python_node_2x_2 = builder.make_node("python_node_2x_2", mrc.core.operators.map(double_float_type2))
     builder.make_edge(python_node_2x_1, python_node_2x_2)
 
-    python_node_2x_3 = builder.make_node("python_node_2x_3", double_float_type1)
+    python_node_2x_3 = builder.make_node("python_node_2x_3", mrc.core.operators.map(double_float_type1))
     builder.make_edge(python_node_2x_2, python_node_2x_3)
 
     python_sink_double = builder.make_sink("python_sink_double", on_next, on_error, on_completed)
