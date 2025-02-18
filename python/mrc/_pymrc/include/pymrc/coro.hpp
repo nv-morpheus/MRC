@@ -205,7 +205,7 @@ class PYBIND11_EXPORT PyTaskToCppAwaitable
             {
                 // Save the result value
                 m_result = future.attr("result")();
-            } catch (pybind11::error_already_set)
+            } catch (const pybind11::error_already_set&)
             {
                 m_exception_ptr = std::current_exception();
             }

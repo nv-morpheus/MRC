@@ -49,7 +49,7 @@ pybind11::bytes PythonPickleInterface::pickle(pybind11::object obj)
     try
     {
         return m_func_dumps(obj);
-    } catch (pybind11::error_already_set err)
+    } catch (const pybind11::error_already_set& err)
     {
         LOG(ERROR) << "Object serialization failed: " << err.what();
         throw;
@@ -61,7 +61,7 @@ pybind11::object PythonPickleInterface::unpickle(pybind11::bytes bytes)
     try
     {
         return m_func_loads(bytes);
-    } catch (pybind11::error_already_set err)
+    } catch (const pybind11::error_already_set& err)
     {
         LOG(ERROR) << "Object deserialization failed: " << err.what();
         throw;

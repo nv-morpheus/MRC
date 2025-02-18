@@ -74,7 +74,7 @@ std::shared_ptr<WritableEdgeHandle> EdgeBuilder::do_adapt_ingress(const EdgeType
             auto converted_edge = fn_converter(ingress->get_ingress());
 
             return std::make_shared<WritableEdgeHandle>(converted_edge);
-        } catch (std::runtime_error e)
+        } catch (const std::exception& e)
         {
             // Last attempt, check if types are the same and return ingress handle.
             if (target_type.full_type() == ingress->get_type().full_type())
@@ -140,7 +140,7 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
             auto converted_edge = fn_converter(egress->get_egress());
 
             return std::make_shared<ReadableEdgeHandle>(converted_edge);
-        } catch (std::runtime_error e)
+        } catch (const std::exception& e)
         {
             // Last attempt, check if types are the same and return ingress handle.
             if (target_type.full_type() == egress->get_type().full_type())
@@ -148,7 +148,7 @@ std::shared_ptr<ReadableEdgeHandle> EdgeBuilder::do_adapt_egress(const EdgeTypeI
                 return egress;
             }
 
-            throw e;
+            throw;
         }
     }
 

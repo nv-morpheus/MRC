@@ -148,7 +148,7 @@ struct NvmlState
         {
             // Try to load the NVML library. If its not found, operate without GPUs
             m_nvml_handle = std::make_unique<NvmlHandle>();
-        } catch (std::runtime_error e)
+        } catch (const std::runtime_error& e)
         {
             VLOG(1) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
             return;
