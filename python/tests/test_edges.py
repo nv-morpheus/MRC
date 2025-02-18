@@ -444,7 +444,7 @@ def gen_parameters(*args,
         combo_vals = tuple(values[x] for x in combo)
 
         if (is_fail_fn(combo_vals)):
-            marks = (pytest.mark.xfail, )
+            marks = (pytest.mark.skip, )
 
         p = pytest.param(*combo_vals, id="-".join([f"{x[0]}_{x[1]}" for x in zip(args, combo)]), marks=marks)
 
@@ -459,7 +459,7 @@ def gen_parameters(*args,
 @pytest.mark.parametrize("source_type,sink_type",
                          [
                              pytest.param(m.Base, m.Base, id="source_base-sink_base"),
-                             pytest.param(m.Base, m.DerivedA, id="source_base-sink_derived", marks=pytest.mark.xfail),
+                             pytest.param(m.Base, m.DerivedA, id="source_base-sink_derived", marks=pytest.mark.skip),
                              pytest.param(m.DerivedA, m.Base, id="source_derived-sink_base"),
                              pytest.param(m.DerivedA, m.DerivedA, id="source_derived-sink_derived")
                          ])

@@ -20,6 +20,20 @@ import pytest
 
 
 @pytest.fixture(scope="session")
+def mrc_version():
+    import mrc
+
+    return mrc.__version__
+
+
+@pytest.fixture(scope="session")
+def mrc_numeric_version_parts(mrc_version: str):
+    parts = mrc_version.split(".")[:3]
+    parts[-1] = parts[-1].split("a")[0]  # remove any alpha tags
+    return [int(part) for part in parts]
+
+
+@pytest.fixture(scope="session")
 def is_debugger_attached():
     import sys
 
