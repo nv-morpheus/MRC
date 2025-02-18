@@ -21,8 +21,6 @@ import pytest
 import mrc
 import mrc.tests.sample_modules
 
-VERSION = [int(cmpt) for cmpt in mrc.tests.sample_modules.__version__.split(".")]
-
 packet_count = 0
 
 
@@ -42,15 +40,14 @@ def test_contains():
     assert registry.contains("SimpleModule", "default") is not True
 
 
-def test_is_version_compatible():
+def test_is_version_compatible(mrc_numeric_version_parts: list[int]):
     registry = mrc.ModuleRegistry
 
-    release_version = [int(x) for x in mrc.__version__.split(".")]
     old_release_version = [22, 10, 0]
     no_version_patch = [22, 10]
     no_version_minor_and_patch = [22]
 
-    assert registry.is_version_compatible(release_version)
+    assert registry.is_version_compatible(mrc_numeric_version_parts)
     assert registry.is_version_compatible(old_release_version) is not True
     assert registry.is_version_compatible(no_version_patch) is not True
     assert registry.is_version_compatible(no_version_minor_and_patch) is not True
@@ -97,24 +94,24 @@ def test_module_registry_register_bad_version():
 
 
 # Purpose: Test basic dynamic module registration and un-registration
-def test_module_registry_register_good_version():
+def test_module_registry_register_good_version(mrc_numeric_version_parts: list[int]):
     registry = mrc.ModuleRegistry
 
     registry.register_module("test_module_registry_register_good_version_module",
                              "mrc_unittests",
-                             VERSION,
+                             mrc_numeric_version_parts,
                              module_init_fn)
     registry.unregister_module("test_module_registry_register_good_version_module", "mrc_unittests")
 
 
 # Purpose: Test basic dynamic module registration, and indirectly test correct shutdown/cleanup behavior
-def test_module_registry_register_good_version_no_unregister():
+def test_module_registry_register_good_version_no_unregister(mrc_numeric_version_parts: list[int]):
     # Ensure that we don"t throw any errors or hang if we don"t explicitly unregister the python module
     registry = mrc.ModuleRegistry
 
     registry.register_module("test_module_registry_register_good_version_no_unregister_module",
                              "mrc_unittests",
-                             VERSION,
+                             mrc_numeric_version_parts,
                              module_init_fn)
 
 
@@ -134,7 +131,7 @@ def test_get_module_constructor():
         registry.get_module_constructor("SimpleModule", "default")
 
 
-def test_module_intitialize():
+def test_module_intitialize(mrc_numeric_version_parts: list[int]):
     module_name = "test_py_source_from_cpp"
     config = {"source_count": 42}
     registry = mrc.ModuleRegistry
@@ -173,7 +170,7 @@ def test_module_intitialize():
         builder.make_edge(source_module.output_port('source'), sink)
 
     # Register the module
-    registry.register_module(module_name, "mrc_unittest", VERSION, module_initializer)
+    registry.register_module(module_name, "mrc_unittest", mrc_numeric_version_parts, module_initializer)
 
     pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_wrapper)
@@ -191,7 +188,7 @@ def test_module_intitialize():
 
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper
-def test_py_registered_nested_modules():
+def test_py_registered_nested_modules(mrc_numeric_version_parts: list[int]):
     global packet_count
 
     # Stand-alone module, no input or output ports
@@ -228,7 +225,10 @@ def test_py_registered_nested_modules():
         builder.load_module("test_py_registered_nested_module", "mrc_unittests", "my_loaded_module!", {})
 
     registry = mrc.ModuleRegistry
-    registry.register_module("test_py_registered_nested_module", "mrc_unittests", VERSION, module_initializer)
+    registry.register_module("test_py_registered_nested_module",
+                             "mrc_unittests",
+                             mrc_numeric_version_parts,
+                             module_initializer)
 
     pipeline = mrc.Pipeline()
     pipeline.make_segment("ModuleAsSource_Segment", init_caller)
@@ -247,7 +247,7 @@ def test_py_registered_nested_modules():
 
 # Purpose: Create a self-contained (no input/output ports), nested, dynamic module, and instantiate two copies in our
 # init wrapper -- since both versions capture our global 'packet_count', we should see double the packets.
-def test_py_registered_nested_copied_modules():
+def test_py_registered_nested_copied_modules(mrc_numeric_version_parts: list[int]):
     global packet_count
 
     def module_initializer(builder: mrc.Builder):
@@ -281,7 +281,10 @@ def test_py_registered_nested_copied_modules():
         builder.make_edge(source_mod.output_port("source"), sink)
 
     registry = mrc.ModuleRegistry
-    registry.register_module("test_py_registered_nested_copied_module", "mrc_unittests", VERSION, module_initializer)
+    registry.register_module("test_py_registered_nested_copied_module",
+                             "mrc_unittests",
+                             mrc_numeric_version_parts,
+                             module_initializer)
 
     def init_wrapper(builder: mrc.Builder):
         global packet_count
@@ -312,7 +315,7 @@ def test_py_registered_nested_copied_modules():
 # via builder.make_source.
 #
 # Purpose: This is intended to check dynamic module creation, registration, and retrieval
-def test_py_dynamic_module_source():
+def test_py_dynamic_module_source(mrc_numeric_version_parts: list[int]):
     global packet_count
     module_name = "test_py_dyn_source"
 
@@ -326,7 +329,7 @@ def test_py_dynamic_module_source():
         builder.register_module_output("source", source1)
 
     registry = mrc.ModuleRegistry
-    registry.register_module(module_name, "mrc_unittests", VERSION, module_initializer)
+    registry.register_module(module_name, "mrc_unittests", mrc_numeric_version_parts, module_initializer)
 
     def init_wrapper(builder: mrc.Builder):
         global packet_count
@@ -368,7 +371,7 @@ def test_py_dynamic_module_source():
 #
 # Purpose: This is intended to check dynamic module creation, registration, and retrieval, in conjunction with module
 # nesting.
-def test_py_dynamic_module_from_cpp_source():
+def test_py_dynamic_module_from_cpp_source(mrc_numeric_version_parts: list[int]):
     global packet_count
     module_name = "test_py_dyn_source_from_cpp"
 
@@ -379,7 +382,7 @@ def test_py_dynamic_module_from_cpp_source():
         builder.register_module_output("source", source_mod.output_port("source"))
 
     registry = mrc.ModuleRegistry
-    registry.register_module(module_name, "mrc_unittests", VERSION, module_initializer)
+    registry.register_module(module_name, "mrc_unittests", mrc_numeric_version_parts, module_initializer)
 
     def init_wrapper(builder: mrc.Builder):
         global packet_count
@@ -417,7 +420,7 @@ def test_py_dynamic_module_from_cpp_source():
 
 
 # Purpose: Test creation of a dynamic module that acts as a sink [source] -> [sink_module]
-def test_py_dynamic_module_sink():
+def test_py_dynamic_module_sink(mrc_numeric_version_parts: list[int]):
     global packet_count
     module_name = "test_py_dyn_sink"
 
@@ -440,7 +443,7 @@ def test_py_dynamic_module_sink():
         builder.register_module_input("sink", sink)
 
     registry = mrc.ModuleRegistry
-    registry.register_module(module_name, "mrc_unittests", VERSION, module_initializer)
+    registry.register_module(module_name, "mrc_unittests", mrc_numeric_version_parts, module_initializer)
 
     def init_wrapper(builder: mrc.Builder):
         global packet_count
@@ -471,7 +474,7 @@ def test_py_dynamic_module_sink():
 
 # Purpose: Test creation of a dynamic module that acts as a sink [source] -> [sink_module], where sink module loads a
 # c++ defined module from the registry and exposes its sink as the sink for the dynamic module.
-def test_py_dynamic_module_from_cpp_sink():
+def test_py_dynamic_module_from_cpp_sink(mrc_numeric_version_parts: list[int]):
     global packet_count
     module_name = "test_py_dyn_sink_from_cpp"
 
@@ -482,7 +485,7 @@ def test_py_dynamic_module_from_cpp_sink():
         builder.register_module_input("sink", sink_mod.input_port("sink"))
 
     registry = mrc.ModuleRegistry
-    registry.register_module(module_name, "mrc_unittests", VERSION, module_initializer)
+    registry.register_module(module_name, "mrc_unittests", mrc_numeric_version_parts, module_initializer)
 
     def gen_data():
         for x in range(42):
