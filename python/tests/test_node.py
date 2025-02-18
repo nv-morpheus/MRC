@@ -87,7 +87,7 @@ def test_launch_options_source(source_type: str, pe_count: int, engines_per_pe: 
 
             hit_count += 1
 
-        hit_counter = seg.make_node("hit_counter", node_fn)
+        hit_counter = seg.make_node("hit_counter", mrc.core.operators.map(node_fn))
         seg.make_edge(src_node, hit_counter)
 
     pipeline = mrc.Pipeline()
@@ -157,7 +157,7 @@ def test_launch_options_source_component(source_type: str, pe_count: int, engine
 
             hit_count += 1
 
-        hit_counter = seg.make_node("hit_counter", node_fn)
+        hit_counter = seg.make_node("hit_counter", mrc.core.operators.map(node_fn))
         seg.make_edge(src_node, hit_counter)
 
     pipeline = mrc.Pipeline()
@@ -202,7 +202,7 @@ def test_launch_options_iterable():
 
             hit_count += 1
 
-        hit_counter = seg.make_node("hit_counter", node_fn)
+        hit_counter = seg.make_node("hit_counter", mrc.core.operators.map(node_fn))
         seg.make_edge(src_node, hit_counter)
 
     pipeline = mrc.Pipeline()
