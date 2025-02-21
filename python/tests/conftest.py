@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import re
 import typing
 
 import pytest
@@ -29,7 +30,11 @@ def mrc_version():
 @pytest.fixture(scope="session")
 def mrc_numeric_version_parts(mrc_version: str):
     parts = mrc_version.split(".")[:3]
-    parts[-1] = parts[-1].split("a")[0]  # remove any alpha tags
+    strip_digits = r"^(\d+).*"
+    last_part = parts[-1]
+    match = re.match(strip_digits, last_part)
+    if match:
+        parts[-1] = match.group(1)
     return [int(part) for part in parts]
 
 
