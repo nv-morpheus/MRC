@@ -221,9 +221,8 @@ def test_stat_gather_full_noreset_start_stop():
                            ("python_sink_double", "sink")]
 
     # Convert to global names
-    required_components = [
-        (f"/stat_gather_full_noreset_start_stop/{name}", node_type) for name, node_type in required_components
-    ]
+    required_components = [(f"/stat_gather_full_noreset_start_stop/{name}", node_type)
+                           for name, node_type in required_components]
 
     active_trace_count = 0
     for i in range(1, 10):

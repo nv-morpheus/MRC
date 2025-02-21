@@ -30,6 +30,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <ostream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -75,8 +76,7 @@ PythonOperator OperatorsProxy::build(PyFuncHolder<void(const PyObjectObservable&
 
                     } catch (const py::error_already_set& err)
                     {
-                        LOG(ERROR)
-                            << "Python occurred during full node subscription. Error: "  << err.what();
+                        LOG(ERROR) << "Python occurred during full node subscription. Error: " << err.what();
 
                         // Rethrow python exceptions
                         throw;

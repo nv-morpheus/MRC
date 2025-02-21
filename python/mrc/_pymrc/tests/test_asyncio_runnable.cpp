@@ -295,10 +295,14 @@ TEST_F(TestAsyncioRunnable, UseAsyncioTasksThrows)
 
 // Helper for always calling a function on scope exit
 template <typename FnT>
-struct OnScopeExit {
+struct OnScopeExit
+{
     FnT fn;
     OnScopeExit(FnT&& fn) : fn(std::move(fn)) {}
-    ~OnScopeExit() { fn(); }
+    ~OnScopeExit()
+    {
+        fn();
+    }
 };
 
 template <typename OperationT>
@@ -307,7 +311,9 @@ auto run_operation(OperationT& operation) -> mrc::coroutines::Task<int>
     auto stop_source = std::stop_source();
 
     auto coro = [](auto& operation, auto stop_source) -> mrc::coroutines::Task<int> {
-        OnScopeExit on_exit{[&] { stop_source.request_stop(); }};
+        OnScopeExit on_exit{[&] {
+            stop_source.request_stop();
+        }};
         co_return co_await operation();
     }(operation, stop_source);
 
