@@ -10,7 +10,7 @@ repos:
         rev: 5.12.0
         hooks:
               - id: isort
-                args: ["--settings-file=./python/setup.cfg"]
+                args: ["--filter-files", "--settings-file=./python/setup.cfg"]
                 files: ^python/
       - repo: https://github.com/PyCQA/flake8
         rev: 6.1.0
