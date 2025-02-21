@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import _version
 from .core import logging
 from .core import operators
-from .core.common import __version__
 from .core.executor import Executor
 from .core.executor import Future
 from .core.options import Config
@@ -32,5 +32,4 @@ from .core.subscriber import Observer
 from .core.subscriber import Subscriber
 from .core.subscriber import Subscription
 
-from . import _version
 __version__ = _version.get_versions()['version']
