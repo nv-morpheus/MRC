@@ -30,12 +30,17 @@ def mrc_version():
 @pytest.fixture(scope="session")
 def mrc_numeric_version_parts(mrc_version: str):
     parts = mrc_version.split(".")[:3]
-    strip_digits = r"^(\d+).*"
-    last_part = parts[-1]
-    match = re.match(strip_digits, last_part)
-    if match:
-        parts[-1] = match.group(1)
-    return [int(part) for part in parts]
+    strip_digits = re.compile(r"^(\d+).*")
+
+    numeric_parts = []
+    for part in parts:
+        match = strip_digits.match(part)
+        if match:
+            numeric_parts.append(int(match.group(1)))
+        else:
+            numeric_parts.append(0)
+
+    return numeric_parts
 
 
 @pytest.fixture(scope="session")
