@@ -36,7 +36,7 @@
 #include <utility>
 
 // Dont directly include python headers
-// IWYU pragma: no_include <genobject.h>
+// IWYU pragma: no_include <cpython/genobject.h>
 
 namespace mrc::pymrc::coro {
 
