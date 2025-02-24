@@ -25,7 +25,7 @@ setup(name="mrc",
       description="mrc",
       version=versioneer.get_version(),
       classifiers=[
-          "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.10"
+          "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.12"
       ],
       author="NVIDIA Corporation",
       setup_requires=[],
