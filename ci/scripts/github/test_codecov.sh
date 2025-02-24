@@ -17,6 +17,9 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
+
+fetch_base_branch
+
 /usr/bin/nvidia-smi
 
 conda activate mrc

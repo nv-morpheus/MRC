@@ -18,6 +18,8 @@ set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
 
+fetch_base_branch
+
 update_conda_env
 
 if [[ "${LOCAL_CI}" == "" ]]; then
