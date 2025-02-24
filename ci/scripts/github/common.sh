@@ -102,12 +102,10 @@ print_env_vars
 
 function fetch_base_branch_gh_api() {
     # For PRs, $GIT_BRANCH is like: pull-request/989
-    git fetch --tags
     REPO_NAME=$(basename "${GITHUB_REPOSITORY}")
     ORG_NAME="${GITHUB_REPOSITORY_OWNER}"
     PR_NUM="${GITHUB_REF_NAME##*/}"
 
-    rapids-logger "Git describe: $(git describe --tags)"
     rapids-logger "Retrieving base branch from GitHub API"
     [[ -n "$GH_TOKEN" ]] && CURL_HEADERS=('-H' "Authorization: token ${GH_TOKEN}")
     RESP=$(
