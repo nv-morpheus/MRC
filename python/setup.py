@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import versioneer
 from setuptools import find_namespace_packages
 from setuptools import setup
-
-import versioneer
 
 ##############################################################################
 # - Python package generation ------------------------------------------------
@@ -26,7 +25,7 @@ setup(name="mrc",
       description="mrc",
       version=versioneer.get_version(),
       classifiers=[
-          "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.10"
+          "Intended Audience :: Developers", "Programming Language :: Python", "Programming Language :: Python :: 3.12"
       ],
       author="NVIDIA Corporation",
       setup_requires=[],

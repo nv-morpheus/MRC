@@ -15,8 +15,6 @@
 
 import mrc
 
-VERSION = [int(cmpt) for cmpt in mrc.__version__.split(".")]
-
 
 def test_mirror_tap_init():
     mirror_tap_one = mrc.MirrorTap("test_mirror_tap")
@@ -178,7 +176,7 @@ def test_single_pipeline_tap_and_buffer_with_additional_ports():
     assert (packets_mirrored >= packet_count * 0.5)
 
 
-def test_single_pipeline_tap_and_buffer_with_module():
+def test_single_pipeline_tap_and_buffer_with_module(mrc_numeric_version_parts: list[int]):
     global packet_count, packets_main, packets_mirrored
     packet_count, packets_main, packets_mirrored = 10000, 0, 0
 
@@ -186,13 +184,12 @@ def test_single_pipeline_tap_and_buffer_with_module():
     test_name = "test_single_pipeline_tap_and_buffer"
 
     registry = mrc.ModuleRegistry
-    release_version = [int(x) for x in mrc.__version__.split(".")]
 
     old_release_version = [22, 10, 0]
     no_version_patch = [22, 10]
     no_version_minor_and_patch = [22]
 
-    assert registry.is_version_compatible(release_version)
+    assert registry.is_version_compatible(mrc_numeric_version_parts)
     assert registry.is_version_compatible(old_release_version) is not True
     assert registry.is_version_compatible(no_version_patch) is not True
     assert registry.is_version_compatible(no_version_minor_and_patch) is not True

@@ -19,6 +19,5 @@ build-backend = "setuptools.build_meta"
 
 [tool.yapfignore]
 ignore_patterns = [
-  "**/versioneer.py",
   "**/_version.py"
 ]

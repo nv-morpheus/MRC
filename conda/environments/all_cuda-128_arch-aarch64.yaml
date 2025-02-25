@@ -39,7 +39,7 @@ dependencies:
 - ninja=1.11
 - nlohmann_json=3.11
 - numactl=2.0.18
-- numpy=1.24
+- numpy=1.26
 - pkg-config=0.29
 - pre-commit
 - pybind11-stubgen=0.10
@@ -47,8 +47,9 @@ dependencies:
 - pytest-asyncio
 - pytest-timeout
 - python-graphviz
-- python=3.10
+- python=3.12
 - scikit-build=0.17
 - ucx=1.15
+- versioneer=0.29
 - yapf
 name: all_cuda-128_arch-aarch64

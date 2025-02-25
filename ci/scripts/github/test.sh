@@ -19,6 +19,8 @@ set -e
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
 
+fetch_base_branch
+
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"

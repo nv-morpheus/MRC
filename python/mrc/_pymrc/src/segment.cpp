@@ -510,13 +510,13 @@ std::shared_ptr<mrc::segment::ObjectProperties> BuilderProxy::make_node_full(
 
                 return output;
 
-            } catch (py::error_already_set& err)
+            } catch (const py::error_already_set& err)
             {
                 LOG(ERROR) << "Python occurred during full node subscription. Error: " + std::string(err.what());
 
                 // Rethrow python exceptions
                 throw;
-            } catch (std::exception& err)
+            } catch (const std::exception& err)
             {
                 LOG(ERROR) << "Exception occurred during subscription. Error: " + std::string(err.what());
                 throw;
