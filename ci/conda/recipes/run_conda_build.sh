@@ -110,7 +110,6 @@ echo -e "${y}===End Env===${x}"
 
 echo -e "${y}===Running conda-build for libmrc===${x}"
 set -x
-conda index /opt/conda/conda-bld
 conda ${CONDA_COMMAND} "${CONDA_ARGS_ARRAY[@]}" ${CONDA_ARGS} ci/conda/recipes/libmrc
 set +x
 echo -e "${g}===Running conda-build for libmrc Complete!===${x}"
