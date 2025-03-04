@@ -84,8 +84,6 @@ if hasArg upload; then
    fi
 fi
 
-# Some default args
-CONDA_ARGS_ARRAY+=("--use-local")
 
 if [[ "${CONDA_COMMAND}" == "mambabuild" || "${CONDA_COMMAND}" == "build" ]]; then
    # Remove the timestamp from the work folder to allow caching to work better
