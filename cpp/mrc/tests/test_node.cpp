@@ -826,13 +826,17 @@ TEST_P(ParallelTests, PeExceedsResources)
     options->topology().user_cpuset(cpu_set);
     // options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
-    Executor exec(std::move(options));
+    EXPECT_DEATH_OR_THROW(
+        {
+            Executor exec(std::move(options));
 
-    exec.register_pipeline(std::move(p));
+            exec.register_pipeline(std::move(p));
+            exec.start();
 
-    exec.start();
-
-    EXPECT_THROW(exec.join(), std::runtime_error);
+            exec.join();
+        },
+        "A node was destructed which still had dependent connections.*",
+        std::runtime_error);
 }
 
 }  // namespace mrc
