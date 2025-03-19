@@ -789,42 +789,81 @@ TEST_P(ParallelTests, NodeMultiThread)
     EXPECT_EQ(complete_count, 1);
 }
 
-TEST_P(ParallelTests, PeExceedsResources)
+struct PeExceedsResourcesParams
 {
-    auto p = mrc::make_pipeline();
+    std::string cpu_set;
+    std::size_t pe_count;
+    std::string bad_node;
+};
 
-    // TODO: Parametarize this
-    const std::string cpu_set        = "0-9";  // cpu set of 10 cores
-    const std::size_t pe_count       = 11;     // pe count one greater
-    const std::size_t engines_per_pe = 1;
+struct PeExceedsTests : public testing::TestWithParam<PeExceedsResourcesParams>
+{};
 
-    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
-        auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
-            s.on_next(0);
-            s.on_completed();
-        });
+// Run parallel tests for 1, 2 and 4 threads
+INSTANTIATE_TEST_SUITE_P(TestNode,
+                         PeExceedsTests,
+                         testing::Values(PeExceedsResourcesParams{"0-9",  // cpu set of 10 cores
+                                                                  11,     // pe count one greater
+                                                                  "sink"},
+                                         PeExceedsResourcesParams{"0-5",  // cpu set of 6 cores
+                                                                  11,
+                                                                  "source"},
+                                         PeExceedsResourcesParams{"0-3",  // cpu set of 4 cores
+                                                                  5,      // pe lower than cores
+                                                                  "node"}));
 
-        auto sink = seg.make_sink<int>(
-            "sink",
-            [&](const int& x) {
-                EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
-                                      "called";
-            },
-            [&]() {
+TEST_P(PeExceedsTests, PeExceedsResources)
+{
+    const auto test_params = GetParam();
+    auto p                 = mrc::make_pipeline();
+
+    const std::string cpu_set  = test_params.cpu_set;
+    const std::size_t pe_count = test_params.pe_count;
+
+    auto my_segment = p->make_segment(
+        "my_segment",
+        [&](segment::IBuilder& seg) {
+            auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
                 EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
                                       "called";
             });
 
-        // TODO : parametarize setting this on a souce, sink and node
-        sink->launch_options().pe_count       = pe_count;
-        sink->launch_options().engines_per_pe = engines_per_pe;
+            auto node = seg.make_node<int>("node", rxcpp::operators::map([&](const int& x) {
+                                               EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                                                     "called";
+                                               return x;
+                                           }));
 
-        seg.make_edge(source, sink);
-    });
+            auto sink = seg.make_sink<int>(
+                "sink",
+                [&](const int& x) {
+                    EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                          "called";
+                },
+                [&]() {
+                    EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                          "called";
+                });
+
+            if (test_params.bad_node == "source")
+            {
+                source->launch_options().pe_count = pe_count;
+            }
+            else if (test_params.bad_node == "node")
+            {
+                node->launch_options().pe_count = pe_count;
+            }
+            else
+            {
+                sink->launch_options().pe_count = pe_count;
+            }
+
+            seg.make_edge(source, node);
+            seg.make_edge(node, sink);
+        });
 
     auto options = std::make_unique<Options>();
     options->topology().user_cpuset(cpu_set);
-    // options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
 
     EXPECT_DEATH_OR_THROW(
         {
