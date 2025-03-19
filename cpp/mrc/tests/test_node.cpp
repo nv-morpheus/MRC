@@ -882,17 +882,14 @@ TEST_P(PeExceedsTests, PeExceedsResources)
     options->topology().user_cpuset(cpu_set);
     options->engine_factories().set_default_engine_type(test_params.engine_type);
 
-    EXPECT_DEATH_OR_THROW(
+    Executor exec(std::move(options));
+    exec.register_pipeline(std::move(p));
+
+    EXPECT_THROW(
         {
-            Executor exec(std::move(options));
-
-            exec.register_pipeline(std::move(p));
             exec.start();
-
             exec.join();
         },
-        "A node was destructed which still had dependent "
-        "connections.*",
         std::runtime_error);
 }
 
