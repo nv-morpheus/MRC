@@ -789,4 +789,50 @@ TEST_P(ParallelTests, NodeMultiThread)
     EXPECT_EQ(complete_count, 1);
 }
 
+TEST_P(ParallelTests, PeExceedsResources)
+{
+    auto p = mrc::make_pipeline();
+
+    // TODO: Parametarize this
+    const std::string cpu_set        = "0-9";  // cpu set of 10 cores
+    const std::size_t pe_count       = 11;     // pe count one greater
+    const std::size_t engines_per_pe = 1;
+
+    auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
+        auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
+            s.on_next(0);
+            s.on_completed();
+        });
+
+        auto sink = seg.make_sink<int>(
+            "sink",
+            [&](const int& x) {
+                EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                      "called";
+            },
+            [&]() {
+                EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                      "called";
+            });
+
+        // TODO : parametarize setting this on a souce, sink and node
+        sink->launch_options().pe_count       = pe_count;
+        sink->launch_options().engines_per_pe = engines_per_pe;
+
+        seg.make_edge(source, sink);
+    });
+
+    auto options = std::make_unique<Options>();
+    options->topology().user_cpuset(cpu_set);
+    // options->placement().resources_strategy(PlacementResources::Shared);  // ignore numa
+
+    Executor exec(std::move(options));
+
+    exec.register_pipeline(std::move(p));
+
+    exec.start();
+
+    EXPECT_THROW(exec.join(), std::runtime_error);
+}
+
 }  // namespace mrc
