@@ -83,7 +83,10 @@ class ReusableFiberEngineFactory final : public FiberEngineFactory
 
     std::vector<std::reference_wrapper<core::FiberTaskQueue>> get_next_n_queues(std::size_t count) final
     {
-        DCHECK_LE(count, m_pool.thread_count());
+        if (count > m_pool.thread_count())
+        {
+            throw exceptions::MrcRuntimeError("more dedicated threads/cores than available");
+        }
         std::vector<std::reference_wrapper<core::FiberTaskQueue>> queues;
 
         for (int i = 0; i < count; ++i)
