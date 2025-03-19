@@ -28,6 +28,7 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/types.hpp"  // for EngineType
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
 #include "mrc/utils/string_utils.hpp"
@@ -794,6 +795,7 @@ struct PeExceedsResourcesParams
     std::string cpu_set;
     std::size_t pe_count;
     std::string bad_node;
+    mrc::runnable::EngineType engine_type;
 };
 
 struct PeExceedsTests : public testing::TestWithParam<PeExceedsResourcesParams>
@@ -804,13 +806,28 @@ INSTANTIATE_TEST_SUITE_P(TestNode,
                          PeExceedsTests,
                          testing::Values(PeExceedsResourcesParams{"0-9",  // cpu set of 10 cores
                                                                   11,     // pe count one greater
-                                                                  "sink"},
+                                                                  "sink",
+                                                                  mrc::runnable::EngineType::Fiber},
                                          PeExceedsResourcesParams{"0-5",  // cpu set of 6 cores
                                                                   11,
-                                                                  "source"},
+                                                                  "source",
+                                                                  mrc::runnable::EngineType::Fiber},
                                          PeExceedsResourcesParams{"0-3",  // cpu set of 4 cores
                                                                   5,      // pe lower than cores
-                                                                  "node"}));
+                                                                  "node",
+                                                                  mrc::runnable::EngineType::Fiber},
+                                         PeExceedsResourcesParams{"0-9",  // cpu set of 10 cores
+                                                                  11,     // pe count one greater
+                                                                  "sink",
+                                                                  mrc::runnable::EngineType::Thread},
+                                         PeExceedsResourcesParams{"0-5",  // cpu set of 6 cores
+                                                                  11,
+                                                                  "source",
+                                                                  mrc::runnable::EngineType::Thread},
+                                         PeExceedsResourcesParams{"0-3",  // cpu set of 4 cores
+                                                                  5,      // pe lower than cores
+                                                                  "node",
+                                                                  mrc::runnable::EngineType::Thread}));
 
 TEST_P(PeExceedsTests, PeExceedsResources)
 {
@@ -864,6 +881,7 @@ TEST_P(PeExceedsTests, PeExceedsResources)
 
     auto options = std::make_unique<Options>();
     options->topology().user_cpuset(cpu_set);
+    options->engine_factories().set_default_engine_type(test_params.engine_type);
 
     EXPECT_DEATH_OR_THROW(
         {
@@ -874,7 +892,8 @@ TEST_P(PeExceedsTests, PeExceedsResources)
 
             exec.join();
         },
-        "A node was destructed which still had dependent connections.*",
+        "A node was destructed which still had dependent "
+        "connections.*",
         std::runtime_error);
 }
 

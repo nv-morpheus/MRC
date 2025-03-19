@@ -196,6 +196,11 @@ class ReusableThreadEngineFactory final : public ThreadEngineFactory
   protected:
     CpuSet get_next_n_cpus(std::size_t count) final
     {
+        if (count > this->cpu_set().weight())
+        {
+            throw exceptions::MrcRuntimeError("more dedicated threads/cores than available");
+        }
+
         CpuSet cpu_set;
         for (int i = 0; i < count; ++i)
         {
