@@ -58,16 +58,17 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            bool const is_connected = m_connected_edge && m_connected_edge->is_connected();
-            LOG(DFATAL)
-                << "EdgeHolder(" << this << ") "
+            std::stringstream msg;
+            msg << "EdgeHolder(" << this << ") "
                 << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
                    "dependent connections are still active\n"
-                << "m_owned_edge=" << m_owned_edge.lock()
-                << "\tm_owned_edge_lifetime=" << m_owned_edge_lifetime
-                << "\tm_connected_edge=" << m_connected_edge
-                << "\tis_connected=" << is_connected
-                << "\tcheck_active_connection=" << this->check_active_connection(false);
+                << this->connection_info();
+
+#if defined(NDEBUG)
+            LOG(ERROR) << msg.str();
+#else
+            LOG(FATAL) << msg.str();
+#endif
         }
     }
 
