@@ -885,10 +885,9 @@ TEST_P(PeExceedsTests, PeExceedsResources)
     EXPECT_DEATH_OR_THROW(
         {
             Executor exec(std::move(options));
-
             exec.register_pipeline(std::move(p));
-            exec.start();
 
+            exec.start();
             exec.join();
         },
         "A node was destructed which still had dependent "
