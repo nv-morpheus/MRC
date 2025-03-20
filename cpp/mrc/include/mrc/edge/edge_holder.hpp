@@ -37,6 +37,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>  // for std::stringstream
 #include <stdexcept>
 #include <type_traits>
 #include <typeindex>
