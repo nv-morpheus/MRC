@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/system/device_info.hpp"
+#include "mrc/system/device_info.hpp"
 
 #include "mrc/cuda/common.hpp"
 
@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <memory>
+#include <new>  // for new
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -255,6 +256,13 @@ struct NvmlState
         return NvmlState::instance().get_handle();
     }
 
+    static void reset()
+    {
+        auto& state = NvmlState::instance();
+        state.~NvmlState();
+        new (&state) NvmlState();
+    }
+
   private:
     // this object can also hold the list of device handles that we have access to.
     // - nvmlDeviceGetCount_v2 - will tell us the total number of devices we have access to, i.e. the range of [0, N)
@@ -394,6 +402,11 @@ std::string DeviceInfo::UUID(unsigned int device_id)
     std::array<char, 256> buffer;
     MRC_CHECK_NVML(NvmlState::handle().nvmlDeviceGetUUID(get_handle_by_id(device_id), buffer.data(), 256));
     return buffer.data();
+}
+
+void DeviceInfo::Reset()
+{
+    NvmlState::reset();
 }
 
 }  // namespace mrc::system
