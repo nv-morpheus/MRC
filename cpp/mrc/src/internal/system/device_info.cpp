@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/system/device_info.hpp"
+#include "mrc/system/device_info.hpp"
 
 #include "mrc/cuda/common.hpp"
 
@@ -394,6 +394,13 @@ std::string DeviceInfo::UUID(unsigned int device_id)
     std::array<char, 256> buffer;
     MRC_CHECK_NVML(NvmlState::handle().nvmlDeviceGetUUID(get_handle_by_id(device_id), buffer.data(), 256));
     return buffer.data();
+}
+
+void DeviceInfo::Reset()
+{
+    auto& state = NvmlState::instance();
+    state.~NvmlState();
+    new (&state) NvmlState();
 }
 
 }  // namespace mrc::system
