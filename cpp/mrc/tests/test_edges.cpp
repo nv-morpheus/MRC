@@ -53,7 +53,7 @@ namespace mrc {
 TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
 {
     // Reset the sink before the source which will cause an exception
-    EXPECT_DEATH(
+    EXPECT_DEBUG_DEATH(
         {
             auto source = std::make_shared<node::TestSource<int>>();
             auto sink   = std::make_shared<node::TestSink<int>>();
@@ -61,7 +61,7 @@ TEST_F(TestEdgesDeathTest, NodeDestroyedBeforeEdge)
             mrc::make_edge(*source, *sink);
             sink.reset();
         },
-        "");
+        "A node was destructed which still had dependent connections");
 }
 
 TEST_F(TestEdges, SourceToSink)

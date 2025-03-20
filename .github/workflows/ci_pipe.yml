@@ -201,7 +201,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: linux-amd64-gpu-v100-latest-1
+    runs-on: linux-amd64-gpu-l4-latest-1
     timeout-minutes: 60
     container:
       credentials:

@@ -45,6 +45,7 @@ struct DeviceInfo
     static auto PowerLimit(unsigned int device_id) -> double;
     static auto PowerUsage(unsigned int device_id) -> double;
     static auto UUID(unsigned int device_id) -> std::string;
+    static void Reset();
     // NOLINTEND(readability-identifier-naming)
 };
 

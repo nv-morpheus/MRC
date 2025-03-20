@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "internal/system/device_info.hpp"
 #include "internal/system/gpu_info.hpp"
 #include "internal/system/topology.hpp"
 
 #include "mrc/core/bitmap.hpp"
 #include "mrc/options/topology.hpp"
+#include "mrc/system/device_info.hpp"
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>

@@ -21,6 +21,7 @@
 #include "mrc/node/rx_node.hpp"
 #include "mrc/node/rx_sink.hpp"
 #include "mrc/node/rx_source.hpp"
+#include "mrc/options/engine_groups.hpp"
 #include "mrc/options/options.hpp"
 #include "mrc/options/placement.hpp"
 #include "mrc/options/topology.hpp"
@@ -28,8 +29,10 @@
 #include "mrc/pipeline/pipeline.hpp"
 #include "mrc/runnable/context.hpp"
 #include "mrc/runnable/launch_options.hpp"
+#include "mrc/runnable/types.hpp"  // for EngineType
 #include "mrc/segment/builder.hpp"
 #include "mrc/segment/object.hpp"
+#include "mrc/system/device_info.hpp"
 #include "mrc/utils/string_utils.hpp"
 
 #include <boost/fiber/operations.hpp>
@@ -787,6 +790,114 @@ TEST_P(ParallelTests, NodeMultiThread)
     EXPECT_EQ(thread_ids.size(), thread_count);
     EXPECT_EQ(next_count, source_count);
     EXPECT_EQ(complete_count, 1);
+}
+
+struct PeExceedsResourcesParams
+{
+    std::string cpu_set;
+    std::size_t pe_count;
+    std::string bad_node;
+    mrc::runnable::EngineType engine_type;
+};
+
+struct PeExceedsTests : public testing::TestWithParam<PeExceedsResourcesParams>
+{};
+
+// Run parallel tests for 1, 2 and 4 threads
+INSTANTIATE_TEST_SUITE_P(TestNode,
+                         PeExceedsTests,
+                         testing::Values(PeExceedsResourcesParams{"0-9",  // cpu set of 10 cores
+                                                                  11,     // pe count one greater
+                                                                  "sink",
+                                                                  mrc::runnable::EngineType::Fiber},
+                                         PeExceedsResourcesParams{"0-5",  // cpu set of 6 cores
+                                                                  11,
+                                                                  "source",
+                                                                  mrc::runnable::EngineType::Fiber},
+                                         PeExceedsResourcesParams{"0-3",  // cpu set of 4 cores
+                                                                  5,      // pe lower than cores
+                                                                  "node",
+                                                                  mrc::runnable::EngineType::Fiber},
+                                         PeExceedsResourcesParams{"0-9",  // cpu set of 10 cores
+                                                                  11,     // pe count one greater
+                                                                  "sink",
+                                                                  mrc::runnable::EngineType::Thread},
+                                         PeExceedsResourcesParams{"0-5",  // cpu set of 6 cores
+                                                                  11,
+                                                                  "source",
+                                                                  mrc::runnable::EngineType::Thread},
+                                         PeExceedsResourcesParams{"0-3",  // cpu set of 4 cores
+                                                                  5,      // pe lower than cores
+                                                                  "node",
+                                                                  mrc::runnable::EngineType::Thread}));
+
+TEST_P(PeExceedsTests, PeExceedsResources)
+{
+    const auto test_params = GetParam();
+
+    EXPECT_DEATH_OR_THROW(
+        {
+            // EXPECT_DEATH Executes this test in a fork, we need to reset the NvmlState singleton which would
+            // otherwise reflect the state of the parent process
+            mrc::system::DeviceInfo::Reset();
+            auto p = mrc::make_pipeline();
+
+            const std::string cpu_set  = test_params.cpu_set;
+            const std::size_t pe_count = test_params.pe_count;
+
+            auto my_segment = p->make_segment("my_segment", [&](segment::IBuilder& seg) {
+                auto source = seg.make_source<int>("src1", [&](rxcpp::subscriber<int>& s) {
+                    EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                          "called";
+                });
+
+                auto node = seg.make_node<int>("node", rxcpp::operators::map([&](const int& x) {
+                                                   EXPECT_TRUE(false) << "Preflight checks should fail, this should "
+                                                                         "not be "
+                                                                         "called";
+                                                   return x;
+                                               }));
+
+                auto sink = seg.make_sink<int>(
+                    "sink",
+                    [&](const int& x) {
+                        EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                              "called";
+                    },
+                    [&]() {
+                        EXPECT_TRUE(false) << "Preflight checks should fail, this should not be "
+                                              "called";
+                    });
+
+                if (test_params.bad_node == "source")
+                {
+                    source->launch_options().pe_count = pe_count;
+                }
+                else if (test_params.bad_node == "node")
+                {
+                    node->launch_options().pe_count = pe_count;
+                }
+                else
+                {
+                    sink->launch_options().pe_count = pe_count;
+                }
+
+                seg.make_edge(source, node);
+                seg.make_edge(node, sink);
+            });
+
+            auto options = std::make_unique<Options>();
+            options->topology().user_cpuset(cpu_set);
+            options->engine_factories().set_default_engine_type(test_params.engine_type);
+
+            Executor exec(std::move(options));
+            exec.register_pipeline(std::move(p));
+
+            exec.start();
+            exec.join();
+        },
+        "A node was destructed which still had dependent connections",
+        std::runtime_error);
 }
 
 }  // namespace mrc
