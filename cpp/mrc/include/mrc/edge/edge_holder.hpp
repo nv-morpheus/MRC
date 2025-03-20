@@ -74,6 +74,22 @@ class EdgeHolder
     }
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_owned_edge=" << m_owned_edge.lock() << "\tm_owned_edge_lifetime=" << m_owned_edge_lifetime
+           << "\tm_connected_edge=" << m_connected_edge;
+
+        bool is_connected = false;
+        if (m_connected_edge)
+        {
+            is_connected = m_connected_edge->is_connected();
+        }
+
+        ss << "\tis_connected=" << is_connected << "\tcheck_active_connection=" << this->check_active_connection(false);
+        return ss.str();
+    }
+
     bool check_active_connection(bool do_throw = true) const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set
