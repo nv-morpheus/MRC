@@ -255,6 +255,13 @@ struct NvmlState
         return NvmlState::instance().get_handle();
     }
 
+    static void reset()
+    {
+        auto& state = NvmlState::instance();
+        state.~NvmlState();
+        new (&state) NvmlState();
+    }
+
   private:
     // this object can also hold the list of device handles that we have access to.
     // - nvmlDeviceGetCount_v2 - will tell us the total number of devices we have access to, i.e. the range of [0, N)
@@ -398,9 +405,7 @@ std::string DeviceInfo::UUID(unsigned int device_id)
 
 void DeviceInfo::Reset()
 {
-    auto& state = NvmlState::instance();
-    state.~NvmlState();
-    new (&state) NvmlState();
+    NvmlState::reset();
 }
 
 }  // namespace mrc::system
