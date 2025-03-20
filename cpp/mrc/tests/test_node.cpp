@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
 #include "test_mrc.hpp"
 
 #include "mrc/channel/status.hpp"  // for Status

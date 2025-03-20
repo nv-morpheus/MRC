@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <memory>
+#include <new>  // for new
 #include <ostream>
 #include <set>
 #include <stdexcept>
