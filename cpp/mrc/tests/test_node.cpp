@@ -896,8 +896,7 @@ TEST_P(PeExceedsTests, PeExceedsResources)
             exec.start();
             exec.join();
         },
-        "A node was destructed which still had dependent "
-        "connections.*",
+        "A node was destructed which still had dependent connections",
         std::runtime_error);
 }
 
