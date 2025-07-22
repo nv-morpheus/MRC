@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,30 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
+
+# MRC 25.06.00 (22 Jul 2025)
+
+## 🚨 Breaking Changes
+
+- Add a pre-flight check when `pe_count > cpu_set.weight()` ([#547](https://github.com/nv-morpheus/MRC/pull/547)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Bugfix: Remove `MRC_USE_CONDA` option since it must always be On ([#539](https://github.com/nv-morpheus/MRC/pull/539)) [@willkill07](https://github.com/willkill07)
+
+## 🐛 Bug Fixes
+
+- Add a pre-flight check when `pe_count > cpu_set.weight()` ([#547](https://github.com/nv-morpheus/MRC/pull/547)) [@dagardner-nv](https://github.com/dagardner-nv)
+- Bugfix: Remove `MRC_USE_CONDA` option since it must always be On ([#539](https://github.com/nv-morpheus/MRC/pull/539)) [@willkill07](https://github.com/willkill07)
+- Forward-merge branch-25.02 into branch-25.06 ([#534](https://github.com/nv-morpheus/MRC/pull/534)) @rapids-bot[bot]
+
+## 🚀 New Features
+
+- Adopt Python 3.12 ([#544](https://github.com/nv-morpheus/MRC/pull/544)) [@willkill07](https://github.com/willkill07)
+- Adopt Rapids 25.02 ([#536](https://github.com/nv-morpheus/MRC/pull/536)) [@dagardner-nv](https://github.com/dagardner-nv)
+
+## 🛠️ Improvements
+
+- Replace `conda-mambabuild` with `conda-build` ([#546](https://github.com/nv-morpheus/MRC/pull/546)) [@willkill07](https://github.com/willkill07)
+- CI: Add new L4 runner for test ([#531](https://github.com/nv-morpheus/MRC/pull/531)) [@willkill07](https://github.com/willkill07)
+- [chore] Suppress innocent warning with clang; add simple CMakePresets.json ([#530](https://github.com/nv-morpheus/MRC/pull/530)) [@willkill07](https://github.com/willkill07)
 
 # MRC 25.02.00 (03 Feb 2025)
 
