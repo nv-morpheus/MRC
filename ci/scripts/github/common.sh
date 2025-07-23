@@ -124,7 +124,17 @@ function fetch_base_branch_gh_api() {
 
 function fetch_base_branch_local() {
     rapids-logger "Retrieving base branch from git"
-    git remote add upstream ${GIT_UPSTREAM_URL}
+
+    # In some workflows this is called more than once
+    set +e
+    git remote  | grep -q upstream
+    UPSTREAM_EXIT_STATUS=$?
+    set -e
+
+    if [[ "${UPSTREAM_EXIT_STATUS}" == "1" ]]; then
+        git remote add upstream ${GIT_UPSTREAM_URL}
+    fi
+
     git fetch upstream --tags
     source ${MRC_ROOT}/ci/scripts/common.sh
     export BASE_BRANCH=$(get_base_branch)
