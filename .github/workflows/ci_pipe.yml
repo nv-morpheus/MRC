@@ -96,11 +96,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           lfs: false
           path: 'mrc'
-          fetch-depth: 0
 
       - name: Get AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v1-node16
@@ -130,8 +131,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           lfs: false
           path: 'mrc'
 
@@ -168,15 +171,17 @@ jobs:
         arch: ["amd64", "arm64"]
         build_cc: ["gcc", "clang"]
         include:
-          - runner: linux-amd64-gpu-v100-latest-1
+          - runner: linux-amd64-gpu-l4-latest-1
             arch: "amd64"
           - runner: linux-arm64-gpu-a100-latest-1
             arch: "arm64"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           lfs: false
           path: 'mrc'
 
@@ -196,7 +201,7 @@ jobs:
 
   codecov:
     name: Code Coverage
-    runs-on: linux-amd64-gpu-v100-latest-1
+    runs-on: linux-amd64-gpu-l4-latest-1
     timeout-minutes: 60
     container:
       credentials:
@@ -213,8 +218,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           lfs: false
           path: 'mrc'
 
@@ -250,7 +257,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: false
           path: 'mrc'
@@ -282,7 +289,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: false
           path: 'mrc'
@@ -323,11 +330,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           lfs: false
           path: 'mrc'
-          fetch-depth: 0
 
       - name: Get AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v1-node16

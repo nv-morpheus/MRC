@@ -14,9 +14,33 @@
 # limitations under the License.
 
 import os
+import re
 import typing
 
 import pytest
+
+
+@pytest.fixture(scope="session")
+def mrc_version():
+    import mrc
+
+    return mrc.__version__
+
+
+@pytest.fixture(scope="session")
+def mrc_numeric_version_parts(mrc_version: str):
+    parts = mrc_version.split(".")[:3]
+    strip_digits = re.compile(r"^(\d+).*")
+
+    numeric_parts = []
+    for part in parts:
+        match = strip_digits.match(part)
+        if match:
+            numeric_parts.append(int(match.group(1)))
+        else:
+            numeric_parts.append(0)
+
+    return numeric_parts
 
 
 @pytest.fixture(scope="session")

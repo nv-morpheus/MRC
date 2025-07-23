@@ -14,8 +14,8 @@
 # limitations under the License.
 
 {% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
-{% set py_version = environ.get('CONDA_PY', '3.10') %}
-{% set cuda_version = '.'.join(environ.get('CUDA', '12.5').split('.')[:2]) %}
+{% set py_version = environ.get('CONDA_PY', '3.12') %}
+{% set cuda_version = '.'.join(environ.get('CUDA', '12.8').split('.')[:2]) %}
 
 package:
   name: libmrc-split
@@ -64,6 +64,7 @@ requirements:
     - python {{ python }}
     - scikit-build =0.17
     - ucx =1.15
+    - versioneer =0.29
 
 outputs:
   - name: libmrc
@@ -139,6 +140,8 @@ outputs:
         - numpy
         - nvtx
         - pytest
+        - pytest-asyncio
+        - pytest-timeout
         - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:

@@ -3,7 +3,7 @@ files:
   all:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64, aarch64]
     includes:
       - build
@@ -21,7 +21,7 @@ files:
   ci:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64, aarch64]
     includes:
       - build
@@ -41,7 +41,7 @@ files:
   runtime:
     output: conda
     matrix:
-      cuda: ["12.5"]
+      cuda: ["12.8"]
       arch: [x86_64]
     includes:
       - cudatoolkit
@@ -79,6 +79,7 @@ dependencies:
           - pybind11-stubgen=0.10
           - scikit-build=0.17
           - ucx=1.15
+          - versioneer=0.29
 
   checks:
     common:
@@ -141,7 +142,7 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - numpy=1.24
+          - numpy=1.26
 
   documentation:
     common:
@@ -154,30 +155,30 @@ dependencies:
     common:
       - output_types: [conda]
         packages:
-          - python=3.10
+          - python=3.12
 
   cudatoolkit-dev:
     specific:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.5"
+              cuda: "12.8"
             packages:
-              - cuda-cudart-dev=12.5
-              - cuda-nvml-dev=12.5
-              - cuda-nvrtc-dev=12.5
-              - cuda-version=12.5
+              - cuda-cudart-dev=12.8
+              - cuda-nvml-dev=12.8
+              - cuda-nvrtc-dev=12.8
+              - cuda-version=12.8
 
   cudatoolkit:
     specific:
       - output_types: [conda]
         matrices:
           - matrix:
-              cuda: "12.5"
+              cuda: "12.8"
             packages:
-              - cuda-cudart=12.5
-              - cuda-nvrtc=12.5
-              - cuda-version=12.5
+              - cuda-cudart=12.8
+              - cuda-nvrtc=12.8
+              - cuda-version=12.8
 
   runtime:
     common:

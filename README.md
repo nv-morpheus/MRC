@@ -57,7 +57,7 @@ If you choose to use Mamba rather than Conda, simply replace `conda` with `mamba
 #### Python Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.10
+conda create --name mrc python=3.12
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -69,7 +69,7 @@ conda install -c rapidsai -c nvidia -c conda-forge mrc
 #### C++ Bindings
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.10
+conda create --name mrc python=3.12
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -81,7 +81,7 @@ conda install -c rapidsai -c nvidia -c conda-forge libmrc
 #### Full MRC Library
 ```bash
 # If needed, create a new conda environment
-conda create --name mrc python=3.10
+conda create --name mrc python=3.12
 
 # Activate the newly created conda environment
 conda activate mrc
@@ -118,7 +118,7 @@ cd $MRC_ROOT
 #### Create MRC Conda Environment
 ```bash
 # note: `mamba` may be used in place of `conda` for better performance.
-conda env create -n mrc-dev --file $MRC_ROOT/conda/environments/all_cuda-125_arch-x86_64.yaml
+conda env create -n mrc-dev --file $MRC_ROOT/conda/environments/all_cuda-128_arch-$(arch).yaml
 conda activate mrc-dev
 ```
 <!-- omit in toc -->

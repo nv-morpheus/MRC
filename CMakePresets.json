@@ -1,0 +1,182 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 24,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },{
+            "name": "release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "build",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_MESSAGE_CONTEXT_SHOW": "ON",
+                "MRC_USE_IWYU": "OFF",
+                "MRC_BUILD_DOCS": "OFF",
+                "MRC_BUILD_TESTS": "ON",
+                "MRC_BUILD_BENCHMARKS": "ON",
+                "MRC_BUILD_PYTHON": "ON",
+                "MRC_PYTHON_PERFORM_INSTALL": "ON"
+            }
+        },
+        {
+            "name": "clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "gcc-debug",
+            "inherits": ["base", "debug"]
+        },
+        {
+            "name": "clang-debug",
+            "inherits": ["base", "debug", "clang"]
+        },
+        {
+            "name": "gcc-release",
+            "inherits": ["base", "release"]
+        },
+        {
+            "name": "clang-release",
+            "inherits": ["base", "release", "clang"]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "gcc-debug",
+            "configurePreset": "gcc-debug"
+        },
+        {
+            "name": "clang-debug",
+            "configurePreset": "clang-debug"
+        },
+        {
+            "name": "gcc-release",
+            "configurePreset": "gcc-release"
+        },
+        {
+            "name": "clang-release",
+            "configurePreset": "clang-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            }
+        },
+        {
+            "name": "gcc-debug",
+            "inherits": "base",
+            "configurePreset": "gcc-debug"
+        },
+        {
+            "name": "gcc-release",
+            "inherits": "base",
+            "configurePreset": "gcc-release"
+        },
+        {
+            "name": "clang-debug",
+            "inherits": "base",
+            "configurePreset": "clang-debug"
+        },
+        {
+            "name": "clang-release",
+            "inherits": "base",
+            "configurePreset": "clang-release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "gcc-debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "gcc-debug"
+                },
+                {
+                    "type": "build",
+                    "name": "gcc-debug"
+                },
+                {
+                    "type": "test",
+                    "name": "gcc-debug"
+                }
+            ]
+        },
+        {
+            "name": "clang-debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "clang-debug"
+                },
+                {
+                    "type": "build",
+                    "name": "clang-debug"
+                },
+                {
+                    "type": "test",
+                    "name": "clang-debug"
+                }
+            ]
+        },
+        {
+            "name": "gcc-release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "gcc-release"
+                },
+                {
+                    "type": "build",
+                    "name": "gcc-release"
+                },
+                {
+                    "type": "test",
+                    "name": "gcc-release"
+                }
+            ]
+        },
+        {
+            "name": "clang-release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "clang-release"
+                },
+                {
+                    "type": "build",
+                    "name": "clang-release"
+                },
+                {
+                    "type": "test",
+                    "name": "clang-release"
+                }
+            ]
+        }
+    ]
+}

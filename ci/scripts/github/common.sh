@@ -39,9 +39,9 @@ id
 
 export BUILD_CC=${BUILD_CC:-"gcc"}
 
-export CONDA_ENV_YML="${MRC_ROOT}/conda/environments/all_cuda-125_arch-${REAL_ARCH}.yaml"
+export CONDA_ENV_YML="${MRC_ROOT}/conda/environments/all_cuda-128_arch-${REAL_ARCH}.yaml"
 
-export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_USE_CONDA=ON -DMRC_PYTHON_BUILD_STUBS=ON"
+export CMAKE_BUILD_ALL_FEATURES="-DCMAKE_MESSAGE_CONTEXT_SHOW=ON -DMRC_BUILD_BENCHMARKS=ON -DMRC_BUILD_EXAMPLES=ON -DMRC_BUILD_PYTHON=ON -DMRC_BUILD_TESTS=ON -DMRC_PYTHON_BUILD_STUBS=ON"
 export CMAKE_BUILD_WITH_CODECOV="-DCMAKE_BUILD_TYPE=Debug -DMRC_ENABLE_CODECOV=ON -DMRC_PYTHON_PERFORM_INSTALL:BOOL=ON -DMRC_PYTHON_INPLACE_BUILD:BOOL=ON"
 
 # Set the depth to allow git describe to work
@@ -124,7 +124,17 @@ function fetch_base_branch_gh_api() {
 
 function fetch_base_branch_local() {
     rapids-logger "Retrieving base branch from git"
-    git remote add upstream ${GIT_UPSTREAM_URL}
+
+    # In some workflows this is called more than once
+    set +e
+    git remote  | grep -q upstream
+    UPSTREAM_EXIT_STATUS=$?
+    set -e
+
+    if [[ "${UPSTREAM_EXIT_STATUS}" == "1" ]]; then
+        git remote add upstream ${GIT_UPSTREAM_URL}
+    fi
+
     git fetch upstream --tags
     source ${MRC_ROOT}/ci/scripts/common.sh
     export BASE_BRANCH=$(get_base_branch)

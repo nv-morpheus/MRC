@@ -14,7 +14,7 @@
 
 include(GenerateExportHeader)
 
-rapids_find_package(Python 3.8 REQUIRED
+rapids_find_package(Python 3.12 REQUIRED
   COMPONENTS
     Development
     Interpreter
@@ -60,6 +60,10 @@ add_library(pymrc
   src/utils.cpp
   src/watchers.cpp
 )
+
+# Disable the assert that checks for the GIL being held during incref/decref
+# https://pybind11.readthedocs.io/en/stable/changelog.html#version-2-11-1-july-17-2023
+add_compile_definitions("PYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF=1")
 
 add_library(${PROJECT_NAME}::pymrc ALIAS pymrc)
 

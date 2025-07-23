@@ -35,7 +35,7 @@ export y="\033[0;33m"
 export x="\033[0m"
 
 # Change this to switch between build/mambabuild/debug
-export CONDA_COMMAND=${CONDA_COMMAND:-"mambabuild"}
+export CONDA_COMMAND=${CONDA_COMMAND:-"build"}
 
 # Get the path to the morpheus git folder
 export MRC_ROOT=${MRC_ROOT:-$(git rev-parse --show-toplevel)}
@@ -84,8 +84,6 @@ if hasArg upload; then
    fi
 fi
 
-# Some default args
-CONDA_ARGS_ARRAY+=("--use-local")
 
 if [[ "${CONDA_COMMAND}" == "mambabuild" || "${CONDA_COMMAND}" == "build" ]]; then
    # Remove the timestamp from the work folder to allow caching to work better
@@ -95,7 +93,7 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 24.10}")
+   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 25.02}")
 fi
 
 # And default channels (should match dependencies.yaml)

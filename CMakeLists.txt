@@ -33,11 +33,9 @@ option(MRC_ENABLE_DEBUG_INFO "Enable printing debug information" OFF)
 option(MRC_PYTHON_INPLACE_BUILD "Whether or not to copy built python modules back to the source tree for debug purposes." OFF)
 option(MRC_USE_CCACHE "Enable caching compilation results with ccache" OFF)
 option(MRC_USE_CLANG_TIDY "Enable running clang-tidy as part of the build process" OFF)
-option(MRC_USE_CONDA "Enables finding dependencies via conda. All dependencies must be installed first in the conda
-  environment" ON)
 option(MRC_USE_IWYU "Enable running include-what-you-use as part of the build process" OFF)
 
-set(MRC_RAPIDS_VERSION "24.10" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
+set(MRC_RAPIDS_VERSION "25.02" CACHE STRING "Which version of RAPIDS to build for. Sets default versions for RAPIDS CMake and RMM.")
 
 set(MRC_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory to contain all CPM and CCache data")
 mark_as_advanced(MRC_CACHE_DIR)
@@ -69,21 +67,18 @@ set(MORPHEUS_UTILS_RAPIDS_CPM_INIT_OVERRIDE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/r
 include(morpheus_utils/load)
 
 # Configure project package manager
-morpheus_utils_initialize_package_manager(
-    MRC_USE_CONDA
-    BUILD_SHARED_LIBS
-    )
+morpheus_utils_initialize_package_manager()
 
 # Configure CUDA architecture
 # NOTE: This MUST occur before any 'project' calls because of rapids_cmake requirements.
 morpheus_utils_initialize_cuda_arch(mrc)
 
 project(mrc
-  VERSION 25.02.00
+  VERSION 25.06.00
   LANGUAGES C CXX
 )
 
-morpheus_utils_initialize_install_prefix(MRC_USE_CONDA)
+morpheus_utils_initialize_install_prefix()
 
 # Delay enabling CUDA until after we have determined our CXX compiler
 if(NOT DEFINED CMAKE_CUDA_HOST_COMPILER)
@@ -112,6 +107,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
   endif()
 
+  # Suppress unused argument during compilation due to -L being included
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-command-line-argument")
 endif()
 
 # Now enable CUDA

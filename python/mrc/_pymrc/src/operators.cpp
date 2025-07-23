@@ -30,6 +30,7 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <ostream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -73,16 +74,15 @@ PythonOperator OperatorsProxy::build(PyFuncHolder<void(const PyObjectObservable&
 
                         return output;
 
-                    } catch (py::error_already_set& err)
+                    } catch (const py::error_already_set& err)
                     {
-                        LOG(ERROR)
-                            << "Python occurred during full node subscription. Error: " + std::string(err.what());
+                        LOG(ERROR) << "Python occurred during full node subscription. Error: " << err.what();
 
                         // Rethrow python exceptions
                         throw;
-                    } catch (std::exception& err)
+                    } catch (const std::exception& err)
                     {
-                        LOG(ERROR) << "Exception occurred during subscription. Error: " + std::string(err.what());
+                        LOG(ERROR) << "Exception occurred during subscription. Error: " << err.what();
                         throw;
                     }
                 });
@@ -143,7 +143,7 @@ PythonOperator OperatorsProxy::flatten()
                                         sink.on_next(std::move(i));
                                     }
                                 }
-                            } catch (py::error_already_set& err)
+                            } catch (const py::error_already_set& err)
                             {
                                 // Need the GIL here
                                 AcquireGIL gil;

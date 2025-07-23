@@ -37,6 +37,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>  // for std::stringstream
 #include <stdexcept>
 #include <type_traits>
 #include <typeindex>
@@ -58,12 +59,37 @@ class EdgeHolder
 
         if (this->check_active_connection(false))
         {
-            LOG(FATAL) << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
-                          "dependent connections are still active";
+            std::stringstream msg;
+            msg << "EdgeHolder(" << this << ") "
+                << "A node was destructed which still had dependent connections. Nodes must be kept alive while "
+                   "dependent connections are still active\n"
+                << this->connection_info();
+
+#if defined(NDEBUG)
+            LOG(ERROR) << msg.str();
+#else
+            LOG(FATAL) << msg.str();
+#endif
         }
     }
 
   protected:
+    std::string connection_info() const
+    {
+        std::stringstream ss;
+        ss << "m_owned_edge=" << m_owned_edge.lock() << "\tm_owned_edge_lifetime=" << m_owned_edge_lifetime
+           << "\tm_connected_edge=" << m_connected_edge;
+
+        bool is_connected = false;
+        if (m_connected_edge)
+        {
+            is_connected = m_connected_edge->is_connected();
+        }
+
+        ss << "\tis_connected=" << is_connected << "\tcheck_active_connection=" << this->check_active_connection(false);
+        return ss.str();
+    }
+
     bool check_active_connection(bool do_throw = true) const
     {
         // Alive connection exists when the lock is true, lifetime is false or a connction object has been set

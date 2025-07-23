@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "internal/system/device_info.hpp"
+#include "mrc/system/device_info.hpp"
 
 #include "mrc/cuda/common.hpp"
 
@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <memory>
+#include <new>  // for new
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -148,7 +149,7 @@ struct NvmlState
         {
             // Try to load the NVML library. If its not found, operate without GPUs
             m_nvml_handle = std::make_unique<NvmlHandle>();
-        } catch (std::runtime_error e)
+        } catch (const std::runtime_error& e)
         {
             VLOG(1) << "NVML: " << e.what() << ". Setting DeviceCount to 0, CUDA will not be initialized";
             return;
@@ -253,6 +254,13 @@ struct NvmlState
     static NvmlHandle& handle()
     {
         return NvmlState::instance().get_handle();
+    }
+
+    static void reset()
+    {
+        auto& state = NvmlState::instance();
+        state.~NvmlState();
+        new (&state) NvmlState();
     }
 
   private:
@@ -394,6 +402,11 @@ std::string DeviceInfo::UUID(unsigned int device_id)
     std::array<char, 256> buffer;
     MRC_CHECK_NVML(NvmlState::handle().nvmlDeviceGetUUID(get_handle_by_id(device_id), buffer.data(), 256));
     return buffer.data();
+}
+
+void DeviceInfo::Reset()
+{
+    NvmlState::reset();
 }
 
 }  // namespace mrc::system

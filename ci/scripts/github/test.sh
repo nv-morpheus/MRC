@@ -19,6 +19,8 @@ set -e
 source ${WORKSPACE}/ci/scripts/github/common.sh
 /usr/bin/nvidia-smi
 
+fetch_base_branch
+
 update_conda_env
 
 rapids-logger "Fetching Build artifacts from ${DISPLAY_ARTIFACT_URL}/"
@@ -41,8 +43,11 @@ cmake -B build -G Ninja ${CMAKE_BUILD_ALL_FEATURES} .
 
 rapids-logger "Running C++ Tests"
 cd ${MRC_ROOT}/build
+
+# Exclude test_mrc_benchmarking to work-around #554
 set +e
 ctest --output-on-failure \
+      --exclude-regex "^test_mrc_benchmarking" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?

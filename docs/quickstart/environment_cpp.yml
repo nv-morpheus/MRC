@@ -28,9 +28,9 @@ dependencies:
   - numpy>=1.21
   - nvcc_linux-64=11.8
   - pkg-config=0.29
-  - python=3.10
+  - python=3.12
   - scikit-build>=0.12
-  - mrc=25.02
+  - mrc=25.06
   - sysroot_linux-64>=2.28
   - pip:
     - cython

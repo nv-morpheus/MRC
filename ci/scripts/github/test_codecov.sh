@@ -17,6 +17,9 @@
 set -e
 
 source ${WORKSPACE}/ci/scripts/github/common.sh
+
+fetch_base_branch
+
 /usr/bin/nvidia-smi
 
 conda activate mrc
@@ -40,11 +43,10 @@ cd ${MRC_ROOT}/build
 # Ensure we have a clean slate
 find . -type f  \( -iname "*.gcov" -or -iname "*.gcda" \) -exec rm {} \;
 
+# Exclude test_mrc_benchmarking to work-around #554
 set +e
-# Tests known to be failing
-# Issues:
-# * test_mrc_private - https://github.com/nv-morpheus/MRC/issues/33
 ctest --output-on-failure \
+      --exclude-regex "^test_mrc_benchmarking" \
       --output-junit ${REPORTS_DIR}/report_ctest.xml
 
 CTEST_RESULTS=$?

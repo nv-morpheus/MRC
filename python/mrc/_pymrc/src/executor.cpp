@@ -40,7 +40,6 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
-#include <string>
 #include <thread>
 #include <utility>
 
@@ -93,7 +92,7 @@ std::function<void()> create_gil_initializer()
 
                 VLOG(10) << "Debugging enabled from mrc threads";
             }
-        } catch (pybind11::error_already_set& err)
+        } catch (const pybind11::error_already_set& err)
         {
             if (err.matches(PyExc_ImportError))
             {
@@ -348,13 +347,13 @@ py::object PyBoostFuture::py_result()
     {
         // Get the result
         return std::move(this->result());
-    } catch (py::error_already_set& err)
+    } catch (const py::error_already_set& err)
     {
-        LOG(ERROR) << "Exception occurred during Future.result(). Error: " << std::string(err.what());
+        LOG(ERROR) << "Exception occurred during Future.result(). Error: " << err.what();
         throw;
-    } catch (std::exception& err)
+    } catch (const std::exception& err)
     {
-        LOG(ERROR) << "Exception occurred during Future.result(). Error: " << std::string(err.what());
+        LOG(ERROR) << "Exception occurred during Future.result(). Error: " << err.what();
         return py::none();
     }
 }

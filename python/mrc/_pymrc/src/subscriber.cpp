@@ -51,7 +51,7 @@ void ObserverProxy::on_error(PyObjectObserver* self, py::object&& value)
         //  Raise the exception locally to convert to C++ exception
         auto locals = py::dict("__on_error_exception"_a = std::move(value));
         py::exec("raise __on_error_exception", py::globals(), locals);
-    } catch (py::error_already_set)
+    } catch (const py::error_already_set&)
     {
         py::gil_scoped_release nogil;
 
@@ -101,7 +101,7 @@ void SubscriberProxy::on_error(PyObjectSubscriber* self, py::object&& value)
         //  Raise the exception locally to convert to C++ exception
         auto locals = py::dict("__on_error_exception"_a = std::move(value));
         py::exec("raise __on_error_exception", py::globals(), locals);
-    } catch (py::error_already_set)
+    } catch (const py::error_already_set&)
     {
         py::gil_scoped_release nogil;
 
