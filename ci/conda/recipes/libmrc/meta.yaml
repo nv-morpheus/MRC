@@ -140,6 +140,8 @@ outputs:
         - numpy
         - nvtx
         - pytest
+        - pytest-asyncio
+        - pytest-timeout
         - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
