@@ -93,7 +93,7 @@ fi
 # Choose default variants
 if hasArg quick; then
    # For quick build, just do most recent version of rapids
-   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 25.02}")
+   CONDA_ARGS_ARRAY+=("--variants" "{rapids_version: 25.06}")
 fi
 
 # And default channels (should match dependencies.yaml)

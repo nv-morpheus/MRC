@@ -34,7 +34,7 @@ dependencies:
 - libclang=16
 - libgrpc=1.62.2
 - libhwloc=2.9.2
-- librmm=24.10
+- librmm=25.06
 - libxml2=2.11.6
 - llvmdev=16
 - ninja=1.11
