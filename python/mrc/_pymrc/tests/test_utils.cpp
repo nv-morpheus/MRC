@@ -23,6 +23,7 @@
 
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+#include <moduleobject.h>  // for PyModuleDef
 #include <nlohmann/json.hpp>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
