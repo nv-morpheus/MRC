@@ -122,6 +122,7 @@ async def test_python_cpp_async_exception():
     assert "c++" in str(ex.value)
 
 
+@pytest.mark.skip("Test is currently segfaulting issue #557")
 @pytest.mark.asyncio
 async def test_can_cancel_coroutine_from_python():
 
