@@ -39,7 +39,7 @@ requirements:
     - {{ compiler("cuda") }}
     - {{ compiler("cxx") }}
     - ccache
-    - cmake =3.27
+    - cmake =3.30
     - libtool
     - ninja =1.11
     - numactl =2.0.18
@@ -80,7 +80,7 @@ outputs:
         - {{ compiler("c") }}
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
-        - cmake =3.27
+        - cmake =3.30
         - numactl =2.0.18
         - sysroot_linux-64 >=2.28
       host:
