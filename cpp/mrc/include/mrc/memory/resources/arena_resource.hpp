@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2020-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@
 
 #include <cuda_runtime_api.h>
 #include <glog/logging.h>
+#include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 
@@ -135,7 +136,7 @@ class arena_resource final : public adaptor<Upstream>
             return nullptr;
         }
 
-        bytes         = detail::arena::align_up(bytes);
+        bytes         = rmm::align_up(bytes, rmm::CUDA_ALLOCATION_ALIGNMENT);
         auto& arena   = get_thread_arena();
         void* pointer = arena.allocate(bytes);
 
@@ -173,7 +174,7 @@ class arena_resource final : public adaptor<Upstream>
             return;
         }
 
-        bytes = detail::arena::align_up(bytes);
+        bytes = rmm::align_up(bytes, rmm::CUDA_ALLOCATION_ALIGNMENT);
         get_thread_arena().deallocate(ptr, bytes);
     }
 
