@@ -9,7 +9,7 @@ dependencies:
 - benchmark=1.8.3
 - boost-cpp=1.84
 - ccache
-- cmake=3.27
+- cmake=3.30
 - codecov=2.1
 - cuda-cudart-dev=12.8
 - cuda-nvcc
