@@ -167,7 +167,7 @@ inline bool block_size_compare(block lhs, block rhs)
  * @param[in] v value to align
  * @return Return the aligned value
  */
-constexpr std::size_t align_up(std::size_t value) noexcept
+std::size_t align_up(std::size_t value) noexcept
 {
     return rmm::align_up(value, rmm::CUDA_ALLOCATION_ALIGNMENT);
 }
@@ -178,7 +178,7 @@ constexpr std::size_t align_up(std::size_t value) noexcept
  * @param[in] v value to align
  * @return Return the aligned value
  */
-constexpr std::size_t align_down(std::size_t value) noexcept
+std::size_t align_down(std::size_t value) noexcept
 {
     return rmm::align_down(value, rmm::CUDA_ALLOCATION_ALIGNMENT);
 }
