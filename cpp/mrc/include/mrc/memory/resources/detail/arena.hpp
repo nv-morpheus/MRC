@@ -162,28 +162,6 @@ inline bool block_size_compare(block lhs, block rhs)
 }
 
 /**
- * @brief Align up to the allocation alignment.
- *
- * @param[in] v value to align
- * @return Return the aligned value
- */
-std::size_t align_up(std::size_t value) noexcept
-{
-    return rmm::align_up(value, rmm::CUDA_ALLOCATION_ALIGNMENT);
-}
-
-/**
- * @brief Align down to the allocation alignment.
- *
- * @param[in] v value to align
- * @return Return the aligned value
- */
-std::size_t align_down(std::size_t value) noexcept
-{
-    return rmm::align_down(value, rmm::CUDA_ALLOCATION_ALIGNMENT);
-}
-
-/**
  * @brief Get the first free block of at least `size` bytes.
  *
  * Address-ordered first-fit has shown to perform slightly better than best-fit when it comes to
@@ -318,9 +296,11 @@ class global_arena final
       maximum_size_{maximum_size}
     {
         RMM_EXPECTS(nullptr != upstream_mr_, "Unexpected null upstream pointer.");
-        RMM_EXPECTS(initial_size == default_initial_size || initial_size == align_up(initial_size),
+        RMM_EXPECTS(initial_size == default_initial_size ||
+                        initial_size == rmm::align_up(initial_size, rmm::CUDA_ALLOCATION_ALIGNMENT),
                     "Error, Initial arena size required to be a multiple of 256 bytes");
-        RMM_EXPECTS(maximum_size_ == default_maximum_size || maximum_size_ == align_up(maximum_size_),
+        RMM_EXPECTS(maximum_size_ == default_maximum_size ||
+                        maximum_size_ == rmm::align_up(maximum_size_, rmm::CUDA_ALLOCATION_ALIGNMENT),
                     "Error, Maximum arena size required to be a multiple of 256 bytes");
 
         if (initial_size == default_initial_size || maximum_size == default_maximum_size)
@@ -330,11 +310,11 @@ class global_arena final
             RMM_CUDA_TRY(cudaMemGetInfo(&free, &total));
             if (initial_size == default_initial_size)
             {
-                initial_size = align_up(std::min(free, total / 2));
+                initial_size = rmm::align_up(std::min(free, total / 2), rmm::CUDA_ALLOCATION_ALIGNMENT);
             }
             if (maximum_size_ == default_maximum_size)
             {
-                maximum_size_ = align_down(free) - reserved_size;
+                maximum_size_ = rmm::align_down(free, rmm::CUDA_ALLOCATION_ALIGNMENT) - reserved_size;
             }
         }
         RMM_EXPECTS(initial_size <= maximum_size_, "Initial arena size exceeds the maximum pool size!");
