@@ -54,6 +54,7 @@ requirements:
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
     - glog>=0.7.1,<0.8
+    - icu >=73.2,<76.0a0 # Pin to version compatible with boost-cpp 1.84
     - libgrpc =1.62.2
     - gtest =1.14
     - libhwloc =2.9.2
@@ -61,7 +62,7 @@ requirements:
     - nlohmann_json =3.11
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen =0.10
-    - python {{ python }}
+    - python {{ python }} *_cpython  # Use cpython builds with compatible icu
     - scikit-build =0.17
     - ucx =1.15
     - versioneer =0.29
@@ -88,6 +89,7 @@ outputs:
         - boost-cpp =1.84
         - cuda-version # Needed to allow pin_compatible to work
         - glog>=0.7.1,<0.8
+        - icu >=73.2,<76.0a0 # Pin to version compatible with boost-cpp 1.84
         - libgrpc =1.62.2
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
@@ -96,6 +98,7 @@ outputs:
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - cuda-version {{ cuda_version }}.*
+        - icu >=73.2,<76.0a0 # Pin to version compatible with boost-cpp 1.84
         - nlohmann_json =3.11
         - ucx =1.15
         - cuda-cudart
@@ -121,6 +124,7 @@ outputs:
     requirements:
       host:
         # Only should need libmrc and python. Keep sorted!
+        - icu >=73.2,<76.0a0 # Pin to version compatible with boost-cpp 1.84
         - {{ pin_subpackage('libmrc', exact=True) }}
         - python {{ python }}
       run:
@@ -137,12 +141,13 @@ outputs:
         - python/setup.cfg
         - python/tests/*
       requires:
+        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
+        - icu >=73.2,<76.0a0 # Pin to version compatible with boost-cpp 1.84
         - numpy
         - nvtx
         - pytest
         - pytest-asyncio
         - pytest-timeout
-        - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
   home: https://github.com/nv-morpheus/MRC
