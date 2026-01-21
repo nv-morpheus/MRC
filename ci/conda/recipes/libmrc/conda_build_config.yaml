@@ -30,4 +30,4 @@ python:
 
 # Setup the dependencies to build with multiple versions of RAPIDS
 rapids_version: # Keep around compatibility with current version -2
-  - 25.06
+  - 25.02

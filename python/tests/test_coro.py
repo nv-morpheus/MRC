@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2022-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,7 +122,6 @@ async def test_python_cpp_async_exception():
     assert "c++" in str(ex.value)
 
 
-@pytest.mark.skip("Test is currently segfaulting issue #557")
 @pytest.mark.asyncio
 async def test_can_cancel_coroutine_from_python():
 

@@ -62,7 +62,7 @@ dependencies:
         packages:
           - boost-cpp=1.84
           - ccache
-          - cmake=3.30
+          - cmake=3.27
           - cuda-nvcc
           - cxx-compiler
           - glog>=0.7.1,<0.8
@@ -70,7 +70,7 @@ dependencies:
           - gxx=12.1
           - libgrpc=1.62.2
           - libhwloc=2.9.2
-          - librmm=25.06
+          - librmm=24.10
           - libxml2=2.11.6
           - ninja=1.11
           - nlohmann_json=3.11
@@ -188,5 +188,5 @@ dependencies:
         - libgrpc=1.62.2
         - libhwloc=2.9.2
         - nlohmann_json=3.11
-        - rmm=25.06
+        - rmm=24.10
         - ucx=1.15

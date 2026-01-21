@@ -14,6 +14,6 @@ dependencies:
 - libhwloc=2.9.2
 - nlohmann_json=3.11
 - python=3.12
-- rmm=25.06
+- rmm=24.10
 - ucx=1.15
 name: runtime_cuda-128_arch-x86_64
