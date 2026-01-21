@@ -39,7 +39,7 @@ requirements:
     - {{ compiler("cuda") }}
     - {{ compiler("cxx") }}
     - ccache
-    - cmake =3.30
+    - cmake =3.27
     - libtool
     - ninja =1.11
     - numactl =2.0.18
@@ -54,7 +54,6 @@ requirements:
     - cuda-version {{ cuda_version }}.*
     - doxygen 1.10.0
     - glog>=0.7.1,<0.8
-    - icu >=73.2,<76.0a0  # Pin to version compatible with boost-cpp 1.84
     - libgrpc =1.62.2
     - gtest =1.14
     - libhwloc =2.9.2
@@ -62,7 +61,7 @@ requirements:
     - nlohmann_json =3.11
     - pybind11-abi # See: https://conda-forge.org/docs/maintainer/knowledge_base.html#pybind11-abi-constraints
     - pybind11-stubgen =0.10
-    - python {{ python }} *_cpython  # Use cpython builds with compatible icu
+    - python {{ python }}
     - scikit-build =0.17
     - ucx =1.15
     - versioneer =0.29
@@ -81,7 +80,7 @@ outputs:
         - {{ compiler("c") }}
         - {{ compiler("cuda") }}
         - {{ compiler("cxx") }}
-        - cmake =3.30
+        - cmake =3.27
         - numactl =2.0.18
         - sysroot_linux-64 >=2.28
       host:
@@ -89,7 +88,6 @@ outputs:
         - boost-cpp =1.84
         - cuda-version # Needed to allow pin_compatible to work
         - glog>=0.7.1,<0.8
-        - icu >=73.2,<76.0a0  # Pin to version compatible with boost-cpp 1.84
         - libgrpc =1.62.2
         - libhwloc =2.9.2
         - librmm {{ rapids_version }}
@@ -98,7 +96,6 @@ outputs:
       run:
         # Manually add any packages necessary for run that do not have run_exports. Keep sorted!
         - cuda-version {{ cuda_version }}.*
-        - icu >=73.2,<76.0a0  # Pin to version compatible with boost-cpp 1.84
         - nlohmann_json =3.11
         - ucx =1.15
         - cuda-cudart
@@ -125,7 +122,6 @@ outputs:
       host:
         # Only should need libmrc and python. Keep sorted!
         - {{ pin_subpackage('libmrc', exact=True) }}
-        - icu >=73.2,<76.0a0  # Pin to version compatible with boost-cpp 1.84
         - python {{ python }}
       run:
         - {{ pin_subpackage('libmrc', exact=True) }}
@@ -146,7 +142,6 @@ outputs:
         - pytest
         - pytest-asyncio
         - pytest-timeout
-        - icu >=73.2,<76.0a0  # Pin to version compatible with boost-cpp 1.84
         - cuml {{ rapids_version }}.* # Ensure we can install cuml. This can cause issues solving libabseil
 
 about:
